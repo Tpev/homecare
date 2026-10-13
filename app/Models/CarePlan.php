@@ -40,6 +40,7 @@ class CarePlan extends Model
     public const PAYMENT_ACTION_REQUIRED = 'action_required';
 
     protected $fillable = [
+        'care_arrangement_id',
         'care_relationship_id',
         'family_account_id',
         'family_user_id',

@@ -1,0 +1,17 @@
+{
+    "model": "gpt-5.6-luna",
+    "prompt_version": "interactive-support-v10",
+    "configuration_hash": "7e7dbac87fd04f9f278ed1ba10b893df9c2e5108b48b8300e15eb62f6e4be7f2",
+    "source_hash": "782a619a80c51030cbf4cc6f7e22e75c7d8e16b6f2cd6b4f85ae88c6969e44bd",
+    "knowledge_hash": "734530977ee0e10ef038be6590400f2e70757277db52d01b317281a851625375",
+    "release_commit": "2329f04b4ffbb315ba7dd211ad04b5dfe7241b8e",
+    "kind": "deterministic_regression",
+    "observed_at": "2026-09-11T13:02:33-04:00",
+    "passed": true,
+    "tests": 438,
+    "assertions": 7948,
+    "errors": 0,
+    "failures": 0,
+    "junit_sha256": "141c99c5896a9e26dab85de8946677537f41ae76e357fd21d9d13f6cbea85c6b",
+    "scope": "Isolated SQLite; synthetic data, fake provider responses, Stripe bypass. Not a live-model quality benchmark."
+}

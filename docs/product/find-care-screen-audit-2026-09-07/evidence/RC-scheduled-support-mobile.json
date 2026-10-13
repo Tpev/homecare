@@ -1,0 +1,229 @@
+{
+  "text": "About Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Wed, Sep 9\nFILLED\nVISIT Scheduled\nPayment Authorized\n\nRecurring care - Sep 09, 10:00 AM - 12:00 PM - Raleigh, NC\n\nVisit #8\n\nCare story\n\nVISIT SCHEDULED\n\nYour visit is scheduled.\n\nYour caregiver is booked. Check the time and address, message them if needed, or change the visit before it starts.\n\nRIGHT NOW\n\nSofia is coming on Sep 09, 10:00 AM - 12:00 PM.\n\nMessage caregiver\nChange or cancel\n\nVisit\n\nTime, location, payment\n\nCaregiver\n\nProfile, chat\n\nHelp\n\nChange or get help\n\nCare details\n\nNeeds, address, tasks\n\nBEFORE THE VISIT\n\nChange or cancel this visit\n\nUse this before caregiver check-in if the time no longer works or you need to cancel.\n\nRequest cancellation or reschedule\n\nUse this for schedule changes before the caregiver checks in.\n\nBefore check-in\nChange type\nCancel visit\nReschedule visit\nReason\nSend request\nNeed to cancel now?\nSupport ticket\nReport incident\nOpen visit details\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H2",
+      "text": "About Ellie"
+    },
+    {
+      "level": "H3",
+      "text": "At a glance"
+    },
+    {
+      "level": "H3",
+      "text": "Communication"
+    },
+    {
+      "level": "H3",
+      "text": "Support and mobility"
+    },
+    {
+      "level": "H3",
+      "text": "Routine and comfort"
+    },
+    {
+      "level": "H3",
+      "text": "Important for safety"
+    },
+    {
+      "level": "H3",
+      "text": "What the family is looking for"
+    },
+    {
+      "level": "H3",
+      "text": "Contacts and care coordination"
+    },
+    {
+      "level": "H1",
+      "text": "Eleanor Bennett · Wed, Sep 9"
+    },
+    {
+      "level": "H2",
+      "text": "Change or cancel this visit"
+    },
+    {
+      "level": "H3",
+      "text": "Request cancellation or reschedule"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Message caregiver",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Change or cancel",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visit\n\nTime, location, payment",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregiver\n\nProfile, chat",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Help\n\nChange or get help",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details\n\nNeeds, address, tasks",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Change type",
+      "text": "",
+      "value": "cancel",
+      "disabled": false,
+      "required": false,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "Cancel visit",
+          "value": "cancel",
+          "selected": true
+        },
+        {
+          "label": "Reschedule visit",
+          "value": "reschedule",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "label": "Reason",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "required": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Send request",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Open visit details",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "+1 919 555 0153",
+      "href": "tel:+1 919 555 0153"
+    },
+    {
+      "text": "daniel.find-care-audit@example.com",
+      "href": "mailto:daniel.find-care-audit@example.com"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8027/family/care/journey/regular/1"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Need to cancel now?",
+      "open": false
+    },
+    {
+      "summary": "Support ticket",
+      "open": false
+    },
+    {
+      "summary": "Report incident",
+      "open": false
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 3858
+}

@@ -45,6 +45,7 @@ class CareRequestInvitationResponseService
         }
 
         $conversation = DB::transaction(function () use ($invitation, $caregiver, $caregiverProfile) {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertCanStartNewWork($caregiverProfile);
             $invitation->loadMissing(['careRequest', 'family']);
 
             $application = CareRequestApplication::query()->firstOrNew([

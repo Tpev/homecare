@@ -4,6 +4,7 @@
 @import "./care-creation.css";
 @import "./care-recruitment.css";
 @import "./care-schedule.css";
+@import "./shared-care.css";
 
 @plugin "@tailwindcss/forms";
 
@@ -321,6 +322,8 @@
     }
 
     .ai-guide-target-highlight {
+        scroll-margin-top: 6rem;
+        scroll-margin-bottom: 8rem;
         outline: 4px solid #c96b55 !important;
         outline-offset: 5px !important;
         border-radius: 0.75rem;

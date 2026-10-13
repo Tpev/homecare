@@ -9,6 +9,7 @@ use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -28,6 +29,7 @@ class AiSupportPreparationService
         private readonly FamilyAccountContext $familyAccounts,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportEventRecorder $events,
+        private readonly AiSupportEligibilityService $eligibility,
     ) {}
 
     /**
@@ -56,11 +58,9 @@ class AiSupportPreparationService
         return DB::transaction(function () use ($actor, $ticket, $contractId, $definition, $fields, $targetId, $resource, $context): AiSupportPreparation {
             $locked = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
             $this->authorize($actor, $locked);
-            AiSupportPreparation::query()
+            $this->invalidate(AiSupportPreparation::query()
                 ->where('actor_user_id', $actor->id)
-                ->where('contract_id', $contractId)
-                ->whereIn('state', [AiSupportPreparation::STATE_READY, AiSupportPreparation::STATE_APPLIED])
-                ->update(['state' => AiSupportPreparation::STATE_CANCELLED, 'cancelled_at' => now()]);
+                ->where('contract_id', $contractId), 'preparation_replaced');
 
             $preparation = AiSupportPreparation::query()->create([
                 'support_ticket_id' => $locked->id,
@@ -114,6 +114,8 @@ class AiSupportPreparationService
         $this->authorize($actor, $ticket);
 
         return DB::transaction(function () use ($actor, $ticket, $actionId): string {
+            $ticket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
+            $this->authorize($actor, $ticket);
             $action = AiSupportMessageAction::query()->lockForUpdate()
                 ->whereKey($actionId)
                 ->where('support_ticket_id', $ticket->id)
@@ -126,12 +128,14 @@ class AiSupportPreparationService
             $preparation = AiSupportPreparation::query()->lockForUpdate()
                 ->whereKey((string) data_get($action->payload, 'preparation_id'))
                 ->where('actor_user_id', $actor->id)
+                ->where('support_ticket_id', $ticket->id)
                 ->firstOrFail();
             if (! $preparation->isUsable()) {
                 throw ValidationException::withMessages(['preparation' => 'This prepared form is no longer available.']);
             }
             $resource = ['resource_type' => $preparation->resource_type, 'resource_id' => $preparation->resource_id];
-            if (! $this->navigation->allowedFor($actor, $preparation->navigation_target_id, $resource)) {
+            if (! $this->familyAccounts->canAccessAccount($actor, (int) $preparation->family_account_id)
+                || ! $this->navigation->allowedFor($actor, $preparation->navigation_target_id, $resource)) {
                 throw new AuthorizationException;
             }
             $preparation->forceFill([
@@ -158,18 +162,106 @@ class AiSupportPreparationService
         if ($id === '') {
             return [];
         }
-        $preparation = AiSupportPreparation::query()
+        $candidate = AiSupportPreparation::query()
             ->whereKey($id)
             ->where('actor_user_id', $actor->id)
-            ->where('contract_id', $contractId)
             ->first();
-        if (! $preparation || ! $preparation->isUsable()
-            || ($resourceType !== null && $preparation->resource_type !== $resourceType)
-            || ($resourceId !== null && (int) $preparation->resource_id !== $resourceId)) {
+        if (! $candidate) {
+            session()->forget(self::SESSION_KEY);
+
             return [];
         }
 
-        return (array) data_get($preparation->payload, 'fields', []);
+        return DB::transaction(function () use ($actor, $candidate, $contractId, $resourceType, $resourceId): array {
+            $ticket = SupportTicket::query()->lockForUpdate()->find($candidate->support_ticket_id);
+            $preparation = AiSupportPreparation::query()->lockForUpdate()->find($candidate->id);
+            try {
+                if (! $ticket || ! $preparation || ! $preparation->isUsable()
+                    || $preparation->state !== AiSupportPreparation::STATE_APPLIED) {
+                    throw new AuthorizationException;
+                }
+                $this->authorize($actor, $ticket);
+                if (! $this->familyAccounts->canAccessAccount($actor, (int) $preparation->family_account_id)
+                    || ! $this->navigation->allowedFor($actor, $preparation->navigation_target_id, [
+                        'resource_type' => $preparation->resource_type, 'resource_id' => $preparation->resource_id,
+                    ])) {
+                    throw new AuthorizationException;
+                }
+            } catch (AuthorizationException) {
+                $this->invalidate(AiSupportPreparation::query()->whereKey($candidate->id), 'preparation_no_longer_authorized');
+                session()->forget(self::SESSION_KEY);
+
+                return [];
+            }
+
+            // An unrelated form must not consume the user's pending destination.
+            if ($preparation->contract_id !== $contractId
+                || ($resourceType !== null && $preparation->resource_type !== $resourceType)
+                || ($resourceId !== null && (int) $preparation->resource_id !== $resourceId)) {
+                return [];
+            }
+
+            $fields = (array) data_get($preparation->payload, 'fields', []);
+            $preparation->forceFill([
+                'state' => AiSupportPreparation::STATE_CONSUMED,
+                'payload' => [],
+                'fields_hash' => hash('sha256', '[]'),
+                'version' => $preparation->version + 1,
+            ])->save();
+            $this->invalidateActions([$preparation->id], [$ticket->id], 'preparation_consumed');
+            session()->forget(self::SESSION_KEY);
+
+            // Values now belong to the editable form; subsequent cleanup never edits that form.
+            return $fields;
+        }, 3);
+    }
+
+    public function invalidateForTicket(int $ticketId, string $reason): void
+    {
+        $this->invalidate(AiSupportPreparation::query()->where('support_ticket_id', $ticketId), $reason);
+    }
+
+    public function invalidateForActors(array $actorIds, string $reason): void
+    {
+        $this->invalidate(AiSupportPreparation::query()->whereIn('actor_user_id', $actorIds), $reason);
+    }
+
+    public function invalidateAll(string $reason): void
+    {
+        $this->invalidate(AiSupportPreparation::query(), $reason);
+    }
+
+    private function invalidate(Builder $query, string $reason): void
+    {
+        $query->whereIn('state', [AiSupportPreparation::STATE_READY, AiSupportPreparation::STATE_APPLIED])
+            ->orderBy('id')->chunkById(100, function ($preparations) use ($reason): void {
+                $ids = $preparations->modelKeys();
+                foreach ($preparations as $preparation) {
+                    $preparation->forceFill([
+                        'state' => AiSupportPreparation::STATE_CANCELLED,
+                        'cancelled_at' => now(),
+                        'payload' => [],
+                        'fields_hash' => hash('sha256', '[]'),
+                    ])->save();
+                }
+                $this->invalidateActions($ids, $preparations->pluck('support_ticket_id')->unique()->all(), $reason);
+                if (request()->hasSession() && in_array(session()->get(self::SESSION_KEY), $ids, true)) {
+                    session()->forget(self::SESSION_KEY);
+                }
+            });
+    }
+
+    private function invalidateActions(array $ids, array $ticketIds, string $reason): void
+    {
+        AiSupportMessageAction::query()
+            ->whereIn('support_ticket_id', $ticketIds)
+            ->where('action_type', AiSupportMessageAction::TYPE_PREPARATION)
+            ->whereNull('invalidated_at')
+            ->get()
+            ->filter(fn (AiSupportMessageAction $action): bool => in_array(data_get($action->payload, 'preparation_id'), $ids, true))
+            ->each(fn (AiSupportMessageAction $action) => $action->forceFill([
+                'payload' => null, 'invalidated_at' => now(), 'invalidation_reason' => $reason,
+            ])->save());
     }
 
     public function cancel(User $actor, string $preparationId, ?SupportTicket $expectedTicket = null): void
@@ -193,6 +285,8 @@ class AiSupportPreparationService
             $preparation->forceFill([
                 'state' => AiSupportPreparation::STATE_CANCELLED,
                 'cancelled_at' => $cancelledAt,
+                'payload' => [],
+                'fields_hash' => hash('sha256', '[]'),
             ])->save();
 
             AiSupportMessageAction::query()
@@ -269,11 +363,15 @@ class AiSupportPreparationService
 
     private function authorize(User $actor, SupportTicket $ticket): void
     {
-        if ($actor->role !== 'family'
+        $actor = $actor->fresh();
+        if (! $actor || $actor->role !== 'family'
             || (int) $ticket->opener_user_id !== (int) $actor->id
             || ! Gate::forUser($actor)->allows('view', $ticket)
             || $ticket->responder_mode !== SupportTicket::RESPONDER_MODE_AUTOMATED
-            || ! $this->familyAccounts->membershipFor($actor, false)) {
+            || in_array($ticket->status, [SupportTicket::STATUS_CLOSED, SupportTicket::STATUS_RESOLVED], true)
+            || ! $this->familyAccounts->membershipFor($actor, false)
+            || ! $this->eligibility->evaluate($actor, 'support_answers_v1', $ticket)->allowed
+            || ! $this->eligibility->evaluate($actor, 'semantic_navigation_v1', $ticket)->allowed) {
             throw new AuthorizationException;
         }
     }

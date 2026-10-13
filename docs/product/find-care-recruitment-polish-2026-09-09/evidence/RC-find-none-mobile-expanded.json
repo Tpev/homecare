@@ -1,0 +1,407 @@
+{
+  "text": "← My care\nRequest #13\nGet help\nCare story\nRecurring care for Ellie — Waiting\n\nRecurring care\n·\nEleanor Bennett\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nChoose a caregiver first\nFind caregivers\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nSearch\nInvited\n0\nSaved profiles\nSearch caregivers by name, city, or certification\nClear\nFilters\n\nSearch from 2 characters. Schedule matches indicate overlap, not a confirmed booking.\n\nCertifications & training\nAny\n⌄\nRequired certifications & training\n\nChoose what the caregiver must currently have. Select more than one to require all of them.\n\nCPR\nFirst Aid\nBasic Life Support (BLS)\nCertified Nursing Assistant (CNA)\nHome Health Aide (HHA)\nPersonal Care Aide (PCA)\nMedication Aide or Technician\nDementia care training\nOther certification or training\n\n0 search results\n\nSearch results\n\n0 matching caregivers\n\nNo caregivers found\n\nTry another name or city.\n\nClear search\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Ellie — Waiting",
+      "rect": {
+        "x": 16,
+        "y": 137,
+        "width": 358,
+        "height": 68.3125
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Find caregivers",
+      "rect": {
+        "x": 33,
+        "y": 389.8125,
+        "width": 1,
+        "height": 1
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Search results",
+      "rect": {
+        "x": 34,
+        "y": 1048.203125,
+        "width": 322,
+        "height": 19.5
+      }
+    },
+    {
+      "level": "H3",
+      "text": "No caregivers found",
+      "rect": {
+        "x": 102.09375,
+        "y": 1154.5,
+        "width": 185.796875,
+        "height": 28.59375
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Search",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invited\n0",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('invited')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Saved profiles",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('saved')",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "search",
+      "label": "Search caregivers by name, city, or certification",
+      "text": "",
+      "value": "NoMatchingCaregiver",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": "Name, city or certification"
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "clearCaregiverSearch",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "CPR",
+      "text": "",
+      "value": "cpr",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "First Aid",
+      "text": "",
+      "value": "first-aid",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Basic Life Support (BLS)",
+      "text": "",
+      "value": "bls",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Certified Nursing Assistant (CNA)",
+      "text": "",
+      "value": "cna",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Home Health Aide (HHA)",
+      "text": "",
+      "value": "hha",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Personal Care Aide (PCA)",
+      "text": "",
+      "value": "pca",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Medication Aide or Technician",
+      "text": "",
+      "value": "medication-aide",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Dementia care training",
+      "text": "",
+      "value": "dementia-training",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Other certification or training",
+      "text": "",
+      "value": "other",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear search",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "clearCaregiverSearch",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/13"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Certifications & training\nAny\n⌄",
+      "open": true
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1501,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "selectedNavigation": [
+    {
+      "text": "2\nFind caregivers",
+      "current": "step",
+      "pressed": null
+    },
+    {
+      "text": "Search",
+      "current": "page",
+      "pressed": null
+    }
+  ]
+}

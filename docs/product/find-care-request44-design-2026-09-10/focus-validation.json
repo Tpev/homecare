@@ -1,0 +1,92 @@
+{
+  "at": "2026-09-10T19:24:43.863Z",
+  "checks": [
+    {
+      "name": "Stage 2 keyboard focus clear of arrow and label",
+      "passed": true,
+      "state": {
+        "text": "2\nFind caregivers",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 10,
+        "right": 70.5,
+        "buttonWidth": 71.5,
+        "labelClearance": true,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      }
+    },
+    {
+      "name": "Stage 3 keyboard focus clear of arrow and label",
+      "passed": true,
+      "state": {
+        "text": "3\nReview applicants",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 10,
+        "right": 70.5,
+        "buttonWidth": 71.5,
+        "labelClearance": true,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      }
+    },
+    {
+      "name": "Applicant count stays above label with keyboard focus",
+      "passed": true,
+      "state": {
+        "focusVisible": true,
+        "count": "Active applicants:\n4",
+        "belowBadge": true,
+        "left": 207.5,
+        "right": 223.5
+      }
+    }
+  ],
+  "errors": [],
+  "blockedRequests": [],
+  "captures": [
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-2.png"
+    },
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-3.png"
+    },
+    {
+      "file": "screenshots/compat-28-focus-final.png"
+    }
+  ],
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-DXCErWQe.css"
+  ],
+  "dataPreservation": {
+    "tables": 26,
+    "changed": [],
+    "passed": true
+  },
+  "originalDataPreservation": {
+    "tables": 26,
+    "changed": [],
+    "originalInvitationRows": {
+      "rows": 6,
+      "sha256": "ce6439f09ac69d00d6d7ee71150187e5ba9f6fee08e7d1ae8acb3f7be7500f3e"
+    },
+    "passed": true,
+    "addition": {
+      "id": 7,
+      "care_request_id": 44,
+      "caregiver_user_id": 16,
+      "status": "pending",
+      "expires_at": "2026-09-13 15:21:08",
+      "created_at": "2026-09-10 15:21:08",
+      "updated_at": "2026-09-10 15:21:08"
+    },
+    "note": "One invitation was independently added between the initial matrix and focus verification. The guarded QA browser did not send it. Every original row still matches the baseline; no data was removed or changed by QA."
+  },
+  "passed": true
+}

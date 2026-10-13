@@ -181,6 +181,8 @@ class SupportTicketMessagingService
                 'transferred_to_human_at' => $lockedTicket->transferred_to_human_at ?: $message->created_at,
                 'handoff_reason_code' => $lockedTicket->handoff_reason_code ?: 'human_admin_replied',
             ];
+            app(\App\Services\AiSupport\AiSupportPreparationService::class)
+                ->invalidateForTicket($lockedTicket->id, 'human_admin_replied');
 
             if (! $lockedTicket->assigned_admin_id) {
                 $updates['assigned_admin_id'] = $admin->id;

@@ -184,7 +184,7 @@ class AiSupportInitialPilotReleaseService
         }, 3);
     }
 
-    private function currentReleaseCommit(): ?string
+    public function currentReleaseCommit(): ?string
     {
         $metadataCommit = $this->releaseCommitFromGitMetadata();
         if ($metadataCommit) {

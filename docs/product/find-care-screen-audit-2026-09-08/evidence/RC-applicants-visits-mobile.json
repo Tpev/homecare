@@ -1,0 +1,163 @@
+{
+  "text": "My care\n/\nRecurring care\n\nRECURRING CARE\n\nRecurring care for Eleanor Bennett\n\nMon, Wed, Fri · 10:00 AM–12:00 PM · Raleigh, NC\n\nFinding a caregiver\nRequest #15\nGet help\nCare story\nOverview\nCaregivers\nVisits\nCare details\n\nREQUESTED SCHEDULE\n\nYour weekly care pattern\n\nThese are requested times. Visits become confirmed when you hire a caregiver.\n\nMonday\n\n10:00–12:00\n\nRequested\n\nWednesday\n\n10:00–12:00\n\nRequested\n\nFriday\n\n10:00–12:00\n\nRequested\n\nStarting September 10, 2026 · Ending December 7, 2026.\n\nView caregivers\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H2",
+      "text": "Your weekly care pattern"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "My care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/15"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1167,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Recurring care for Eleanor Bennett",
+    "status": "Finding a caregiver",
+    "headerText": "My care\n/\nRecurring care\n\nRECURRING CARE\n\nRecurring care for Eleanor Bennett\n\nMon, Wed, Fri · 10:00 AM–12:00 PM · Raleigh, NC\n\nFinding a caregiver\nRequest #15\nGet help\nCare story",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Visits"
+    ]
+  }
+}

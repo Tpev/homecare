@@ -79,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
         Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);
         CareRequest::observe(CareRequestObserver::class);
+        \App\Models\CaregiverProfile::observe(\App\Observers\CaregiverScreeningObserver::class);
         CareRequestApplication::observe(CareRequestApplicationObserver::class);
         Lead::observe(FamilyLeadObserver::class);
         SupportTicket::observe(SupportTicketAuditObserver::class);

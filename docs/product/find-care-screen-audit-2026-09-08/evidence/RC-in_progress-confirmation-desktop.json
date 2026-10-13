@@ -1,0 +1,299 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\nMy care\n/\nBack to recurring care · Visits\n/\nVisit #9\n\nONE VISIT IN YOUR RECURRING CARE\n\nEleanor Bennett · Mon, Sep 7\n\nSep 07, 7:56 AM - 9:56 AM · Raleigh, NC\n\nCaregiver: Sofia Martinez\n\nIn progress\nVisit #9\nMessage caregiver\nGet help\nCare story\nThis visit\nCare instructions\nHelp & changes\n\nVISIT IN PROGRESS\n\nCare is happening now.\n\nSofia checked in at 7:56 AM.\n\nChanges and approvals here apply to this dated visit. Your recurring schedule has its own controls.\n\nThe visit has ended\nImportant for this visit\nFull care instructions\nSafety & support\nFall risk\nKeep the hallway clear and remind Ellie to use the handrail.\nHome access\n\nUse the main entrance and ring apartment 2B. Maria will meet you for the first visit.\n\nCare contact\n\nDaniel Bennett\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nFINISH THIS VISIT\n\nEleanor Bennett · Mon, Sep 7\n\nSofia Martinez · Sep 07, 7:56 AM - 9:56 AM\n\nConfirm that care has ended. This records the end of this visit; its hours can then be reviewed.\n\nConfirm visit has ended\nBack to visit\n\nLIVE DETAILS\n\nLive visit details\n\nSchedule, check-in, location, and payment stay here while live actions stay above.\n\nIn progress\n\nLIVE CHECK-IN\n\nSofia is with Eleanor Bennett.\n\nTIME\n\nSep 07\n\n7:56 AM - 9:56 AM\n\nCAREGIVER\n\nSofia Martinez\n\nChecked in 7:56 AM\n\nPAYMENT\n\nAuthorized\n\nAuthorized $62.00\n\nCARE LOCATION\n\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\n\nOpen map\nEleanor Bennett - Mother\n\nChecked in\n\nSofia checked in Sep 07, 7:56 AM.\n\nGPS was captured at check-in.\n\nMap and visit record\nCare during this visit\n1 of 3 tasks done\nCare tasks & notes\n\nTo do · Meal preparation\n\nPrepare soup and a sandwich for lunch; leave the kitchen tidy.\n\nTo do · Light housekeeping\n\nWash dishes and keep the living room and hallway clear.\n\nCompleted · Companionship\n\nConversation, a crossword puzzle, and a short walk if Ellie feels up to it.\n\nVisit activity\n\nShift started by caregiver\n\nSep 7, 7:56 AM · Sofia Martinez\n\nBooking hired\n\nSep 6, 7:56 AM · Maria Bennett\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H2",
+      "text": "Care is happening now."
+    },
+    {
+      "level": "H2",
+      "text": "Important for this visit"
+    },
+    {
+      "level": "H3",
+      "text": "Safety & support"
+    },
+    {
+      "level": "H3",
+      "text": "Home access"
+    },
+    {
+      "level": "H3",
+      "text": "Care contact"
+    },
+    {
+      "level": "H2",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H2",
+      "text": "Live visit details"
+    },
+    {
+      "level": "H3",
+      "text": "Sofia is with Eleanor Bennett."
+    },
+    {
+      "level": "H2",
+      "text": "Care during this visit"
+    },
+    {
+      "level": "H3",
+      "text": "Care tasks & notes"
+    },
+    {
+      "level": "H3",
+      "text": "Visit activity"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Message caregiver",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "This visit",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care instructions",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Help & changes",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "The visit has ended",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Full care instructions",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Confirm visit has ended",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Back to visit",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8028/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8028/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "My care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Back to recurring care · Visits",
+      "href": "http://127.0.0.1:8028/family/care/1?tab=visits&visit_filter=upcoming&visitsPage=1#care-visit-9"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/regular/1"
+    },
+    {
+      "text": "+1 919 555 0153",
+      "href": "tel:+1 919 555 0153"
+    },
+    {
+      "text": "daniel.find-care-audit@example.com",
+      "href": "mailto:daniel.find-care-audit@example.com"
+    },
+    {
+      "text": "Open map",
+      "href": "https://www.google.com/maps/search/?api=1&query=142%20Maple%20Grove%20Lane%2C%20Apartment%202B%2C%20Raleigh%2C%20NC%2027601"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Map and visit record",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 2118,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Eleanor Bennett · Mon, Sep 7",
+    "status": "In progress",
+    "headerText": "My care\n/\nBack to recurring care · Visits\n/\nVisit #9\n\nONE VISIT IN YOUR RECURRING CARE\n\nEleanor Bennett · Mon, Sep 7\n\nSep 07, 7:56 AM - 9:56 AM · Raleigh, NC\n\nCaregiver: Sofia Martinez\n\nIn progress\nVisit #9\nMessage caregiver\nGet help\nCare story",
+    "primaryTitle": "Care is happening now.",
+    "selectedTabs": [
+      "This visit"
+    ]
+  }
+}

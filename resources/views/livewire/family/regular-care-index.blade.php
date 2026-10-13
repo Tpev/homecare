@@ -13,14 +13,18 @@
         ];
     @endphp
 
-    <h1 data-ai-target="family.care_arrangements" tabindex="-1" class="sr-only">Care requests</h1>
-    <span data-ai-target="family.regular_care" tabindex="-1" class="sr-only">Care requests</span>
+    <h1 class="sr-only">Care requests</h1>
+    @if($sharedCareSchedules->isNotEmpty())
+        <section aria-label="Shared care schedules" class="space-y-3">
+            @foreach($sharedCareSchedules as $sharedSchedule)<a href="{{ route('family.shared-care.show', $sharedSchedule->id) }}" wire:navigate class="block rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5"><strong class="text-lg">{{ $sharedSchedule->sourceRequest->recipient?->full_name ?: $sharedSchedule->title }} · Shared care schedule</strong><p class="mt-1 text-sm">{{ \App\Support\WeeklySchedule::label($sharedSchedule->schedule_slots) }}</p><span class="mt-2 inline-block font-semibold text-emerald-800">View all caregivers, missing visits and payments →</span></a>@endforeach
+        </section>
+    @endif
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <x-family-care-nav active="arrangements" />
         <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
     </div>
 
-    <section class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-3 shadow-sm sm:p-4">
+    <section data-ai-target="family.care_arrangements" tabindex="-1" aria-label="Care request filters" class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-3 shadow-sm sm:p-4">
         <div class="grid gap-3 sm:grid-cols-2 {{ count($recipientOptions ?? []) > 2 ? 'lg:grid-cols-3' : '' }}">
             @if (count($recipientOptions ?? []) > 2)
                 <x-native-select-field label="Care recipient" wire:model.live="recipient" :options="$recipientOptions" id="arrangements-recipient" />
@@ -31,7 +35,7 @@
     </section>
 
     <section aria-labelledby="arrangement-list-heading" class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div data-ai-target="family.regular_care" tabindex="-1" class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">Requests and relationships</p>
                 <h2 id="arrangement-list-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $totalArrangementCount }} {{ $totalArrangementCount === 1 ? 'arrangement' : 'arrangements' }}</h2>

@@ -1,0 +1,56 @@
+CMDORNUM      OFFENDER NC DOC ID NUMBER          CHAR      1       7     
+CMPREFIX      COMMITMENT PREFIX                  CHAR      8       2     
+CMSENCMP      SENTENCE COMPONENT NUMBER          CHAR      10      3     
+CMCOCNVT      COUNTY OF CONVICTION CODE          CHAR      13      30    
+CMCASENO      COURT DOCKET NUMBER                CHAR      43      8     
+PUNISHTYP     PUNISHMENT TYPE CODE               CHAR      51      30    
+COURTTYP      COURT TYPE CODE                    CHAR      81      30    
+CMDISPOS      COMPONENT DISPOSITION CODE         CHAR      111     30    
+CMDISPO2      CMP. DISPOSITION CODE (2 OF 2)     CHAR      141     30    
+CMCOUNTS      NUMBER OF COUNTS                   CHAR      171     3     
+CMCNTYPE      TYPE OF COUNT CODE                 CHAR      174     30    
+CMOFFNSE      PRIMARY OFFENSE CODE               CHAR      204     30    
+CMOFFQLF      OFFENSE QUALIFIER CODE             CHAR      234     30    
+CMOFFDTE      DATE OFFENSE COMMITTED - BEGIN     DATE      264     10    
+CMOFFDT2      DATE OFFENSE COMMITTED - END       DATE      274     10    
+CMSTATUT      NC GENERAL STATUTE NUMBER          CHAR      284     15    
+PRIFELMD      PRIMARY FELONY/MISDEMEANOR CD.     CHAR      299     30    
+PENCLASS      SENTENCING PENALTY CLASS CODE      CHAR      329     30    
+PRPOINTS      PRIOR RCD. POINTS/CONVICTIONS      CHAR      359     3     
+PRLEVEL       PRIOR RECORD LEVEL CODE            CHAR      362     30    
+CMTRMMIN      MINIMUM SENTENCE LENGTH            CHAR      392     7     
+CMTRMMAX      MAXIMUM SENTENCE LENGTH            CHAR      399     7     
+CMTRMPRB      LENGTH OF SUPERVISION              CHAR      406     7     
+CMTRMEXT      SUPERVISION TERM EXTENSION         CHAR      413     7     
+CMPARLEN      SUPERVISION TO FOLLOW INCAR.       CHAR      420     7     
+SSACTTRM      SPLIT SENTENCE ACTIVE TERM         CHAR      427     7     
+GSMAXTERM     G.S. MAXIMUM SENTENCE ALLOWED      CHAR      434     7     
+ONMAX         SERVING MIN OR MAX TERM CODE       CHAR      441     30    
+CMSNTYPE      SENTENCE TYPE CODE                 CHAR      471     30    
+CMSNTYP2      SENTENCE TYPE CODE                 CHAR      501     30    
+CMSNTYP3      SENTENCE TYPE CODE                 CHAR      531     30    
+CMSNTYP4      SENTENCE TYPE CODE                 CHAR      561     30    
+CMSNTYP5      SENTENCE TYPE CODE                 CHAR      591     30    
+CMSNTYP6      SENTENCE TYPE CODE                 CHAR      621     30    
+CMJALCRD      CREDITS FOR JAIL DAYS SERVED       DECIMAL   651     5     
+ICCJAIL       ICC JAIL CREDITS (IN DAYS)         DECIMAL   656     5     
+CMCHNTYP      SENTENCE CHAINING TYPE CODE        CHAR      661     30    
+CMPRCOMM      PRIOR COMMITMENT PREFIX            CHAR      691     2     
+CMPRCMP       PRIOR COMPONENT IDENTIFIER         CHAR      693     3     
+CMPPCHTY      P&P SUPV.TERM CHAIN TYPE CODE      CHAR      696     30    
+CMPPCOMM      P&P PRIOR COMMITMENT PREFIX        CHAR      726     2     
+CMPPCMP       PRIOR P&P COMMNT/COMPONENT ID      CHAR      728     3     
+CMTIMCOM      TIME COMPUTATION EXCEPTION CD.     CHAR      731     30    
+CMIMPSDT      SENTENCE CONVICTION DATE           DATE      761     10    
+CMSENTDT      SENTENCE EFFECTIVE(BEGIN) DATE     DATE      771     10    
+DELAUTH       DELEGATED AUTHORITY FLAG           CHAR      781     1     
+CMCMPSTA      INMATE SENTENCE  STATUS CODE       CHAR      782     30    
+CMCMSTDT      INMATE COMPONENT STATUS DATE       DATE      812     10    
+CMPPCMST      P&P CASE STATUS                    CHAR      822     30    
+CMPPSTDT      P&P COMPONENT STATUS DATE          DATE      852     10    
+DTOFUPDT      DATE OF LAST UPDATE                DATE      862     10    
+TMOFUPDT      TIME OF LAST UPDATE                TIME      872     8     
+DTINUPDT      ORIGINAL DATA ENTRY DATE           DATE      880     10    
+CMOLDAUDIT    ORIGINAL SENTENCE AUDIT CODE       CHAR      890     30    
+DTOFUPDT2     DATE OF LAST UPDATE TWO            DATE      920     10    
+TMOFUPDT2     TIME OF LAST UPDATE TWO            TIME      930     8     

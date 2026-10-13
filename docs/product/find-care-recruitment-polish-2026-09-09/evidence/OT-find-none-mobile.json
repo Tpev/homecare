@@ -1,0 +1,272 @@
+{
+  "text": "← My care\nRequest #2\nGet help\nCare story\nA helping hand for Ellie — Waiting\n\nOne-time care\n·\nEleanor Bennett · Thu, Sep 10\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nChoose a caregiver first\nFind caregivers\n\nSep 10, 10:00 AM–12:00 PM · 2026 EDT\n\nSearch\nInvited\n0\nSaved profiles\nSearch caregivers by name, city, or certification\nClear\nFilters\n\n0 search results\n\nSearch results\n\n0 matching caregivers\n\nNo caregivers found\n\nTry another name or city.\n\nClear search\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "A helping hand for Ellie — Waiting",
+      "rect": {
+        "x": 16,
+        "y": 137,
+        "width": 358,
+        "height": 68.3125
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Find caregivers",
+      "rect": {
+        "x": 33,
+        "y": 389.8125,
+        "width": 1,
+        "height": 1
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Search results",
+      "rect": {
+        "x": 34,
+        "y": 588.609375,
+        "width": 322,
+        "height": 19.5
+      }
+    },
+    {
+      "level": "H3",
+      "text": "No caregivers found",
+      "rect": {
+        "x": 102.09375,
+        "y": 694.90625,
+        "width": 185.796875,
+        "height": 28.59375
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Search",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invited\n0",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('invited')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Saved profiles",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('saved')",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "search",
+      "label": "Search caregivers by name, city, or certification",
+      "text": "",
+      "value": "NoMatchingCaregiver",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": "Name, city or certification"
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "clearCaregiverSearch",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear search",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "clearCaregiverSearch",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/2"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Filters",
+      "open": false
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1041,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "selectedNavigation": [
+    {
+      "text": "2\nFind caregivers",
+      "current": "step",
+      "pressed": null
+    },
+    {
+      "text": "Search",
+      "current": "page",
+      "pressed": null
+    }
+  ]
+}

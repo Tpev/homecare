@@ -1,0 +1,344 @@
+{
+  "at": "2026-09-09T12:58:33.984Z",
+  "type": "Resolved capture harness error",
+  "blockedRequests": 55,
+  "serverSubmissions": 0,
+  "methods": [
+    "sendCaregiverInvitation"
+  ],
+  "cause": "The initial expanded-inventory routine tried to focus background native disclosures while an invitation dialog remained open. Browser inert handling retained focus on the Send control, so keyboard Enter triggered attempted submission. The local request guard aborted every matching request before it reached the server.",
+  "fix": "Inventory expansion is now scoped to the active dialog and uses explicit summary clicks. Filter popovers are closed before background hover inspection. Invitation captures are being replaced with fresh corrected runs.",
+  "evidence": "data-preservation.json compares original care fields and row counts before and after capture.",
+  "blockedRequestLog": [
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:8028/livewire/update",
+      "methods": [
+        "sendCaregiverInvitation"
+      ]
+    }
+  ]
+}

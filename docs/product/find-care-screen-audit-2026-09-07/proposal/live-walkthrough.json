@@ -1,0 +1,248 @@
+{
+  "date": "2026-09-07T16:30:07.407Z",
+  "method": "Read-only navigation and local UI filter. No care/business mutations submitted. Existing isolated audit database.",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "results": [
+    {
+      "id": "OT-timesheet_review-shift",
+      "url": "http://127.0.0.1:8027/family/requests/8?tab=shift",
+      "text": "About Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Mon, Sep 7\nFILLED\nVISIT Completed\nPayment Authorized\n\nOne-time care - Sep 07, 2:51 AM - 4:51 AM - Raleigh, NC\n\nVisit #4\n\nCare story\n\nREVIEW HOURS\n\nCaregiver hours need your review.\n\nCheck the worked time and payment amount. Approving will capture payment and move payout forward.\n\nSUBMITTED HOURS\n\n2h 00m\n\n120 minutes\n\nESTIMATED PAYMENT\n\n$62.00\n\nCare $60.00 at $30.00/hr* + $2.00 processing fee\n\n*A $1.00/hour processing fee is added.\n\nApprove hours and pay $62.00\nQuestion hours\n\nVisit\n\nTime, location, payment\n\nHelp\n\nChange or get help\n\nCaregiver\n\nProfile, chat\n\nCare details\n\nNeeds, address, tasks\n\nVISIT DETAILS\n\nVisit details before approval\n\nConfirm schedule, caregiver, and location here. The hours and payment decision stay above.\n\nCompleted\n\nSCHEDULE\n\nSep 07, 2026\n\n2:51 AM - 4:51 AM\n\nCAREGIVER\n\nSofia Martinez\n\nChecked in Sep 07, 2:51 AM\n\nCARE LOCATION\n\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\n\nOpen map\nEleanor Bennett - Mother\nQuestion hours\nDetailed visit record\nApprove hours and pay $62.00\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "About Ellie",
+          "y": 110
+        },
+        {
+          "text": "Eleanor Bennett · Mon, Sep 7",
+          "y": 2023
+        },
+        {
+          "text": "Visit details before approval",
+          "y": 3034
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": []
+    },
+    {
+      "id": "OT-time_correction-shift",
+      "url": "http://127.0.0.1:8027/family/requests/32?tab=shift",
+      "text": "About Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Mon, Sep 7\nFILLED\nVISIT Completed\nPayment Authorized\n\nOne-time care - Sep 07, 2:51 AM - 4:51 AM - Raleigh, NC\n\nVisit #20\n\nCare story\n\nREVIEW HOURS\n\nCaregiver hours need your review.\n\nCheck the worked time and payment amount. Approving will capture payment and move payout forward.\n\nVisit\n\nTime, location, payment\n\nHelp\n\nChange or get help\n\nCaregiver\n\nProfile, chat\n\nCare details\n\nNeeds, address, tasks\n\nVISIT RECORD\n\nFinal details\n\nKeep the final schedule, time, payment, notes, and feedback in one record.\n\nCompleted\n\nTIME CORRECTION · VISIT #20\n\nSofia asked you to review visit time\n\nMonday, September 7, 2026 · America/New York\n\nWaiting for family review\n\nSCHEDULED\n\n2:51 AM – 4:51 AM\n\nAPP RECORDED\n\n2:51 AM – 4:51 AM\n\nREQUESTED\n\n2:51 AM – 4:36 AM\n\n1 hr 45 min after 0 min unpaid break\n\nWHAT HAPPENED\n\nI forgot to end the visit\n\nI finished helping Ellie at the time below but forgot to end the visit in the app until 15 minutes later.\n\nFINAL AMOUNT IF APPROVED\n\n$54.25\n\nFor 1 hr 45 min of care.\n\nCare $52.50 + $1.75 processing fee.\n\nApprove 1 hr 45 min and pay $54.25\nAsk Sofia to change this  Send change request\nGet help from LoLo\n\nSCHEDULE\n\nSep 07, 2026\n\n2:51 AM - 4:51 AM\n\nCAREGIVER\n\nSofia Martinez\n\nChecked in Sep 07, 2:51 AM\n\nCARE LOCATION\n\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\n\nOpen map\nEleanor Bennett - Mother\n\nVISIT RECEIPT\n\nWORKED TIME\n\n2h 00m\n\nPAYMENT\n\n$60.00\n\nAuthorized\n\nTIMESHEET\n\nConfirmed\n\nConfirmed by family\n\nDetailed visit record\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "About Ellie",
+          "y": 110
+        },
+        {
+          "text": "Eleanor Bennett · Mon, Sep 7",
+          "y": 2023
+        },
+        {
+          "text": "Final details",
+          "y": 2678
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": []
+    },
+    {
+      "id": "RC-plan-pending",
+      "url": "http://127.0.0.1:8027/family/care/2",
+      "text": "Back to your care\nRecurring care with Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nCare story\nView past visits\nMessage caregiver\nRecurring care is active\nAbout Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\n\nYour regular schedule is active. The next visit is being prepared.\n\nLater visits\n\nAfter your next visit, these are the visits already on the calendar.\n\nNo later visits are scheduled yet.\n\nManage recurring care\n\nChoose one change. We will explain what happens before you confirm.\n\nAdd an extra visit\nChange future schedule\nPause recurring care\nEnd recurring care\nCare details and instructions\nManage recurring care\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "Recurring care with Sofia Martinez",
+          "y": 137
+        },
+        {
+          "text": "About Ellie",
+          "y": 457
+        },
+        {
+          "text": "Later visits",
+          "y": 2471
+        },
+        {
+          "text": "Manage recurring care",
+          "y": 2714
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": []
+    },
+    {
+      "id": "RC-plan-paused",
+      "url": "http://127.0.0.1:8027/family/care/3",
+      "text": "Back to your care\nRecurring care with Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nCare story\nView past visits\nMessage caregiver\nCare is paused\nAbout Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\n\nYour regular schedule is active. The next visit is being prepared.\n\nLater visits\n\nAfter your next visit, these are the visits already on the calendar.\n\nNo later visits are scheduled yet.\n\nManage recurring care\n\nChoose one change. We will explain what happens before you confirm.\n\nAdd an extra visit\nChange future schedule\nResume recurring care\nEnd recurring care\nCare details and instructions\nManage recurring care\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "Recurring care with Sofia Martinez",
+          "y": 137
+        },
+        {
+          "text": "About Ellie",
+          "y": 403
+        },
+        {
+          "text": "Later visits",
+          "y": 2417
+        },
+        {
+          "text": "Manage recurring care",
+          "y": 2660
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": []
+    },
+    {
+      "id": "RC-in_progress-shift",
+      "url": "http://127.0.0.1:8027/family/requests/17?tab=shift",
+      "text": "About Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Mon, Sep 7\nFILLED\nVISIT In progress\nPayment Authorized\n\nOne-time care - Sep 07, 7:56 AM - 9:56 AM - Raleigh, NC\n\nVisit #9\n\nCare story\n\nVISIT IN PROGRESS\n\nCare is happening now.\n\nUse this screen for check-in details, chat, safety support, and completion.\n\nRIGHT NOW\n\nSofia checked in at 7:56 AM.\n\nMessage caregiver\nThe visit has ended\nGet help\n\nVisit\n\nTime, location, payment\n\nHelp\n\nChange or get help\n\nCaregiver\n\nProfile, chat\n\nCare details\n\nNeeds, address, tasks\n\nLIVE DETAILS\n\nLive visit details\n\nSchedule, check-in, location, and payment stay here while live actions stay above.\n\nIn progress\n\nLIVE CHECK-IN\n\nSofia is with Eleanor Bennett.\n\nTIME\n\nSep 07\n\n7:56 AM - 9:56 AM\n\nCAREGIVER\n\nSofia Martinez\n\nChecked in 7:56 AM\n\nPAYMENT\n\nAuthorized\n\nAuthorized $62.00\n\nCARE LOCATION\n\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\n\nOpen map\nEleanor Bennett - Mother\n\nChecked in\n\nSofia checked in Sep 07, 7:56 AM.\n\nGPS was captured at check-in.\n\nMap and visit record\nThe visit has ended\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "About Ellie",
+          "y": 110
+        },
+        {
+          "text": "Eleanor Bennett · Mon, Sep 7",
+          "y": 2023
+        },
+        {
+          "text": "Live visit details",
+          "y": 2896
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": []
+    },
+    {
+      "id": "OT-private_waiting-applicants",
+      "url": "http://127.0.0.1:8027/family/requests/29?tab=applicants",
+      "text": "This request is private and cannot be discovered in the caregiver marketplace. Invite at least one caregiver when you are ready.\n\nAbout Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Thu, Sep 10\nOPEN\nPRIVATE\n\nOne-time care - Sep 10, 10:00 AM - Raleigh, NC\n\nRequest #29\n\nCare story\n\nFINDING CARE\n\nYour request is live.\n\nCaregivers can reply now. Invite a good match if you want to move faster.\n\nFind matching caregivers\n\nCaregivers\n\nInvite matching people\n\nCare details\n\nNeeds, address, tasks\n\nSUGGESTED CAREGIVERS\n\nInvite one or two caregivers\n\nYour request is live. Inviting a strong match can help you get a reply faster.\n\nLOOKING FOR A SPECIFIC PERSON?\n\nInvite someone you know\n\nSearch by name and invite them without leaving this request or choosing the request again.\n\nSearch and invite\nPeople you invited\n\nInvitations are separate from caregivers who replied.\n\n0 total\nNo active invitations yet.\nRecommended caregivers\n\nSuggestions based on this request’s schedule and location.\n\nCertifications & training\nAny\n⌄\n\n3 suggested caregivers found\n\nAR\n\nAisha Robinson\n\nSame ZIP service area - Match score 124\n\n5.0\n31 reviews\nIdentity verified\nBackground check\nTop caregiver\n\nSame ZIP service area - Matches requested time window\n\nInvite Aisha\nSM\n\nSofia Martinez\n\nSame ZIP service area - Match score 124\n\n4.9\n24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\nSame ZIP service area - Matches requested time window\n\nInvite Sofia\nJW\n\nJames Wilson\n\nSame ZIP service area - Match score 124\n\n4.8\n18 reviews\nIdentity verified\nBackground check\nTop caregiver\n\nSame ZIP service area - Matches requested time window\n\nInvite James\nAfter a caregiver replies, this screen changes to compare, chat, and hire.\nFind matching caregivers\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "About Ellie",
+          "y": 222
+        },
+        {
+          "text": "Eleanor Bennett · Thu, Sep 10",
+          "y": 2135
+        },
+        {
+          "text": "Invite one or two caregivers",
+          "y": 2705
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": []
+    },
+    {
+      "id": "OT-many_applicants-applicants",
+      "url": "http://127.0.0.1:8027/family/requests/28?tab=applicants",
+      "text": "About Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Thu, Sep 10\nOPEN\n\nOne-time care - Sep 10, 10:00 AM - Raleigh, NC\n\nRequest #28\n\nCare story\n\nCHOOSE CAREGIVER\n\nCaregivers are ready for review.\n\nCompare profiles, chat if needed, then hire the person you trust.\n\n4 caregivers replied. Review each card below, then hire the person you trust.\n\nInvite someone else\n\nCaregivers\n\nReview, chat, hire\n\nCare details\n\nNeeds, address, tasks\n\nCAREGIVER REPLIES\n\nReview replies below\n\nOpen profile details only when you need more context. The main actions stay on each caregiver card.\n\nLOOKING FOR A SPECIFIC PERSON?\n\nInvite someone you know\n\nSearch by name and invite them without leaving this request or choosing the request again.\n\nSearch and invite\nPeople you invited\n\nInvitations are separate from caregivers who replied.\n\n0 total\nNo active invitations yet.\nFilter or sort caregivers\n\n4 caregivers match the applicant filters\n\nCaregivers who replied\n\nReview their reply, profile, or start a conversation.\n\nSM\n\nSofia Martinez\n\nSaved\n\nRaleigh, NC\n\n7 years experience\n4.9\n24 reviews\nReliability 98%\nProfile details\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nHire Sofia\nView profile\nStart chat\nMore options for Sofia\nJW\n\nJames Wilson\n\nInterested\n\nRaleigh, NC\n\n5 years experience\n4.8\n18 reviews\nReliability 98%\nProfile details\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nHire James\nView profile\nSave & chat\nMore options for James\nAR\n\nAisha Robinson\n\nInterested\n\nRaleigh, NC\n\n9 years experience\n5.0\n31 reviews\nReliability 98%\nProfile details\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nHire Aisha\nView profile\nSave & chat\nMore options for Aisha\nOC\n\nOliver Chen\n\nInterested\n\nRaleigh, NC\n\n4 years experience\n4.8\n12 reviews\nReliability 98%\nProfile details\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nHire Oliver\nView profile\nSave & chat\nMore options for Oliver\nRecommended caregivers\n\nKeep reviewing replies above, or invite another matching caregiver if no one feels right yet.\n\nER\n\nE2E Ready Caregiver\n\nSame ZIP service area - Match score 114\n\n4.9\n14 reviews\nIdentity verified\nBackground check\nTop caregiver\nCPR\n · \nReported by caregiver\nMemory loss, dementia, or Alzheimer's support\nLimited mobility or fall-risk support\n\nSame ZIP service area - Matches requested time window\n\nInvite E2E\nEM\n\nE2E Marketplace Caregiver\n\nSame ZIP service area - Match score 114\n\n4.9\n14 reviews\nIdentity verified\nBackground check\nTop caregiver\nCPR\n · \nLoLo verified\nMemory loss, dementia, or Alzheimer's support\nLimited mobility or fall-risk support\n\nSame ZIP service area - Matches requested time window\n\nInvite E2E\nReview caregivers\n\n© 2026 LoLo\n\nLegal links",
+      "headings": [
+        {
+          "text": "About Ellie",
+          "y": 110
+        },
+        {
+          "text": "Eleanor Bennett · Thu, Sep 10",
+          "y": 2023
+        },
+        {
+          "text": "Review replies below",
+          "y": 2673
+        },
+        {
+          "text": "LoLo Support",
+          "y": 0
+        }
+      ],
+      "selects": [
+        {
+          "label": "",
+          "options": [
+            {
+              "label": "All caregivers",
+              "value": "all"
+            },
+            {
+              "label": "Interested",
+              "value": "applied"
+            },
+            {
+              "label": "Saved",
+              "value": "shortlisted"
+            },
+            {
+              "label": "Hired",
+              "value": "hired"
+            },
+            {
+              "label": "Declined",
+              "value": "rejected"
+            },
+            {
+              "label": "Not selected",
+              "value": "not_selected"
+            },
+            {
+              "label": "Withdrawn",
+              "value": "withdrawn"
+            }
+          ]
+        },
+        {
+          "label": "",
+          "options": [
+            {
+              "label": "Latest first",
+              "value": "latest"
+            },
+            {
+              "label": "Oldest first",
+              "value": "oldest"
+            },
+            {
+              "label": "Rate high-low",
+              "value": "rate_high"
+            },
+            {
+              "label": "Rate low-high",
+              "value": "rate_low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OT-many_applicants-filter-saved",
+      "url": "http://127.0.0.1:8027/family/requests/28?tab=applicants",
+      "text": "About Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Thu, Sep 10\nOPEN\n\nOne-time care - Sep 10, 10:00 AM - Raleigh, NC\n\nRequest #28\n\nCare story\n\nCHOOSE CAREGIVER\n\nCaregivers are ready for review.\n\nCompare profiles, chat if needed, then hire the person you trust.\n\nREADY TO CHOOSE\n\nSofia Martinez\n\nSaved\n7 years experience\n4.9 stars\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nSaved\nHire Sofia\nChat first\nView profile\n\nNeed more choices? Invite more caregivers by searching for a specific person without leaving this request.\n\nInvite someone you know\n\nCaregivers\n\nReview, chat, hire\n\nCare details\n\nNeeds, address, tasks\n\nReview caregivers\n\n© 2026 LoLo\n\nLegal links",
+      "statusControlCount": 0,
+      "filterSummaryCount": 0
+    }
+  ]
+}

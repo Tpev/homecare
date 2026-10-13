@@ -6,7 +6,7 @@
     $workspaceTabs = $stageTabs->filter(fn ($tab) => empty($tab['hidden']) && ! ($isRecurringVisit && $tab['key'] === 'applicants') && ! (! $booking && $plainRequestType === 'Recurring care' && $tab['key'] === 'support'));
 @endphp
 @if ($booking)
-<header class="hc-care-heading">
+<header data-ai-target="family.request.summary" tabindex="-1" class="hc-care-heading">
     <nav aria-label="Care location" class="hc-care-breadcrumb">
         <a href="{{ route('family.care.index') }}" wire:navigate>My care</a>
         <span aria-hidden="true">/</span>

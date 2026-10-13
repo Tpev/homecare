@@ -808,11 +808,11 @@ $entries = [
     $entry(
         'KB-FOP-PAY-011',
         'Understand the hourly price and start the next care step',
-        'Care costs $30 per worked hour total for the Family. The caregiver earns $27 per hour gross minus the actual Stripe processing fees on successful Family charges, and LoLo’s gross platform portion is $3 per worked hour. For an explicit duration, AI Support can calculate the Family total, caregiver gross, and LoLo gross platform portion. It does not add taxes, tips, mileage, holiday charges, surcharges, discounts, or promotional credits to support estimates. The Family can continue by starting a care request.',
+        'The current review separates the care rate, Family processing fee and total. An applicable pricing agreement or preserved booking snapshot can differ from current defaults. AI Support quotes only server-provided amounts for the selected care and duration; otherwise it opens the review. Historical charges, refunds and caregiver earnings come from the payment ledger. It does not invent taxes, tips, mileage, holiday charges, surcharges, discounts or promotional credits. The Family can continue by starting a care request.',
         'Pricing',
         'family.new_care_request',
         ['FAM-PAY-028', 'FAM-PAY-029'],
-        ['The Family total is $30 per worked hour.', 'Caregiver gross earnings are $27 per worked hour minus actual Stripe processing fees on successful Family charges.', 'LoLo’s gross platform portion is $3 per worked hour.', 'An estimate is calculated only from a duration explicitly provided by the user.'],
+        ['The care rate, Family processing fee and total are separate components.', 'Applicable agreements and booking snapshots determine the pricing terms.', 'A personalized estimate requires a current server-provided quote and duration.', 'Exact caregiver earnings come from the payment ledger.'],
         ['A different personalized rate, discount, tax, tip, mileage amount, holiday charge, surcharge, or final worked-time total.', 'Exact caregiver net earnings without the payment ledger.'],
         ['What does care cost?', 'What would three hours cost?', 'Are taxes, tips, mileage, or holiday charges added?'],
         ['Why did my card fail?', 'Apply a promo code.', 'Show my submitted hours.'],

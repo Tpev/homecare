@@ -2195,6 +2195,7 @@ class ContinuousCoverageFlowTest extends TestCase
         CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
         ]);
 
         return $caregiver;

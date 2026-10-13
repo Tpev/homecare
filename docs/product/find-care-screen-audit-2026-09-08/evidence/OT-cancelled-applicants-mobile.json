@@ -1,0 +1,159 @@
+{
+  "text": "My care\n/\nOne-time care\n\nONE-TIME CARE\n\nEleanor Bennett · Thu, Sep 10\n\nSep 10, 10:00 AM · Raleigh, NC\n\nCancelled\nRequest #11\nGet help\nCare story\nOverview\nCaregivers\nCare details\nHelp\n\nCAREGIVER SELECTION\n\nCaregivers\n\nCaregiver replies and past conversations stay here.\n\nREADY\n\n0 to review\n\nPeople you invited\n\nInvitations are separate from caregivers who replied.\n\n0 total\nNo active invitations yet.\nThis request is no longer open. You can still open caregiver profiles or past chats here.\nCaregivers who replied\n\nReview their reply, profile, or start a conversation.\n\nNo caregivers have replied yet.\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Eleanor Bennett · Thu, Sep 10"
+    },
+    {
+      "level": "H2",
+      "text": "Caregivers"
+    },
+    {
+      "level": "H3",
+      "text": "People you invited"
+    },
+    {
+      "level": "H3",
+      "text": "Caregivers who replied"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "My care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/11"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1252,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Eleanor Bennett · Thu, Sep 10",
+    "status": "Cancelled",
+    "headerText": "My care\n/\nOne-time care\n\nONE-TIME CARE\n\nEleanor Bennett · Thu, Sep 10\n\nSep 10, 10:00 AM · Raleigh, NC\n\nCancelled\nRequest #11\nGet help\nCare story",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Caregivers"
+    ]
+  }
+}

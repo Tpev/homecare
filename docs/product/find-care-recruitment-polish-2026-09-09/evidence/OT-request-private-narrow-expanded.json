@@ -1,0 +1,235 @@
+{
+  "text": "This request is private and cannot be discovered in the caregiver marketplace. Invite at least one caregiver when you are ready.\n\n← My care\nRequest #29\nGet help\nCare story\nA helping hand for Ellie — Private Waiting\n\nOne-time care\n·\nEleanor Bennett · Thu, Sep 10\n·\nRaleigh, NC\n\nBy invitation\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nChoose a caregiver first\nYour care request\nFull care details ↗\nCare for\nEleanor Bennett\nWhen\nSep 10, 10:00 AM–12:00 PM · 2026 EDT\nLocation\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\nVisibility\nOnly invited caregivers\nWhat help is needed\n\nCompanionship, preparing lunch, and light housekeeping.\n\nCompanionship\nMeal preparation\nLight housekeeping\n\nPlease arrive on time and leave a short update after the visit.\n\nNEXT STEP\n\nFind the right caregiver\n\nInvite a caregiver to review your private request.\n\nFind caregivers\n→\n0\nActive applicants\n0\nInvitations sent\n\nHiring opens your booked visit.\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "A helping hand for Ellie — Private Waiting",
+      "rect": {
+        "x": 16,
+        "y": 269,
+        "width": 288,
+        "height": 68.3125
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Your care request",
+      "rect": {
+        "x": 36,
+        "y": 874.140625,
+        "width": 141.625,
+        "height": 57.1875
+      }
+    },
+    {
+      "level": "H3",
+      "text": "What help is needed",
+      "rect": {
+        "x": 36,
+        "y": 1236.3125,
+        "width": 248,
+        "height": 19.5
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Find the right caregiver",
+      "rect": {
+        "x": 35,
+        "y": 572.8125,
+        "width": 250,
+        "height": 29.265625
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Full care details ↗",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('overview')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Find caregivers\n→",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "0\nActive applicants",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "0\nInvitations sent",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('invited')",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/29"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 320,
+  "height": 844,
+  "documentWidth": 320,
+  "documentHeight": 1624,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "selectedNavigation": [
+    {
+      "text": "1\nCare request",
+      "current": "step",
+      "pressed": null
+    }
+  ]
+}

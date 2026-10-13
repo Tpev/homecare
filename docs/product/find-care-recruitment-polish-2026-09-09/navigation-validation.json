@@ -1,0 +1,113 @@
+{
+  "at": "2026-09-09T12:53:05.700Z",
+  "checks": [
+    {
+      "name": "one_time request to full discovery",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=invite"
+    },
+    {
+      "name": "one_time invited view URL",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=invite&view=invited"
+    },
+    {
+      "name": "one_time browser back restores search",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=invite"
+    },
+    {
+      "name": "one_time shortlist filters actual records",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=applicants"
+    },
+    {
+      "name": "one_time hire opens a review",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=applicants"
+    },
+    {
+      "name": "one_time get started becomes current",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=applicants"
+    },
+    {
+      "name": "one_time back retains shortlist",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=applicants"
+    },
+    {
+      "name": "one_time navigation closes stale hire review",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=home"
+    },
+    {
+      "name": "recurring request to full discovery",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=invite"
+    },
+    {
+      "name": "recurring invited view URL",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=invite&view=invited"
+    },
+    {
+      "name": "recurring browser back restores search",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=invite"
+    },
+    {
+      "name": "recurring shortlist filters actual records",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=applicants"
+    },
+    {
+      "name": "recurring hire opens a review",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=applicants"
+    },
+    {
+      "name": "recurring get started becomes current",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=applicants"
+    },
+    {
+      "name": "recurring back retains shortlist",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=applicants"
+    },
+    {
+      "name": "recurring navigation closes stale hire review",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/34?tab=home"
+    },
+    {
+      "name": "recurring arrangement opens exact visit",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/16?tab=shift&return_tab=visits&visit_filter=all&return_page=1",
+      "target": "http://127.0.0.1:8028/family/requests/16?tab=shift&return_tab=visits&visit_filter=all&return_page=1"
+    },
+    {
+      "name": "visit retains arrangement return filter",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/16?tab=shift&return_tab=visits&visit_filter=all&return_page=1"
+    },
+    {
+      "name": "visit returns to filtered arrangement",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/care/1?tab=visits&visit_filter=all&visitsPage=1#care-visit-8"
+    },
+    {
+      "name": "invitation Escape restores exact list control focus",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/2?tab=invite&view=search"
+    },
+    {
+      "name": "invitation Escape preserves name search",
+      "passed": true,
+      "url": "http://127.0.0.1:8028/family/requests/2?tab=invite&view=search"
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

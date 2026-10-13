@@ -62,6 +62,7 @@ class PrelaunchFamilyAutoApplicantsTest extends TestCase
         CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'slug' => 'charles-'.$caregiver->id,
             'platform_hourly_rate' => 28.00,
         ]);

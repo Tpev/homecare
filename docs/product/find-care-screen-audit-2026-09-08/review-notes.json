@@ -1,0 +1,2235 @@
+{
+  "OT-timesheet_review-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-create-ready": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-create-ready": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-hire-review": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Hiring needs a clear final opportunity to check the selected caregiver, scope and price.",
+    "redesign": "The inline review shows the existing terms before confirmation; final confirmation calls the original hire action.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-timesheet_review-confirmation": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Ending care and approving submitted hours are different decisions.",
+    "redesign": "This explicit preview describes the relevant decision, retains draft notes and delegates confirmation to the existing completion method.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-waiting-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-waiting-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invitations-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invitations-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-applicants-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-applicants-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-in_progress-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-in_progress-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-in_progress-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-in_progress-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-after_shift-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-after_shift-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-after_shift-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-after_shift-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-timesheet_review-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-timesheet_review-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-timesheet_review-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-leave_review-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-leave_review-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-leave_review-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-leave_review-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-closed-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-closed-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-closed-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-closed-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled_booking-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled_booking-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled_booking-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled_booking-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-waiting-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-waiting-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invitations-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invitations-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-applicants-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-applicants-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-in_progress-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-in_progress-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-in_progress-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-in_progress-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-after_shift-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-after_shift-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-after_shift-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-after_shift-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-leave_review-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-leave_review-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-leave_review-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-leave_review-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-closed-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-closed-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-closed-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-closed-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled_booking-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled_booking-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled_booking-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled_booking-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invitations-applicants-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-applicants-applicants-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-support-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-in_progress-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-timesheet_review-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-timesheet_review-support-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-closed-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-waiting-overview-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invite-drawer": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invitations-applicants-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-applicants-applicants-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-support-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-in_progress-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-support-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-closed-shift-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-waiting-overview-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invite-drawer": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-panel-extra": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-panel-schedule": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-panel-pause": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-panel-end": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "SH-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "SH-arrangements": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "SH-schedule": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "SH-history": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-create-empty": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-create-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-create-empty": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-create-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-create-self-private": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-create-saved-profile": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invite-confirmation": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invite-search-certifications": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invite-drawer-bottom": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-scheduled-reschedule-draft": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-existing-chat": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-care-story": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-single_applicant-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-single_applicant-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-many_applicants-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-many_applicants-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-private_waiting-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-private_waiting-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-paused-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-paused-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-paused-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-paused-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-payment_attention-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-payment_attention-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-payment_attention-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-payment_attention-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-time_correction-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-time_correction-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-time_correction-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-time_correction-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-many_applicants-applicants-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-time-correction-approval-preview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-create-self-private": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-create-saved-profile": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invite-confirmation": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invite-search-certifications": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invite-drawer-bottom": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-scheduled-reschedule-draft": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-existing-chat": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-care-story": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-single_applicant-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-single_applicant-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-many_applicants-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-many_applicants-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-private_waiting-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-private_waiting-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-paused-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-paused-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-paused-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-paused-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-payment_attention-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-payment_attention-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-payment_attention-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-payment_attention-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-time_correction-shift": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-time_correction-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-time_correction-applicants": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-time_correction-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The full care information needs a stable destination while the main task remains concise.",
+    "redesign": "The legacy overview route still opens care details/instructions, including the attached care-profile version, tasks, address and contact information.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-many_applicants-applicants-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "A family comparing replies should reach candidates without navigating through a large invitation area.",
+    "redesign": "Replies lead when present; invitations lead when there are no replies. Filters, profiles, messages, invitation history and original eligibility rules remain available.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-time-correction-approval-preview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-book-again": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Cross-care lists and history must retain their existing record identity and filtering.",
+    "redesign": "Shared styling connects these pages to the new workspace. Care cards open the continuing arrangement; booked-date actions open the exact visit.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-review-form-empty": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-review-form-draft": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-review-form-empty": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-review-form-draft": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The dated visit is the correct scope for care, hours, payment and feedback.",
+    "redesign": "The compact header retains exact identity and status. Relevant actions lead, with the existing detailed record, corrections, payment information and review fields still accessible.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "SH-navigation-menu": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-waiting-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-waiting-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invitations-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-invitations-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-applicants-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-applicants-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-single_applicant-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-single_applicant-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-many_applicants-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-many_applicants-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-private_waiting-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-private_waiting-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-cancelled-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-in_progress-confirmation": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Ending care and approving submitted hours are different decisions.",
+    "redesign": "This explicit preview describes the relevant decision, retains draft notes and delegates confirmation to the existing completion method.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-waiting-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-waiting-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-waiting-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invitations-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invitations-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-invitations-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-applicants-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-applicants-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-applicants-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-single_applicant-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-single_applicant-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-single_applicant-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-many_applicants-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-many_applicants-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-many_applicants-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-private_waiting-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-private_waiting-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-private_waiting-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled-home": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The next step should remain clear for zero, one or many replies, including overdue requests.",
+    "redesign": "Overview gives the request status and current action; Caregivers, Visits where relevant, Care details and Help remain predictable destinations.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled-support": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Changes, hours questions and disputes need the context of the affected visit.",
+    "redesign": "Existing contextual forms and support actions remain on this record. They do not silently apply a change to the whole recurring arrangement.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-cancelled-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Before hire, a recurring weekly pattern is not a set of confirmed visits.",
+    "redesign": "This page labels the requested pattern clearly and keeps the family in the same recruiting workspace.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-hire-review": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Hiring needs a clear final opportunity to check the selected caregiver, scope and price.",
+    "redesign": "The inline review shows the existing terms before confirmation; final confirmation calls the original hire action.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-in_progress-confirmation": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Ending care and approving submitted hours are different decisions.",
+    "redesign": "This explicit preview describes the relevant decision, retains draft notes and delegates confirmation to the existing completion method.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-timesheet_review-confirmation": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Ending care and approving submitted hours are different decisions.",
+    "redesign": "This explicit preview describes the relevant decision, retains draft notes and delegates confirmation to the existing completion method.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-active-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-pending-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-paused-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-ended-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-countered-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-declined-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-cancelled-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_paused-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_payment_attention-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-overview": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-caregivers": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The ongoing caregiver relationship needs a stable destination, separate from a dated visit.",
+    "redesign": "Caregiver identity, offer context and original recruitment/conversation access stay with the recurring care.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-visits": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-details": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-visits-attention": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-visits-past": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-visits-cancelled": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-visits-all": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Families need to distinguish confirmed dates from a requested schedule and find older outstanding work.",
+    "redesign": "Filters use real bookings, retain exact-visit links and preserve the tab, filter and pagination context on return. Schedule management keeps existing business rules.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-help": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "The recurring arrangement needs one continuing home across individual visits.",
+    "redesign": "A current visit and outstanding decisions are visible with their own status. Optional reviews follow operational decisions; plan status does not replace visit or payment status.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-plan-visit_time_correction-details-expanded": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Care instructions should be findable without repeating the full profile above every action.",
+    "redesign": "The complete attached profile, plan notes, tasks, address and plan record stay here. Full event payloads are retained in the database, not presented as a new timeline.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "SH-inline-support-create": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Help must remain reachable without covering the mobile decision button.",
+    "redesign": "The inline entry opens the existing support dialog. Context and support behavior remain unchanged.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-inline-support-visit": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Help must remain reachable without covering the mobile decision button.",
+    "redesign": "The inline entry opens the existing support dialog. Context and support behavior remain unchanged.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-inline-support-plan": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Help must remain reachable without covering the mobile decision button.",
+    "redesign": "The inline entry opens the existing support dialog. Context and support behavior remain unchanged.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "OT-create-quick-profile": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  },
+  "RC-create-quick-profile": {
+    "review": "Implementation rationale; validation recorded separately",
+    "findings": "Creation needs a readable sequence and a complete check before publishing.",
+    "redesign": "Person/help, schedule, location/notes and review use the existing form fields and publish action. Recurring schedule previews remain requests until booked.",
+    "owner": "Local care workspace implementation",
+    "priority": ""
+  }
+}

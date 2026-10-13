@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "name": "recommended",
+      "width": 1440,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "invitation-preview",
+      "width": 1440,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "search-results",
+      "width": 1440,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "saved-profiles",
+      "width": 1440,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "invited-history",
+      "width": 1440,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "recommended",
+      "width": 390,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "invitation-preview",
+      "width": 390,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "search-results",
+      "width": 390,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "saved-profiles",
+      "width": 390,
+      "noPrices": true,
+      "noOverflow": true
+    },
+    {
+      "name": "invited-history",
+      "width": 390,
+      "noPrices": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

@@ -25,6 +25,10 @@ APP_HEALTH_HOST="${HOMECARE_APP_HEALTH_HOST:-carelolo.com}"
 APP_HEALTH_URL="${HOMECARE_APP_HEALTH_URL:-https://carelolo.com/up}"
 VOICE_HEALTH_URL="${HOMECARE_VOICE_HEALTH_URL:-http://127.0.0.1:8088/healthz}"
 CONTENT_MCP_HEALTH_URL="${HOMECARE_CONTENT_MCP_HEALTH_URL:-http://127.0.0.1:8090/healthz}"
+# This host-specific hook controls the real queue/scheduler topology. There is
+# deliberately no guessed production worker unit or implicit queue:restart fallback.
+RUNTIME_HOOK="${HOMECARE_RUNTIME_HOOK:-/usr/local/libexec/homecare-runtime-control}"
+SCREENING_STAGE_ROOT="${HOMECARE_SCREENING_STAGE_ROOT:-/home/$DEPLOY_USER/.homecare-screening}"
 
 MODE="${1:-deploy}"
 SWITCHED=0
@@ -33,6 +37,11 @@ OLD_RELEASE=""
 NEW_RELEASE=""
 LEGACY_RELEASE=""
 DEPLOY_COMMIT=""
+RUNTIME_PAUSED=0
+FPM_STOPPED=0
+SCREENING_FIRST_ROLLOUT=0
+SCREENING_ACTIVATION_ATTEMPTED=0
+DEPLOY_COMPLETED=0
 
 log() {
   printf '%s\n' "$*"
@@ -49,16 +58,94 @@ Usage:
   ./deploy.sh             Build and atomically activate the latest master release.
   ./deploy.sh --rollback  Atomically return to the previously active release.
   ./deploy.sh --status    Show the current and previous releases without changing anything.
+  ./deploy.sh --screening-check REV
+                         Stage runtime files from Git REV and inspect server setup only.
+  ./deploy.sh --screening-setup REV --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+                         Apply the reviewed runtime setup without deploying application code.
   ./deploy.sh --help      Show this help.
 
 The first normal deployment converts /var/www/homecare from an in-place checkout
-to a stable symlink automatically. The live application is never placed in
-Laravel maintenance mode.
+to a stable symlink automatically. Screening releases require a configured
+runtime-control hook. The first screening cutover briefly drains PHP-FPM so
+legacy access can be finalized safely. No Laravel maintenance mode is used.
 EOF
 }
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
+}
+
+screening_runtime_from_git() {
+  local action="$1" revision="$2" commit driver_path expected_driver actual_driver
+  local stage_root app_real deploy_real forbidden stage mode source entry
+  local -a sources=(
+    docs/deployment/screening-supervisor-setup.sh
+    docs/deployment/screening-supervisor-runtime-control.sh
+    docs/deployment/screening-runtime-entrypoint.sh
+    scripts/deployment/check-screening-queue.php
+  ) names=()
+
+  for command_name in git readlink mktemp sha256sum stat sudo; do
+    require_command "$command_name"
+  done
+  [[ -n "$revision" && "$revision" != -* ]] || die "Supply a locally available Git revision."
+  [[ "$APP_DIR" == /* && "$DEPLOY_ROOT" == /* && -f "$APP_DIR/artisan" ]] \
+    || die "Screening setup requires the existing application and absolute deployment paths."
+  commit="$(git -C "$APP_DIR" rev-parse --verify --end-of-options "$revision^{commit}")" \
+    || die "Git revision is unavailable. Fetch the deployment mirror first."
+  [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] || die "Could not resolve one Git commit."
+  driver_path="$(readlink -f -- "${BASH_SOURCE[0]}")"
+  expected_driver="$(git -C "$APP_DIR" rev-parse --verify "$commit:deploy.sh")" \
+    || die "The selected Git commit has no deployment driver."
+  actual_driver="$(git -C "$APP_DIR" hash-object --no-filters -- "$driver_path")"
+  [[ "$actual_driver" == "$expected_driver" ]] \
+    || die "Running deploy.sh differs from the selected Git commit. Obtain the driver from that same commit."
+
+  # Validate every source before creating staging files or invoking sudo. Git
+  # objects, rather than the live or dirty worktree, are the delivery authority.
+  for source in "${sources[@]}"; do
+    entry="$(git -C "$APP_DIR" ls-tree "$commit" -- "$source")"
+    [[ "$entry" == '100644 blob '* || "$entry" == '100755 blob '* ]] \
+      || die "Git commit is missing a regular runtime file: $source"
+    names+=("${source##*/}")
+  done
+
+  [[ "$SCREENING_STAGE_ROOT" == /* && ! -L "$SCREENING_STAGE_ROOT" ]] \
+    || die "Screening staging must use an absolute directory, not a symbolic link."
+  stage_root="$(readlink -m -- "$SCREENING_STAGE_ROOT")"
+  app_real="$(readlink -f -- "$APP_DIR")"
+  deploy_real="$(readlink -m -- "$DEPLOY_ROOT")"
+  for forbidden in "$app_real" "$deploy_real"; do
+    case "$stage_root/" in
+      "$forbidden/"*) die "Screening staging must stay outside the application and deployment directories." ;;
+    esac
+  done
+  if [[ ! -e "$stage_root" ]]; then
+    (umask 077; mkdir -p -m 0700 -- "$stage_root")
+  fi
+  [[ -d "$stage_root" && ! -L "$stage_root" && -O "$stage_root" ]] \
+    || die "Screening staging must be a directory owned by the calling account."
+  mode="$(stat -c '%a' -- "$stage_root")"
+  [[ "$mode" =~ ^[0-7]{3,4}$ && $((8#$mode & 077)) -eq 0 ]] \
+    || die "Screening staging must have no group or other access (mode 0700)."
+  stage="$(umask 077; mktemp -d "$stage_root/${commit:0:12}.XXXXXX")"
+  for source in "${sources[@]}"; do
+    (umask 077; git -C "$APP_DIR" show "$commit:$source" > "$stage/${source##*/}")
+  done
+  (umask 077; printf '%s\n' "$commit" > "$stage/REVISION")
+  (cd "$stage"; umask 077; sha256sum -- "${names[@]}" > SHA256SUMS; sha256sum --check SHA256SUMS)
+  bash -n "$stage/screening-supervisor-setup.sh"
+  bash -n "$stage/screening-supervisor-runtime-control.sh"
+  bash -n "$stage/screening-runtime-entrypoint.sh"
+  log "Screening Git revision: $commit"
+  log "Screening Git staging directory: $stage"
+  if [[ "$action" == check ]]; then
+    log "Inspecting server setup only; application code, configuration and services stay unchanged."
+    sudo bash "$stage/screening-supervisor-setup.sh" --check "$stage"
+  else
+    sudo bash "$stage/screening-supervisor-setup.sh" --apply "$stage" \
+      --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+  fi
 }
 
 resolved_path() {
@@ -77,6 +164,97 @@ run_artisan() {
   local release="$1"
   shift
   (cd "$release" && "$PHP_BIN" artisan "$@")
+}
+
+is_screening_release() {
+  [[ -f "$1/app/Console/Commands/ScreeningRollout.php" ]]
+}
+
+runtime_hook() {
+  "$RUNTIME_HOOK" "$1" "$APP_DIR"
+}
+
+preflight_screening_runtime() {
+  [[ "$RUNTIME_HOOK" == /* && -x "$RUNTIME_HOOK" ]] \
+    || die "Screening deployment requires an executable HOMECARE_RUNTIME_HOOK (see docs/deployment/screening-runtime-control.md)."
+  runtime_hook preflight
+}
+
+validate_screening_queue_config() {
+  local release="$1"
+  local checker="$release/scripts/deployment/check-screening-queue.php"
+  [[ -f "$checker" ]] || die "Screening release is missing its queue configuration check."
+  # The production Supervisor worker consumes database/default with timeout=120.
+  # Inspect the warmed candidate cache, not the old live cache or just .env.
+  "$PHP_BIN" "$checker" "$release/bootstrap/cache/config.php" 120 \
+    || die "Screening queue configuration is unsafe; the release was not activated."
+}
+
+preflight_first_screening_cutover() {
+  local signal kill_mode
+  signal="$(systemctl show "$FPM_SERVICE" --property=KillSignal --value)"
+  kill_mode="$(systemctl show "$FPM_SERVICE" --property=KillMode --value)"
+  [[ "$signal" == SIGQUIT || "$signal" == 3 ]] \
+    || die "$FPM_SERVICE must use KillSignal=SIGQUIT for the first screening drain."
+  [[ "$kill_mode" == control-group || "$kill_mode" == mixed ]] \
+    || die "$FPM_SERVICE must drain its complete process group."
+  [[ "$(systemctl show "$FPM_SERVICE" --property=SendSIGKILL --value)" == no ]] \
+    || die "$FPM_SERVICE must use SendSIGKILL=no to avoid killing in-flight approvals."
+  [[ -z "$(systemctl show "$FPM_SERVICE" --property=ExecStop --value)" ]] \
+    || die "$FPM_SERVICE has a custom ExecStop; configure a reviewed graceful stop before the first rollout."
+  [[ -z "$(systemctl show "$FPM_SERVICE" --property=TriggeredBy --value)" ]] \
+    || die "$FPM_SERVICE has an activation source; disable it before the first screening rollout."
+}
+
+pause_screening_runtime() {
+  local fpm_cgroup
+  # Set flags before side effects: a hook or stop can fail after partial success.
+  RUNTIME_PAUSED=1
+  log "Pausing scheduler starts and draining old queue workers..."
+  runtime_hook pause
+  if [[ "$SCREENING_FIRST_ROLLOUT" -eq 1 ]]; then
+    FPM_STOPPED=1
+    log "Briefly draining PHP-FPM to finalize legacy caregiver access..."
+    sudo systemctl stop "$FPM_SERVICE"
+    [[ "$(systemctl show "$FPM_SERVICE" --property=ActiveState --value)" == inactive \
+      && "$(systemctl show "$FPM_SERVICE" --property=MainPID --value)" == 0 \
+      && "$(systemctl show "$FPM_SERVICE" --property=ControlPID --value)" == 0 ]] \
+      || die "PHP-FPM has not fully drained; legacy reconciliation was not run."
+    fpm_cgroup="$(systemctl show "$FPM_SERVICE" --property=ControlGroup --value)"
+    if [[ -n "$fpm_cgroup" ]]; then
+      [[ "$fpm_cgroup" == /* && "$fpm_cgroup" != *'..'* \
+        && -f "/sys/fs/cgroup$fpm_cgroup/cgroup.events" ]] \
+        || die "Cannot verify PHP-FPM's remaining process group is empty."
+      grep -qx 'populated 0' "/sys/fs/cgroup$fpm_cgroup/cgroup.events" \
+        || die "PHP-FPM still has live child processes; legacy reconciliation was not run."
+    fi
+    run_artisan "$NEW_RELEASE" screening:rollout --prepare --no-interaction
+  fi
+}
+
+prepare_screening_cutover() {
+  local state
+  is_screening_release "$NEW_RELEASE" || return 0
+  state="$(run_artisan "$NEW_RELEASE" screening:rollout --status --no-interaction)"
+  case "$state" in
+    pending)
+      SCREENING_FIRST_ROLLOUT=1
+      preflight_first_screening_cutover
+      ;;
+    active) ;;
+    *) die "Cannot determine the durable screening rollout state; refusing activation." ;;
+  esac
+  pause_screening_runtime
+}
+
+rollback_target_is_safe() {
+  local state
+  is_screening_release "$OLD_RELEASE" && return 0
+  is_screening_release "$NEW_RELEASE" || return 0
+  # A command can commit and then fail. Read the DB again; unknown state must
+  # never restore an old release that bypasses screening decisions/new jobs.
+  state="$(run_artisan "$NEW_RELEASE" screening:rollout --status --no-interaction 2>/dev/null)" || return 1
+  [[ "$state" == pending && "$SCREENING_ACTIVATION_ATTEMPTED" -eq 0 ]]
 }
 
 atomic_symlink() {
@@ -167,14 +345,21 @@ wait_for_health() {
 }
 
 restart_runtime_for_active_release() {
-  log "Gracefully reloading PHP-FPM..."
-  sudo systemctl reload "$FPM_SERVICE"
+  if [[ "$FPM_STOPPED" -eq 1 || "$(systemctl show "$FPM_SERVICE" --property=ActiveState --value)" == inactive ]]; then
+    log "Starting PHP-FPM against the active release..."
+    sudo systemctl start "$FPM_SERVICE"
+    FPM_STOPPED=0
+  else
+    log "Gracefully reloading PHP-FPM..."
+    sudo systemctl reload "$FPM_SERVICE"
+  fi
 
-  log "Restarting queue workers after their current jobs..."
-  run_artisan "$APP_DIR" queue:restart || log "Queue restart signal failed; inspect the worker service."
-
-  if run_artisan "$APP_DIR" list --raw 2>/dev/null | grep -qx 'horizon:terminate'; then
-    run_artisan "$APP_DIR" horizon:terminate || log "Horizon termination signal failed."
+  if [[ "$RUNTIME_PAUSED" -eq 1 ]]; then
+    log "Starting drained queue workers and resuming the scheduler..."
+    runtime_hook resume
+    RUNTIME_PAUSED=0
+  elif ! is_screening_release "$APP_DIR"; then
+    run_artisan "$APP_DIR" queue:restart
   fi
 
   log "Restarting voice-agent..."
@@ -190,30 +375,83 @@ restart_runtime_for_active_release() {
 }
 
 rollback_after_failure() {
-  local exit_code=$?
+  local exit_code="$1"
+  local actual_release activation_state
   trap - ERR EXIT
+  [[ "$exit_code" -ne 0 ]] || return 0
 
   log "Deployment failed. The active release will be preserved."
 
+  # A rename may have succeeded immediately before an interruption or a failed
+  # wrapper returned. Inspect reality rather than only the post-rename flag.
+  actual_release="$(current_release)"
+  if [[ "$DEPLOY_COMPLETED" -eq 0 && -n "$NEW_RELEASE" && "$actual_release" == "$NEW_RELEASE" && -n "$OLD_RELEASE" ]]; then
+    SWITCHED=1
+    BOOTSTRAP_MOVED=0
+  fi
+
   if [[ "$SWITCHED" -eq 1 && -n "$OLD_RELEASE" && -d "$OLD_RELEASE" ]]; then
-    log "Rolling the application symlink back to $OLD_RELEASE..."
-    if atomic_symlink "$OLD_RELEASE" "$APP_DIR"; then
-      sudo systemctl reload "$FPM_SERVICE" || true
-      run_artisan "$APP_DIR" queue:restart || true
-      sudo systemctl restart "$VOICE_AGENT_SERVICE" || true
-      if content_mcp_service_is_installed; then
-        sudo systemctl restart "$CONTENT_MCP_SERVICE" || true
+    if rollback_target_is_safe; then
+      # New producers may already have restarted consumers. Drain those before
+      # switching back, just as on a forward deployment.
+      if is_screening_release "$APP_DIR" && [[ "$RUNTIME_PAUSED" -eq 0 ]]; then
+        RUNTIME_PAUSED=1
+        if ! runtime_hook pause; then
+          log "Cannot drain the current runtime; retaining the active release for recovery."
+          SWITCHED=0
+        fi
       fi
-      wait_for_health app_is_healthy "Application rollback" || true
-      log "Rollback attempt finished. Database migrations were not reversed."
+      if [[ "$SWITCHED" -eq 1 ]]; then
+        log "Rolling the application symlink back to $OLD_RELEASE..."
+        if atomic_symlink "$OLD_RELEASE" "$APP_DIR"; then
+          log "Rollback selected. Database migrations were not reversed."
+        else
+          log "Automatic rollback failed; inspect the application symlink before recovery."
+        fi
+      fi
     else
-      log "Automatic rollback failed; point $APP_DIR to $OLD_RELEASE manually."
+      log "Screening activation is committed or uncertain. Refusing rollback to a pre-screening release."
+      log "Keeping the screening release active; repair it or deploy a screening-compatible release."
     fi
   elif [[ "$BOOTSTRAP_MOVED" -eq 1 && -n "$LEGACY_RELEASE" ]]; then
     log "Restoring the bootstrap storage pointer; the original application stayed live."
     atomic_symlink "$APP_DIR/storage" "$SHARED_STORAGE" || true
     if [[ -L "$LEGACY_RELEASE" ]]; then
       sudo rm -f -- "$LEGACY_RELEASE" || true
+    fi
+  fi
+
+  # A retry may return to an earlier screening release that was itself paused
+  # before activation. Compatibility does not prove this DB boundary is active.
+  if [[ "$SCREENING_FIRST_ROLLOUT" -eq 1 ]] && is_screening_release "$APP_DIR"; then
+    activation_state="$(run_artisan "$APP_DIR" screening:rollout --status --no-interaction 2>/dev/null)" || activation_state=unknown
+    if [[ "$activation_state" != active ]]; then
+      log "Screening activation is not confirmed. PHP-FPM and background writers remain paused."
+      log "Repair the database/activation error, then rerun this deployment script; do not resume old code."
+      log "Failed release retained for inspection: $NEW_RELEASE"
+      exit "$exit_code"
+    fi
+  fi
+
+  if [[ "$RUNTIME_PAUSED" -eq 1 || "$FPM_STOPPED" -eq 1 || "$SWITCHED" -eq 1 ]]; then
+    # Explicit checks are necessary here: the EXIT handler must keep reporting
+    # recovery failures instead of exiting on the first unsuccessful operation.
+    if [[ -f "$APP_DIR/artisan" ]]; then
+      if [[ "$FPM_STOPPED" -eq 1 ]]; then
+        sudo systemctl start "$FPM_SERVICE" || log "PHP-FPM recovery failed; operator action required."
+      else
+        sudo systemctl reload "$FPM_SERVICE" || log "PHP-FPM reload failed; operator action required."
+      fi
+      if [[ "$RUNTIME_PAUSED" -eq 1 ]]; then
+        runtime_hook resume || log "Runtime recovery failed; use the hook's resume action after repair."
+      fi
+      sudo systemctl restart "$VOICE_AGENT_SERVICE" || true
+      if content_mcp_service_is_installed; then
+        sudo systemctl restart "$CONTENT_MCP_SERVICE" || true
+      fi
+      wait_for_health app_is_healthy "Application recovery" || true
+    else
+      log "Application path is unavailable; runtime remains paused pending operator recovery."
     fi
   fi
 
@@ -250,6 +488,7 @@ show_status() {
 
 prepare_shared_state() {
   local shared_storage_real
+  local screening_private
 
   sudo mkdir -p "$RELEASES_DIR" "$SHARED_DIR"
   sudo chown "$DEPLOY_USER:$WEB_GROUP" "$DEPLOY_ROOT" "$RELEASES_DIR" "$SHARED_DIR"
@@ -288,9 +527,20 @@ prepare_shared_state() {
     "$SHARED_STORAGE/framework/testing" \
     "$SHARED_STORAGE/framework/views"
   sudo touch "$SHARED_STORAGE/logs/laravel.log"
-  sudo chown -R "$DEPLOY_USER:$WEB_GROUP" "$shared_storage_real"
-  sudo find "$shared_storage_real" -type d -exec chmod 775 {} \;
-  sudo find "$shared_storage_real" -type f -exec chmod 664 {} \;
+  screening_private="$shared_storage_real/app/private/screening"
+  [[ ! -L "$shared_storage_real/app" && ! -L "$shared_storage_real/app/private" && ! -L "$screening_private" ]] \
+    || die "Private screening storage must not traverse a symlink."
+  sudo mkdir -p -m 2770 "$screening_private"
+  [[ -z "$(sudo find "$screening_private" -type l -print -quit)" ]] \
+    || die "Private screening storage contains a symlink; inspect it before deploying."
+
+  # Never run the generic public-storage modes over evidence, even briefly.
+  sudo chown -R "$DEPLOY_USER:$WEB_GROUP" "$screening_private"
+  sudo find "$screening_private" -type d -exec chmod 2770 {} +
+  sudo find "$screening_private" -type f -exec chmod 660 {} +
+  sudo find "$shared_storage_real" -path "$screening_private" -prune -o -exec chown -h "$DEPLOY_USER:$WEB_GROUP" {} +
+  sudo find "$shared_storage_real" -path "$screening_private" -prune -o -type d -exec chmod 775 {} +
+  sudo find "$shared_storage_real" -path "$screening_private" -prune -o -type f -exec chmod 664 {} +
 }
 
 prepare_repository() {
@@ -315,13 +565,19 @@ create_release() {
   local release_name
   local compiled_views
 
-  release_name="$(date -u +%Y%m%d%H%M%S)-${DEPLOY_COMMIT:0:12}"
+  release_name="$(date -u +%Y%m%d%H%M%S)-${DEPLOY_COMMIT:0:12}-$$"
   NEW_RELEASE="$RELEASES_DIR/$release_name"
   [[ ! -e "$NEW_RELEASE" ]] || die "Release already exists: $NEW_RELEASE"
 
   log "Creating release $release_name..."
   git clone --shared --no-checkout "$REPOSITORY_DIR" "$NEW_RELEASE"
   git -C "$NEW_RELEASE" checkout --detach "$DEPLOY_COMMIT"
+
+  if is_screening_release "$NEW_RELEASE"; then
+    preflight_screening_runtime
+  elif is_screening_release "$current"; then
+    die "Refusing to deploy a pre-screening release over a screening-enabled application."
+  fi
 
   case "$(resolved_path "$NEW_RELEASE")" in
     "$(resolved_path "$RELEASES_DIR")"/*) ;;
@@ -378,6 +634,9 @@ create_release() {
   # view:cache starts by clearing compiled views. Persist a release-local path
   # so warming this release cannot delete templates still used by live workers.
   VIEW_COMPILED_PATH="$compiled_views" run_artisan "$NEW_RELEASE" config:cache
+  if is_screening_release "$NEW_RELEASE"; then
+    validate_screening_queue_config "$NEW_RELEASE"
+  fi
   run_artisan "$NEW_RELEASE" route:cache
   run_artisan "$NEW_RELEASE" view:cache
 
@@ -491,12 +750,25 @@ perform_rollback() {
   [[ -n "$previous" && -d "$previous" ]] || die "No previous release is available."
   [[ "$current" != "$previous" ]] || die "Current and previous releases are identical."
 
+  if is_screening_release "$current" && ! is_screening_release "$previous"; then
+    die "Rollback to a pre-screening release is disabled: it would bypass screening decisions and cannot consume screening jobs."
+  fi
+
   OLD_RELEASE="$current"
   NEW_RELEASE="$previous"
+  if is_screening_release "$previous"; then
+    preflight_screening_runtime
+    validate_screening_queue_config "$previous"
+    prepare_screening_cutover
+  fi
   log "Atomically rolling back from $current to $previous..."
   atomic_symlink "$previous" "$APP_DIR"
   SWITCHED=1
   set_previous_release "$current"
+  if [[ "$SCREENING_FIRST_ROLLOUT" -eq 1 ]]; then
+    SCREENING_ACTIVATION_ATTEMPTED=1
+    run_artisan "$APP_DIR" screening:rollout --activate --no-interaction
+  fi
   restart_runtime_for_active_release
   wait_for_health app_is_healthy "Application"
   wait_for_health voice_is_healthy "Voice-agent"
@@ -509,6 +781,17 @@ perform_rollback() {
 }
 
 case "$MODE" in
+  --screening-check)
+    [[ "$#" -eq 2 ]] || die "Usage: deploy.sh --screening-check REV"
+    screening_runtime_from_git check "$2"
+    exit 0
+    ;;
+  --screening-setup)
+    [[ "$#" -eq 4 && "$3" == --confirm-single-host-runtime && "$4" == --accept-existing-supervisor-stop-timeout ]] \
+      || die "Usage: deploy.sh --screening-setup REV --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout"
+    screening_runtime_from_git setup "$2"
+    exit 0
+    ;;
   --help|-h)
     usage
     exit 0
@@ -534,11 +817,13 @@ done
 
 exec 9>"$LOCK_FILE"
 flock -n 9 || die "Another deploy is already running."
-trap rollback_after_failure ERR
+trap 'rollback_after_failure "$?"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 if [[ "$MODE" == "--rollback" ]]; then
   perform_rollback
-  trap - ERR
+  trap - EXIT INT TERM
   exit 0
 fi
 
@@ -554,14 +839,19 @@ fi
 
 [[ -d "$APP_DIR" ]] || die "Application directory not found: $APP_DIR"
 
-log "Starting zero-maintenance HomeCare deployment..."
-log "The current release will stay live until the atomic switch."
+log "Starting HomeCare atomic deployment..."
+log "The current release stays live during the build; first screening activation includes a brief request drain."
 
 CURRENT_RELEASE="$(current_release)"
 prepare_shared_state
 prepare_repository "$CURRENT_RELEASE"
 create_release "$CURRENT_RELEASE"
+prepare_screening_cutover
 activate_release "$CURRENT_RELEASE"
+if [[ "$SCREENING_FIRST_ROLLOUT" -eq 1 ]]; then
+  SCREENING_ACTIVATION_ATTEMPTED=1
+  run_artisan "$APP_DIR" screening:rollout --activate --no-interaction
+fi
 restart_runtime_for_active_release
 wait_for_health app_is_healthy "Application"
 wait_for_health voice_is_healthy "Voice-agent"
@@ -572,12 +862,16 @@ fi
 
 SWITCHED=0
 BOOTSTRAP_MOVED=0
+DEPLOY_COMPLETED=1
 cleanup_old_releases
-trap - ERR
+trap - EXIT INT TERM
 
 log "Deployment complete at commit $DEPLOY_COMMIT"
 log "Active release: $(resolved_path "$APP_DIR")"
 log "No Laravel maintenance mode or deployment-long 503 was used."
+if is_screening_release "$APP_DIR"; then
+  log "Screening rollout is active. Dataset imports and Didit identity backfill were not run by deployment."
+fi
 
 if [[ "$OLD_RELEASE" == "$LEGACY_RELEASE" && -n "$LEGACY_RELEASE" ]]; then
   log "One-time setup complete. Run 'cd /var/www/homecare' before your next server command."

@@ -13,6 +13,8 @@ use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\Screening\CaregiverScreeningService;
+use App\Services\Screening\CaregiverWorkEligibility;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
@@ -214,59 +216,43 @@ class CaregiverRegressionTest extends TestCase
             ->assertHasErrors(['task_preferences']);
     }
 
-    public function test_admin_can_approve_under_review_profile(): void
+    public function test_replaced_review_queue_does_not_expose_legacy_approval_or_manual_verification_bypasses(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
-        $caregiver = User::factory()->create(['role' => 'caregiver']);
-        $profile = CaregiverProfile::query()->create([
-            'user_id' => $caregiver->id,
-            'status' => 'under_review',
-            'identity_verified_at' => now(),
-            'identity_verification_status' => 'approved',
-        ]);
-
-        Livewire::actingAs($admin)
-            ->test(CaregiverReviewsQueue::class)
-            ->call('approve', $profile->id);
-
-        $this->assertDatabaseHas('caregiver_profiles', [
-            'id' => $profile->id,
-            'status' => 'active',
-        ]);
-
-        $freshProfile = $profile->fresh();
-        $this->assertNotNull($freshProfile?->identity_verified_at);
-        $this->assertNotNull($freshProfile?->background_check_verified_at);
-
-        $this->assertDatabaseHas('caregiver_moderation_logs', [
-            'caregiver_profile_id' => $profile->id,
-            'action' => 'approved',
-        ]);
+        foreach (['approve', 'reject', 'suspend', 'unsuspend', 'toggleIdentityVerification', 'toggleBackgroundCheck'] as $method) {
+            $this->assertFalse(method_exists(CaregiverReviewsQueue::class, $method), "Legacy {$method} must not bypass screening decisions.");
+        }
     }
 
-    public function test_admin_can_reject_under_review_profile_with_reason(): void
+    public function test_pending_review_reason_does_not_remove_existing_legacy_work_access(): void
     {
         $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
-            'status' => 'under_review',
+            'status' => 'active',
+            'screening_legacy_at' => now(),
+            'screening_legacy_access' => true,
         ]);
+        $case = app(CaregiverScreeningService::class)->enqueue($profile);
+        $due = $case->due_at->toIso8601String();
 
         Livewire::actingAs($admin)
             ->test(CaregiverReviewsQueue::class)
-            ->set('rejection_reason', 'Missing detail about transportation support.')
-            ->call('reject', $profile->id);
+            ->call('selectCase', $case->id)
+            ->call('claim')
+            ->set('note', 'Awaiting verified identity evidence before reviewing public records.')
+            ->call('keepPending')
+            ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('caregiver_profiles', [
-            'id' => $profile->id,
-            'status' => 'draft',
-            'rejection_reason' => 'Missing detail about transportation support.',
-        ]);
-
-        $this->assertDatabaseHas('caregiver_moderation_logs', [
-            'caregiver_profile_id' => $profile->id,
-            'action' => 'rejected',
+        $this->assertSame('active', $profile->fresh()->status);
+        $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+        $this->assertNull($profile->fresh()->screening_suspended_at);
+        $this->assertNull($profile->fresh()->screening_initial_approved_at);
+        $this->assertSame($due, $case->fresh()->due_at->toIso8601String());
+        $this->assertSame('Awaiting verified identity evidence before reviewing public records.', $case->fresh()->note);
+        $this->assertDatabaseHas('screening_audit_events', [
+            'screening_case_id' => $case->id,
+            'event_type' => 'case_deferred',
         ]);
     }
 
@@ -279,52 +265,23 @@ class CaregiverRegressionTest extends TestCase
             'status' => 'under_review',
             'identity_verification_status' => 'not_started',
         ]);
+        $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
             ->test(CaregiverReviewsQueue::class)
-            ->call('approve', $profile->id)
-            ->assertHasErrors(['approval_'.$profile->id]);
+            ->call('selectCase', $case->id)
+            ->call('claim')
+            ->set('outcome', 'no_match')
+            ->set('note', 'Cannot approve before verified identity and source evidence are available.')
+            ->call('decide', 'approve')
+            ->assertHasErrors(['screening']);
 
         $this->assertDatabaseHas('caregiver_profiles', [
             'id' => $profile->id,
             'status' => 'under_review',
         ]);
-    }
-
-    public function test_admin_can_suspend_and_unsuspend_profile(): void
-    {
-        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
-        $caregiver = User::factory()->create(['role' => 'caregiver']);
-        $profile = CaregiverProfile::query()->create([
-            'user_id' => $caregiver->id,
-            'status' => 'active',
-        ]);
-
-        Livewire::actingAs($admin)
-            ->test(CaregiverReviewsQueue::class)
-            ->call('suspend', $profile->id);
-
-        $this->assertDatabaseHas('caregiver_profiles', [
-            'id' => $profile->id,
-            'status' => 'suspended',
-        ]);
-        $this->assertDatabaseHas('caregiver_moderation_logs', [
-            'caregiver_profile_id' => $profile->id,
-            'action' => 'suspended',
-        ]);
-
-        Livewire::actingAs($admin)
-            ->test(CaregiverReviewsQueue::class)
-            ->call('unsuspend', $profile->id);
-
-        $this->assertDatabaseHas('caregiver_profiles', [
-            'id' => $profile->id,
-            'status' => 'active',
-        ]);
-        $this->assertDatabaseHas('caregiver_moderation_logs', [
-            'caregiver_profile_id' => $profile->id,
-            'action' => 'unsuspended',
-        ]);
+        $this->assertSame('awaiting_kyc', $case->fresh()->status);
+        $this->assertNull($profile->fresh()->screening_initial_approved_at);
     }
 
     public function test_profile_editor_keeps_active_status_and_creates_version(): void
@@ -534,7 +491,7 @@ class CaregiverRegressionTest extends TestCase
             ->assertSee('Choose caregivers through a care request')
             ->assertSee('To contact or hire someone, create a care request')
             ->assertSee('Create care request')
-            ->assertDontSee('Find Caregivers');
+            ->assertSee('href="'.route('family.requests.create').'"', false);
     }
 
     public function test_search_filters_apply_on_submit_without_live_typing_updates(): void
@@ -599,7 +556,7 @@ class CaregiverRegressionTest extends TestCase
             ->assertDontSee('Durham Helper');
     }
 
-    public function test_admin_can_toggle_trust_badges_for_active_caregiver(): void
+    public function test_top_caregiver_badge_does_not_grant_identity_or_screening_verification(): void
     {
         $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
@@ -610,13 +567,12 @@ class CaregiverRegressionTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(CaregiverReviewsQueue::class)
-            ->call('toggleIdentityVerification', $profile->id)
-            ->call('toggleBackgroundCheck', $profile->id)
             ->call('toggleTopCaregiver', $profile->id);
 
         $freshProfile = $profile->fresh();
-        $this->assertNotNull($freshProfile?->identity_verified_at);
-        $this->assertNotNull($freshProfile?->background_check_verified_at);
+        $this->assertNull($freshProfile?->identity_verified_at);
+        $this->assertNull($freshProfile?->background_check_verified_at);
+        $this->assertNull($freshProfile?->screening_initial_approved_at);
         $this->assertTrue((bool) $freshProfile?->top_caregiver);
     }
 
@@ -666,6 +622,7 @@ class CaregiverRegressionTest extends TestCase
             'insurance_status' => CaregiverProfile::INSURANCE_NO,
             'identity_verified_at' => $profile->identity_verified_at ?: now(),
             'identity_verification_status' => 'approved',
+            'screening_initial_approved_at' => now(),
         ])->save();
     }
 }

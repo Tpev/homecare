@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\CareRequestProgress;
 use App\Support\FamilyActionInboxBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class FamilyGuidedAssistanceService
@@ -131,7 +132,7 @@ class FamilyGuidedAssistanceService
     public function respond(User $actor, SupportTicket $ticket, string $intent, ?string $stableIntentId = null): void
     {
         $account = $this->familyAccounts->account($actor);
-        $actionItems = $this->actions->buildForAccount($account);
+        $actionItems = $this->alignVisitActions($actor, $this->actions->buildForAccount($account));
 
         [$message, $guides, $resultCode] = match ($intent) {
             self::INTENT_OVERVIEW => $this->overview($actor, $actionItems, $stableIntentId),
@@ -146,19 +147,19 @@ class FamilyGuidedAssistanceService
             self::INTENT_HISTORY => $this->history($actor, $stableIntentId),
             self::INTENT_REGULAR_CARE => $this->regularCare($actor),
             self::INTENT_CARE_ACTIONS => $this->directNavigation(
-                'Care Actions collects decisions and problems that need your attention. I can open it and highlight the right area.',
+                'Needs your attention collects decisions and problems that need your attention. I can open it and highlight the right area.',
                 'family.care_actions',
                 'Open Care Actions',
             ),
             self::INTENT_CARE_SCHEDULE => $this->directNavigation(
-                'Care Schedule shows your upcoming visits. I can open it and highlight the schedule.',
+                'Schedule shows confirmed visits. Use List for visits in date order or Calendar to choose a date, with filters for person and care type.',
                 'family.care_schedule',
                 'Open Care Schedule',
             ),
             self::INTENT_CARE_ARRANGEMENTS => $this->directNavigation(
-                'Care Arrangements shows recurring care and care that is still being arranged. I can open it and highlight the right area.',
+                'Care request shows requests and recurring care plans. Filter by status, person or care type, then open the request or plan you need.',
                 'family.care_arrangements',
-                'Open Care Arrangements',
+                'Open Care request',
             ),
             self::INTENT_CAREGIVERS => $this->directNavigation(
                 'Find Caregivers lets you browse and compare available caregiver profiles. I can open it and highlight the search and filters.',
@@ -208,7 +209,7 @@ class FamilyGuidedAssistanceService
     {
         if (in_array($stableIntentId, ['FAM-START-003', 'FAM-START-004'], true)) {
             return [
-                'Care is your Family home. Overview shows what needs attention and each care journey. Actions collects decisions and problems, Schedule shows upcoming visits, Arrangements shows recurring care and care still being arranged, and History shows past care.',
+                'Care is your Family home. Overview shows what needs attention and each care journey. Care request shows requests and recurring care plans. Schedule shows confirmed visits in List or Calendar with filters for person and care type. History shows past care. A plan holds the repeating schedule; each booked visit has its own date, hours and payment.',
                 [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_REQUEST, 'family.care_requests', 'Open Care overview')],
                 'care_overview_explained',
             ];
@@ -745,37 +746,28 @@ class FamilyGuidedAssistanceService
     {
         $plans = CarePlan::query()
             ->forFamilyAccount($this->familyAccounts->account($actor))
-            ->with(['caregiver:id,name', 'nextBooking:id,care_plan_id,status,scheduled_start_at,scheduled_end_at'])
+            ->with(['caregiver:id,name'])
             ->orderByRaw("CASE WHEN status IN ('active', 'payment_attention', 'paused', 'pending_caregiver', 'countered') THEN 0 ELSE 1 END")
             ->latest('updated_at')
             ->get();
 
         if ($plans->isEmpty()) {
             return [
-                'You do not have a recurring care plan yet. After you complete and approve a visit, the Recurring care page shows caregivers you can book on a repeating schedule.',
-                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.care_arrangements', 'Open Arrangements')],
+                'You do not have a recurring care plan yet. Care request shows care you are arranging and recurring plans. You can create a recurring request or review eligible caregivers from previous care there.',
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.care_arrangements', 'Open Care request')],
                 'regular_care_empty',
             ];
         }
 
         $plan = $plans->first();
-        $booking = $plans
-            ->pluck('nextBooking')
-            ->filter()
-            ->filter(fn (CareBooking $candidate): bool => in_array($candidate->status, [
-                CareBooking::STATUS_IN_PROGRESS,
-                CareBooking::STATUS_PAUSED,
-            ], true) || ($candidate->status === CareBooking::STATUS_SCHEDULED
-                && $candidate->scheduled_start_at?->gte(now()->subHours(2))))
-            ->sortBy('scheduled_start_at')
-            ->first();
+        $booking = $this->nextRelevantBooking($actor, $plans->modelKeys());
         if ($booking) {
             $plan = $plans->firstWhere('id', $booking->care_plan_id) ?: $plan;
             $caregiver = trim((string) $plan->caregiver?->name) ?: 'Your caregiver';
 
             return [
                 $caregiver.' has your next recurring care visit '.$this->bookingTime($booking).'.',
-                [$this->guide(
+                [$this->guideForBooking($booking, 'Open recurring visit'), $this->guide(
                     AiSupportGuidedTask::TYPE_FAMILY_VISIT,
                     'family.regular_care.attention',
                     'Open recurring care plan',
@@ -856,22 +848,62 @@ class FamilyGuidedAssistanceService
             ->values();
     }
 
-    private function nextRelevantBooking(User $actor): ?CareBooking
+    /** @param list<int>|null $planIds */
+    private function nextRelevantBooking(User $actor, ?array $planIds = null): ?CareBooking
     {
-        $query = CareBooking::query()
+        return CareBooking::query()
             ->forFamilyAccount($this->familyAccounts->account($actor))
-            ->with(['careRequest:id,title,is_system_generated', 'carePlan:id,title', 'caregiver:id,name']);
-
-        $live = (clone $query)
-            ->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+            ->when($planIds !== null, fn (Builder $query) => $query->whereIn('care_plan_id', $planIds))
+            ->with(['careRequest:id,title,is_system_generated', 'carePlan:id,title', 'caregiver:id,name'])
+            ->where(function (Builder $query): void {
+                $query->where(function (Builder $live): void {
+                    $cutoff = now()->subDay();
+                    $live->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+                        ->where(fn (Builder $recent) => $recent->where('scheduled_end_at', '>=', $cutoff)
+                            ->orWhere(fn (Builder $withoutEnd) => $withoutEnd->whereNull('scheduled_end_at')
+                                ->where('scheduled_start_at', '>=', $cutoff)));
+                })->orWhere(fn (Builder $scheduled) => $scheduled->where('status', CareBooking::STATUS_SCHEDULED)
+                    ->where('scheduled_start_at', '>=', now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes())));
+            })
+            ->orderByRaw("CASE WHEN status IN ('in_progress', 'paused') THEN 0 ELSE 1 END")
             ->orderBy('scheduled_start_at')
+            ->orderBy('id')
             ->first();
+    }
 
-        return $live ?: $query
-            ->where('status', CareBooking::STATUS_SCHEDULED)
-            ->where('scheduled_start_at', '>=', now()->subHours(2))
-            ->orderBy('scheduled_start_at')
-            ->first();
+    /** Keep a dated visit's identity when adapting the shared account inbox for chat. */
+    private function alignVisitActions(User $actor, Collection $items): Collection
+    {
+        $bookingIds = $items->filter(fn (array $item): bool => in_array($item['type'], ['live_visit', 'timesheet'], true))
+            ->map(function (array $item): ?int {
+                return preg_match('/^booking-(\d+)$/', (string) $item['key'], $matches) ? (int) $matches[1] : null;
+            })->filter()->all();
+        if ($bookingIds === []) {
+            return $items;
+        }
+        $bookings = CareBooking::query()->forFamilyAccount($this->familyAccounts->account($actor))
+            ->with(['careRequest:id,title', 'carePlan:id,title'])->whereKey($bookingIds)->get()->keyBy('id');
+
+        return $items->map(function (array $item) use ($bookings): array {
+            if (! in_array($item['type'], ['live_visit', 'timesheet'], true)
+                || ! preg_match('/^booking-(\d+)$/', (string) $item['key'], $matches)
+                || ! ($booking = $bookings->get((int) $matches[1]))) {
+                return $item;
+            }
+            $guide = $this->guideForBooking($booking, $item['label'], $item['type'] === 'timesheet');
+            $item['navigation_target_id'] = $guide['target_id'];
+            $item['resource_type'] = $guide['resource_type'];
+            $item['resource_id'] = $guide['resource_id'];
+            if ($item['type'] === 'live_visit'
+                && ! (($booking->scheduled_end_at ?: $booking->scheduled_start_at)?->gte(now()->subDay()) ?? false)) {
+                $item['type'] = 'visit_issue';
+                $item['title'] = 'Unfinished visit needs review';
+                $item['body'] = 'This older visit is still marked '.str_replace('_', ' ', (string) $booking->status).'. Review its record; it is not the next current visit.';
+                $item['label'] = 'Review unfinished visit';
+            }
+
+            return $item;
+        });
     }
 
     private function requestTarget(CareRequest $request): string
@@ -889,7 +921,7 @@ class FamilyGuidedAssistanceService
             return 'family.request.visit';
         }
 
-        return 'family.request.overview';
+        return 'family.request.summary';
     }
 
     private function pendingApplicants(CareRequest $request): int
@@ -921,7 +953,7 @@ class FamilyGuidedAssistanceService
     {
         $taskType = match ((string) $item['type']) {
             'applicants' => AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
-            'live_visit', 'visit_change' => AiSupportGuidedTask::TYPE_FAMILY_VISIT,
+            'live_visit', 'visit_change', 'visit_issue' => AiSupportGuidedTask::TYPE_FAMILY_VISIT,
             'time_correction', 'timesheet', 'completed_extra_visit', 'payment' => AiSupportGuidedTask::TYPE_FAMILY_TIMESHEET,
             default => AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
         };
@@ -932,7 +964,7 @@ class FamilyGuidedAssistanceService
             || ($targetId === 'family.regular_care.attention'
                 && str_contains(mb_strtolower((string) ($item['title'] ?? '')), 'payment'));
 
-        $label = (string) $item['label'];
+        $label = $item['type'] === 'applicants' ? 'Review applicants' : (string) $item['label'];
         $subject = trim((string) ($item['subject'] ?? ''));
         if ($includeSubject && $subject !== '') {
             $label .= ' — '.$subject;
@@ -951,7 +983,7 @@ class FamilyGuidedAssistanceService
     /** @return array<string,mixed> */
     private function guideForBooking(CareBooking $booking, string $label, bool $timesheet = false): array
     {
-        if ($booking->care_request_id && ! $booking->careRequest?->is_system_generated) {
+        if ($booking->care_request_id && $booking->careRequest) {
             return $this->guide(
                 $timesheet ? AiSupportGuidedTask::TYPE_FAMILY_TIMESHEET : AiSupportGuidedTask::TYPE_FAMILY_VISIT,
                 $timesheet ? 'family.request.timesheet' : 'family.request.visit',
@@ -959,6 +991,10 @@ class FamilyGuidedAssistanceService
                 'care_request',
                 (int) $booking->care_request_id,
             );
+        }
+
+        if (! $booking->care_plan_id || ! $booking->carePlan) {
+            return $this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.care_schedule', 'Open Schedule');
         }
 
         return $this->guide(

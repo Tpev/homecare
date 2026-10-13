@@ -1,0 +1,649 @@
+{
+  "checkedAt": "2026-09-08T16:01:25.994Z",
+  "groups": [
+    {
+      "name": "Applicant replies before invitation area",
+      "sourceChangedAt": "2026-09-08T15:37:29.844Z",
+      "sources": [
+        {
+          "file": "resources/views/livewire/family/manage-care-request.blade.php",
+          "modifiedAt": "2026-09-08T15:37:29.844Z",
+          "sha256": "452034d5bc1cf56a40604f52f257f254c7270cbe5f0692a9d1e27f37fe8e82f1"
+        },
+        {
+          "file": "resources/views/livewire/family/partials/caregiver-invitations.blade.php",
+          "modifiedAt": "2026-09-08T15:37:23.742Z",
+          "sha256": "8fa2ae6ee42ead43cb07e2e5bb5661303cdcaeb963cf280318b6ab35e2dd857d"
+        }
+      ],
+      "captures": [
+        {
+          "id": "OT-hire-review",
+          "capturedAt": "2026-09-08T15:59:17.216Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-hire-review-desktop-viewport.png",
+          "mobile": "screenshots/OT-hire-review-mobile-viewport.png"
+        },
+        {
+          "id": "OT-waiting-applicants",
+          "capturedAt": "2026-09-08T15:54:53.675Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-waiting-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-waiting-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-invitations-applicants",
+          "capturedAt": "2026-09-08T15:54:57.394Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-invitations-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-invitations-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-applicants-applicants",
+          "capturedAt": "2026-09-08T15:55:00.536Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-applicants-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-applicants-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-scheduled-applicants",
+          "capturedAt": "2026-09-08T15:55:03.956Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-scheduled-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-scheduled-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-in_progress-applicants",
+          "capturedAt": "2026-09-08T15:55:07.341Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-in_progress-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-in_progress-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-after_shift-applicants",
+          "capturedAt": "2026-09-08T15:55:10.795Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-after_shift-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-after_shift-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-timesheet_review-applicants",
+          "capturedAt": "2026-09-08T15:55:13.742Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-timesheet_review-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-timesheet_review-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-leave_review-applicants",
+          "capturedAt": "2026-09-08T15:55:16.988Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-leave_review-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-leave_review-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-closed-applicants",
+          "capturedAt": "2026-09-08T15:55:19.949Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-closed-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-closed-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-cancelled-applicants",
+          "capturedAt": "2026-09-08T15:55:22.853Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-cancelled-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-cancelled-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-cancelled_booking-applicants",
+          "capturedAt": "2026-09-08T15:55:25.594Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-cancelled_booking-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-cancelled_booking-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-waiting-applicants",
+          "capturedAt": "2026-09-08T15:55:28.491Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-waiting-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-waiting-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-invitations-applicants",
+          "capturedAt": "2026-09-08T15:55:31.709Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-invitations-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-invitations-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-applicants-applicants",
+          "capturedAt": "2026-09-08T15:55:34.650Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-applicants-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-applicants-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-scheduled-applicants",
+          "capturedAt": "2026-09-08T15:55:37.751Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-scheduled-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-scheduled-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-in_progress-applicants",
+          "capturedAt": "2026-09-08T15:55:40.759Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-in_progress-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-in_progress-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-after_shift-applicants",
+          "capturedAt": "2026-09-08T15:55:43.968Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-after_shift-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-after_shift-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-timesheet_review-applicants",
+          "capturedAt": "2026-09-08T15:55:47.676Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-timesheet_review-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-timesheet_review-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-leave_review-applicants",
+          "capturedAt": "2026-09-08T15:55:53.553Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-leave_review-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-leave_review-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-closed-applicants",
+          "capturedAt": "2026-09-08T15:55:58.055Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-closed-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-closed-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-cancelled-applicants",
+          "capturedAt": "2026-09-08T15:56:02.340Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-cancelled-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-cancelled-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-cancelled_booking-applicants",
+          "capturedAt": "2026-09-08T15:56:07.594Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-cancelled_booking-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-cancelled_booking-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-invitations-applicants-expanded",
+          "capturedAt": "2026-09-08T15:56:11.999Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-invitations-applicants-expanded-desktop-viewport.png",
+          "mobile": "screenshots/OT-invitations-applicants-expanded-mobile-viewport.png"
+        },
+        {
+          "id": "OT-applicants-applicants-expanded",
+          "capturedAt": "2026-09-08T15:56:16.788Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-applicants-applicants-expanded-desktop-viewport.png",
+          "mobile": "screenshots/OT-applicants-applicants-expanded-mobile-viewport.png"
+        },
+        {
+          "id": "OT-invite-drawer",
+          "capturedAt": "2026-09-08T15:56:24.018Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-invite-drawer-desktop-viewport.png",
+          "mobile": "screenshots/OT-invite-drawer-mobile-viewport.png"
+        },
+        {
+          "id": "RC-invitations-applicants-expanded",
+          "capturedAt": "2026-09-08T15:56:29.820Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-invitations-applicants-expanded-desktop-viewport.png",
+          "mobile": "screenshots/RC-invitations-applicants-expanded-mobile-viewport.png"
+        },
+        {
+          "id": "RC-applicants-applicants-expanded",
+          "capturedAt": "2026-09-08T15:56:34.259Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-applicants-applicants-expanded-desktop-viewport.png",
+          "mobile": "screenshots/RC-applicants-applicants-expanded-mobile-viewport.png"
+        },
+        {
+          "id": "RC-invite-drawer",
+          "capturedAt": "2026-09-08T15:56:41.881Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-invite-drawer-desktop-viewport.png",
+          "mobile": "screenshots/RC-invite-drawer-mobile-viewport.png"
+        },
+        {
+          "id": "OT-invite-confirmation",
+          "capturedAt": "2026-09-08T15:57:21.806Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-invite-confirmation-desktop-viewport.png",
+          "mobile": "screenshots/OT-invite-confirmation-mobile-viewport.png"
+        },
+        {
+          "id": "OT-invite-search-certifications",
+          "capturedAt": "2026-09-08T15:57:31.109Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-invite-search-certifications-desktop-viewport.png",
+          "mobile": "screenshots/OT-invite-search-certifications-mobile-viewport.png"
+        },
+        {
+          "id": "OT-invite-drawer-bottom",
+          "capturedAt": "2026-09-08T15:57:38.958Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-invite-drawer-bottom-desktop-viewport.png",
+          "mobile": "screenshots/OT-invite-drawer-bottom-mobile-viewport.png"
+        },
+        {
+          "id": "OT-single_applicant-applicants",
+          "capturedAt": "2026-09-08T15:57:45.183Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-single_applicant-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-single_applicant-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-many_applicants-applicants",
+          "capturedAt": "2026-09-08T15:57:51.500Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-many_applicants-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-many_applicants-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-private_waiting-applicants",
+          "capturedAt": "2026-09-08T15:57:55.722Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-private_waiting-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-private_waiting-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-paused-applicants",
+          "capturedAt": "2026-09-08T15:58:00.486Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-paused-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-paused-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-payment_attention-applicants",
+          "capturedAt": "2026-09-08T15:58:04.229Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-payment_attention-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-payment_attention-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-time_correction-applicants",
+          "capturedAt": "2026-09-08T15:58:09.521Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-time_correction-applicants-desktop-viewport.png",
+          "mobile": "screenshots/OT-time_correction-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "OT-many_applicants-applicants-expanded",
+          "capturedAt": "2026-09-08T15:58:14.259Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/OT-many_applicants-applicants-expanded-desktop-viewport.png",
+          "mobile": "screenshots/OT-many_applicants-applicants-expanded-mobile-viewport.png"
+        },
+        {
+          "id": "RC-invite-confirmation",
+          "capturedAt": "2026-09-08T15:58:19.192Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-invite-confirmation-desktop-viewport.png",
+          "mobile": "screenshots/RC-invite-confirmation-mobile-viewport.png"
+        },
+        {
+          "id": "RC-invite-search-certifications",
+          "capturedAt": "2026-09-08T15:58:25.872Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-invite-search-certifications-desktop-viewport.png",
+          "mobile": "screenshots/RC-invite-search-certifications-mobile-viewport.png"
+        },
+        {
+          "id": "RC-invite-drawer-bottom",
+          "capturedAt": "2026-09-08T15:58:34.700Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-invite-drawer-bottom-desktop-viewport.png",
+          "mobile": "screenshots/RC-invite-drawer-bottom-mobile-viewport.png"
+        },
+        {
+          "id": "RC-single_applicant-applicants",
+          "capturedAt": "2026-09-08T15:58:40.677Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-single_applicant-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-single_applicant-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-many_applicants-applicants",
+          "capturedAt": "2026-09-08T15:58:45.541Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-many_applicants-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-many_applicants-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-private_waiting-applicants",
+          "capturedAt": "2026-09-08T15:58:50.129Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-private_waiting-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-private_waiting-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-paused-applicants",
+          "capturedAt": "2026-09-08T15:58:55.300Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-paused-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-paused-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-payment_attention-applicants",
+          "capturedAt": "2026-09-08T15:59:00.303Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-payment_attention-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-payment_attention-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-time_correction-applicants",
+          "capturedAt": "2026-09-08T15:59:06.504Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-time_correction-applicants-desktop-viewport.png",
+          "mobile": "screenshots/RC-time_correction-applicants-mobile-viewport.png"
+        },
+        {
+          "id": "RC-many_applicants-applicants-expanded",
+          "capturedAt": "2026-09-08T15:59:10.808Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-many_applicants-applicants-expanded-desktop-viewport.png",
+          "mobile": "screenshots/RC-many_applicants-applicants-expanded-mobile-viewport.png"
+        },
+        {
+          "id": "RC-hire-review",
+          "capturedAt": "2026-09-08T15:59:22.917Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-hire-review-desktop-viewport.png",
+          "mobile": "screenshots/RC-hire-review-mobile-viewport.png"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "Current visit before follow-up; operational decisions before optional reviews",
+      "sourceChangedAt": "2026-09-08T15:39:07.274Z",
+      "sources": [
+        {
+          "file": "app/Livewire/Family/RegularCareShow.php",
+          "modifiedAt": "2026-09-08T15:38:54.710Z",
+          "sha256": "2f76caca26af6b39e4160ea74bf1d611633a5b5efc5f1e13134c3a5e61cefc94"
+        },
+        {
+          "file": "resources/views/livewire/family/partials/regular-care-overview.blade.php",
+          "modifiedAt": "2026-09-08T15:39:07.274Z",
+          "sha256": "69784b9c40b1f2596af6abe2dbc5e29d9bbd0c7e07c788eea80644d4aa96b9c5"
+        },
+        {
+          "file": "resources/views/livewire/family/partials/regular-care-next-visit.blade.php",
+          "modifiedAt": "2026-09-08T15:39:01.342Z",
+          "sha256": "de191c7e1019f8765714e8b50888c7f74ad11712c3bb19d58d3f7afd9e3d38cb"
+        }
+      ],
+      "captures": [
+        {
+          "id": "RC-plan-active",
+          "capturedAt": "2026-09-08T15:56:47.038Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-active-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-active-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-pending",
+          "capturedAt": "2026-09-08T15:56:50.537Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-pending-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-pending-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-paused",
+          "capturedAt": "2026-09-08T15:56:56.274Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-paused-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-paused-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-ended",
+          "capturedAt": "2026-09-08T15:57:00.391Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-ended-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-ended-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-active-overview",
+          "capturedAt": "2026-09-08T15:44:36.817Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-active-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-active-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-active-help",
+          "capturedAt": "2026-09-08T15:45:08.822Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-active-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-active-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-pending-overview",
+          "capturedAt": "2026-09-08T15:45:17.906Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-pending-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-pending-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-pending-help",
+          "capturedAt": "2026-09-08T15:45:48.628Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-pending-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-pending-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-paused-overview",
+          "capturedAt": "2026-09-08T15:45:57.218Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-paused-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-paused-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-paused-help",
+          "capturedAt": "2026-09-08T15:46:25.396Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-paused-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-paused-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-ended-overview",
+          "capturedAt": "2026-09-08T15:46:33.944Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-ended-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-ended-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-ended-help",
+          "capturedAt": "2026-09-08T15:47:03.907Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-ended-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-ended-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-countered-overview",
+          "capturedAt": "2026-09-08T15:47:11.896Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-countered-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-countered-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-countered-help",
+          "capturedAt": "2026-09-08T15:47:41.660Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-countered-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-countered-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-declined-overview",
+          "capturedAt": "2026-09-08T15:47:50.484Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-declined-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-declined-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-declined-help",
+          "capturedAt": "2026-09-08T15:48:25.665Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-declined-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-declined-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-cancelled-overview",
+          "capturedAt": "2026-09-08T15:48:35.031Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-cancelled-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-cancelled-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-cancelled-help",
+          "capturedAt": "2026-09-08T15:49:03.482Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-cancelled-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-cancelled-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-visit_paused-overview",
+          "capturedAt": "2026-09-08T15:49:12.226Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-visit_paused-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-visit_paused-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-visit_paused-help",
+          "capturedAt": "2026-09-08T15:49:54.962Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-visit_paused-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-visit_paused-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-visit_payment_attention-overview",
+          "capturedAt": "2026-09-08T15:50:05.258Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-visit_payment_attention-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-visit_payment_attention-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-visit_payment_attention-help",
+          "capturedAt": "2026-09-08T15:50:44.883Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-visit_payment_attention-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-visit_payment_attention-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-visit_time_correction-overview",
+          "capturedAt": "2026-09-08T15:50:56.897Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-visit_time_correction-overview-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-visit_time_correction-overview-mobile-viewport.png"
+        },
+        {
+          "id": "RC-plan-visit_time_correction-help",
+          "capturedAt": "2026-09-08T15:51:29.604Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-plan-visit_time_correction-help-desktop-viewport.png",
+          "mobile": "screenshots/RC-plan-visit_time_correction-help-mobile-viewport.png"
+        },
+        {
+          "id": "RC-inline-support-plan",
+          "capturedAt": "2026-09-08T15:59:31.078Z",
+          "status": "captured",
+          "afterFinalSourceChange": true,
+          "desktop": "screenshots/RC-inline-support-plan-desktop-viewport.png",
+          "mobile": "screenshots/RC-inline-support-plan-mobile-viewport.png"
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true
+}

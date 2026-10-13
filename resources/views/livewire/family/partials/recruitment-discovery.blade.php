@@ -1,4 +1,4 @@
-<section class="hc-recruit-browser" aria-labelledby="find-caregivers-heading">
+<section data-ai-target="{{ match ($caregiverView) { 'invited' => 'family.request.invitations', 'saved' => 'family.request.saved', default => 'family.request.discovery' } }}" tabindex="-1" class="hc-recruit-browser" aria-labelledby="find-caregivers-heading">
     <div class="hc-recruit-discovery-heading"><h2 id="find-caregivers-heading">Find caregivers</h2><p>Search profiles, send invitations and track replies.</p><p class="hc-recruit-caption">{{ $recruitmentSchedule }}</p></div>
     <nav class="hc-recruit-subnav" aria-label="Caregiver discovery">
         <button type="button" wire:click="setCaregiverView('search')" @if ($caregiverView === 'search') aria-current="page" @endif>Search</button>

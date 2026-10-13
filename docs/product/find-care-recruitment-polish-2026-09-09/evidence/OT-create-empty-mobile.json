@@ -1,0 +1,923 @@
+{
+  "text": "←\nMy requests\nRequest care\n\nShare the help you need. Find a caregiver who feels right.\n\nChat with support\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nPerson & help\nSchedule\nLocation & notes\nReview & publish\n\n01 · PERSON & HELP\n\nWhat kind of care would help?\nUse saved information (optional)\n+\n✓\nOne visit\nCare on one specific date and time.\n✓\nRecurring care\nA repeating weekly schedule with a familiar caregiver.\n\nWho is receiving care?\n\nMe\nA family member\n\nUse a saved care profile (optional)\n\nChoose the person once and we will share the same caregiver preview with this request.\n\nEllie\nMother · Reviewed Sep 7, 2026\nFamily member receiving care\nRelationship to you\n\nHelp needed\n\n✓\nCompanionship\n✓\nDaily living assistance\n✓\nErrands\n✓\nLight housekeeping\n✓\nMeal preparation\n✓\nMedication reminders\n✓\nTransportation\n\n02 · SCHEDULE\n\nVisit schedule\nStarting day\nStarting time\nDuration (HH:MM)\n01:00 (1 hour)\n01:30 (1h 30m)\n02:00 (2 hours)\n02:30 (2h 30m)\n03:00 (3 hours)\n03:30 (3h 30m)\n04:00 (4 hours)\n04:30 (4h 30m)\n05:00 (5 hours)\n05:30 (5h 30m)\n06:00 (6 hours)\n06:30 (6h 30m)\n07:00 (7 hours)\n07:30 (7h 30m)\n08:00 (8 hours)\n08:30 (8h 30m)\n09:00 (9 hours)\n09:30 (9h 30m)\n10:00 (10 hours)\n10:30 (10h 30m)\n11:00 (11 hours)\n11:30 (11h 30m)\n12:00 (12 hours)\nSchedule: Choose a day and start time\n\n03 · LOCATION & NOTES\n\nWhere will care happen?\n\nCaregivers see the area before applying. Exact details stay with the request.\n\nStreet address\nApartment, unit, or gate (optional)\nCity\nState\nAlabama\nArizona\nArkansas\nCalifornia\nColorado\nConnecticut\nDelaware\nFlorida\nGeorgia\nIdaho\nIllinois\nIndiana\nIowa\nKansas\nKentucky\nLouisiana\nMaine\nMaryland\nMassachusetts\nMichigan\nMinnesota\nMississippi\nMissouri\nMontana\nNebraska\nNevada\nNew Hampshire\nNew Jersey\nNew Mexico\nNew York\nNorth Carolina\nNorth Dakota\nOhio\nOklahoma\nOregon\nPennsylvania\nRhode Island\nSouth Carolina\nSouth Dakota\nTennessee\nTexas\nUtah\nVermont\nVirginia\nWashington\nWest Virginia\nWisconsin\nWyoming\nDistrict of Columbia\nZIP\n\nCare notes & arrival details\n\nRoutines, home access, timing and another contact.\n\n+\n\n04 · REVIEW\n\nReview and publish\n\n0 of 4 essentials ready. Fill the missing pieces, then publish.\n\nEstimated one-time cost\n\nAdd the schedule to see the estimate.\n\nBEFORE PUBLISHING\n\nPerson Needed\nHelp Needed\nTime Needed\nAddress Needed\nCare type\nOne-time care\nFor\nEdit\nCare recipient\nFamily member\nHelp\nEdit\nChoose at least one service\nSchedule\nEdit\nChoose a day and start time\nAddress\nEdit\nStreet address\nRaleigh, NC\nWho can find this request?\nMake this request private\nLeave this unchecked to let eligible caregivers discover and apply to the request. You can still invite specific caregivers.\n\nNext: eligible caregivers can apply. Choose a caregiver when you are ready.\n\nPublish request\nCancel\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Request care",
+      "rect": {
+        "x": 16,
+        "y": 131,
+        "width": 211.96875,
+        "height": 34.21875
+      }
+    },
+    {
+      "level": "H2",
+      "text": "What kind of care would help?",
+      "rect": {
+        "x": 34,
+        "y": 416.1875,
+        "width": 322,
+        "height": 27.5
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Visit schedule",
+      "rect": {
+        "x": 34,
+        "y": 1724.46875,
+        "width": 322,
+        "height": 27.5
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Where will care happen?",
+      "rect": {
+        "x": 34,
+        "y": 2157.96875,
+        "width": 322,
+        "height": 27.5
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Review and publish",
+      "rect": {
+        "x": 34,
+        "y": 2844.9375,
+        "width": 322,
+        "height": 28.75
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Chat with support",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "✓\nOne visit\nCare on one specific date and time.",
+      "text": "",
+      "value": "one_time",
+      "checked": true,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "✓\nRecurring care\nA repeating weekly schedule with a familiar caregiver.",
+      "text": "",
+      "value": "recurring",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "Me",
+      "text": "",
+      "value": "self",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "A family member",
+      "text": "",
+      "value": "other",
+      "checked": true,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Ellie\nMother · Reviewed Sep 7, 2026",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "selectCareRecipientProfile(2)",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "Family member receiving care",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "Relationship to you",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": "Mother, father, spouse, friend"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nCompanionship",
+      "text": "",
+      "value": "1",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nDaily living assistance",
+      "text": "",
+      "value": "7",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nErrands",
+      "text": "",
+      "value": "6",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nLight housekeeping",
+      "text": "",
+      "value": "3",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nMeal preparation",
+      "text": "",
+      "value": "2",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nMedication reminders",
+      "text": "",
+      "value": "5",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "✓\nTransportation",
+      "text": "",
+      "value": "4",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "date",
+      "label": "Starting day",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "time",
+      "label": "Starting time",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Duration (HH:MM)",
+      "text": "",
+      "value": "60",
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "01:00 (1 hour)",
+          "value": "60",
+          "selected": true
+        },
+        {
+          "label": "01:30 (1h 30m)",
+          "value": "90",
+          "selected": false
+        },
+        {
+          "label": "02:00 (2 hours)",
+          "value": "120",
+          "selected": false
+        },
+        {
+          "label": "02:30 (2h 30m)",
+          "value": "150",
+          "selected": false
+        },
+        {
+          "label": "03:00 (3 hours)",
+          "value": "180",
+          "selected": false
+        },
+        {
+          "label": "03:30 (3h 30m)",
+          "value": "210",
+          "selected": false
+        },
+        {
+          "label": "04:00 (4 hours)",
+          "value": "240",
+          "selected": false
+        },
+        {
+          "label": "04:30 (4h 30m)",
+          "value": "270",
+          "selected": false
+        },
+        {
+          "label": "05:00 (5 hours)",
+          "value": "300",
+          "selected": false
+        },
+        {
+          "label": "05:30 (5h 30m)",
+          "value": "330",
+          "selected": false
+        },
+        {
+          "label": "06:00 (6 hours)",
+          "value": "360",
+          "selected": false
+        },
+        {
+          "label": "06:30 (6h 30m)",
+          "value": "390",
+          "selected": false
+        },
+        {
+          "label": "07:00 (7 hours)",
+          "value": "420",
+          "selected": false
+        },
+        {
+          "label": "07:30 (7h 30m)",
+          "value": "450",
+          "selected": false
+        },
+        {
+          "label": "08:00 (8 hours)",
+          "value": "480",
+          "selected": false
+        },
+        {
+          "label": "08:30 (8h 30m)",
+          "value": "510",
+          "selected": false
+        },
+        {
+          "label": "09:00 (9 hours)",
+          "value": "540",
+          "selected": false
+        },
+        {
+          "label": "09:30 (9h 30m)",
+          "value": "570",
+          "selected": false
+        },
+        {
+          "label": "10:00 (10 hours)",
+          "value": "600",
+          "selected": false
+        },
+        {
+          "label": "10:30 (10h 30m)",
+          "value": "630",
+          "selected": false
+        },
+        {
+          "label": "11:00 (11 hours)",
+          "value": "660",
+          "selected": false
+        },
+        {
+          "label": "11:30 (11h 30m)",
+          "value": "690",
+          "selected": false
+        },
+        {
+          "label": "12:00 (12 hours)",
+          "value": "720",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "Street address",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "Apartment, unit, or gate (optional)",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "City",
+      "text": "",
+      "value": "Raleigh",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "State",
+      "text": "",
+      "value": "NC",
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "Alabama",
+          "value": "AL",
+          "selected": false
+        },
+        {
+          "label": "Arizona",
+          "value": "AZ",
+          "selected": false
+        },
+        {
+          "label": "Arkansas",
+          "value": "AR",
+          "selected": false
+        },
+        {
+          "label": "California",
+          "value": "CA",
+          "selected": false
+        },
+        {
+          "label": "Colorado",
+          "value": "CO",
+          "selected": false
+        },
+        {
+          "label": "Connecticut",
+          "value": "CT",
+          "selected": false
+        },
+        {
+          "label": "Delaware",
+          "value": "DE",
+          "selected": false
+        },
+        {
+          "label": "Florida",
+          "value": "FL",
+          "selected": false
+        },
+        {
+          "label": "Georgia",
+          "value": "GA",
+          "selected": false
+        },
+        {
+          "label": "Idaho",
+          "value": "ID",
+          "selected": false
+        },
+        {
+          "label": "Illinois",
+          "value": "IL",
+          "selected": false
+        },
+        {
+          "label": "Indiana",
+          "value": "IN",
+          "selected": false
+        },
+        {
+          "label": "Iowa",
+          "value": "IA",
+          "selected": false
+        },
+        {
+          "label": "Kansas",
+          "value": "KS",
+          "selected": false
+        },
+        {
+          "label": "Kentucky",
+          "value": "KY",
+          "selected": false
+        },
+        {
+          "label": "Louisiana",
+          "value": "LA",
+          "selected": false
+        },
+        {
+          "label": "Maine",
+          "value": "ME",
+          "selected": false
+        },
+        {
+          "label": "Maryland",
+          "value": "MD",
+          "selected": false
+        },
+        {
+          "label": "Massachusetts",
+          "value": "MA",
+          "selected": false
+        },
+        {
+          "label": "Michigan",
+          "value": "MI",
+          "selected": false
+        },
+        {
+          "label": "Minnesota",
+          "value": "MN",
+          "selected": false
+        },
+        {
+          "label": "Mississippi",
+          "value": "MS",
+          "selected": false
+        },
+        {
+          "label": "Missouri",
+          "value": "MO",
+          "selected": false
+        },
+        {
+          "label": "Montana",
+          "value": "MT",
+          "selected": false
+        },
+        {
+          "label": "Nebraska",
+          "value": "NE",
+          "selected": false
+        },
+        {
+          "label": "Nevada",
+          "value": "NV",
+          "selected": false
+        },
+        {
+          "label": "New Hampshire",
+          "value": "NH",
+          "selected": false
+        },
+        {
+          "label": "New Jersey",
+          "value": "NJ",
+          "selected": false
+        },
+        {
+          "label": "New Mexico",
+          "value": "NM",
+          "selected": false
+        },
+        {
+          "label": "New York",
+          "value": "NY",
+          "selected": false
+        },
+        {
+          "label": "North Carolina",
+          "value": "NC",
+          "selected": true
+        },
+        {
+          "label": "North Dakota",
+          "value": "ND",
+          "selected": false
+        },
+        {
+          "label": "Ohio",
+          "value": "OH",
+          "selected": false
+        },
+        {
+          "label": "Oklahoma",
+          "value": "OK",
+          "selected": false
+        },
+        {
+          "label": "Oregon",
+          "value": "OR",
+          "selected": false
+        },
+        {
+          "label": "Pennsylvania",
+          "value": "PA",
+          "selected": false
+        },
+        {
+          "label": "Rhode Island",
+          "value": "RI",
+          "selected": false
+        },
+        {
+          "label": "South Carolina",
+          "value": "SC",
+          "selected": false
+        },
+        {
+          "label": "South Dakota",
+          "value": "SD",
+          "selected": false
+        },
+        {
+          "label": "Tennessee",
+          "value": "TN",
+          "selected": false
+        },
+        {
+          "label": "Texas",
+          "value": "TX",
+          "selected": false
+        },
+        {
+          "label": "Utah",
+          "value": "UT",
+          "selected": false
+        },
+        {
+          "label": "Vermont",
+          "value": "VT",
+          "selected": false
+        },
+        {
+          "label": "Virginia",
+          "value": "VA",
+          "selected": false
+        },
+        {
+          "label": "Washington",
+          "value": "WA",
+          "selected": false
+        },
+        {
+          "label": "West Virginia",
+          "value": "WV",
+          "selected": false
+        },
+        {
+          "label": "Wisconsin",
+          "value": "WI",
+          "selected": false
+        },
+        {
+          "label": "Wyoming",
+          "value": "WY",
+          "selected": false
+        },
+        {
+          "label": "District of Columbia",
+          "value": "DC",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "ZIP",
+      "text": "",
+      "value": "",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Make this request private\nLeave this unchecked to let eligible caregivers discover and apply to the request. You can still invite specific caregivers.",
+      "text": "",
+      "value": "on",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "submit",
+      "label": "",
+      "text": "Publish request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "←\nMy requests",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Person & help",
+      "href": "#care-person"
+    },
+    {
+      "text": "Schedule",
+      "href": "#care-schedule"
+    },
+    {
+      "text": "Location & notes",
+      "href": "#care-location"
+    },
+    {
+      "text": "Review & publish",
+      "href": "#care-review"
+    },
+    {
+      "text": "Edit care recipient",
+      "href": "#care-person"
+    },
+    {
+      "text": "Edit help needed",
+      "href": "#care-person"
+    },
+    {
+      "text": "Edit care schedule",
+      "href": "#care-schedule"
+    },
+    {
+      "text": "Edit care address and notes",
+      "href": "#care-location"
+    },
+    {
+      "text": "Cancel",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Use saved information (optional)\n+",
+      "open": false
+    },
+    {
+      "summary": "Care notes & arrival details\n\nRoutines, home access, timing and another contact.\n\n+",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 4140,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "selectedNavigation": [
+    {
+      "text": "1\nCare request",
+      "current": "step",
+      "pressed": null
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← Back to your care\n\nRecurring care · Care #1\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nRecurring care is active\nCaregiver & conversations\nGet help\nOverview\nCaregivers\nVisits\nCare details\nCurrent visit\n\nOpen this date for its care, check-in, hours and payment.\n\nRecurring visit · Visit #9\n\nMonday, September 7, 2026\n\n7:56 AM–9:56 AM EDT · Sofia Martinez\n\nHappening now\n\nCare location\n\n142 Maple Grove Lane, Apartment 2B\nRaleigh, NC 27601\n\nPayment\n\nCard authorized\n\nChecked in Sep 7 · 7:56 AM\n\nView visit details\nGet help with this visit\nView all 2 booked visits →\n\nACROSS YOUR VISITS\n\n3 visits to follow up\n\nEach date keeps its own changes, hours, payment and review.\n\nMonday, Sep 7 · 2:51 AM · Visit #11\n\nSofia Martinez\n\nHours awaiting approval\nReview hours\nfor visit #11\nMonday, Sep 7 · 5:51 AM · Visit #10\n\nSofia Martinez\n\nHours awaiting approval\nReview hours\nfor visit #10\nSaturday, Sep 5 · 10:00 AM · Visit #12\n\nSofia Martinez\n\nCaregiver review available\nLeave a review\nfor visit #12\nImportant for Ellie’s safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nRead full care details →\nCare story\nAll past visits & payments\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H2",
+      "text": "Current visit"
+    },
+    {
+      "level": "H3",
+      "text": "Monday, September 7, 2026"
+    },
+    {
+      "level": "H2",
+      "text": "3 visits to follow up"
+    },
+    {
+      "level": "H3",
+      "text": "Monday, Sep 7 · 2:51 AM · Visit #11"
+    },
+    {
+      "level": "H3",
+      "text": "Monday, Sep 7 · 5:51 AM · Visit #10"
+    },
+    {
+      "level": "H3",
+      "text": "Saturday, Sep 5 · 10:00 AM · Visit #12"
+    },
+    {
+      "level": "H2",
+      "text": "Important for Ellie’s safety"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View all 2 booked visits →",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Read full care details →",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8028/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8028/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← Back to your care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Caregiver & conversations",
+      "href": "http://127.0.0.1:8028/family/requests/16?tab=applicants"
+    },
+    {
+      "text": "View visit details",
+      "href": "http://127.0.0.1:8028/family/requests/17?tab=shift&return_tab=overview&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Get help with this visit",
+      "href": "http://127.0.0.1:8028/family/requests/17?tab=support&return_tab=overview&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Review hours\nfor visit #11",
+      "href": "http://127.0.0.1:8028/family/requests/19?tab=shift&return_tab=overview&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Review hours\nfor visit #10",
+      "href": "http://127.0.0.1:8028/family/requests/18?tab=shift&return_tab=overview&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Leave a review\nfor visit #12",
+      "href": "http://127.0.0.1:8028/family/requests/20?tab=shift&return_tab=overview&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/regular/1"
+    },
+    {
+      "text": "All past visits & payments",
+      "href": "http://127.0.0.1:8028/family/care/history?plan=1"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 1823,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Recurring care for Eleanor Bennett",
+    "status": "",
+    "headerText": "← Back to your care\n\nRecurring care · Care #1\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nRecurring care is active\nCaregiver & conversations\nGet help",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Overview"
+    ]
+  }
+}

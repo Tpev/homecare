@@ -173,7 +173,8 @@ class AiSupportRecapService
                     'care_request_id' => $careRequest->id,
                     'request_reference' => 'care-request-'.$careRequest->id,
                     'recipient' => $careRequest->recipient?->full_name,
-                    'url' => route('family.requests.show', $careRequest),
+                    'url' => route('family.requests.show', ['careRequest' => $careRequest->id, 'tab' => 'invite', 'view' => 'search']),
+                    'label' => 'Find caregivers',
                 ],
             ]);
             $this->events->record($ticket, 'request_receipt_delivered', [

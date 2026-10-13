@@ -1215,6 +1215,7 @@ class RegularCarePlanFlowTest extends TestCase
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'slug' => 'caroline-care-'.$caregiver->id,
             'bio' => str_repeat('Reliable regular care specialist. ', 4),
             'platform_hourly_rate' => 28.00,

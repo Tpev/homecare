@@ -2,7 +2,7 @@
     <div class="hc-calendar-toolbar">
         <div aria-live="polite" aria-atomic="true">
             <h2 id="care-calendar-month">{{ $calendarMonth->format('F Y') }}</h2>
-            <p>{{ $monthVisitCount }} upcoming {{ $monthVisitCount === 1 ? 'visit' : 'visits' }} this month</p>
+            <p>{{ $monthVisitCount }} {{ $monthVisitCount === 1 ? 'visit or care need' : 'visits and care needs' }} this month</p>
         </div>
         <div class="hc-calendar-controls">
             <button type="button" wire:click="goToToday" class="hc-calendar-today">Today</button>
@@ -32,15 +32,15 @@
                 data-date="{{ $date->toDateString() }}"
                 aria-pressed="{{ $selected ? 'true' : 'false' }}"
                 aria-controls="care-calendar-day-visits"
-                aria-label="{{ $date->format('l, F j, Y') }}{{ $date->isToday() ? ', today' : '' }} — {{ $dayCount }} upcoming {{ $dayCount === 1 ? 'visit' : 'visits' }}"
+                aria-label="{{ $date->format('l, F j, Y') }}{{ $date->isToday() ? ', today' : '' }} — {{ $dayCount }} {{ $dayCount === 1 ? 'visit or care need' : 'visits and care needs' }}"
                 @if ($date->isToday()) aria-current="date" @endif
             >
                 <span class="hc-calendar-date">{{ $date->day }}</span>
                 <span class="hc-calendar-previews" aria-hidden="true">
                     @foreach ($day['visits']->take(2) as $visit)
-                        <span class="hc-calendar-preview {{ $visit['payment_needs_action'] ? 'hc-calendar-preview-attention' : '' }}">
+                        <span class="hc-calendar-preview {{ $visit['payment_needs_action'] || ($visit['is_care_need'] ?? false) ? 'hc-calendar-preview-attention' : '' }}">
                             <strong>{{ $visit['starts_at']->lt($date) ? 'Continues' : $visit['starts_at']->format('g:i A') }} · {{ $visit['recipient'] }}</strong>
-                            <span>{{ $visit['payment_needs_action'] ? 'Payment needs attention' : $visit['caregiver'] }}</span>
+                            <span>{{ $visit['payment_needs_action'] ? 'Payment needs attention' : (($visit['is_care_need'] ?? false) ? $visit['status']['label'] : $visit['caregiver']) }}</span>
                         </span>
                     @endforeach
                     @if ($dayCount > 2)<span class="hc-calendar-more">+{{ $dayCount - 2 }} more</span>@endif
@@ -83,7 +83,7 @@
                     @if ($visit['payment_needs_action'])
                         <a href="{{ $visit['action_url'] }}" wire:navigate class="hc-primary-button">Fix payment</a>
                     @else
-                        <a href="{{ $visit['action_url'] }}" wire:navigate class="hc-secondary-button">View visit</a>
+                        <a href="{{ $visit['action_url'] }}" wire:navigate class="hc-secondary-button">{{ ($visit['is_care_need'] ?? false) ? 'Arrange this care' : 'View visit' }}</a>
                     @endif
                 </div>
             </article>

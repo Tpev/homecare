@@ -36,6 +36,7 @@ class CareRequest extends Model
         'family_user_id',
         'created_by_user_id',
         'care_plan_id',
+        'care_arrangement_id',
         'is_system_generated',
         'origin',
         'ai_support_ticket_id',
@@ -101,6 +102,11 @@ class CareRequest extends Model
     public function carePlan(): BelongsTo
     {
         return $this->belongsTo(CarePlan::class);
+    }
+
+    public function careArrangement(): BelongsTo
+    {
+        return $this->belongsTo(CareArrangement::class);
     }
 
     public function recipient(): HasOne

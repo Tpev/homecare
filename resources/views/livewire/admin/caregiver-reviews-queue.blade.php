@@ -1,106 +1,171 @@
-<div class="hc-page py-8 space-y-6">
+<div class="hc-page space-y-6 py-8">
     @if (session('status'))
-        <x-alert color="green">{{ session('status') }}</x-alert>
+        <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">{{ session('status') }}</div>
     @endif
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <header class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-            <h1 class="text-xl font-semibold">Caregiver Review Queue</h1>
-            <p class="mt-1 text-sm text-slate-600">Approve launch-ready caregivers, reject incomplete submissions, and manage trust badges.</p>
+            <h1 class="text-2xl font-semibold text-slate-900">Caregiver screening</h1>
+            <p class="mt-1 max-w-3xl text-sm text-slate-600">Review verified identities, public-record candidates, profiles, and credentials in one queue.</p>
         </div>
-        <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-            {{ $profiles->count() }} awaiting review
-        </div>
+        <span class="shrink-0 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">{{ $counts->sum() }} open reviews</span>
+    </header>
+
+    <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        New caregivers need initial approval before taking work. Legacy access is preserved. Six-month reviews never automatically block work, even when overdue or a possible match is found. Only an explicit suspension blocks new work.
     </div>
 
-    @forelse($profiles as $profile)
-        <x-card>
-            <x-slot:header>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span>{{ $profile->user->name }} ({{ $profile->user->email }})</span>
-                    <x-badge text="Under review" color="yellow" />
-                </div>
-            </x-slot:header>
+    @include('livewire.admin.partials.screening-dataset-health')
 
-            <p class="text-sm text-slate-600">{{ $profile->bio }}</p>
-            <p class="text-sm mt-2">Platform rate: ${{ number_format((float) $profile->resolvePlatformHourlyRate(), 2) }}/hr</p>
-            <p class="text-xs text-slate-500 mt-1">
-                Identity status:
-                <span class="font-semibold uppercase">{{ str_replace('_', ' ', $profile->identity_verification_status ?? 'not_started') }}</span>
-            </p>
-
-            @include('livewire.admin.partials.caregiver-background-review', ['profile' => $profile])
-
-            @error('approval_'.$profile->id)
-                <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-            @enderror
-
-            <x-slot:footer>
-                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[auto_minmax(14rem,1fr)] lg:grid-cols-[auto_minmax(16rem,1fr)_auto_auto] lg:items-center">
-                    <x-button
-                        color="green"
-                        wire:click="approve({{ $profile->id }})"
-                        :disabled="!$profile->hasIdentityVerifiedBadge()"
-                        class="justify-center"
-                    >
-                        Approve
-                    </x-button>
-                    <x-input placeholder="Rejection reason" wire:model="rejection_reason" />
-                    <div class="grid grid-cols-2 gap-2 lg:contents">
-                        <x-button color="red" wire:click="reject({{ $profile->id }})" class="justify-center">Reject</x-button>
-                        <x-button color="amber" wire:click="suspend({{ $profile->id }})" class="justify-center">Suspend</x-button>
-                    </div>
-                    <x-button color="teal" wire:click="unsuspend({{ $profile->id }})" class="justify-center">Unsuspend</x-button>
-                </div>
-            </x-slot:footer>
-        </x-card>
-    @empty
-        <x-card>
-            <p class="text-sm text-slate-600">No caregivers are currently waiting for review.</p>
-        </x-card>
-    @endforelse
-
-    <x-card>
-        <x-slot:header>
-            <h2 class="text-lg font-semibold">Trust Badge Management (Active Caregivers)</h2>
-        </x-slot:header>
-
-        <div class="space-y-3">
-            @forelse($activeProfiles as $profile)
-                <div class="rounded-lg border border-slate-200 p-3">
-                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <p class="font-medium text-slate-900">{{ $profile->user->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $profile->user->email }}</p>
-                            <div class="mt-2 flex flex-wrap gap-2">
-                                @if ($profile->identity_verified_at)
-                                    <x-badge color="cyan" text="Identity verified" />
-                                @endif
-                                @if ($profile->background_check_verified_at)
-                                    <x-badge color="green" text="Background check" />
-                                @endif
-                                @if ($profile->top_caregiver)
-                                    <x-badge color="amber" text="Top Caregiver" />
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                            <x-button color="cyan" light wire:click="toggleIdentityVerification({{ $profile->id }})" class="justify-center">
-                                {{ $profile->identity_verified_at ? 'Remove identity' : 'Verify identity' }}
-                            </x-button>
-                            <x-button color="green" light wire:click="toggleBackgroundCheck({{ $profile->id }})" class="justify-center">
-                                {{ $profile->background_check_verified_at ? 'Remove background' : 'Verify background' }}
-                            </x-button>
-                            <x-button color="amber" light wire:click="toggleTopCaregiver({{ $profile->id }})" class="justify-center">
-                                {{ $profile->top_caregiver ? 'Remove top badge' : 'Set top caregiver' }}
-                            </x-button>
-                        </div>
-                    </div>
-                    @include('livewire.admin.partials.caregiver-background-review', ['profile' => $profile])
-                </div>
-            @empty
-                <p class="text-sm text-slate-600">No active caregivers yet.</p>
-            @endforelse
+    @if ($errors->any())
+        <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+            <p class="font-semibold">The action could not be completed.</p>
+            <ul class="mt-2 list-inside list-disc space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-    </x-card>
+    @endif
+
+    <div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,2fr)]">
+        <aside class="overflow-hidden rounded-2xl border border-slate-200 bg-white" aria-label="Screening queue">
+            <div class="space-y-3 border-b border-slate-200 p-4">
+                <h2 class="font-semibold text-slate-900">Review queue</h2>
+                <label for="screening-search" class="sr-only">Search caregiver name or email</label>
+                <input id="screening-search" type="search" wire:model.live.debounce.350ms="query" placeholder="Name or email" class="min-h-11 w-full rounded-xl border-slate-300 text-sm">
+                <label for="screening-filter" class="sr-only">Filter reviews</label>
+                <select id="screening-filter" wire:model.live="filter" class="min-h-11 w-full rounded-xl border-slate-300 text-sm">
+                    <option value="open">All open reviews ({{ $counts->sum() }})</option>
+                    <option value="initial">New caregivers ({{ $counts->get('initial', 0) }})</option>
+                    <option value="legacy">Legacy reviews ({{ $counts->get('legacy', 0) }})</option>
+                    <option value="recurring">Six-month reviews ({{ $counts->get('recurring', 0) }})</option>
+                    <option value="overdue">Overdue reviews</option>
+                    <option value="potential_matches">Potential matches</option>
+                    <option value="awaiting_kyc">Awaiting KYC</option>
+                    <option value="awaiting_investigation">Awaiting investigation</option>
+                    <option value="completed">Completed / history</option>
+                </select>
+            </div>
+            <div class="divide-y divide-slate-100">
+                @forelse ($cases as $case)
+                    <button type="button" wire:key="screening-case-{{ $case->id }}" wire:click="selectCase({{ $case->id }})" @if ($selectedId === $case->id) aria-current="true" @endif class="block w-full px-4 py-4 text-left transition {{ $selectedId === $case->id ? 'bg-teal-50 ring-1 ring-inset ring-teal-400' : 'hover:bg-slate-50' }}">
+                        <span class="block font-semibold text-slate-900">{{ $case->profile?->user?->name ?? 'Unavailable caregiver' }}</span>
+                        <span class="mt-0.5 block break-all text-xs text-slate-500">{{ $case->profile?->user?->email }}</span>
+                        <span class="mt-2 flex flex-wrap gap-1.5 text-xs">
+                            <span class="rounded-full bg-slate-100 px-2 py-1 font-medium text-slate-700">{{ ['initial' => 'New caregiver', 'legacy' => 'Legacy review', 'recurring' => 'Six-month review'][$case->kind] ?? $case->kind }}</span>
+                            <span class="rounded-full px-2 py-1 {{ $case->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900' }}">{{ str($case->status)->headline() }}</span>
+                        </span>
+                        <span class="mt-2 block text-xs {{ $case->status !== 'completed' && $case->due_at?->isPast() ? 'font-semibold text-rose-700' : 'text-slate-500' }}">{{ $case->status !== 'completed' && $case->due_at?->isPast() ? 'Overdue · ' : 'Due ' }}{{ $case->due_at?->format('M j, Y') ?? 'Not scheduled' }}</span>
+                        @if ($case->claimed_by && $case->claimed_until?->isFuture())
+                            <span class="mt-1 block text-xs text-slate-500">Claimed by {{ $case->claimant?->name ?? 'an admin' }}</span>
+                        @endif
+                    </button>
+                @empty
+                    <p class="p-5 text-sm text-slate-500">No reviews match this filter.</p>
+                @endforelse
+            </div>
+            @if ($cases->hasPages()) <div class="border-t border-slate-200 p-3">{{ $cases->links() }}</div> @endif
+        </aside>
+
+        <main class="min-w-0 space-y-5" aria-label="Selected screening review">
+            @if ($selectedCase && $selectedCase->profile)
+                @php
+                    $profile = $selectedCase->profile;
+                    $identity = $selectedCase->identity_snapshot ?? [];
+                    $hasClaim = (int) $selectedCase->claimed_by === (int) auth()->id() && $selectedCase->claimed_until?->isFuture();
+                    $claimedByOther = $selectedCase->claimed_by && (int) $selectedCase->claimed_by !== (int) auth()->id() && $selectedCase->claimed_until?->isFuture();
+                    $completed = $selectedCase->status === 'completed';
+                    $canDecide = $hasClaim && ! $completed && $selectedCase->search_status === 'completed' && $selectedCase->status !== 'awaiting_kyc';
+                @endphp
+                <section class="rounded-2xl border border-slate-200 bg-white p-5" wire:key="selected-screening-{{ $selectedCase->id }}">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Case #{{ $selectedCase->id }} · {{ ['initial' => 'New caregiver', 'legacy' => 'Legacy review', 'recurring' => 'Six-month review'][$selectedCase->kind] ?? $selectedCase->kind }}</p>
+                            <h2 class="mt-1 text-xl font-semibold text-slate-900">{{ $profile->user?->name }}</h2>
+                            <p class="mt-1 break-all text-sm text-slate-500">{{ $profile->user?->email }}</p>
+                        </div>
+                        <a href="{{ route('admin.caregivers.screening.export', $selectedCase) }}" class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">Export audit</a>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                        <span class="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">Profile: {{ str($profile->status)->headline() }}</span>
+                        @if ($profile->screening_suspended_at)
+                            <span class="rounded-full bg-rose-100 px-3 py-1.5 font-semibold text-rose-800">New work suspended · login retained</span>
+                        @elseif ($profile->screening_legacy_access && ! $profile->screening_initial_approved_at)
+                            <span class="rounded-full bg-blue-100 px-3 py-1.5 text-blue-800">Legacy work access preserved</span>
+                        @elseif ($profile->screening_initial_approved_at)
+                            <span class="rounded-full bg-emerald-100 px-3 py-1.5 text-emerald-800">Initial screening approved</span>
+                        @else
+                            <span class="rounded-full bg-amber-100 px-3 py-1.5 text-amber-900">Initial approval required for new work</span>
+                        @endif
+                    </div>
+                    @if (! $completed)
+                        <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+                            <button type="button" wire:click="claim" wire:loading.attr="disabled" @disabled($claimedByOther) class="min-h-11 rounded-xl border border-teal-300 px-4 py-2 text-sm font-semibold text-teal-800 disabled:cursor-not-allowed disabled:opacity-50">{{ $hasClaim ? 'Renew review claim' : 'Claim review' }}</button>
+                            <p class="text-xs text-slate-500">{{ $hasClaim ? 'Claimed by you until '.$selectedCase->claimed_until->format('g:i A') : ($claimedByOther ? 'Currently claimed by '.($selectedCase->claimant?->name ?? 'another admin').' until '.$selectedCase->claimed_until->format('g:i A') : 'Claim this case before searching or deciding.') }}</p>
+                        </div>
+                    @endif
+                    <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="font-semibold text-slate-900">Didit-verified identity</h3>
+                            @if ($identity)
+                                <dl class="mt-3 space-y-2 text-sm">
+                                    <div><dt class="text-xs text-slate-500">Legal name</dt><dd class="font-medium text-slate-900">{{ $identity['full_name'] ?? trim(($identity['first_name'] ?? '').' '.($identity['last_name'] ?? '')) }}</dd></div>
+                                    <div><dt class="text-xs text-slate-500">Date of birth</dt><dd>{{ $identity['date_of_birth'] ?? 'Not supplied by provider' }}</dd></div>
+                                </dl>
+                            @else
+                                <p class="mt-3 text-sm text-amber-900">Awaiting successful Didit KYC with verified identity evidence. A manual verification badge does not qualify.</p>
+                            @endif
+                            <p class="mt-3 text-xs text-slate-500">This identity snapshot is retained with the screening case. The profile name may differ.</p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 p-4">
+                            <h3 class="font-semibold text-slate-900">Search evidence</h3>
+                            <p class="mt-2 text-sm">Status: <strong>{{ str($selectedCase->search_status)->headline() }}</strong></p>
+                            <p class="mt-1 text-xs text-slate-500">{{ $selectedCase->searched_at ? 'Searched '.$selectedCase->searched_at->format('M j, Y g:i A') : 'Not searched yet' }}</p>
+                            @if ($selectedCase->search_error)
+                                <p role="alert" class="mt-2 break-words text-sm text-rose-800">{{ $selectedCase->search_error }}</p>
+                            @endif
+                            @if ($selectedCase->source_versions)
+                                <details class="mt-3 text-xs text-slate-600"><summary class="cursor-pointer font-semibold">Dataset versions used</summary><pre class="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-50 p-2">{{ json_encode($selectedCase->source_versions, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre></details>
+                            @endif
+                            @if (! $completed)
+                                <button type="button" wire:click="search" wire:loading.attr="disabled" @disabled(! $hasClaim || ! $identity || $selectedCase->status === 'awaiting_kyc') class="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{{ $selectedCase->searched_at ? 'Refresh name search' : 'Search public records' }}</button>
+                            @endif
+                        </div>
+                    </div>
+                    @include('livewire.admin.partials.screening-candidates')
+                    @include('livewire.admin.partials.screening-decision')
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h2 class="font-semibold text-slate-900">Profile & credentials</h2>
+                        <button type="button" wire:click="toggleTopCaregiver({{ $profile->id }})" wire:loading.attr="disabled" class="min-h-11 rounded-xl border border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900">{{ $profile->top_caregiver ? 'Remove Top Caregiver badge' : 'Set Top Caregiver badge' }}</button>
+                    </div>
+                    <p class="mt-3 whitespace-pre-line text-sm text-slate-600">{{ $profile->bio ?: 'No biography provided.' }}</p>
+                    <p class="mt-3 text-xs text-slate-500">{{ $profile->years_experience ?? 'Unknown' }} years of experience · {{ $profile->service_area_zip ?: 'No service ZIP' }} · Platform rate ${{ number_format((float) $profile->resolvePlatformHourlyRate(), 2) }}/hr</p>
+                    @include('livewire.admin.partials.caregiver-background-review', ['profile' => $profile])
+                </section>
+                @include('livewire.admin.partials.screening-history')
+            @elseif ($selectedCase)
+                <section class="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h2 class="font-semibold text-slate-900">Archived case #{{ $selectedCase->id }}</h2>
+                        <a href="{{ route('admin.caregivers.screening.export', $selectedCase) }}" class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">Export audit</a>
+                    </div>
+                    <p class="mt-2 text-sm text-slate-500">The caregiver profile is no longer available. Screening evidence and completed decisions remain in the audit history.</p>
+                    <p class="mt-3 text-sm text-slate-700">{{ str($selectedCase->status)->headline() }}{{ $selectedCase->outcome ? ' · '.str($selectedCase->outcome)->headline() : '' }}{{ $selectedCase->decision ? ' · '.str($selectedCase->decision)->headline() : '' }}</p>
+                    <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $selectedCase->note }}</p>
+                    @include('livewire.admin.partials.screening-record', ['record' => $selectedCase->identity_snapshot ?? [], 'depth' => 0])
+                    @include('livewire.admin.partials.screening-candidates')
+                </section>
+                @include('livewire.admin.partials.screening-history')
+            @else
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-16 text-center">
+                    <h2 class="font-semibold text-slate-900">Select a review to get started</h2>
+                    <p class="mt-2 text-sm text-slate-500">Choose a caregiver from the queue. Completed decisions are available in the history filter.</p>
+                </div>
+            @endif
+        </main>
+    </div>
+    @include('livewire.admin.partials.screening-booking-reviews')
 </div>

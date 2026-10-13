@@ -1,0 +1,27 @@
+{
+  "baselineScreenStates": 175,
+  "reviewNotes": 175,
+  "missingReviewNotes": [],
+  "sourceChecks": [
+    {
+      "path": "resources/views/livewire/family/create-care-request-wizard.blade.php",
+      "unchanged": true
+    },
+    {
+      "path": "resources/views/livewire/family/manage-care-request.blade.php",
+      "unchanged": true
+    },
+    {
+      "path": "resources/views/livewire/family/regular-care-show.blade.php",
+      "unchanged": true
+    },
+    {
+      "path": "app/Support/CareRequestProgress.php",
+      "unchanged": true
+    }
+  ],
+  "conceptLayoutChecks": 250,
+  "conceptOverflows": 0,
+  "conceptScriptErrors": 0,
+  "appCodeImplemented": false
+}

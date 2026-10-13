@@ -1,0 +1,264 @@
+{
+  "text": "← My care\nRequest #34\nGet help\nCare story\nRecurring care for Ellie — Many Applicants\n\nRecurring care\n·\nEleanor Bennett\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\n4\nGet started\nChoose a caregiver first\nReview applicants\n\nCompare experience, review application notes, and choose who feels right.\n\nFind more caregivers\nAll\n4\nShortlisted\n1\nPast\n0\nFilter or sort caregivers\n\n0 caregivers match the applicant filters\n\nNo matching applications\n\nTry another list or remove a filter to see more caregivers.\n\nView all applications\nFind caregivers\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Ellie — Many Applicants",
+      "rect": {
+        "x": 16,
+        "y": 137,
+        "width": 358,
+        "height": 68.3125
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Review applicants",
+      "rect": {
+        "x": 34,
+        "y": 396.8125,
+        "width": 232.34375,
+        "height": 28.59375
+      }
+    },
+    {
+      "level": "H3",
+      "text": "No matching applications",
+      "rect": {
+        "x": 76.171875,
+        "y": 632.484375,
+        "width": 237.640625,
+        "height": 28.59375
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants\n4",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Find more caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All\n4",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('all')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Shortlisted\n1",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('shortlisted')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Past\n0",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('past')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View all applications",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('all')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Find caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/34"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Filter or sort caregivers",
+      "open": false
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 988,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-dG8yja1b.css"
+  ],
+  "selectedNavigation": [
+    {
+      "text": "3\nReview applicants\n4",
+      "current": "step",
+      "pressed": null
+    },
+    {
+      "text": "Past\n0",
+      "current": "page",
+      "pressed": null
+    }
+  ]
+}

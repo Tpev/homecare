@@ -71,7 +71,7 @@ class FamilyGuidedAssistanceTest extends TestCase
         $cases = [
             ['Open Care Actions.', 'family.care_actions', 'Open Care Actions'],
             ['Open my care schedule.', 'family.care_schedule', 'Open Care Schedule'],
-            ['Open my Care Arrangements.', 'family.care_arrangements', 'Open Care Arrangements'],
+            ['Open my Care Arrangements.', 'family.care_arrangements', 'Open Care request'],
             ['Where can I find and compare caregivers?', 'family.caregivers', 'Open Find Caregivers'],
         ];
 
@@ -380,7 +380,7 @@ class FamilyGuidedAssistanceTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_regular_care_attention_guides_to_the_plan_instead_of_its_system_request(): void
+    public function test_regular_care_attention_guides_to_its_exact_generated_visit(): void
     {
         [, $family] = $this->eligibleFamily();
         $account = app(FamilyAccountContext::class)->account($family);
@@ -420,20 +420,20 @@ class FamilyGuidedAssistanceTest extends TestCase
 
         Http::assertNothingSent();
         $task = AiSupportGuidedTask::query()
-            ->where('navigation_target_id', 'family.regular_care.attention')
+            ->where('navigation_target_id', 'family.request.visit')
             ->sole();
-        $this->assertSame('care_plan', $task->resource_type);
-        $this->assertSame($plan->id, (int) $task->resource_id);
+        $this->assertSame('care_request', $task->resource_type);
+        $this->assertSame($systemRequest->id, (int) $task->resource_id);
         $this->assertSame(
-            route('family.care.show', $plan),
+            route('family.requests.show', ['careRequest' => $systemRequest->id, 'tab' => 'shift']),
             app(NavigationTargetRegistry::class)->urlFor($family, $task->navigation_target_id, [
                 'resource_type' => $task->resource_type,
                 'resource_id' => $task->resource_id,
             ]),
         );
-        $this->actingAs($family)->get(route('family.care.show', $plan))
+        $this->actingAs($family)->get(route('family.requests.show', ['careRequest' => $systemRequest->id, 'tab' => 'shift']))
             ->assertOk()
-            ->assertSee('data-ai-target="family.regular_care.attention"', false);
+            ->assertSee('data-ai-target="family.request.visit"', false);
     }
 
     public function test_batch_two_pages_expose_only_registered_semantic_targets(): void
@@ -480,6 +480,79 @@ class FamilyGuidedAssistanceTest extends TestCase
             ->assertOk()
             ->assertSee('data-ai-target="family.request.visit"', false)
             ->assertSee('data-ai-target="family.request.timesheet"', false);
+    }
+
+    public function test_next_visit_excludes_stale_live_records_and_keeps_long_and_null_end_current_visits(): void
+    {
+        $this->travelTo(now()->setTime(12, 0));
+        [, $family] = $this->eligibleFamily();
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $stale = $this->booking($family, $caregiver, $this->request($family), [
+            'status' => CareBooking::STATUS_IN_PROGRESS,
+            'scheduled_start_at' => now()->subDays(4), 'scheduled_end_at' => now()->subDays(3),
+        ]);
+        $current = $this->booking($family, $caregiver, $this->request($family), [
+            'status' => CareBooking::STATUS_IN_PROGRESS,
+            'scheduled_start_at' => now()->subHours(5), 'scheduled_end_at' => now()->addHour(),
+        ]);
+        $future = $this->booking($family, $caregiver, $this->request($family));
+        Http::fake();
+        $service = app(FamilyGuidedAssistanceService::class);
+
+        foreach ([
+            [CareBooking::STATUS_IN_PROGRESS, now()->subHours(5), now()->addHour(), $current],
+            [CareBooking::STATUS_PAUSED, now()->subHours(3), null, $current],
+            [CareBooking::STATUS_PAUSED, now()->subDays(3), null, $future],
+        ] as [$status, $start, $end, $expected]) {
+            $current->update(['status' => $status, 'scheduled_start_at' => $start, 'scheduled_end_at' => $end]);
+            $before = CareBooking::query()->orderBy('id')->get()->toArray();
+            $ticket = $this->automatedTicket($family, 'Show my next visit');
+            $service->respond($family, $ticket, FamilyGuidedAssistanceService::INTENT_VISITS);
+            $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
+            $this->assertSame('family.request.visit', $task->navigation_target_id);
+            $this->assertSame($expected->care_request_id, (int) $task->resource_id);
+            $this->assertSame($before, CareBooking::query()->orderBy('id')->get()->toArray());
+        }
+        $overview = $this->automatedTicket($family, 'What needs attention?');
+        $service->respond($family, $overview, FamilyGuidedAssistanceService::INTENT_OVERVIEW);
+        $this->assertStringContainsString('Unfinished visit needs review', $overview->publicMessages()->reorder()->latest()->firstOrFail()->body);
+        $this->assertSame(CareBooking::STATUS_IN_PROGRESS, $stale->fresh()->status);
+        Http::assertNothingSent();
+    }
+
+    public function test_generated_visit_timesheet_keeps_the_exact_request_and_legacy_missing_visit_falls_back_to_plan(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $plan = CarePlan::query()->create([
+            'family_account_id' => app(FamilyAccountContext::class)->account($family)->id,
+            'family_user_id' => $family->id, 'caregiver_user_id' => $caregiver->id,
+            'title' => 'Existing recurring care', 'status' => CarePlan::STATUS_ACTIVE,
+            'schedule_days' => [1], 'schedule_start_time' => '09:00', 'schedule_end_time' => '11:00',
+            'starts_on' => now()->subWeek()->toDateString(), 'hourly_rate' => 30,
+        ]);
+        $request = $this->request($family, ['care_plan_id' => $plan->id, 'is_system_generated' => true, 'status' => CareRequest::STATUS_FILLED]);
+        $booking = $this->booking($family, $caregiver, $request, [
+            'care_plan_id' => $plan->id, 'plan_visit_kind' => 'extra', 'status' => CareBooking::STATUS_COMPLETED,
+            'scheduled_start_at' => now()->subHours(3), 'scheduled_end_at' => now()->subHour(),
+            'completed_at' => now()->subHour(), 'timesheet_submitted_at' => now()->subMinutes(50), 'worked_minutes' => 120,
+        ]);
+        Http::fake();
+        $ticket = $this->automatedTicket($family, 'Review hours');
+        app(FamilyGuidedAssistanceService::class)->respond($family, $ticket, FamilyGuidedAssistanceService::INTENT_TIMESHEETS);
+        $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
+        $this->assertSame('family.request.timesheet', $task->navigation_target_id);
+        $this->assertSame($request->id, (int) $task->resource_id);
+
+        // Current storage requires the request foreign key. Exercise the legacy
+        // relation fallback in memory without fabricating an invalid database row.
+        $booking->setRelation('careRequest', null)->setRelation('carePlan', $plan);
+        $method = new \ReflectionMethod(FamilyGuidedAssistanceService::class, 'guideForBooking');
+        $guide = $method->invoke(app(FamilyGuidedAssistanceService::class), $booking, 'Open visit');
+        $this->assertSame('family.regular_care.attention', $guide['target_id']);
+        $this->assertSame($plan->id, $guide['resource_id']);
+        $this->assertSame($request->id, $booking->fresh()->care_request_id);
+        Http::assertNothingSent();
     }
 
     /** @return array{User,User} */

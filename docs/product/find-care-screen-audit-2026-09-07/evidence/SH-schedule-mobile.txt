@@ -1,0 +1,151 @@
+CARE SCHEDULE
+
+Your visits, organized by when they happen.
+Request care
+Overview
+Arrangements
+Schedule
+History
+8 upcoming visits
+
+Filter by person or care type without changing the underlying schedule.
+
+Care recipient
+Everyone
+Eleanor Bennett
+Care type
+All upcoming care
+One-time visits
+Recurring care visits
+Extra visits
+Continuous care
+
+RIGHT NOW
+
+Today
+
+Care happening now or scheduled today.
+
+4
+
+TODAY
+
+Sep 7
+
+ONE-TIME VISIT
+Happening now
+Eleanor Bennett · Mon, Sep 7
+
+7:56 AM–9:56 AM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #2
+
+View care
+ONE-TIME VISIT
+Paused
+Eleanor Bennett · Mon, Sep 7
+
+7:56 AM–9:56 AM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #18
+
+View care
+REGULAR VISIT
+Happening now
+Eleanor Bennett · Mon, Sep 7
+
+7:56 AM–9:56 AM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #9
+
+View care
+REGULAR VISIT
+Paused
+Eleanor Bennett · Mon, Sep 7
+
+7:56 AM–9:56 AM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #21
+
+View care
+
+LOOKING AHEAD
+
+This week
+
+The rest of this week, grouped by day.
+
+4
+
+WEDNESDAY
+
+Sep 9
+
+ONE-TIME VISIT
+Scheduled
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #1
+
+View care
+REGULAR VISIT
+Scheduled
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #8
+
+View care
+ONE-TIME VISIT
+Payment needs attention
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #19
+
+Fix payment
+
+Required to keep this visit financially protected.
+
+REGULAR VISIT
+Payment needs attention
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #22
+
+Fix payment
+
+Required to keep this visit financially protected.
+
+© 2026 LoLo Care Inc
+
+﻿
+Terms of Service
+Privacy Policy
+Payments & Cancellation
+Caregiver Terms
+Family Terms
+Safety Policy
+All Legal Documents

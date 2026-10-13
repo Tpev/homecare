@@ -207,6 +207,7 @@ class PrivateCareRequestTest extends TestCase
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'slug' => 'caregiver-'.$caregiver->id,
             'bio' => str_repeat('Experienced caregiver. ', 4),
             'platform_hourly_rate' => 27,

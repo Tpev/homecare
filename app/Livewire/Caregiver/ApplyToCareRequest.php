@@ -38,6 +38,8 @@ class ApplyToCareRequest extends Component
 
     public string $cover_note = '';
 
+    public array $selectedDays = [];
+
     public ?CareRequestApplication $existingApplication = null;
 
     public ?int $reviewRating = null;
@@ -118,6 +120,12 @@ class ApplyToCareRequest extends Component
 
         abort_unless(auth()->user()->can('view', $this->requestItem), 403);
 
+        if ($this->requestItem->care_arrangement_id && ! $this->requestItem->is_system_generated && $this->existingApplication?->status === 'hired') {
+            $this->redirectRoute('caregiver.regular-clients.index', navigate: true);
+
+            return;
+        }
+
         if ($this->requestItem->status === CareRequest::STATUS_OPEN && ! $this->existingApplication) {
             abort_unless(auth()->user()->can('apply', $this->requestItem), 403);
         } elseif (! $this->existingApplication) {
@@ -126,6 +134,7 @@ class ApplyToCareRequest extends Component
 
         if ($this->existingApplication) {
             $this->cover_note = (string) $this->existingApplication->cover_note;
+            $this->selectedDays = $this->existingApplication->selected_days ?? [];
         }
 
         $this->activeTab = $this->existingApplication?->booking
@@ -314,29 +323,47 @@ class ApplyToCareRequest extends Component
 
         $applicationRate = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
 
-        $existing = CareRequestApplication::query()
-            ->where('care_request_id', $this->requestItem->id)
-            ->where('caregiver_user_id', auth()->id())
-            ->first();
+        $this->existingApplication = \Illuminate\Support\Facades\DB::transaction(function () use ($applicationRate) {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) auth()->id());
+            $request = CareRequest::lockForUpdate()->findOrFail($this->requestItem->id);
+            $existing = CareRequestApplication::query()->lockForUpdate()
+                ->where('care_request_id', $this->requestItem->id)
+                ->where('caregiver_user_id', auth()->id())
+                ->first();
 
-        $status = $existing && in_array($existing->status, [
-            CareRequestApplication::STATUS_SHORTLISTED,
-            CareRequestApplication::STATUS_HIRED,
-        ], true)
-            ? $existing->status
-            : CareRequestApplication::STATUS_APPLIED;
+            $scheduleData = [];
+            if ($request->isRecurring() && ! $request->is_system_generated) {
+                $this->validate(['selectedDays' => ['required', 'array', 'min:1'], 'selectedDays.*' => ['integer', 'between:0,6']]);
+                if ($existing?->status === 'hired' || $request->status !== CareRequest::STATUS_OPEN) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['selectedDays' => 'This application is already agreed or recruitment has closed. Review your regular care for the current schedule.']);
+                }
+                $shared = app(\App\Services\RegularCare\SharedCareService::class);
+                $scheduleData = ['selected_days' => array_values(array_unique(array_map('intval', $this->selectedDays))),
+                    'offered_schedule' => $shared->offer($request, $this->selectedDays),
+                    'schedule_fingerprint' => $shared->fingerprint($request),
+                    'offer_version' => ($existing?->offer_version ?? 0) + 1];
+            }
 
-        $this->existingApplication = CareRequestApplication::query()->updateOrCreate(
-            [
-                'care_request_id' => $this->requestItem->id,
-                'caregiver_user_id' => auth()->id(),
-            ],
-            [
-                'status' => $status,
-                'proposed_rate' => $applicationRate,
-                'cover_note' => trim($this->cover_note) ?: null,
-            ],
-        );
+            $status = $existing && in_array($existing->status, [
+                CareRequestApplication::STATUS_SHORTLISTED,
+                CareRequestApplication::STATUS_HIRED,
+            ], true)
+                ? $existing->status
+                : CareRequestApplication::STATUS_APPLIED;
+
+            return CareRequestApplication::query()->updateOrCreate(
+                [
+                    'care_request_id' => $this->requestItem->id,
+                    'caregiver_user_id' => auth()->id(),
+                ],
+                [
+                    'status' => $status,
+                    'proposed_rate' => $applicationRate,
+                    'cover_note' => trim($this->cover_note) ?: null,
+                    ...$scheduleData,
+                ],
+            );
+        }, 3);
 
         CareRequestConversation::query()
             ->where('care_request_id', $this->requestItem->id)
@@ -960,33 +987,37 @@ class ApplyToCareRequest extends Component
             return;
         }
 
-        $changeRequest->update([
-            'status' => CareBookingChangeRequest::STATUS_ACCEPTED,
-            'resolved_at' => now(),
-            'resolved_by_user_id' => auth()->id(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($booking, $changeRequest): void {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertBookingChangeAllowed($booking, $changeRequest);
+            $changeRequest->update([
+                'status' => CareBookingChangeRequest::STATUS_ACCEPTED,
+                'resolved_at' => now(),
+                'resolved_by_user_id' => auth()->id(),
+            ]);
 
-        if ($changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL) {
-            $lateCancel = app(BookingTrustService::class)->markLateCancelFlag($booking);
-            $booking->update([
-                'status' => CareBooking::STATUS_CANCELLED,
-                'cancelled_at' => now(),
-                'cancelled_by_user_id' => $changeRequest->requester_user_id,
-                'cancellation_reason' => $changeRequest->reason,
-                'late_cancel_flag' => $lateCancel,
-            ]);
-            app(BookingPaymentService::class)->cancelForBooking($booking);
-            FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
-        } else {
-            $booking->update([
-                'status' => CareBooking::STATUS_SCHEDULED,
-                'scheduled_start_at' => $changeRequest->proposed_start_at,
-                'scheduled_end_at' => $changeRequest->proposed_end_at,
-                'last_rescheduled_at' => now(),
-                'last_reschedule_reason' => $changeRequest->reason,
-            ]);
-            FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
-        }
+            if ($changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL) {
+                $lateCancel = app(BookingTrustService::class)->markLateCancelFlag($booking);
+                $booking->update([
+                    'status' => CareBooking::STATUS_CANCELLED,
+                    'cancelled_at' => now(),
+                    'cancelled_by_user_id' => $changeRequest->requester_user_id,
+                    'cancellation_reason' => $changeRequest->reason,
+                    'late_cancel_flag' => $lateCancel,
+                ]);
+                app(BookingPaymentService::class)->cancelForBooking($booking);
+                FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
+            } else {
+                $booking->update([
+                    'status' => CareBooking::STATUS_SCHEDULED,
+                    'scheduled_start_at' => $changeRequest->proposed_start_at,
+                    'scheduled_end_at' => $changeRequest->proposed_end_at,
+                    'last_rescheduled_at' => now(),
+                    'last_reschedule_reason' => $changeRequest->reason,
+                ]);
+                FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
+            }
+
+        });
 
         app(BookingTrustService::class)->recordEvent(
             $booking,

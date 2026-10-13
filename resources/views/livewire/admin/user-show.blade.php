@@ -144,13 +144,12 @@
                                 <x-button
                                     color="green"
                                     class="w-full justify-center sm:w-auto"
-                                    wire:click="approveIdentityVerification"
-                                    loading="approveIdentityVerification"
+                                    :href="route('admin.caregivers.reviews')"
                                 >
-                                    Approve KYC manually
+                                    Open caregiver screening
                                 </x-button>
                                 <p class="mt-2 text-xs text-slate-500 sm:max-w-[16rem]">
-                                    Use only after confirming the caregiver's identity documents outside the automated flow.
+                                    Successful Didit verification is required before screening.
                                 </p>
                             </div>
                         @else

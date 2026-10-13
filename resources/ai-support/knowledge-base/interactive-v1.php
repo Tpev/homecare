@@ -127,9 +127,9 @@ return [
         $entry(
             'KB-CARE-006',
             'Current hourly price',
-            'The Family total is $30 per worked hour. The caregiver gross amount is $27 per worked hour minus the actual Stripe processing fees recorded on the successful Family charge. LoLo’s gross portion is $3 per worked hour. The exact receipt and payment record determine historical amounts, refunds, and payment status.',
+            'Review the current care rate, Family processing fee and total in the app before confirming. An authorized pricing agreement or an existing booking snapshot can differ from current defaults. Quote only server-provided amounts for the selected care and duration. The exact receipt and payment ledger determine historical amounts, refunds, payment status and caregiver earnings; do not replace those records with a default-rate calculation.',
             'family.care_requests',
-            ['The Family total is $30 per worked hour.', 'Caregiver gross is $27 per worked hour minus actual Stripe processing fees.', 'LoLo’s gross portion is $3 per worked hour.'],
+            ['The care rate, Family processing fee and total are separate components.', 'Authoritative pricing agreements and booking snapshots determine the applicable terms.', 'Exact charges and caregiver earnings come from the payment ledger.'],
             ['A payment outcome not present in authoritative state.', 'A historical total without its pricing version and payment record.', 'Caregiver availability.'],
             ['How much does care cost?', 'What is the hourly rate?', 'Calculate the cost of care.'],
             ['Create my request.', 'Was my card charged?', 'What is the support queue?'],
@@ -141,7 +141,7 @@ return [
         $entry(
             'KB-CARE-007',
             'A published request is not a hired caregiver',
-            'Publishing makes the request live so eligible caregivers can see it. It does not mean a caregiver has applied, been selected, or been hired. Current application or hiring status must come from the request itself, not from a general support answer.',
+            'Publishing makes the request live so eligible caregivers can see it. It does not mean a caregiver has applied, been selected, or been hired. The publication receipt opens Find caregivers for this exact request. Search and invite there, track replies under Invited, compare applications under Review applicants, and use Get started to review a chosen caregiver before confirmation. Current application or hiring status must come from the request itself, not from a general support answer.',
             'family.care_requests',
             ['A live request is visible to eligible caregivers.', 'Publication does not hire a caregiver.', 'Current application and hiring state require authorized live data.'],
             ['That a specific caregiver saw, applied to, or accepted a request.', 'That coverage is available.', 'A booking that is not in authoritative context.'],

@@ -1,0 +1,26 @@
+Name          Description                        Type      Start   Length
+CMDORNUM      OFFENDER NC DOC ID NUMBER          CHAR      1       7     
+CMPREFIX      COMMITMENT PREFIX                  CHAR      8       2     
+CMSCLSTN      COMMITTED LAST NAME                CHAR      10      20    
+CMSCFSTN      COMMITTED FIRST NAME               CHAR      30      11    
+CMSCMIDN      COMMITTED MIDDLE NAME              CHAR      41      15    
+CMSCSUFX      COMMITTED NAME SUFFIX              CHAR      56      3     
+CMADMDTE      OFFENDER ADMISSION/INTAKE DATE     DATE      59      10    
+CMINTDTE      P&P CASE INTAKE DATE               DATE      69      10    
+CMSTAFLG      INMATE COMMITMENT STATUS FLAG      CHAR      79      30    
+CMSTADTE      COMMITMENT STATUS DATE             DATE      109     10    
+GMSEFFDT      EARLIEST SENTENCE EFFECTIVE DT     DATE      119     10    
+CMNEWPD       NEW PERIOD OF INCARCERATION FL     CHAR      129     1     
+CMPRIOFF      MOST SERIOUS OFFENSE CODE          CHAR      130     30    
+CMCOUNTY      CO OF CONV MOST SERIOUS OFFNSE     CHAR      160     30    
+CMMAXLEN      TOTAL SENTENCE LENGTH              CHAR      190     7     
+CMJAILCR      TOTAL JAIL CREDITS (IN DAYS)       CHAR      197     4     
+CMNOREST      NO RESTITUTION FLAG                CHAR      201     1     
+CMPPSTFL      P&P COMMITMENT STATUS FLAG         CHAR      202     30    
+CMPPCMDT      P&P COMMITMENT STATUS DATE         DATE      232     10    
+CMPROLEN      TOTAL LENGTH OF SUPERVISION        CHAR      242     7     
+CIOLDPED      PED PRIOR TO 1995 CONVERSION       DATE      249     10    
+DTOFUPDT      DATE OF LAST UPDATE                DATE      259     10    
+TMOFUPDT      TIME OF LAST UPDATE                TIME      269     8     
+CMNEWSUPV     NEW PERIOD OF SUPERVISION FLAG     CHAR      277     1     
+CMPEDTYP      TYPE OF OLD PE DATE CODE           CHAR      278     30    

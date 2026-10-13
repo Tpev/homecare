@@ -1,0 +1,16 @@
+{
+  "at": "2026-09-09T12:39:35.714Z",
+  "database": "C:\\Users\\Epicpp\\homecare\\.tmp\\find-care-screen-audit-2026-09-08\\find-care-audit.sqlite",
+  "backup": "C:\\Users\\Epicpp\\homecare\\.tmp\\find-care-recruitment-polish-2026-09-09\\before-pricing-migration-2026-09-09T12-39-35-514Z.sqlite",
+  "backupSha256": "c1857d9e2c36cb5d28025062e26d26dcc963729726ab74a556927c411f25c6f5",
+  "backupIntegrity": "ok",
+  "pending": [
+    "2026_09_09_000001_create_care_pricing_agreements"
+  ],
+  "changes": "Existing repository migration creates an empty care_pricing_agreements table and nullable pricing references/fee policy columns. No reset, reseed, or fixture date changes.",
+  "migrationOutput": "\n   INFO  Running migrations.  \n\r\n  2026_09_09_000001_create_care_pricing_agreements ..................................................... 555.34ms DONE\r\n\r\n",
+  "afterStatus": [
+    "  2026_09_09_000001_create_care_pricing_agreements ........................................................... [2] Ran  \r"
+  ],
+  "passed": true
+}

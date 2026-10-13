@@ -1,0 +1,261 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\nAbout Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nEleanor Bennett · Sat, Sep 5\nFILLED\nVISIT Reviewed\nPayment Captured\n\nOne-time care - Sep 05, 10:00 AM - 12:00 PM - Raleigh, NC\n\nVisit #12\n\nCare story\n\nVISIT COMPLETE\n\nThis visit is complete.\n\nReview the final record, caregiver feedback, and book again when you need the same help.\n\nVisit\n\nTime, location, payment\n\nCaregiver\n\nProfile, chat\n\nHelp\n\nChange or get help\n\nCare details\n\nNeeds, address, tasks\n\nVISIT RECORD\n\nFinal details\n\nKeep the final schedule, time, payment, notes, and feedback in one record.\n\nReviewed\n\nSCHEDULE\n\nSep 05, 2026\n\n10:00 AM - 12:00 PM\n\nCAREGIVER\n\nSofia Martinez\n\nChecked in Sep 05, 10:00 AM\n\nCARE LOCATION\n\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\n\nOpen map\nEleanor Bennett - Mother\n\nVISIT RECEIPT\n\nWORKED TIME\n\n2h 00m\n\nPAYMENT\n\n$62.00\n\nCaptured\n\nTIMESHEET\n\nConfirmed\n\nSep 05, 12:35\n\nDetailed visit record\nLeave a caregiver review\n\nTap stars to rate this visit.\n\nRating\n\nNo rating selected yet.\n\nReview comment\nSubmit review\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents\nSupport",
+  "headings": [
+    {
+      "level": "H2",
+      "text": "About Ellie"
+    },
+    {
+      "level": "H3",
+      "text": "At a glance"
+    },
+    {
+      "level": "H3",
+      "text": "Communication"
+    },
+    {
+      "level": "H3",
+      "text": "Support and mobility"
+    },
+    {
+      "level": "H3",
+      "text": "Routine and comfort"
+    },
+    {
+      "level": "H3",
+      "text": "Important for safety"
+    },
+    {
+      "level": "H3",
+      "text": "What the family is looking for"
+    },
+    {
+      "level": "H3",
+      "text": "Contacts and care coordination"
+    },
+    {
+      "level": "H1",
+      "text": "Eleanor Bennett · Sat, Sep 5"
+    },
+    {
+      "level": "H2",
+      "text": "Final details"
+    },
+    {
+      "level": "H2",
+      "text": "Leave a caregiver review"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visit\n\nTime, location, payment",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregiver\n\nProfile, chat",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Help\n\nChange or get help",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details\n\nNeeds, address, tasks",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Rate 1 out of 5",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Rate 2 out of 5",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Rate 3 out of 5",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Rate 4 out of 5",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Rate 5 out of 5",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "label": "Review comment",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "required": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Submit review",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8027/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8027/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8027/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "+1 919 555 0153",
+      "href": "tel:+1 919 555 0153"
+    },
+    {
+      "text": "daniel.find-care-audit@example.com",
+      "href": "mailto:daniel.find-care-audit@example.com"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8027/family/care/journey/regular/1"
+    },
+    {
+      "text": "Open map",
+      "href": "https://www.google.com/maps/search/?api=1&query=142%20Maple%20Grove%20Lane%2C%20Apartment%202B%2C%20Raleigh%2C%20NC%2027601"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8027/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8027/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8027/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8027/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8027/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8027/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8027/legal"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Detailed visit record",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 3028
+}

@@ -1,0 +1,439 @@
+FAMILY WORKSPACE
+Care
+Caregivers
+Messages
+Request care
+MB
+Maria Bennett
+Family
+
+CARE HISTORY
+
+Care history
+
+Every previous visit, caregiver, worked hour, and charge in one place.
+
+Upcoming schedule
+Request care
+Overview
+Arrangements
+Schedule
+History
+History summary
+
+Totals reflect every matching visit, not only this page.
+
+CARE PROVIDED
+
+16
+
+Visits with recorded care
+
+RECORDED HOURS
+
+32h 00m
+
+Submitted worked time only
+
+NET BILLED
+
+$620.00
+
+Captured minus refunds
+
+Find a visit
+
+Search by booking number, caregiver, recipient, or care title.
+
+Search
+More filters
+Date, type, status, or person
+Date range
+All time
+Past 30 days
+Past 3 months
+Past year
+Custom dates
+Care type
+All care types
+One-time
+Recurring care
+Extra visit
+Visit status
+All visit statuses
+Completed
+Awaiting hours approval
+Check-in missing
+Disputed
+Cancelled
+Caregiver no-show
+Adjusted
+Payment status
+All payment statuses
+Any billed care
+Paid
+Card authorized
+Payment issue
+Partially refunded
+Refunded
+Not charged
+Recipient
+All recipients
+Eleanor Bennett
+Caregiver
+All caregivers
+Sofia Martinez
+Recurring care plan
+All recurring care plans
+Recurring care for Ellie — Active
+Recurring care for Ellie — Ended
+Recurring care for Ellie — Paused
+Recurring care for Ellie — Pending
+Recurring care for Ellie — Time Correction
+Previous care
+
+16 matching bookings, newest first.
+
+Mon, Sep 7, 2026
+Recurring care
+Awaiting hours approval
+Eleanor Bennett with Sofia Martinez
+
+Recurring care for Ellie — After Shift · Booking #10
+
+SCHEDULED
+
+5:51 AM –7:51 AM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+Not charged
+
+Card authorized
+Review hours
+View care story
+Visit, payment, and help details
+Mon, Sep 7, 2026
+One-time
+Awaiting hours approval
+Eleanor Bennett with Sofia Martinez
+
+A helping hand for Ellie — After Shift · Booking #3
+
+SCHEDULED
+
+5:51 AM –7:51 AM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+Not charged
+
+Card authorized
+Review hours
+View care story
+Visit, payment, and help details
+Mon, Sep 7, 2026
+Recurring care
+Awaiting hours approval
+Waiting for family review
+Eleanor Bennett with Sofia Martinez
+
+Recurring care for Ellie — Time Correction · Booking #23
+
+SCHEDULED
+
+2:51 AM –4:51 AM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+Not charged
+
+Card authorized
+Review corrected hours
+View care story
+Visit, payment, and help details
+Mon, Sep 7, 2026
+One-time
+Awaiting hours approval
+Waiting for family review
+Eleanor Bennett with Sofia Martinez
+
+A helping hand for Ellie — Time Correction · Booking #20
+
+SCHEDULED
+
+2:51 AM –4:51 AM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+Not charged
+
+Card authorized
+Review corrected hours
+View care story
+Visit, payment, and help details
+Mon, Sep 7, 2026
+Recurring care
+Awaiting hours approval
+Eleanor Bennett with Sofia Martinez
+
+Recurring care for Ellie — Timesheet Review · Booking #11
+
+SCHEDULED
+
+2:51 AM –4:51 AM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+Not charged
+
+Card authorized
+Review hours
+View care story
+Visit, payment, and help details
+Mon, Sep 7, 2026
+One-time
+Awaiting hours approval
+Eleanor Bennett with Sofia Martinez
+
+A helping hand for Ellie — Timesheet Review · Booking #4
+
+SCHEDULED
+
+2:51 AM –4:51 AM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+Not charged
+
+Card authorized
+Review hours
+View care story
+Visit, payment, and help details
+Sat, Sep 5, 2026
+Recurring care
+Completed
+Eleanor Bennett with Sofia Martinez
+
+Recurring care for Ellie — Leave Review · Booking #12
+
+SCHEDULED
+
+10:00 AM –12:00 PM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+$62.00
+
+Paid
+View receipt
+View care story
+Visit, payment, and help details
+Sat, Sep 5, 2026
+One-time
+Completed
+Eleanor Bennett with Sofia Martinez
+
+A helping hand for Ellie — Leave Review · Booking #5
+
+SCHEDULED
+
+10:00 AM –12:00 PM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+$62.00
+
+Paid
+View receipt
+View care story
+Visit, payment, and help details
+Mon, Aug 31, 2026
+Recurring care
+Completed
+Eleanor Bennett with Sofia Martinez
+
+Recurring care for Ellie — Closed · Booking #13
+
+SCHEDULED
+
+10:00 AM –12:00 PM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+$62.00
+
+Paid
+View receipt
+View care story
+Visit, payment, and help details
+Mon, Aug 31, 2026
+One-time
+Completed
+Eleanor Bennett with Sofia Martinez
+
+A helping hand for Ellie — Closed · Booking #6
+
+SCHEDULED
+
+10:00 AM –12:00 PM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+$62.00
+
+Paid
+View receipt
+View care story
+Visit, payment, and help details
+Mon, Aug 24, 2026
+One-time
+Completed
+Care recipient with Sofia Martinez
+
+Recurring care for Ellie — Pending plan source · Booking #26
+
+SCHEDULED
+
+10:00 AM –12:00 PM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+$62.00
+
+Paid
+View receipt
+View care story
+Visit, payment, and help details
+Mon, Aug 24, 2026
+One-time
+Completed
+Care recipient with Sofia Martinez
+
+Recurring care for Ellie — Pending plan source · Booking #25
+
+SCHEDULED
+
+10:00 AM –12:00 PM
+
+2h 00m
+
+RECORDED CARE
+
+Worked 2h 00m
+
+Submitted caregiver time
+
+PAYMENT
+
+$62.00
+
+Paid
+View receipt
+View care story
+Visit, payment, and help details
+
+Showing 1 to 12 of 16 results
+
+1
+2
+
+© 2026 LoLo Care Inc
+
+﻿
+Terms of Service
+Privacy Policy
+Payments & Cancellation
+Caregiver Terms
+Family Terms
+Safety Policy
+All Legal Documents
+Support

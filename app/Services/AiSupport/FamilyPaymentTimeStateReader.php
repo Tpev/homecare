@@ -244,7 +244,7 @@ class FamilyPaymentTimeStateReader
     /** @return array{target_id:string,resource_type:string,resource_id:int,label:string} */
     private function targetFor(CareBooking $booking, bool $payment): array
     {
-        if ($booking->care_request_id && ! $booking->careRequest?->is_system_generated) {
+        if ($booking->care_request_id && $booking->careRequest) {
             return [
                 'target_id' => $payment ? 'family.request.payment_attention' : 'family.request.timesheet',
                 'resource_type' => 'care_request',

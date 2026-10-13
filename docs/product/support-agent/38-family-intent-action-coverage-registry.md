@@ -96,7 +96,7 @@ The table above remains the original inventory snapshot and is not the current B
 | --- | --- | --- | --- | --- | --- |
 | FAM-START-001 | Understand what LoLo does for Families | UI | Yes | Guide | Explain the bounded marketplace and support model and offer the current Family Care overview |
 | FAM-START-002 | Understand what non-medical care means | UI | Yes | Guide | Explain the non-medical boundary, offer Support, and transfer medical questions |
-| FAM-START-003 | Understand what the Family Care overview shows | UI | Yes | Navigate | Explain Overview, Actions, Schedule, Arrangements, and History |
+| FAM-START-003 | Understand what the Family Care overview shows | UI | Yes | Navigate | Explain Overview, Care request, Schedule and History; distinguish the recurring plan from its dated visits |
 | FAM-START-004 | Open the Family Care overview | UI | Yes | Navigate | Open the current Care overview, never the retired dashboard |
 | FAM-START-005 | Understand the difference between one-time, regular, and 24/7 care | UI | Yes | Draft / Transfer | Keep one-time/regular drafting and 24/7 transfer |
 | FAM-START-006 | Decide whether the need is one visit or recurring weekly care | UI | Yes | Draft | Keep AI recommendation plus explicit path selection |
@@ -304,8 +304,8 @@ The table above remains the original inventory snapshot and is not the current B
 | FAM-PAY-025 | Understand a duplicate or unfamiliar charge | Human | No | Transfer | Read matching authorized records if safe, then human |
 | FAM-PAY-026 | Get a receipt | UI | Yes | Guide | Navigate to the exact Family-visible care and payment record; never invent a document action |
 | FAM-PAY-027 | Get an invoice or tax document | Gap / Human | Yes | Guide / Transfer | Explain current availability and transfer rather than promise a document |
-| FAM-PAY-028 | Understand taxes, fees, tips, mileage, holiday charges, or surcharges | Approved pricing truth | Yes | Explain / Guide | State $30/hour Family total, $27/hour caregiver gross minus actual Stripe processing fees, and $3/hour LoLo gross platform portion; do not invent other charges; offer the next valid care step |
-| FAM-PAY-029 | Ask the hourly price or estimated total | Approved pricing truth | Yes | Explain / Calculate / Guide | State $30/hour Family total, $27/hour caregiver gross minus actual Stripe processing fees, and $3/hour LoLo gross platform portion; calculate only from an explicit duration; offer request creation |
+| FAM-PAY-028 | Understand taxes, fees, tips, mileage, holiday charges, or surcharges | Current authoritative pricing | Yes | Explain / Guide | Distinguish care rate, Family processing fee and total from the current quote or preserved booking terms; do not invent additional charges; offer the exact review |
+| FAM-PAY-029 | Ask the hourly price or estimated total | Current authoritative pricing | Yes | Explain / Calculate / Guide | General default examples use current server pricing and an explicit duration; exact care uses its agreement, booking snapshot and ledger; never replace legacy terms or infer future recurring prepayment |
 | FAM-PAY-030 | Apply a coupon, credit, or promo code | Gap | Yes | Guide | State plainly that coupons, credits, and promo codes are not currently supported; never invent a discount; offer Care history or a person for a claimed existing credit |
 | FAM-PAY-031 | Change billing owner or use a different person's card | Gap / Human | No | No | Define authorization and account model; human until then |
 | FAM-PAY-032 | Understand whether caregiver payout has happened | Human / restricted | No | No | Do not expose caregiver payout details; explain Family-visible state only |

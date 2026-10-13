@@ -11,12 +11,19 @@ class CaregiverIdentityVerification extends Model
     use HasFactory;
 
     public const STATUS_NOT_STARTED = 'not_started';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_IN_REVIEW = 'in_review';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_DECLINED = 'declined';
+
     public const STATUS_ABANDONED = 'abandoned';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_ERROR = 'error';
 
     protected $fillable = [
@@ -35,6 +42,8 @@ class CaregiverIdentityVerification extends Model
         'declined_at',
         'last_webhook_at',
         'failure_reason',
+        'provider_confirmed_at',
+        'provider_decision_payload',
     ];
 
     protected function casts(): array
@@ -48,6 +57,8 @@ class CaregiverIdentityVerification extends Model
             'approved_at' => 'datetime',
             'declined_at' => 'datetime',
             'last_webhook_at' => 'datetime',
+            'provider_confirmed_at' => 'datetime',
+            'provider_decision_payload' => 'array',
         ];
     }
 
@@ -75,4 +86,3 @@ class CaregiverIdentityVerification extends Model
         return $this->belongsTo(User::class);
     }
 }
-

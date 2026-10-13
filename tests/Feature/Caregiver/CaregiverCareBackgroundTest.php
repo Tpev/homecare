@@ -17,6 +17,7 @@ use App\Models\Skill;
 use App\Models\User;
 use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
+use App\Services\Screening\CaregiverScreeningService;
 use App\Support\CaregiverOnboardingState;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -371,9 +372,11 @@ class CaregiverCareBackgroundTest extends TestCase
         $this->actingAs($admin)
             ->get(route('caregiver.certifications.document', $credential))
             ->assertOk();
+        $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
             ->test(CaregiverReviewsQueue::class)
+            ->call('selectCase', $case->id)
             ->call('verifyCertification', $credential->id)
             ->assertHasNoErrors();
 
@@ -387,7 +390,6 @@ class CaregiverCareBackgroundTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(CaregiverReviewsQueue::class)
-            ->call('verifyCertification', $credential->id)
             ->assertForbidden();
     }
 
@@ -400,9 +402,11 @@ class CaregiverCareBackgroundTest extends TestCase
             'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
         ]);
         $admin = User::factory()->create(['role' => 'admin']);
+        $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
             ->test(CaregiverReviewsQueue::class)
+            ->call('selectCase', $case->id)
             ->set('certificationRejectionReasons.'.$credential->id, 'The uploaded information does not show a current expiration date.')
             ->call('rejectCertification', $credential->id)
             ->assertHasNoErrors();
@@ -462,9 +466,11 @@ class CaregiverCareBackgroundTest extends TestCase
             'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
         ]);
         $admin = User::factory()->create(['role' => 'admin']);
+        $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
             ->test(CaregiverReviewsQueue::class)
+            ->call('selectCase', $case->id)
             ->assertSee('Memory loss, dementia, or Alzheimer')
             ->assertSee('American Red Cross')
             ->assertDontSee('document_path');
@@ -688,6 +694,7 @@ class CaregiverCareBackgroundTest extends TestCase
             'service_radius_miles' => 10,
             'identity_verified_at' => now(),
             'identity_verification_status' => 'approved',
+            'screening_initial_approved_at' => $status === 'active' ? now() : null,
             'care_background_schema_version' => $newSchema ? CaregiverBackgroundService::SCHEMA_VERSION : null,
         ]);
         $profile->skills()->sync([$skill->id]);

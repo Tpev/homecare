@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Family;
 
+use App\Models\CareArrangement;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\ContinuousCoveragePlan;
@@ -10,6 +11,7 @@ use App\Services\Family\FamilyCareActionService;
 use App\Services\Family\FamilyCarePresentationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -25,6 +27,9 @@ class RequestsIndex extends Component
 
     public string $sort = 'latest';
 
+    #[Url(as: 'care', except: 0)]
+    public int $sharedCareId = 0;
+
     public function mount(): void
     {
         abort_unless(auth()->user()?->role === 'family', 403);
@@ -37,12 +42,28 @@ class RequestsIndex extends Component
     ) {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
 
+        $sharedCareSchedules = CareArrangement::forFamilyAccount($account)->where('status', 'active')
+            ->with('sourceRequest.recipient')->latest()->get();
+        $activeSharedCare = $sharedCareSchedules->firstWhere('id', $this->sharedCareId) ?: $sharedCareSchedules->first();
+        if ($activeSharedCare) {
+            $this->sharedCareId = $activeSharedCare->id;
+        }
+
         $familyActions = $actions->forAccount($account);
+        if ($activeSharedCare) {
+            // The selected care home's reply card already provides this action.
+            $familyActions = $familyActions->reject(fn ($action) => ($action['type'] ?? '') === 'applicants'
+                && ($action['resource_type'] ?? '') === 'care_request'
+                && ($action['resource_id'] ?? 0) === $activeSharedCare->source_care_request_id)->values();
+        }
         $attentionCount = $familyActions->count();
         $familyActions = $familyActions->take(self::ACTION_PREVIEW_LIMIT)->values();
 
         $upcomingCount = $presentation->upcomingVisitCount($account);
         $nextVisit = $presentation->upcomingVisits($account, 1)->first();
+        $otherUpcomingVisits = $activeSharedCare
+            ? $presentation->upcomingVisits($account, 3, excludingArrangementId: $activeSharedCare->id)
+            : collect();
 
         $openRequests = CareRequest::query()
             ->forFamilyAccount($account)
@@ -82,6 +103,9 @@ class RequestsIndex extends Component
             : 0;
 
         return view('livewire.family.requests-index', [
+            'sharedCareSchedules' => $sharedCareSchedules,
+            'activeSharedCare' => $activeSharedCare,
+            'otherUpcomingVisits' => $otherUpcomingVisits,
             'familyActions' => $familyActions,
             'attentionCount' => $attentionCount,
             'nextVisit' => $nextVisit,

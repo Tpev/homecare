@@ -2,13 +2,18 @@
 
 namespace App\Livewire\Admin\AiSupport;
 
+use App\Models\AiSupportIncident;
 use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportPilotGrant;
 use App\Models\KnowledgeBaseEntry;
 use App\Models\KnowledgeBaseVersion;
 use App\Services\AiSupport\AiSupportControlService;
+use App\Services\AiSupport\AiSupportHealthMonitorService;
+use App\Services\AiSupport\AiSupportIncidentService;
+use App\Services\AiSupport\AiSupportReadinessService;
 use App\Services\AiSupport\FamilyIntentCatalog;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -17,20 +22,46 @@ class Overview extends Component
 {
     public string $intentSearch = '';
 
+    public string $intentDisposition = '';
+
+    public bool $intentNeedsKnowledge = false;
+
+    public string $resolutionReason = '';
+
     public function mount(): void
     {
         abort_unless(auth()->user()?->canViewAiSupportPilot(), 403);
     }
 
-    public function render(AiSupportControlService $controls, FamilyIntentCatalog $intentCatalog): View
+    public function resolveIncident(string $incidentId, AiSupportIncidentService $incidents): void
+    {
+        $this->validate(['resolutionReason' => ['required', 'string', 'min:5', 'max:500']]);
+        $incidents->resolve(auth()->user(), AiSupportIncident::query()->findOrFail($incidentId), $this->resolutionReason);
+        $this->reset('resolutionReason');
+        session()->flash('status', 'Incident resolved. Availability controls were not changed.');
+    }
+
+    public function render(AiSupportControlService $controls, FamilyIntentCatalog $intentCatalog, AiSupportReadinessService $evidence, AiSupportHealthMonitorService $health): View
     {
         $now = now();
-        $intentRecords = collect($intentCatalog->records());
+        $publishedIds = KnowledgeBaseVersion::query()->retrievable()->with('entry:id,stable_id')->get()
+            ->pluck('entry.stable_id')->filter()->all();
+        $intentRecords = collect($intentCatalog->records())->map(function (array $record) use ($publishedIds): array {
+            $stages = (array) data_get($record, 'capability_stages.current', []);
+            $record['delivery'] = in_array('Execute', $stages, true) && in_array('Verify', $stages, true)
+                ? 'complete'
+                : (in_array('Human', $stages, true) ? 'human' : 'assisted');
+            $record['missing_knowledge'] = array_values(array_diff((array) $record['kb_stable_ids'], $publishedIds));
+
+            return $record;
+        });
         $search = mb_strtolower(trim($this->intentSearch));
         $matchingIntentRecords = $intentRecords
             ->when($search !== '', fn ($records) => $records->filter(fn (array $record): bool => str_contains(mb_strtolower(implode(' ', [
                 $record['intent_id'], $record['domain'], $record['intent'], implode(' ', (array) $record['kb_stable_ids']),
             ])), $search)))
+            ->when($this->intentDisposition !== '', fn ($records) => $records->where('delivery', $this->intentDisposition))
+            ->when($this->intentNeedsKnowledge, fn ($records) => $records->filter(fn (array $record): bool => $record['missing_knowledge'] !== []))
             ->values();
         $outcomeTypes = [
             'intent_unmatched', 'intent_looped', 'intent_failed', 'intent_verification_failed',
@@ -96,6 +127,13 @@ class Overview extends Component
                 ->whereHas('workingVersion', fn ($version) => $version->whereDate('review_by', '<', today()))
                 ->count(),
             'intentCoverage' => $intentCatalog->coverageSummary(),
+            'deliveryCoverage' => $intentRecords->countBy('delivery'),
+            'needsKnowledgeCount' => $intentRecords->filter(fn (array $record): bool => $record['missing_knowledge'] !== [])->count(),
+            'operationalEvidence' => $evidence->operationalEvidence(),
+            'health' => $health->snapshot(),
+            'retentionHealth' => Cache::get(\App\Console\Commands\ApplyAiSupportRetention::HEARTBEAT_KEY, []),
+            'openIncidents' => AiSupportIncident::query()->where('status', AiSupportIncident::STATUS_OPEN)
+                ->latest('opened_at')->limit(20)->get(),
             'intentDomains' => $intentRecords->groupBy('domain')->map(fn ($records, string $domain): array => [
                 'domain' => $domain,
                 'total' => $records->count(),

@@ -342,6 +342,7 @@ class LimitedReleaseReadinessTest extends TestCase
 
     public function test_option_b_deferrals_are_distinct_and_satisfy_only_initial_pilot_scope(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-08-15 12:00:00'));
         config(['ai_support.initial_pilot.enforced' => true]);
         $admin = User::factory()->create(['role' => 'admin', 'email' => 'option-b-admin@example.com']);
 

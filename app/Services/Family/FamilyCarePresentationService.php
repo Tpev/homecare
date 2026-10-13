@@ -23,12 +23,14 @@ class FamilyCarePresentationService
         int $limit = 50,
         ?string $careType = null,
         ?string $recipient = null,
+        ?int $excludingArrangementId = null,
     ): Collection {
         return $this->applyUpcomingFilters(
             $this->upcomingBookingsQuery($account),
             $careType,
             $recipient,
         )
+            ->when($excludingArrangementId, fn (Builder $query) => $query->whereDoesntHave('carePlan', fn (Builder $plans) => $plans->where('care_arrangement_id', $excludingArrangementId)))
             ->with([
                 'careRequest:id,title,care_plan_id,request_type,city,state',
                 'careRequest.recipient:id,care_request_id,full_name',

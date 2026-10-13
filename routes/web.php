@@ -161,6 +161,8 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::redirect('/ai-support/readiness', '/admin/ai-support/settings')->name('ai-support.readiness');
         Route::get('/ai-support/settings', AiSupportSettings::class)->name('ai-support.settings');
         Route::get('/caregivers/reviews', CaregiverReviewsQueue::class)->name('caregivers.reviews');
+        Route::get('/caregivers/screening/{screeningCase}/audit', \App\Http\Controllers\ScreeningAuditExportController::class)
+            ->whereNumber('screeningCase')->name('caregivers.screening.export');
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
@@ -355,6 +357,7 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
         Route::get('/{coveragePlan}', ContinuousCoverageShow::class)->whereNumber('coveragePlan')->name('show');
     });
     Route::get('/care', RegularCareIndex::class)->name('care.index');
+    Route::get('/shared-care/{arrangement}', \App\Livewire\Family\SharedCareShow::class)->whereNumber('arrangement')->name('shared-care.show');
     Route::get('/care/actions', CareActionsIndex::class)->name('care.actions');
     Route::get('/care/schedule', CareSchedule::class)->name('care.schedule');
     Route::get('/care/history', CareHistory::class)->name('care.history');

@@ -1,0 +1,30 @@
+[
+  {
+    "file": "CareRequestFlowTest.php",
+    "changedMethods": [
+      "test_assigned_caregiver_identity_is_visible_on_family_request_cards",
+      "test_request_detail_lands_on_the_right_lifecycle_screen",
+      "test_failed_hire_payment_keeps_request_open_on_current_screen",
+      "test_family_can_save_and_chat_with_applicant_before_hiring",
+      "test_closed_request_still_links_to_caregiver_profile_from_applicants"
+    ],
+    "allOtherTextExact": true,
+    "originalSha256": "510CD6E1450B4A6DC33047164962A724643C4CD3B58A613E04545276D4D6864A"
+  },
+  {
+    "file": "CareWorkspaceNavigationTest.php",
+    "changedMethods": [
+      "test_recurring_request_has_a_continuing_home_and_an_honest_unconfirmed_schedule"
+    ],
+    "allOtherTextExact": true,
+    "originalSha256": "0A6FC3A8CF8AC5B160BE4ADB7864F1A531203F645058F748252CFED005AB9B1E"
+  },
+  {
+    "file": "CaregiverInvitationExperienceTest.php",
+    "changedMethods": [
+      "test_family_can_open_search_and_invite_a_named_caregiver_without_leaving_request"
+    ],
+    "allOtherTextExact": true,
+    "originalSha256": "FC90E7D99EF6F34D9C4D5E83C38540B3FD36A6D0BBDD36150668B539318577F6"
+  }
+]

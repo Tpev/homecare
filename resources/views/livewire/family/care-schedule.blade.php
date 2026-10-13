@@ -1,15 +1,15 @@
 <div class="hc-care-workspace hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
-    <h1 data-ai-target="family.care_schedule" tabindex="-1" class="sr-only">Care schedule</h1>
+    <h1 class="sr-only">Care schedule</h1>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <x-family-care-nav active="schedule" />
         <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
     </div>
 
-    <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">
+    <section data-ai-target="family.care_schedule" tabindex="-1" aria-label="Schedule filters and view" class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h2 class="font-display text-xl font-semibold text-[#17313F]">{{ $totalVisitCount }} upcoming {{ $totalVisitCount === 1 ? 'visit' : 'visits' }}</h2>
-                <p class="mt-1 text-sm text-[#607080]">Your confirmed care, by person and date.</p>
+                <p class="mt-1 text-sm text-[#607080]">{{ $scheduleView === 'calendar' ? 'Booked visits and care still to arrange, by person and date.' : 'Your booked visits. Switch to Calendar to also see unfilled care.' }}</p>
                 @if ($scheduleView === 'list' && $totalVisitCount > $visits->count())
                     <p class="mt-1 text-xs font-medium text-[#7B8794]">Showing the next {{ $visits->count() }} visits.</p>
                 @endif
@@ -86,7 +86,7 @@
                                                     <a href="{{ $visit['action_url'] }}" wire:navigate class="hc-primary-button w-full sm:w-auto">Fix payment</a>
                                                     <p class="max-w-48 text-xs leading-5 text-amber-800">Required to keep this visit financially protected.</p>
                                                 @else
-                                                    <a href="{{ $visit['details_url'] }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">View care</a>
+                                                    <a href="{{ $visit['action_url'] }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">View visit</a>
                                                 @endif
                                             </div>
                                         </div>

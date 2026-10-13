@@ -32,7 +32,7 @@
     x-on:support-chat-guidance-failed.window="guidanceFailed($event.detail)"
     x-on:support-chat-guidance-completed.window="guidanceCompleted()"
     x-on:support-chat-focus-composer.window="$nextTick(() => $refs.composer?.focus())"
-    x-on:open-care-support-chat.window="showPanel()"
+    x-on:open-care-support-chat.window="showPanel($event.target)"
     x-on:keydown.window="handleKeydown($event)"
     x-on:online.window="wentOnline()"
     x-on:offline.window="wentOffline()"
@@ -79,6 +79,7 @@
         x-transition.opacity.scale.90.duration.180ms
         type="button"
         data-testid="support-chat-launcher"
+        data-support-chat-opener="launcher"
         class="support-chat-launcher"
         aria-haspopup="dialog"
         aria-controls="support-chat-panel"
@@ -435,7 +436,7 @@
                                             wire:navigate
                                             x-on:click="closeForNavigation()"
                                             class="support-chat-action mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
-                                        >View request</a>
+                                        >{{ $actionPayload['label'] ?? 'View request' }}</a>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && $action->invalidation_reason === 'actor_logged_out')
                                         <button
                                             type="button"

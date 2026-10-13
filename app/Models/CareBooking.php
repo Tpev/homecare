@@ -42,6 +42,7 @@ class CareBooking extends Model
         'care_request_id',
         'care_plan_id',
         'occurrence_key',
+        'occurrence_revision',
         'plan_visit_kind',
         'plan_schedule_version',
         'care_request_application_id',

@@ -1,0 +1,269 @@
+{
+    "checkedAt": "2026-09-08T16:01:25+00:00",
+    "baselineDatabaseUnchanged": true,
+    "tables": {
+        "care_requests": {
+            "baselineRows": 38,
+            "different": []
+        },
+        "care_request_applications": {
+            "baselineRows": 37,
+            "different": []
+        },
+        "care_request_invitations": {
+            "baselineRows": 4,
+            "different": []
+        },
+        "care_bookings": {
+            "baselineRows": 23,
+            "different": []
+        },
+        "care_booking_payments": {
+            "baselineRows": 23,
+            "different": []
+        },
+        "care_booking_payment_attempts": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "care_booking_payment_operations": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "care_reviews": {
+            "baselineRows": 10,
+            "different": []
+        },
+        "care_booking_change_requests": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "care_booking_time_corrections": {
+            "baselineRows": 2,
+            "different": []
+        },
+        "care_booking_corrections": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "care_booking_incidents": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "care_plans": {
+            "baselineRows": 7,
+            "different": []
+        },
+        "care_plan_events": {
+            "baselineRows": 4,
+            "different": []
+        },
+        "care_plan_schedule_changes": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "completed_extra_visit_requests": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "care_booking_events": {
+            "baselineRows": 73,
+            "different": []
+        },
+        "care_booking_task_checks": {
+            "baselineRows": 69,
+            "different": []
+        },
+        "care_recipient_profile_versions": {
+            "baselineRows": 2,
+            "different": []
+        },
+        "care_recipient_profiles": {
+            "baselineRows": 2,
+            "different": []
+        },
+        "care_relationships": {
+            "baselineRows": 4,
+            "different": []
+        },
+        "care_request_conversations": {
+            "baselineRows": 2,
+            "different": []
+        },
+        "care_request_messages": {
+            "baselineRows": 4,
+            "different": []
+        },
+        "care_request_recipients": {
+            "baselineRows": 38,
+            "different": []
+        },
+        "care_request_task": {
+            "baselineRows": 111,
+            "different": []
+        },
+        "care_request_third_party_contacts": {
+            "baselineRows": 37,
+            "different": []
+        },
+        "care_tasks": {
+            "baselineRows": 7,
+            "different": []
+        },
+        "caregiver_availabilities": {
+            "baselineRows": 63,
+            "different": []
+        },
+        "caregiver_certification_types": {
+            "baselineRows": 9,
+            "different": []
+        },
+        "caregiver_certifications": {
+            "baselineRows": 5,
+            "different": []
+        },
+        "caregiver_experience_types": {
+            "baselineRows": 10,
+            "different": []
+        },
+        "caregiver_identity_verifications": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "caregiver_language": {
+            "baselineRows": 9,
+            "different": []
+        },
+        "caregiver_payout_items": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "caregiver_payouts": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "caregiver_profile_experience": {
+            "baselineRows": 8,
+            "different": []
+        },
+        "caregiver_profile_versions": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "caregiver_profiles": {
+            "baselineRows": 9,
+            "different": []
+        },
+        "caregiver_skill": {
+            "baselineRows": 22,
+            "different": []
+        },
+        "family_account_invitations": {
+            "baselineRows": 2,
+            "different": []
+        },
+        "family_account_members": {
+            "baselineRows": 9,
+            "different": []
+        },
+        "family_accounts": {
+            "baselineRows": 6,
+            "different": []
+        },
+        "family_caregiver_favorites": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "family_household_profiles": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "family_recipient_profiles": {
+            "baselineRows": 2,
+            "different": []
+        },
+        "languages": {
+            "baselineRows": 6,
+            "different": []
+        },
+        "skills": {
+            "baselineRows": 7,
+            "different": []
+        },
+        "support_ticket_activities": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "support_ticket_messages": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "support_tickets": {
+            "baselineRows": 1,
+            "different": []
+        },
+        "user_notification_preferences": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_events": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_handoffs": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_lane_requests": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_plans": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_replacement_cases": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_roster_members": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_shift_offers": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_shift_templates": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "continuous_coverage_shifts": {
+            "baselineRows": 0,
+            "different": []
+        },
+        "users": {
+            "baselineRows": 20,
+            "different": []
+        }
+    },
+    "failures": [],
+    "excludedFields": {
+        "users": [
+            "password",
+            "remember_token",
+            "last_login_at",
+            "last_seen_at",
+            "updated_at"
+        ]
+    },
+    "excludedOperationalTables": [
+        "sessions, password_reset_tokens, cache, cache_locks",
+        "family_conversation_reads, family_support_ticket_reads, care_recipient_profile_views (read\/view receipts)",
+        "family_account_activity_logs, caregiver_moderation_logs, page_view_events, funnel_events, marketplace_notification_deliveries, notifications (activity\/delivery telemetry)",
+        "jobs, job_batches, failed_jobs, migrations, sqlite_sequence",
+        "ai_support_* (assistant runtime telemetry\/drafts)",
+        "content\/blog\/marketing\/lead\/knowledge-base\/infrastructure tables outside care records"
+    ],
+    "passed": true
+}

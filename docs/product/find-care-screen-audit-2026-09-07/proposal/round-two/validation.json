@@ -1,0 +1,6165 @@
+{
+  "date": "2026-09-07T18:33:45.077Z",
+  "scope": "V2 concept only; no application actions",
+  "before": [
+    {
+      "theme": "light",
+      "normal": {
+        "color": "rgb(255, 253, 250)",
+        "background": "rgb(33, 77, 62)",
+        "border": "rgb(33, 77, 62)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 186.5625,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(255, 253, 250)",
+        "background": "rgb(237, 242, 233)",
+        "border": "rgb(33, 77, 62)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "brightness(0.94)",
+        "width": 186.5625,
+        "height": 44
+      },
+      "normalRatio": 9.419231436572069,
+      "hoverRatio": 1.1192820913645862
+    },
+    {
+      "theme": "dark",
+      "normal": {
+        "color": "rgb(25, 59, 44)",
+        "background": "rgb(185, 215, 191)",
+        "border": "rgb(185, 215, 191)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 186.5625,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(25, 59, 44)",
+        "background": "rgb(48, 62, 50)",
+        "border": "rgb(185, 215, 191)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "brightness(0.94)",
+        "width": 186.5625,
+        "height": 44
+      },
+      "normalRatio": 7.946590572220255,
+      "hoverRatio": 1.092463983211767
+    }
+  ],
+  "layoutChecks": 451,
+  "renderedTextChecks": 12344,
+  "minimumTextContrast": 6.578111093372081,
+  "states": [
+    {
+      "theme": "light",
+      "label": "Primary",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(35, 72, 63, 0.04) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(35, 72, 63, 0.04) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(35, 72, 63, 0.04) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(35, 72, 63, 0.04) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "light",
+      "label": "Active tab",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "light",
+      "label": "Inactive tab",
+      "normal": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(240, 230, 214)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(227, 235, 224)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "normalRatio": 9.990660601223706,
+      "hoverRatio": 8.209299572650428,
+      "activeRatio": 8.320926206915724
+    },
+    {
+      "theme": "light",
+      "label": "Secondary message",
+      "normal": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(240, 230, 214)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(227, 235, 224)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "normalRatio": 9.990660601223706,
+      "hoverRatio": 8.209299572650428,
+      "activeRatio": 8.320926206915724
+    },
+    {
+      "theme": "light",
+      "label": "Text action",
+      "normal": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(246, 237, 223)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "active": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(246, 237, 223)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "focus": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "normalRatio": 9.990660601223706,
+      "hoverRatio": 8.74210006276595,
+      "activeRatio": 8.74210006276595
+    },
+    {
+      "theme": "light",
+      "label": "Disclosure",
+      "normal": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "hover": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(246, 237, 223)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "active": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(246, 237, 223)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "focus": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "normalRatio": 9.990660601223706,
+      "hoverRatio": 8.74210006276595,
+      "activeRatio": 8.74210006276595
+    },
+    {
+      "theme": "light",
+      "label": "Unselected filter",
+      "normal": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(240, 230, 214)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "active": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(227, 235, 224)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "focus": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "normalRatio": 9.990660601223706,
+      "hoverRatio": 8.209299572650428,
+      "activeRatio": 8.320926206915724
+    },
+    {
+      "theme": "light",
+      "label": "Selected filter",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "light",
+      "label": "Disabled submit",
+      "normal": {
+        "color": "rgb(72, 94, 83)",
+        "background": "rgb(246, 237, 223)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 135.640625,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(72, 94, 83)",
+        "background": "rgb(246, 237, 223)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 135.640625,
+        "height": 45.25
+      }
+    },
+    {
+      "theme": "light",
+      "label": "Rating",
+      "normal": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "hover": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(240, 230, 214)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "active": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(227, 235, 224)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "focus": {
+        "color": "rgb(35, 72, 63)",
+        "background": "rgb(255, 253, 250)",
+        "border": "rgb(116, 129, 118)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "normalRatio": 9.990660601223706,
+      "hoverRatio": 8.209299572650428,
+      "activeRatio": 8.320926206915724
+    },
+    {
+      "theme": "light",
+      "label": "Selected rating",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(35, 72, 63)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "dark",
+      "label": "Primary",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(0, 0, 0, 0.08) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(0, 0, 0, 0.08) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(0, 0, 0, 0.08) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "rgba(0, 0, 0, 0.08) 0px 4px 10px 0px",
+        "filter": "none",
+        "width": 185.46875,
+        "height": 45.25
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "dark",
+      "label": "Active tab",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "dark",
+      "label": "Inactive tab",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(55, 78, 62)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(56, 83, 64)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 235.25,
+        "height": 45.25
+      },
+      "normalRatio": 12.320388495457104,
+      "hoverRatio": 8.504066550168096,
+      "activeRatio": 7.963104435562409
+    },
+    {
+      "theme": "dark",
+      "label": "Secondary message",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(55, 78, 62)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(56, 83, 64)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 140.0625,
+        "height": 45.25
+      },
+      "normalRatio": 12.320388495457104,
+      "hoverRatio": 8.504066550168096,
+      "activeRatio": 7.963104435562409
+    },
+    {
+      "theme": "dark",
+      "label": "Text action",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(45, 65, 53)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(45, 65, 53)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgba(0, 0, 0, 0)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 119.40625,
+        "height": 44
+      },
+      "normalRatio": 12.320388495457104,
+      "hoverRatio": 10.288343655493325,
+      "activeRatio": 10.288343655493325
+    },
+    {
+      "theme": "dark",
+      "label": "Disclosure",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(255, 247, 234)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(45, 65, 53)",
+        "border": "rgb(255, 247, 234)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(45, 65, 53)",
+        "border": "rgb(255, 247, 234)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(255, 247, 234)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 565.359375,
+        "height": 49.25
+      },
+      "normalRatio": 12.320388495457104,
+      "hoverRatio": 10.288343655493325,
+      "activeRatio": 10.288343655493325
+    },
+    {
+      "theme": "dark",
+      "label": "Unselected filter",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(55, 78, 62)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(56, 83, 64)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "normalRatio": 12.320388495457104,
+      "hoverRatio": 8.504066550168096,
+      "activeRatio": 7.963104435562409
+    },
+    {
+      "theme": "dark",
+      "label": "Selected filter",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 86.96875,
+        "height": 44
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    },
+    {
+      "theme": "dark",
+      "label": "Disabled submit",
+      "normal": {
+        "color": "rgb(201, 217, 207)",
+        "background": "rgb(45, 65, 53)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 135.640625,
+        "height": 45.25
+      },
+      "hover": {
+        "color": "rgb(201, 217, 207)",
+        "background": "rgb(45, 65, 53)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 135.640625,
+        "height": 45.25
+      }
+    },
+    {
+      "theme": "dark",
+      "label": "Rating",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(55, 78, 62)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(56, 83, 64)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(36, 52, 44)",
+        "border": "rgb(155, 171, 158)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "normalRatio": 12.320388495457104,
+      "hoverRatio": 8.504066550168096,
+      "activeRatio": 7.963104435562409
+    },
+    {
+      "theme": "dark",
+      "label": "Selected rating",
+      "normal": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "hover": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(25, 57, 47)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "active": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(17, 46, 36)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "focus": {
+        "color": "rgb(255, 247, 234)",
+        "background": "rgb(35, 72, 63)",
+        "border": "rgb(159, 195, 173)",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "shadow": "none",
+        "filter": "none",
+        "width": 44,
+        "height": 45.890625
+      },
+      "normalRatio": 9.537499138235606,
+      "hoverRatio": 11.839781768974715,
+      "activeRatio": 13.710374581824182
+    }
+  ],
+  "interactions": [
+    {
+      "name": "Disabled hover unchanged light",
+      "passed": true
+    },
+    {
+      "name": "Disabled hover unchanged dark",
+      "passed": true
+    },
+    {
+      "name": "Payment review has one final amount/action",
+      "passed": true
+    },
+    {
+      "name": "Confirmation is explicitly preview only",
+      "passed": true
+    },
+    {
+      "name": "Back restores payment entry focus",
+      "passed": true
+    },
+    {
+      "name": "Message draft survives navigation",
+      "passed": true
+    },
+    {
+      "name": "Review draft and rating survive tabs",
+      "passed": true
+    },
+    {
+      "name": "Review draft survives layout choice",
+      "passed": true
+    },
+    {
+      "name": "One-result filters remain available",
+      "passed": true
+    },
+    {
+      "name": "Zero saved results retain reset",
+      "passed": true
+    },
+    {
+      "name": "All applicants restored",
+      "passed": true
+    },
+    {
+      "name": "Back restores correct candidate",
+      "passed": true
+    },
+    {
+      "name": "Private invitation tab works",
+      "passed": true
+    },
+    {
+      "name": "Help appropriate to scheduled",
+      "passed": true
+    },
+    {
+      "name": "General support retained for scheduled",
+      "passed": true
+    },
+    {
+      "name": "Help appropriate to live",
+      "passed": true
+    },
+    {
+      "name": "General support retained for live",
+      "passed": true
+    },
+    {
+      "name": "Help appropriate to hours",
+      "passed": true
+    },
+    {
+      "name": "General support retained for hours",
+      "passed": true
+    },
+    {
+      "name": "Help appropriate to closed",
+      "passed": true
+    },
+    {
+      "name": "General support retained for closed",
+      "passed": true
+    },
+    {
+      "name": "Retained visit opens Friday",
+      "passed": true
+    },
+    {
+      "name": "Friday has separate message draft",
+      "passed": true
+    },
+    {
+      "name": "Change panel preserves Friday",
+      "passed": true
+    },
+    {
+      "name": "Keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "Renders without host controls",
+      "passed": true
+    }
+  ],
+  "fontChecks": [
+    {
+      "theme": "light",
+      "width": 1024,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "inter": true,
+      "serif": true,
+      "loadedFonts": [
+        "Inter",
+        "Inter",
+        "Source Serif 4"
+      ]
+    }
+  ],
+  "scriptErrors": [],
+  "failures": [],
+  "layouts": [
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 726.671875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1162.203125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 719.359375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1718.171875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 836.875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 903.125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 862.125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 910.84375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 626.28125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 799.265625
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 763.46875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 763.46875
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 788.546875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1162.203125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 788.546875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1718.171875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 836.875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 903.125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 862.125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 943.234375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 626.28125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 799.265625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 786.71875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 786.71875
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1120.625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1285.140625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 675.515625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1126.703125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 2078.359375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 675.515625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1438.453125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 887.453125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1340.703125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1008.953125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 935.953125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1575.015625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 995.203125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1362.84375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 995.203125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 648.71875
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 934.953125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 817.703125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 868.40625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 868.40625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1167.125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1408.890625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1433.1875
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 698.765625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1149.953125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 2194.609375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1433.1875
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 698.765625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1438.453125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 964.703125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1393.953125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1032.203125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1013.203125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1575.015625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1018.453125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1392.84375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1018.453125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 648.71875
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 994.203125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 876.953125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 891.65625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 891.65625
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1503.203125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1190.375
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1455.390625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1527.734375
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 728.765625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1223.34375
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 2449.609375
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1527.734375
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 728.765625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1461.703125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1041.953125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1440.453125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1055.453125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1503.203125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1036.453125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1652.15625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1041.703125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1416.09375
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1041.703125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 708.90625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 708.90625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 713.515625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1052.25
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 935
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 772.765625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 949.703125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 949.703125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 772.765625
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 958.25
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 958.25
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 772.765625
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 726.671875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1162.203125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 719.359375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1718.171875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 836.875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 903.125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 862.125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 910.84375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 843.34375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 626.28125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 799.265625
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 763.46875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 763.46875
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 788.546875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1162.203125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 788.546875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1718.171875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 653.078125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 836.875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 903.125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 862.125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 943.234375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 883.625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 757.578125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 866.125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 628.421875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 626.28125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 799.265625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 786.71875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 786.71875
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 736.015625
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1204.609375
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 685.53125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1120.625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1285.140625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 675.515625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1126.703125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 2078.359375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 675.515625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1438.453125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 887.453125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1340.703125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1008.953125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 935.953125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1575.015625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 995.203125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1362.84375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1391.578125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 995.203125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 648.71875
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 934.953125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 817.703125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 868.40625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 868.40625
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1363.4375
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1167.125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1408.890625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1433.1875
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 698.765625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1149.953125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 2194.609375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1433.1875
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 698.765625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1438.453125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 964.703125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1393.953125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1032.203125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1456.703125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1013.203125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1575.015625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1018.453125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1392.84375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 808.15625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1438.078125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1018.453125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 650.859375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 648.71875
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 994.203125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 876.953125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 891.65625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 891.65625
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 900.203125
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1409.9375
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 707.96875
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1503.203125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1190.375
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 1455.390625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1527.734375
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "waiting",
+      "tab": "help",
+      "overflow": 0,
+      "height": 728.765625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1223.34375
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 2449.609375
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1527.734375
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0,
+      "height": 728.765625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1461.703125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1041.953125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1440.453125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1055.453125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1503.203125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1036.453125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1652.15625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1041.703125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1416.09375
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 901.15625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1555.875
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "visit",
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0,
+      "height": 1041.703125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 708.90625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 708.90625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "pending",
+      "tab": "help",
+      "overflow": 0,
+      "height": 713.515625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 1052.25
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 935
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "active",
+      "tab": "help",
+      "overflow": 0,
+      "height": 772.765625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 949.703125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 949.703125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "paused",
+      "tab": "help",
+      "overflow": 0,
+      "height": 772.765625
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "overview",
+      "overflow": 0,
+      "height": 958.25
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "caregivers",
+      "overflow": 0,
+      "height": 958.25
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "details",
+      "overflow": 0,
+      "height": 1539.28125
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "scope": "plan",
+      "status": "ended",
+      "tab": "help",
+      "overflow": 0,
+      "height": 772.765625
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "scope": "action",
+      "action": "payment",
+      "overflow": 0,
+      "height": 825.59375
+    }
+  ],
+  "followup": {
+    "date": "2026-09-07T18:36:24.522Z",
+    "scope": "Targeted selector repair, one-time variation, borders/focus, draft separation, plan support, touch",
+    "boundaries": [
+      {
+        "theme": "light",
+        "border": "rgb(116, 129, 118)",
+        "background": "rgb(255, 253, 250)",
+        "focusColor": "rgb(55, 92, 146)",
+        "focusShadow": "rgb(255, 253, 250) 0px 0px 0px 3px, rgb(55, 92, 146) 0px 0px 0px 5px",
+        "borderContrast": 4.020472860869034,
+        "focusContrast": 6.653825172244812
+      },
+      {
+        "theme": "dark",
+        "border": "rgb(155, 171, 158)",
+        "background": "rgb(36, 52, 44)",
+        "focusColor": "rgb(172, 204, 250)",
+        "focusShadow": "rgb(36, 52, 44) 0px 0px 0px 3px, rgb(172, 204, 250) 0px 0px 0px 5px",
+        "borderContrast": 5.4366089844208165,
+        "focusContrast": 7.969463534405137
+      }
+    ],
+    "touchRules": {
+      "viewportWidth": 390,
+      "hover": false,
+      "coarse": true,
+      "minTarget": 44,
+      "overflow": 0,
+      "correctViewportMetaVerified": true
+    },
+    "checks": [
+      {
+        "name": "One-result filters remain available",
+        "passed": true
+      },
+      {
+        "name": "Field boundary and focus ring light",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 waiting overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 waiting caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 waiting details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 waiting help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hiring overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hiring caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hiring details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hiring help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 scheduled overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 scheduled caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 scheduled details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 scheduled help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 live overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 live caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 live details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 live help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hours overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hours caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hours details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 hours help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 review overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 review caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 review details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 review help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 closed overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 closed caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 closed details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 1024 closed help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 waiting overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 waiting caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 waiting details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 waiting help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hiring overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hiring caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hiring details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hiring help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 scheduled overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 scheduled caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 scheduled details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 scheduled help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 live overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 live caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 live details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 live help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hours overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hours caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hours details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 hours help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 review overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 review caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 review details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 review help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 closed overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 closed caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 closed details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 390 closed help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 waiting overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 waiting caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 waiting details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 waiting help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hiring overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hiring caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hiring details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hiring help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 scheduled overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 scheduled caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 scheduled details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 scheduled help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 live overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 live caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 live details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 live help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hours overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hours caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hours details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 hours help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 review overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 review caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 review details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 review help",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 closed overview",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 closed caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 closed details",
+        "passed": true
+      },
+      {
+        "name": "One-time light 320 closed help",
+        "passed": true
+      },
+      {
+        "name": "Field boundary and focus ring dark",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 waiting overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 waiting caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 waiting details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 waiting help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hiring overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hiring caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hiring details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hiring help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 scheduled overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 scheduled caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 scheduled details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 scheduled help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 live overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 live caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 live details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 live help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hours overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hours caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hours details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 hours help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 review overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 review caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 review details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 review help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 closed overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 closed caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 closed details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 1024 closed help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 waiting overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 waiting caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 waiting details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 waiting help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hiring overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hiring caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hiring details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hiring help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 scheduled overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 scheduled caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 scheduled details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 scheduled help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 live overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 live caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 live details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 live help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hours overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hours caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hours details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 hours help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 review overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 review caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 review details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 review help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 closed overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 closed caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 closed details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 390 closed help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 waiting overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 waiting caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 waiting details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 waiting help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hiring overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hiring caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hiring details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hiring help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 scheduled overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 scheduled caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 scheduled details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 scheduled help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 live overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 live caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 live details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 live help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hours overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hours caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hours details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 hours help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 review overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 review caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 review details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 review help",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 closed overview",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 closed caregivers",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 closed details",
+        "passed": true
+      },
+      {
+        "name": "One-time dark 320 closed help",
+        "passed": true
+      },
+      {
+        "name": "Ratings separate by care record",
+        "passed": true
+      },
+      {
+        "name": "Reviews separate by care record",
+        "passed": true
+      },
+      {
+        "name": "Original review returns intact",
+        "passed": true
+      },
+      {
+        "name": "Pending plan has support without a visit",
+        "passed": true
+      },
+      {
+        "name": "Paused plan can resume",
+        "passed": true
+      },
+      {
+        "name": "Touch hover gated and targets at least 44px",
+        "passed": true
+      },
+      {
+        "name": "Touch payment review opens",
+        "passed": true
+      }
+    ],
+    "scriptErrors": [],
+    "touchRecheckedAt": "2026-09-07T18:41:05.855Z"
+  }
+}

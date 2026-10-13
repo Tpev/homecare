@@ -1,0 +1,2 @@
+All bytes outside the six migrated methods match the saved original, including Carbon/DataProvider imports and same-day test/provider additions.
+Original SHA256: 5113e279952e8cf153e86e667ce05d68cffd6f5f0da71580629c499dc906585b

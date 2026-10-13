@@ -1,0 +1,639 @@
+{
+  "text": "←\nMy requests\nRequest care\n\nShare the help you need. Find a caregiver who feels right.\n\nChat with support\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\n\n01 · PERSON & HELP\n\nWhat kind of care would help?\nUse saved information (optional)\n+\n✓\nOne visit\nCare on one specific date and time.\n✓\nRecurring care\nA repeating weekly schedule with a familiar caregiver.\n\nWho is receiving care?\n\nMe\nA family member\n\nUse a saved care profile (optional)\n\nChoose the person once and we will share the same caregiver preview with this request.\n\nEllie\nMother · Reviewed Sep 7, 2026\nFamily member receiving care\nRelationship to you\n\nHelp needed\n\n✓\nCompanionship\n✓\nDaily living assistance\n✓\nErrands\n✓\nLight housekeeping\n✓\nMeal preparation\n✓\nMedication reminders\n✓\nTransportation\n\n02 · SCHEDULE\n\nRecurring care schedule\n\nWhich days each week?\n\nChoose the days first, then set the time for each day.\n\nSunday\nMonday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nWhen should this schedule begin?\nHow long should this repeat?\nUntil I stop it\nEnd on a date\nSchedule: Choose a time for each day\n\nRepeats until you end it\n\n03 · LOCATION & NOTES\n\nWhere will care happen?\n\nCaregivers see the area before applying. Exact details stay with the request.\n\nStreet address\nApartment, unit, or gate (optional)\nCity\nState\nAlabama\nArizona\nArkansas\nCalifornia\nColorado\nConnecticut\nDelaware\nFlorida\nGeorgia\nIdaho\nIllinois\nIndiana\nIowa\nKansas\nKentucky\nLouisiana\nMaine\nMaryland\nMassachusetts\nMichigan\nMinnesota\nMississippi\nMissouri\nMontana\nNebraska\nNevada\nNew Hampshire\nNew Jersey\nNew Mexico\nNew York\nNorth Carolina\nNorth Dakota\nOhio\nOklahoma\nOregon\nPennsylvania\nRhode Island\nSouth Carolina\nSouth Dakota\nTennessee\nTexas\nUtah\nVermont\nVirginia\nWashington\nWest Virginia\nWisconsin\nWyoming\nDistrict of Columbia\nZIP\n\nCare notes & arrival details\n\nRoutines, home access, timing and another contact.\n\n+\n\n04 · REVIEW\n\nReview and publish\n\n0 of 4 essentials ready. Fill the missing pieces, then publish.\n\nEstimated recurring care each week\n\nAdd the schedule to see the estimate.\n\nBEFORE PUBLISHING\n\nPerson Needed\nHelp Needed\nTime Needed\nAddress Needed\nCare type\nRecurring care\nFor\nEdit\nCare recipient\nFamily member\nHelp\nEdit\nChoose at least one service\nSchedule\nEdit\nChoose a time for each day\nRepeats until you end it\nAddress\nEdit\nStreet address\nRaleigh, NC\nWho can find this request?\nMake this request private\nLeave this unchecked to let eligible caregivers discover and apply to the request. You can still invite specific caregivers.\n\nNext: eligible caregivers can apply. Choose a caregiver when you are ready.\n\nPublish request\nCancel\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "form": {
+    "x": 16,
+    "y": 325.40625,
+    "width": 288,
+    "height": 3788.9375,
+    "bottom": 4114.34375,
+    "right": 304
+  },
+  "fields": {
+    "x": 16,
+    "y": 325.40625,
+    "width": 288,
+    "height": 2654.84375,
+    "bottom": 2980.25,
+    "right": 304
+  },
+  "review": {
+    "x": 16,
+    "y": 2996.25,
+    "width": 288,
+    "height": 1118.09375,
+    "bottom": 4114.34375,
+    "right": 304
+  },
+  "asideCount": 0,
+  "sectionSubnavCount": 0,
+  "steps": [
+    {
+      "text": "1 Care request",
+      "current": "step",
+      "rect": {
+        "x": 17,
+        "y": 224.40625,
+        "width": 71.5,
+        "height": 84,
+        "bottom": 308.40625,
+        "right": 88.5
+      },
+      "before": {
+        "content": "\"\"",
+        "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+        "width": "9px",
+        "borderLeft": "0px"
+      },
+      "after": {
+        "content": "\"\"",
+        "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+        "width": "9px",
+        "borderLeft": "0px"
+      }
+    },
+    {
+      "text": "2 Find caregivers",
+      "current": null,
+      "rect": {
+        "x": 88.5,
+        "y": 224.40625,
+        "width": 71.5,
+        "height": 84,
+        "bottom": 308.40625,
+        "right": 160
+      },
+      "before": {
+        "content": "\"\"",
+        "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+        "width": "9px",
+        "borderLeft": "0px"
+      },
+      "after": {
+        "content": "\"\"",
+        "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+        "width": "9px",
+        "borderLeft": "0px"
+      }
+    },
+    {
+      "text": "3 Review applicants",
+      "current": null,
+      "rect": {
+        "x": 160,
+        "y": 224.40625,
+        "width": 71.5,
+        "height": 84,
+        "bottom": 308.40625,
+        "right": 231.5
+      },
+      "before": {
+        "content": "\"\"",
+        "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+        "width": "9px",
+        "borderLeft": "0px"
+      },
+      "after": {
+        "content": "\"\"",
+        "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+        "width": "9px",
+        "borderLeft": "0px"
+      }
+    },
+    {
+      "text": "4 Get started",
+      "current": null,
+      "rect": {
+        "x": 231.5,
+        "y": 224.40625,
+        "width": 71.5,
+        "height": 84,
+        "bottom": 308.40625,
+        "right": 303
+      },
+      "before": {
+        "content": "none",
+        "clip": "none",
+        "width": "auto",
+        "borderLeft": "0px"
+      },
+      "after": {
+        "content": "none",
+        "clip": "none",
+        "width": "auto",
+        "borderLeft": "0px"
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "model": "request_type",
+      "label": "✓ One visit Care on one specific date and time.",
+      "value": "one_time",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "model": "request_type",
+      "label": "✓ Recurring care A repeating weekly schedule with a familiar caregiver.",
+      "value": "recurring",
+      "checked": true,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "model": "care_for",
+      "label": "Me",
+      "value": "self",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "model": "care_for",
+      "label": "A family member",
+      "value": "other",
+      "checked": true,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "recipient_full_name",
+      "label": "Family member receiving care",
+      "value": "",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "recipient_relationship_to_family",
+      "label": "Relationship to you",
+      "value": "",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Companionship",
+      "value": "1",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Daily living assistance",
+      "value": "7",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Errands",
+      "value": "6",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Light housekeeping",
+      "value": "3",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Meal preparation",
+      "value": "2",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Medication reminders",
+      "value": "5",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "selectedTasks",
+      "label": "✓ Transportation",
+      "value": "4",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Sunday",
+      "value": "0",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Monday",
+      "value": "1",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Tuesday",
+      "value": "2",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Wednesday",
+      "value": "3",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Thursday",
+      "value": "4",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Friday",
+      "value": "5",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "recurring_days",
+      "label": "Saturday",
+      "value": "6",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "date",
+      "model": "recurring_starts_on",
+      "label": "When should this schedule begin?",
+      "value": "",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "model": "recurring_end_choice",
+      "label": "Until I stop it",
+      "value": "ongoing",
+      "checked": true,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "model": "recurring_end_choice",
+      "label": "End on a date",
+      "value": "date",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "address_line1",
+      "label": "Street address",
+      "value": "",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "address_line2",
+      "label": "Apartment, unit, or gate (optional)",
+      "value": "",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "city",
+      "label": "City",
+      "value": "Raleigh",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "model": "state",
+      "label": "State",
+      "value": "NC",
+      "visible": true,
+      "options": [
+        {
+          "value": "AL",
+          "label": "Alabama"
+        },
+        {
+          "value": "AZ",
+          "label": "Arizona"
+        },
+        {
+          "value": "AR",
+          "label": "Arkansas"
+        },
+        {
+          "value": "CA",
+          "label": "California"
+        },
+        {
+          "value": "CO",
+          "label": "Colorado"
+        },
+        {
+          "value": "CT",
+          "label": "Connecticut"
+        },
+        {
+          "value": "DE",
+          "label": "Delaware"
+        },
+        {
+          "value": "FL",
+          "label": "Florida"
+        },
+        {
+          "value": "GA",
+          "label": "Georgia"
+        },
+        {
+          "value": "ID",
+          "label": "Idaho"
+        },
+        {
+          "value": "IL",
+          "label": "Illinois"
+        },
+        {
+          "value": "IN",
+          "label": "Indiana"
+        },
+        {
+          "value": "IA",
+          "label": "Iowa"
+        },
+        {
+          "value": "KS",
+          "label": "Kansas"
+        },
+        {
+          "value": "KY",
+          "label": "Kentucky"
+        },
+        {
+          "value": "LA",
+          "label": "Louisiana"
+        },
+        {
+          "value": "ME",
+          "label": "Maine"
+        },
+        {
+          "value": "MD",
+          "label": "Maryland"
+        },
+        {
+          "value": "MA",
+          "label": "Massachusetts"
+        },
+        {
+          "value": "MI",
+          "label": "Michigan"
+        },
+        {
+          "value": "MN",
+          "label": "Minnesota"
+        },
+        {
+          "value": "MS",
+          "label": "Mississippi"
+        },
+        {
+          "value": "MO",
+          "label": "Missouri"
+        },
+        {
+          "value": "MT",
+          "label": "Montana"
+        },
+        {
+          "value": "NE",
+          "label": "Nebraska"
+        },
+        {
+          "value": "NV",
+          "label": "Nevada"
+        },
+        {
+          "value": "NH",
+          "label": "New Hampshire"
+        },
+        {
+          "value": "NJ",
+          "label": "New Jersey"
+        },
+        {
+          "value": "NM",
+          "label": "New Mexico"
+        },
+        {
+          "value": "NY",
+          "label": "New York"
+        },
+        {
+          "value": "NC",
+          "label": "North Carolina"
+        },
+        {
+          "value": "ND",
+          "label": "North Dakota"
+        },
+        {
+          "value": "OH",
+          "label": "Ohio"
+        },
+        {
+          "value": "OK",
+          "label": "Oklahoma"
+        },
+        {
+          "value": "OR",
+          "label": "Oregon"
+        },
+        {
+          "value": "PA",
+          "label": "Pennsylvania"
+        },
+        {
+          "value": "RI",
+          "label": "Rhode Island"
+        },
+        {
+          "value": "SC",
+          "label": "South Carolina"
+        },
+        {
+          "value": "SD",
+          "label": "South Dakota"
+        },
+        {
+          "value": "TN",
+          "label": "Tennessee"
+        },
+        {
+          "value": "TX",
+          "label": "Texas"
+        },
+        {
+          "value": "UT",
+          "label": "Utah"
+        },
+        {
+          "value": "VT",
+          "label": "Vermont"
+        },
+        {
+          "value": "VA",
+          "label": "Virginia"
+        },
+        {
+          "value": "WA",
+          "label": "Washington"
+        },
+        {
+          "value": "WV",
+          "label": "West Virginia"
+        },
+        {
+          "value": "WI",
+          "label": "Wisconsin"
+        },
+        {
+          "value": "WY",
+          "label": "Wyoming"
+        },
+        {
+          "value": "DC",
+          "label": "District of Columbia"
+        }
+      ]
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "zip",
+      "label": "ZIP",
+      "value": "",
+      "checked": false,
+      "visible": true
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "model": "additional_info",
+      "label": "Anything important for the caregiver?",
+      "value": "",
+      "visible": false
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "model": "recipient_care_notes",
+      "label": "Care notes",
+      "value": "",
+      "visible": false
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "model": "home_access_notes",
+      "label": "Home access",
+      "value": "",
+      "visible": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "model": "time_expectations",
+      "label": "Timing note",
+      "value": "",
+      "checked": false,
+      "visible": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "includeThirdPartyContact",
+      "label": "Add another contact Use this if a family member or helper should also be reachable.",
+      "value": "on",
+      "checked": false,
+      "visible": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "model": "is_private",
+      "label": "Make this request private Leave this unchecked to let eligible caregivers discover and apply to the request. You can still invite specific caregivers.",
+      "value": "on",
+      "checked": false,
+      "visible": true
+    }
+  ],
+  "width": 320,
+  "documentWidth": 320,
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-YvDJe0qj.css"
+  ],
+  "fonts": [
+    "Inter",
+    "Source Serif 4"
+  ]
+}

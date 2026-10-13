@@ -84,7 +84,7 @@ $profileContact = ['family.care_profile.contact'];
 $profileReview = ['family.care_profile.review'];
 $requests = ['family.care_requests'];
 $newRequest = ['family.new_care_request'];
-$requestOverview = ['family.request.overview'];
+$requestOverview = ['family.request.summary'];
 $requestApplicants = ['family.request.applicants'];
 $handoff = ['handoff:SUP-HANDOFF-001'];
 
@@ -211,7 +211,7 @@ return [
         ),
         $entry(
             'KB-B5-REQUEST-001',
-            'Choosing one-time, regular, or human-led 24/7 care',
+            'Choosing one-time, recurring, or human-led 24/7 care',
             'One specific visit is one-time care. Care repeating on selected weekdays is recurring care. A request for continuous day-and-night or 24/7 coverage transfers to LoLo Support for human coordination and does not create an AI marketplace request. Mentioning 24/7 is not itself an emergency unless someone is in immediate danger.',
             'Care requests', $newRequest,
             array_map(static fn (int $number): string => sprintf('FAM-REQUEST-%03d', $number), range(1, 5)),
@@ -225,7 +225,7 @@ return [
         $entry(
             'KB-B5-REQUEST-002',
             'Information collected for a care request',
-            'A request needs the person receiving care, at least one approved non-medical task, the care address, and a schedule. One-time care needs a future date, start time, and duration. Recurring care needs weekdays, a start time and duration for each day, a start date, and either ongoing care or an end date. The Family can add task notes and other instructions before reviewing the recap.',
+            'A request needs the person receiving care, at least one approved non-medical task, the care address, and a schedule. One-time care needs a future date, start time, and duration. Recurring care needs weekdays, a start time and duration for each day, a start date, and either ongoing care or an end date. The Family can add task notes and other instructions before reviewing the recap. The creation form keeps the care details, schedule, address and final review together; Care notes & arrival details contains optional instructions.',
             'Care requests', $newRequest,
             array_map(static fn (int $number): string => sprintf('FAM-REQUEST-%03d', $number), range(6, 19)),
             ['Recipient, tasks, address, and schedule are required.', 'One-time and regular schedules have different required details.', 'Only approved non-medical tasks are accepted.'],
@@ -272,12 +272,12 @@ return [
             ['What happens after I post?', 'Did this hire someone?', 'Was my card charged?', 'Did retrying create two requests?'],
             ['Withdraw my request.', 'Archive a profile.', 'Approve hours.'],
             ['SRC-B5-REQUEST-001', 'SRC-B5-CONFIRM-001'],
-            ['navigate:family.request.overview'], $handoff,
+            ['navigate:family.request.summary'], $handoff,
         ),
         $entry(
             'KB-B5-REQUEST-006',
             'Care-request status and applicant visibility',
-            'Draft means not live. Open means eligible caregivers may apply. Filled means a caregiver was hired and the request has moved into the visit or care workflow. Cancelled means the Family withdrew the request. Expired means it is no longer live. The assistant may read the current status and Family-visible applicant counts, but it cannot claim who merely viewed a request or promise a response.',
+            'Draft means not live. Open means eligible caregivers may apply. An unbooked request uses four stages: Care request for the summary and next step; Find caregivers for Search, Invited and Saved profiles; Review applicants for applicants and the shortlist; and Get started for choosing and reviewing a caregiver before confirmation. Filled means a caregiver was hired and the request has moved into the visit or care workflow. Cancelled means the Family withdrew the request. Expired means it is no longer live. The assistant may read the current status and Family-visible applicant counts, but it cannot claim who merely viewed a request or promise a response.',
             'Care requests', array_merge($requests, $requestOverview, $requestApplicants),
             ['FAM-REQUEST-034', 'FAM-REQUEST-035', 'FAM-REQUEST-044'],
             ['Request status comes from the current authorized record.', 'Applicant counts may be stated when visible to the Family.', 'Caregiver views and response times are not promised.'],
@@ -285,7 +285,7 @@ return [
             ['What is my request status?', 'Did anyone apply?', 'When will a caregiver respond?', 'Why is this request no longer open?'],
             ['Change the saved card.', 'Edit a profile.', 'Show submitted hours.'],
             ['SRC-B5-REQUEST-001', 'SRC-B5-BOUNDARY-001'],
-            ['navigate:family.request.overview', 'navigate:family.request.applicants'], $handoff,
+            ['navigate:family.request.summary', 'navigate:family.request.applicants'], $handoff,
         ),
         $entry(
             'KB-B5-REQUEST-007',
@@ -311,7 +311,7 @@ return [
             ['Change the time on my live request.', 'Turn this one-time request into recurring care.', 'Edit the tasks without affecting applicants.'],
             ['Cancel an active visit.', 'Change submitted hours.', 'Update a profile only.'],
             ['SRC-B5-REQUEST-001', 'SRC-B5-CONFIRM-001', 'SRC-B5-BOUNDARY-001'],
-            ['navigate:family.new_care_request', 'navigate:family.request.overview'], $handoff,
+            ['navigate:family.new_care_request', 'navigate:family.request.summary'], $handoff,
         ),
         $entry(
             'KB-B5-REQUEST-009',
@@ -324,7 +324,7 @@ return [
             ['Withdraw my open request.', 'Stop caregivers applying to this request.', 'Cancel this request before anyone is hired.'],
             ['Cancel tomorrow’s booked visit.', 'Delete a profile.', 'End recurring care.'],
             ['SRC-B5-REQUEST-001', 'SRC-B5-CONFIRM-001'],
-            ['navigate:family.request.overview'], $handoff,
+            ['navigate:family.request.summary'], $handoff,
         ),
         $entry(
             'KB-B5-REQUEST-010',

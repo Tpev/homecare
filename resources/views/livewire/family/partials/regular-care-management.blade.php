@@ -1,4 +1,6 @@
-    @if ($canManage)
+    @if ($plan->care_arrangement_id)
+        <section class="hc-surface space-y-3 p-5"><h2 class="text-xl font-semibold">Manage the shared schedule</h2><p>Skip individual dates, ask for extra visits or end this caregiver assignment from the shared schedule. Repeating schedule edits and bulk pauses are not available for shared care yet.</p><a href="{{ route('family.shared-care.show', $plan->care_arrangement_id) }}" wire:navigate class="hc-primary-button">Open shared schedule</a></section>
+    @elseif ($canManage)
         <section id="manage-regular-care" class="scroll-mt-24 rounded-lg border border-[#D8D0C5] bg-white">
             <div class="border-b border-[#E7E0D8] px-5 py-4 sm:px-7">
                 <h2 class="font-display text-2xl font-semibold text-[#17313F]">Manage recurring care</h2>

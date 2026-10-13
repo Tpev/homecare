@@ -1,0 +1,478 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← My care\nRequest #13\nGet help\nCare story\nRecurring care for Ellie — Waiting\n\nRecurring care\n·\nEleanor Bennett\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nChoose a caregiver first\nFind caregivers\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nSearch\nInvited\n0\nSaved profiles\nSearch caregivers by name, city, or certification\nClear\nFilters\n\nSearch from 2 characters. Schedule matches indicate overlap, not a confirmed booking.\n\nCertifications & training\nAny\n⌄\nRequired certifications & training\n\nChoose what the caregiver must currently have. Select more than one to require all of them.\n\nCPR\nFirst Aid\nBasic Life Support (BLS)\nCertified Nursing Assistant (CNA)\nHome Health Aide (HHA)\nPersonal Care Aide (PCA)\nMedication Aide or Technician\nDementia care training\nOther certification or training\n\n1 search results\n\nSearch results\n\n1 matching caregiver\n\nSM\nSofia Martinez\n\nRaleigh, NC\n\n★ 4.9 · 24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Sofia\n\nOverlaps your requested days\n\nWhy suggested\n\nSame ZIP service area · Match score 128\n\nSame ZIP service area · Recurring match 100% · Identity verified · Background check · Top caregiver\n\nAvailable to invite\n· Accepting new clients.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Ellie — Waiting",
+      "rect": {
+        "x": 132,
+        "y": 159,
+        "width": 490.09375,
+        "height": 42.6875
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Find caregivers",
+      "rect": {
+        "x": 156,
+        "y": 356.1875,
+        "width": 1,
+        "height": 1
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Search results",
+      "rect": {
+        "x": 157,
+        "y": 503.984375,
+        "width": 1126,
+        "height": 19.5
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Sofia Martinez",
+      "rect": {
+        "x": 229,
+        "y": 583.671875,
+        "width": 833,
+        "height": 22.9375
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Search",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invited\n0",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('invited')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Saved profiles",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('saved')",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "search",
+      "label": "Search caregivers by name, city, or certification",
+      "text": "",
+      "value": "Sofia",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": "Name, city or certification"
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "clearCaregiverSearch",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "CPR",
+      "text": "",
+      "value": "cpr",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "First Aid",
+      "text": "",
+      "value": "first-aid",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Basic Life Support (BLS)",
+      "text": "",
+      "value": "bls",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Certified Nursing Assistant (CNA)",
+      "text": "",
+      "value": "cna",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Home Health Aide (HHA)",
+      "text": "",
+      "value": "hha",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Personal Care Aide (PCA)",
+      "text": "",
+      "value": "pca",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Medication Aide or Technician",
+      "text": "",
+      "value": "medication-aide",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Dementia care training",
+      "text": "",
+      "value": "dementia-training",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Other certification or training",
+      "text": "",
+      "value": "other",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invite Sofia",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "beginCaregiverInvitation(16)",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8028/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8028/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/13"
+    },
+    {
+      "text": "Sofia Martinez",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=13"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=13"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Filters",
+      "open": true
+    },
+    {
+      "summary": "Certifications & training\nAny\n⌄",
+      "open": true
+    },
+    {
+      "summary": "Why suggested",
+      "open": true
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [
+    {
+      "kind": "discovery-row",
+      "text": "SM\nSofia Martinez\n\nRaleigh, NC\n\n★ 4.9 · 24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Sofia\n\nOverlaps your requested days\n\nWhy suggested\n\nSame ZIP service area · Match score 128\n\nSame ZIP service area · Recurring match 100% · Identity verified · Background check · Top caregiver\n\nAvailable to invite\n· Accepting new clients.",
+      "rect": {
+        "x": 133,
+        "y": 559.671875,
+        "width": 1174,
+        "height": 322.1875
+      }
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 1000,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-dG8yja1b.css"
+  ],
+  "selectedNavigation": [
+    {
+      "text": "2\nFind caregivers",
+      "current": "step",
+      "pressed": null
+    },
+    {
+      "text": "Search",
+      "current": "page",
+      "pressed": null
+    }
+  ]
+}

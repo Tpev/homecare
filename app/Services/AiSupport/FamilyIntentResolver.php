@@ -18,6 +18,17 @@ class FamilyIntentResolver
     /** @return array{status:string,intent_id:?string,candidate_ids:list<string>,confidence:float,source:string} */
     public function resolve(string $message): array
     {
+        $restriction = app(FamilyActionIntentGuard::class)->inspect($message);
+        if ($restriction !== null && $restriction['kind'] !== 'information_question') {
+            return [
+                'status' => $restriction['intent_id'] ? self::STATUS_RECOGNIZED : self::STATUS_CLARIFY,
+                'intent_id' => $restriction['intent_id'],
+                'candidate_ids' => $restriction['intent_id'] ? [$restriction['intent_id']] : [],
+                'confidence' => 1.0,
+                'source' => $restriction['kind'],
+            ];
+        }
+
         $exactIntent = $this->exactCatalogIntent($message);
         if ($exactIntent !== null) {
             return [

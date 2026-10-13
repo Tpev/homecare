@@ -13,6 +13,8 @@ class AiSupportPreparation extends Model
 
     public const STATE_APPLIED = 'applied';
 
+    public const STATE_CONSUMED = 'consumed';
+
     public const STATE_CANCELLED = 'cancelled';
 
     public $incrementing = false;

@@ -1,0 +1,291 @@
+{
+  "text": "← My care\nRequest #28\nGet help\nCare story\nA helping hand for Ellie — Many Applicants\n\nOne-time care\n·\nEleanor Bennett · Thu, Sep 10\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\n4\nGet started\nChoose a caregiver first\nReview applicants\n\nCompare experience, review application notes, and choose who feels right.\n\nFind more caregivers\nAll\n4\nShortlisted\n1\nPast\n0\nFilter or sort caregivers\n\n1 caregivers match the applicant filters\n\nSM\nSofia Martinez\nShortlisted\n\nRaleigh, NC\n\n7 years experience\n★ 4.9 · 24 reviews\nReliability 98%\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nHire Sofia\nStart chat\n\nApplication note\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nProfile details\nMore options for Sofia\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "A helping hand for Ellie — Many Applicants",
+      "rect": {
+        "x": 16,
+        "y": 137,
+        "width": 288,
+        "height": 68.3125
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Review applicants",
+      "rect": {
+        "x": 34,
+        "y": 419.8125,
+        "width": 168.234375,
+        "height": 57.1875
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Sofia Martinez",
+      "rect": {
+        "x": 93,
+        "y": 681.0625,
+        "width": 104.75,
+        "height": 22.390625
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants\n4",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Find more caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All\n4",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('all')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Shortlisted\n1",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('shortlisted')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Past\n0",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('past')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Hire Sofia",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "reviewHire(23)",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Start chat",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "startConversation(23)",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/28"
+    },
+    {
+      "text": "Sofia Martinez",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=28"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=28"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Filter or sort caregivers",
+      "open": false
+    },
+    {
+      "summary": "Profile details",
+      "open": false
+    },
+    {
+      "summary": "More options for Sofia",
+      "open": false
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [
+    {
+      "kind": "applicant-row",
+      "text": "SM\nSofia Martinez\nShortlisted\n\nRaleigh, NC\n\n7 years experience\n★ 4.9 · 24 reviews\nReliability 98%\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nHire Sofia\nStart chat\n\nApplication note\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nProfile details\nMore options for Sofia",
+      "rect": {
+        "x": 17,
+        "y": 660.5625,
+        "width": 286,
+        "height": 614.140625
+      }
+    }
+  ],
+  "width": 320,
+  "height": 844,
+  "documentWidth": 320,
+  "documentHeight": 1443,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-dG8yja1b.css"
+  ],
+  "selectedNavigation": [
+    {
+      "text": "3\nReview applicants\n4",
+      "current": "step",
+      "pressed": null
+    },
+    {
+      "text": "Shortlisted\n1",
+      "current": "page",
+      "pressed": null
+    }
+  ]
+}

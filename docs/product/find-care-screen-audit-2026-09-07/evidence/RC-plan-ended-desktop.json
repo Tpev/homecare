@@ -1,0 +1,192 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\nBack to your care\nRecurring care with Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nCare story\nView past visits\nMessage caregiver\nRecurring care ended\nAbout Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nLater visits\n\nAfter your next visit, these are the visits already on the calendar.\n\nNo later visits are scheduled yet.\n\nCare details and instructions\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents\nSupport",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care with Sofia Martinez"
+    },
+    {
+      "level": "H2",
+      "text": "About Ellie"
+    },
+    {
+      "level": "H3",
+      "text": "At a glance"
+    },
+    {
+      "level": "H3",
+      "text": "Communication"
+    },
+    {
+      "level": "H3",
+      "text": "Support and mobility"
+    },
+    {
+      "level": "H3",
+      "text": "Routine and comfort"
+    },
+    {
+      "level": "H3",
+      "text": "Important for safety"
+    },
+    {
+      "level": "H3",
+      "text": "What the family is looking for"
+    },
+    {
+      "level": "H3",
+      "text": "Contacts and care coordination"
+    },
+    {
+      "level": "H2",
+      "text": "Later visits"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care story",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View past visits",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Message caregiver",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8027/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8027/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8027/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "Back to your care",
+      "href": "http://127.0.0.1:8027/family/care"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8027/family/care/journey/regular/4"
+    },
+    {
+      "text": "View past visits",
+      "href": "http://127.0.0.1:8027/family/care/history?plan=4"
+    },
+    {
+      "text": "Message caregiver",
+      "href": "http://127.0.0.1:8027/family/requests/26"
+    },
+    {
+      "text": "+1 919 555 0153",
+      "href": "tel:+1 919 555 0153"
+    },
+    {
+      "text": "daniel.find-care-audit@example.com",
+      "href": "mailto:daniel.find-care-audit@example.com"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8027/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8027/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8027/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8027/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8027/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8027/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8027/legal"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Care details and instructions",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 2227
+}

@@ -1,0 +1,300 @@
+ADMIN CONSOLE
+Dashboard
+Work queues
+Insights
+All tools
+LD
+LoLo Demo Administrator
+Admin
+User Management
+
+All accounts on the platform with role, registration date, and quick delete action.
+
+Total: 21
+Search
+User type
+All user types
+Rows per page
+25
+USER	TYPE	REVIEW READINESS	LOCATION	REGISTERED	ACTIONS
+
+
+LoLo Demo Administrator
+
+admin.find-care-audit@example.com
+
+	ADMIN	—	—	Sep 08, 2026 10:42	
+View profile
+Protected
+
+
+
+Nora Brooks
+
+nora.empty-profile.find-care-audit@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 09:16	
+View profile
+Login as
+Delete
+
+
+
+Oliver Chen
+
+oliver.find-care-audit@example.com
+
+	CAREGIVER	
+
+ACTIVE PROFILE
+
+	Raleigh, NC	Sep 07, 2026 08:54	
+View profile
+Login as
+Delete
+
+
+
+Maria Bennett
+
+maria.find-care-audit@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 08:51	
+View profile
+Login as
+Delete
+
+
+
+Sofia Martinez
+
+sofia.find-care-audit@example.com
+
+	CAREGIVER	
+
+ACTIVE PROFILE
+
+	Raleigh, NC	Sep 07, 2026 08:51	
+View profile
+Login as
+Delete
+
+
+
+James Wilson
+
+james.find-care-audit@example.com
+
+	CAREGIVER	
+
+ACTIVE PROFILE
+
+	Raleigh, NC	Sep 07, 2026 08:51	
+View profile
+Login as
+Delete
+
+
+
+Aisha Robinson
+
+aisha.find-care-audit@example.com
+
+	CAREGIVER	
+
+ACTIVE PROFILE
+
+	Raleigh, NC	Sep 07, 2026 08:51	
+View profile
+Login as
+Delete
+
+
+
+E2E Journey Family
+
+family.journey.e2e@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E AI Family Member
+
+family.ai-member.e2e@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E AI Family
+
+family.ai.e2e@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Marketplace Caregiver
+
+caregiver.marketplace.e2e@example.com
+
+	CAREGIVER	
+
+ACTIVE PROFILE
+
+	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E New Caregiver
+
+caregiver.new.e2e@example.com
+
+	CAREGIVER	
+
+READY FOR REVIEW SUBMISSION
+
+	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Under Review Caregiver
+
+caregiver.review.e2e@example.com
+
+	CAREGIVER	
+
+UNDER REVIEW
+
+	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Background Review Caregiver
+
+caregiver.background.review.e2e@example.com
+
+	CAREGIVER	
+
+UNDER REVIEW
+
+	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Removed Relative
+
+family.removed.e2e@example.com
+
+	FAMILY	—	—	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Admin
+
+test@test.com
+
+	ADMIN	—	—	Sep 07, 2026 08:44	
+View profile
+Protected
+
+
+
+E2E Ready Caregiver
+
+caregiver.ready.e2e@example.com
+
+	CAREGIVER	
+
+ACTIVE PROFILE
+
+	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Mobile Visual Caregiver
+
+caregiver.mobile-visual.e2e@example.com
+
+	CAREGIVER	
+
+MISSING REQUIRED STEPS
+
+Missing: Profile basics, Identity verification, Task comfort selection
+
+	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Family Member
+
+family.member.e2e@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Eligible Relative
+
+family.eligible.e2e@example.com
+
+	FAMILY	—	—	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+
+
+E2E Family
+
+family.e2e@example.com
+
+	FAMILY	—	Raleigh, NC	Sep 07, 2026 08:44	
+View profile
+Login as
+Delete
+
+© 2026 LoLo Care Inc
+
+﻿
+Terms of Service
+Privacy Policy
+Payments & Cancellation
+Caregiver Terms
+Family Terms
+Safety Policy
+All Legal Documents

@@ -43,9 +43,9 @@ class MarketplaceCareKnowledgeContentTest extends TestCase
         }
 
         $answers = $entries->pluck('answer_body')->implode("\n");
-        $this->assertStringContainsString('$30/hour', $answers);
-        $this->assertStringContainsString('$27/hour', $answers);
-        $this->assertStringContainsString('$3/hour', $answers);
+        $this->assertStringContainsString('Family processing fee', $answers);
+        $this->assertStringContainsString('pricing agreement', $answers);
+        $this->assertStringNotContainsString('$30/hour', $answers);
         $this->assertStringContainsString('not a promise', mb_strtolower($answers));
         $this->assertStringContainsString('human', mb_strtolower($answers));
     }

@@ -13,8 +13,7 @@ class DiditSessionService
 {
     public function __construct(
         private readonly DiditClient $client,
-    ) {
-    }
+    ) {}
 
     public function createForCaregiver(User $user): CaregiverIdentityVerification
     {
@@ -28,6 +27,7 @@ class DiditSessionService
             $verificationUrl = route('caregiver.verification.return');
 
             return DB::transaction(function () use ($profile, $user, $sessionId, $verificationUrl) {
+                $profile = CaregiverProfile::query()->lockForUpdate()->findOrFail($profile->id);
                 $verification = CaregiverIdentityVerification::query()->create([
                     'caregiver_profile_id' => $profile->id,
                     'user_id' => $user->id,
@@ -117,6 +117,8 @@ class DiditSessionService
         }
 
         return DB::transaction(function () use ($profile, $user, $sessionId, $verificationUrl, $vendorData, $status, $response) {
+            // Serialize a new current identity with screening decisions and webhooks.
+            $profile = CaregiverProfile::query()->lockForUpdate()->findOrFail($profile->id);
             $verification = CaregiverIdentityVerification::query()->create([
                 'caregiver_profile_id' => $profile->id,
                 'user_id' => $user->id,

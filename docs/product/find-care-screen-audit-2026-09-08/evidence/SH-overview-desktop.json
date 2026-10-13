@@ -1,0 +1,200 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n\nCARE OVERVIEW\n\nHi, Maria.\n\nHere’s an overview of your care.\n\nRequest care\nOverview\nArrangements\nSchedule\nHistory\n\nDO NOW\n\nNeeds your attention\n\nThe most urgent decisions across all care.\n\nView all 18\n\nPAYMENT ACTION REQUIRED\n\nPayment needs attention\n\nA helping hand for Ellie — Payment Attention · Wed, Sep 9\n\nSep 9, 10:00 AM to 12:00 PM\n\nFix payment\n\nPAYMENT ACTION REQUIRED\n\nPayment needs attention\n\nRegular visit for Eleanor Bennett · Wed, Sep 9\n\nSep 9, 10:00 AM to 12:00 PM\n\nFix payment\n\nVISIT HOURS NEED YOUR REVIEW\n\nReview Sofia Martinez's reported visit hours\n\nMonday, September 7, 2026\n\nEstimated $54.25 · Review the exact hours before any payment is made.\n\nReview hours\n\nNEXT\n\nNext visit\nSchedule (4)\nONE-TIME VISIT\nScheduled\nEleanor Bennett · Wed, Sep 9\n\n10:00 AM–12:00 PM\n\nSofia Martinez · Raleigh, NC\n\nOpen visit\n\nYOUR CARE\n\nArrangements\nView all (19)\n\nBeing arranged\n\nOpen one-time and recurring care requests\n\n14\n\nOngoing recurring care\n\nActive or paused schedules\n\n5\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents\nSupport",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Hi, Maria."
+    },
+    {
+      "level": "H2",
+      "text": "Needs your attention"
+    },
+    {
+      "level": "H2",
+      "text": "Next visit"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Wed, Sep 9"
+    },
+    {
+      "level": "H2",
+      "text": "Arrangements"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8028/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8028/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Overview",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Arrangements",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Schedule",
+      "href": "http://127.0.0.1:8028/family/care/schedule"
+    },
+    {
+      "text": "History",
+      "href": "http://127.0.0.1:8028/family/care/history"
+    },
+    {
+      "text": "View all 18",
+      "href": "http://127.0.0.1:8028/family/care/actions"
+    },
+    {
+      "text": "PAYMENT ACTION REQUIRED\n\nPayment needs attention\n\nA helping hand for Ellie — Payment Attention · Wed, Sep 9\n\nSep 9, 10:00 AM to 12:00 PM\n\nFix payment",
+      "href": "http://127.0.0.1:8028/family/requests/31"
+    },
+    {
+      "text": "PAYMENT ACTION REQUIRED\n\nPayment needs attention\n\nRegular visit for Eleanor Bennett · Wed, Sep 9\n\nSep 9, 10:00 AM to 12:00 PM\n\nFix payment",
+      "href": "http://127.0.0.1:8028/family/care/6"
+    },
+    {
+      "text": "VISIT HOURS NEED YOUR REVIEW\n\nReview Sofia Martinez's reported visit hours\n\nMonday, September 7, 2026\n\nEstimated $54.25 · Review the exact hours before any payment is made.\n\nReview hours",
+      "href": "http://127.0.0.1:8028/family/requests/32?tab=shift#time-correction-review-1"
+    },
+    {
+      "text": "Schedule (4)",
+      "href": "http://127.0.0.1:8028/family/care/schedule"
+    },
+    {
+      "text": "Open visit",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/5"
+    },
+    {
+      "text": "View all (19)",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Being arranged\n\nOpen one-time and recurring care requests\n\n14",
+      "href": "http://127.0.0.1:8028/family/care?view=arranging"
+    },
+    {
+      "text": "Ongoing recurring care\n\nActive or paused schedules\n\n5",
+      "href": "http://127.0.0.1:8028/family/care?view=ongoing&type=regular"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 1284,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Hi, Maria.",
+    "status": "",
+    "headerText": "",
+    "primaryTitle": "",
+    "selectedTabs": []
+  }
+}

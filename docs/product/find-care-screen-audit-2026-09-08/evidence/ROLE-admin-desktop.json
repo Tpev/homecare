@@ -1,0 +1,689 @@
+{
+  "text": "ADMIN CONSOLE\nDashboard\nWork queues\nInsights\nAll tools\nLD\nLoLo Demo Administrator\nAdmin\nUser Management\n\nAll accounts on the platform with role, registration date, and quick delete action.\n\nTotal: 21\nSearch\nUser type\nAll user types\nRows per page\n25\nUSER\tTYPE\tREVIEW READINESS\tLOCATION\tREGISTERED\tACTIONS\n\n\nLoLo Demo Administrator\n\nadmin.find-care-audit@example.com\n\n\tADMIN\t—\t—\tSep 08, 2026 10:42\t\nView profile\nProtected\n\n\n\nNora Brooks\n\nnora.empty-profile.find-care-audit@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 09:16\t\nView profile\nLogin as\nDelete\n\n\n\nOliver Chen\n\noliver.find-care-audit@example.com\n\n\tCAREGIVER\t\n\nACTIVE PROFILE\n\n\tRaleigh, NC\tSep 07, 2026 08:54\t\nView profile\nLogin as\nDelete\n\n\n\nMaria Bennett\n\nmaria.find-care-audit@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 08:51\t\nView profile\nLogin as\nDelete\n\n\n\nSofia Martinez\n\nsofia.find-care-audit@example.com\n\n\tCAREGIVER\t\n\nACTIVE PROFILE\n\n\tRaleigh, NC\tSep 07, 2026 08:51\t\nView profile\nLogin as\nDelete\n\n\n\nJames Wilson\n\njames.find-care-audit@example.com\n\n\tCAREGIVER\t\n\nACTIVE PROFILE\n\n\tRaleigh, NC\tSep 07, 2026 08:51\t\nView profile\nLogin as\nDelete\n\n\n\nAisha Robinson\n\naisha.find-care-audit@example.com\n\n\tCAREGIVER\t\n\nACTIVE PROFILE\n\n\tRaleigh, NC\tSep 07, 2026 08:51\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Journey Family\n\nfamily.journey.e2e@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E AI Family Member\n\nfamily.ai-member.e2e@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E AI Family\n\nfamily.ai.e2e@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Marketplace Caregiver\n\ncaregiver.marketplace.e2e@example.com\n\n\tCAREGIVER\t\n\nACTIVE PROFILE\n\n\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E New Caregiver\n\ncaregiver.new.e2e@example.com\n\n\tCAREGIVER\t\n\nREADY FOR REVIEW SUBMISSION\n\n\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Under Review Caregiver\n\ncaregiver.review.e2e@example.com\n\n\tCAREGIVER\t\n\nUNDER REVIEW\n\n\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Background Review Caregiver\n\ncaregiver.background.review.e2e@example.com\n\n\tCAREGIVER\t\n\nUNDER REVIEW\n\n\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Removed Relative\n\nfamily.removed.e2e@example.com\n\n\tFAMILY\t—\t—\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Admin\n\ntest@test.com\n\n\tADMIN\t—\t—\tSep 07, 2026 08:44\t\nView profile\nProtected\n\n\n\nE2E Ready Caregiver\n\ncaregiver.ready.e2e@example.com\n\n\tCAREGIVER\t\n\nACTIVE PROFILE\n\n\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Mobile Visual Caregiver\n\ncaregiver.mobile-visual.e2e@example.com\n\n\tCAREGIVER\t\n\nMISSING REQUIRED STEPS\n\nMissing: Profile basics, Identity verification, Task comfort selection\n\n\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Family Member\n\nfamily.member.e2e@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Eligible Relative\n\nfamily.eligible.e2e@example.com\n\n\tFAMILY\t—\t—\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n\n\nE2E Family\n\nfamily.e2e@example.com\n\n\tFAMILY\t—\tRaleigh, NC\tSep 07, 2026 08:44\t\nView profile\nLogin as\nDelete\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "User Management"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Work queues",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Insights",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All tools",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Support notifications",
+      "text": "",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Account menu for LoLo Demo Administrator",
+      "text": "LD\nLoLo Demo Administrator\nAdmin",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "label": "Search",
+      "text": "",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All user types",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "25",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Login as",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Delete",
+      "value": "",
+      "disabled": false
+    }
+  ],
+  "links": [
+    {
+      "text": "ADMIN CONSOLE",
+      "href": "http://127.0.0.1:8028/admin/crm"
+    },
+    {
+      "text": "Dashboard",
+      "href": "http://127.0.0.1:8028/admin/crm"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/21"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/20"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/19"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/15"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/16"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/17"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/18"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/14"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/13"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/12"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/11"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/8"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/9"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/10"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/4"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/5"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/6"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/7"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/2"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/3"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/admin/users/1"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentHeight": 2029,
+  "horizontalOverflow": 0
+}

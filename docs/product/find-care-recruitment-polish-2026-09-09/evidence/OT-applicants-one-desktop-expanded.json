@@ -1,0 +1,584 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← My care\nRequest #27\nGet help\nCare story\nA helping hand for Ellie — Single Applicant\n\nOne-time care\n·\nEleanor Bennett · Thu, Sep 10\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n1\n4\nGet started\nChoose a caregiver first\nReview applicants\n\nCompare experience, review application notes, and choose who feels right.\n\nFind more caregivers\nAll\n1\nShortlisted\n1\nPast\n0\nFilter or sort caregivers\nStatus\nAll caregivers\nInterested\nShortlisted\nHired\nDeclined\nNot selected\nWithdrawn\nPast applications\nSort\nLatest first\nOldest first\nCare rate high-low\nCare rate low-high\nCertifications & training\nAny\n⌄\nRequired certifications & training\n\nChoose what the caregiver must currently have. Select more than one to require all of them.\n\nCPR\nFirst Aid\nBasic Life Support (BLS)\nCertified Nursing Assistant (CNA)\nHome Health Aide (HHA)\nPersonal Care Aide (PCA)\nMedication Aide or Technician\nDementia care training\nOther certification or training\n\n1 caregivers match the applicant filters\n\nSM\nSofia Martinez\nShortlisted\n\nRaleigh, NC\n\n7 years experience\n★ 4.9 · 24 reviews\nReliability 98%\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nHire Sofia\nStart chat\n\nApplication note\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nProfile details\n\nAccepting clients\n\nI enjoy helping older adults keep a familiar routine, prepare meals, and stay connected.\n\nSkills: Companionship, Meal preparation, Light housekeeping\n\nLanguages: English\n\nRate recorded on application: $30.00/hour. The care rate above reflects the pricing that applies to this request.\n\nApplication received Sep 7, 2026, 8:54 AM\n\nMore options for Sofia\nSave for later\nNot this caregiver\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "A helping hand for Ellie — Single Applicant",
+      "rect": {
+        "x": 132,
+        "y": 159,
+        "width": 618.125,
+        "height": 42.6875
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Review applicants",
+      "rect": {
+        "x": 157,
+        "y": 365.1875,
+        "width": 462.453125,
+        "height": 31.1875
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Sofia Martinez",
+      "rect": {
+        "x": 229,
+        "y": 525.390625,
+        "width": 110.859375,
+        "height": 22.9375
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants\n1",
+      "value": "",
+      "disabled": false,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started\nChoose a caregiver first",
+      "value": "",
+      "disabled": true,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Find more caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setCaregiverView('search')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All\n1",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('all')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Shortlisted\n1",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('shortlisted')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Past\n0",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setApplicantView('past')",
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Status",
+      "text": "",
+      "value": "all",
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "All caregivers",
+          "value": "all",
+          "selected": true
+        },
+        {
+          "label": "Interested",
+          "value": "applied",
+          "selected": false
+        },
+        {
+          "label": "Shortlisted",
+          "value": "shortlisted",
+          "selected": false
+        },
+        {
+          "label": "Hired",
+          "value": "hired",
+          "selected": false
+        },
+        {
+          "label": "Declined",
+          "value": "rejected",
+          "selected": false
+        },
+        {
+          "label": "Not selected",
+          "value": "not_selected",
+          "selected": false
+        },
+        {
+          "label": "Withdrawn",
+          "value": "withdrawn",
+          "selected": false
+        },
+        {
+          "label": "Past applications",
+          "value": "past",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Sort",
+      "text": "",
+      "value": "latest",
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "Latest first",
+          "value": "latest",
+          "selected": true
+        },
+        {
+          "label": "Oldest first",
+          "value": "oldest",
+          "selected": false
+        },
+        {
+          "label": "Care rate high-low",
+          "value": "rate_high",
+          "selected": false
+        },
+        {
+          "label": "Care rate low-high",
+          "value": "rate_low",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "CPR",
+      "text": "",
+      "value": "cpr",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "First Aid",
+      "text": "",
+      "value": "first-aid",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Basic Life Support (BLS)",
+      "text": "",
+      "value": "bls",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Certified Nursing Assistant (CNA)",
+      "text": "",
+      "value": "cna",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Home Health Aide (HHA)",
+      "text": "",
+      "value": "hha",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Personal Care Aide (PCA)",
+      "text": "",
+      "value": "pca",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Medication Aide or Technician",
+      "text": "",
+      "value": "medication-aide",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Dementia care training",
+      "text": "",
+      "value": "dementia-training",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Other certification or training",
+      "text": "",
+      "value": "other",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Hire Sofia",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "reviewHire(22)",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Start chat",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "startConversation(22)",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Save for later",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "shortlist(22)",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Not this caregiver",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "reject(22)",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8028/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8028/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/27"
+    },
+    {
+      "text": "Sofia Martinez",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=27"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=27"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Filter or sort caregivers",
+      "open": true
+    },
+    {
+      "summary": "Certifications & training\nAny\n⌄",
+      "open": true
+    },
+    {
+      "summary": "Profile details",
+      "open": true
+    },
+    {
+      "summary": "More options for Sofia",
+      "open": true
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [
+    {
+      "kind": "applicant-row",
+      "text": "SM\nSofia Martinez\nShortlisted\n\nRaleigh, NC\n\n7 years experience\n★ 4.9 · 24 reviews\nReliability 98%\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nHire Sofia\nStart chat\n\nApplication note\n\nI am available for your schedule and would love to help Ellie with her everyday routine.\n\nProfile details\n\nAccepting clients\n\nI enjoy helping older adults keep a familiar routine, prepare meals, and stay connected.\n\nSkills: Companionship, Meal preparation, Light housekeeping\n\nLanguages: English\n\nRate recorded on application: $30.00/hour. The care rate above reflects the pricing that applies to this request.\n\nApplication received Sep 7, 2026, 8:54 AM\n\nMore options for Sofia\nSave for later\nNot this caregiver",
+      "rect": {
+        "x": 133,
+        "y": 501.171875,
+        "width": 1174,
+        "height": 635.03125
+      }
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 1218,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "selectedNavigation": [
+    {
+      "text": "3\nReview applicants\n1",
+      "current": "step",
+      "pressed": null
+    },
+    {
+      "text": "All\n1",
+      "current": "page",
+      "pressed": null
+    }
+  ]
+}

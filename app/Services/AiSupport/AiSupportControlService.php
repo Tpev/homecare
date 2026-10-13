@@ -303,6 +303,7 @@ class AiSupportControlService
             return;
         }
 
+        app(AiSupportPreparationService::class)->invalidateAll('control_stop');
         AiSupportActionPreview::query()->whereNull('content_deleted_at')->update([
             'preview_payload' => null,
             'invalidated_at' => $now,
@@ -387,6 +388,7 @@ class AiSupportControlService
             return;
         }
 
+        app(AiSupportPreparationService::class)->invalidateForActors($affectedUserIds, 'general_release_ended');
         AiSupportActionPreview::query()
             ->whereIn('actor_user_id', $affectedUserIds)
             ->whereNull('content_deleted_at')

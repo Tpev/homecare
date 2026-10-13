@@ -434,7 +434,10 @@ class OnboardingWizard extends Component
                 ]);
 
                 if ($submitForReview) {
-                    $this->profile->status = 'under_review';
+                    // Requesting a review must never remove an existing admin restriction.
+                    if ($this->profile->status !== 'suspended') {
+                        $this->profile->status = 'under_review';
+                    }
                     $this->profile->review_submitted_at = now();
                     $this->profile->rejection_reason = null;
 
@@ -496,10 +499,11 @@ class OnboardingWizard extends Component
                         'action' => 'submitted',
                         'note' => 'Profile submitted for review',
                         'meta' => [
-                            'status' => 'under_review',
+                            'status' => $this->profile->status,
                             'care_background_answered' => $this->profile->fresh()->careBackgroundIsAnswered(),
                         ],
                     ]);
+                    app(\App\Services\Screening\CaregiverScreeningService::class)->sync($this->profile->fresh());
                 }
             });
         } catch (Throwable $exception) {

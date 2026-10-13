@@ -356,6 +356,10 @@ class CaregiverWorkInboxBuilder
 
         $booking = $application->booking;
         $status = (string) $application->status;
+        if ($status === CareRequestApplication::STATUS_HIRED && $request->care_arrangement_id && ! $request->is_system_generated) {
+            // The caregiver's own recurring-plan card already shows their agreed days and actual visits.
+            return null;
+        }
         $recipientContext = $this->recipientContext($request->recipient);
 
         if ($status === CareRequestApplication::STATUS_APPLIED) {

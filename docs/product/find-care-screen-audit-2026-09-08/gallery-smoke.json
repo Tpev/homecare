@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-09-08T16:02:00.547Z",
+  "url": "http://127.0.0.1:8031",
+  "assertions": [
+    {
+      "description": "Gallery returns HTTP200",
+      "passed": true
+    },
+    {
+      "description": "Every capture state is present in gallery",
+      "passed": true,
+      "detail": 319
+    },
+    {
+      "description": "Text search narrows to intended screen",
+      "passed": true
+    },
+    {
+      "description": "Search result has correct identity",
+      "passed": true
+    },
+    {
+      "description": "Variation filter narrows the gallery",
+      "passed": true,
+      "detail": 214
+    },
+    {
+      "description": "Stage filter combines with variation filter",
+      "passed": true,
+      "detail": 46
+    },
+    {
+      "description": "Filtered cards match both selected values",
+      "passed": true
+    },
+    {
+      "description": "Screenshot link resolves to a PNG",
+      "passed": true,
+      "detail": "screenshots/RC-cancelled_booking-applicants-desktop-focus.png"
+    },
+    {
+      "description": "Information inventory link resolves to its screen report",
+      "passed": true,
+      "detail": "screens/RC-cancelled_booking-applicants.md"
+    },
+    {
+      "description": "Gallery has no horizontal overflow at390px",
+      "passed": true,
+      "detail": 0
+    },
+    {
+      "description": "Gallery produces no browser script errors",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

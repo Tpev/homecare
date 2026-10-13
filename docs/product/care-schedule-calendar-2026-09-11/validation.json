@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "noOverflow": true,
+      "selectedDate": "2026-10-02"
+    },
+    {
+      "width": 768,
+      "noOverflow": true,
+      "selectedDate": "2026-10-02"
+    },
+    {
+      "width": 390,
+      "noOverflow": true,
+      "selectedDate": "2026-10-02"
+    },
+    {
+      "width": 320,
+      "noOverflow": true,
+      "selectedDate": "2026-10-02"
+    },
+    {
+      "defaultList": true,
+      "listCount": 8,
+      "initialMonth": "September 2026",
+      "calendarBookedDates": 3,
+      "monthNavigation": true,
+      "filtersPreserved": true,
+      "urlRestoresView": true,
+      "todaySelectsToday": true,
+      "dayOnlyUrl": true,
+      "dateClickRevealsDetails": true,
+      "exactVisitUrl": "http://127.0.0.1:8028/family/requests/49?tab=shift"
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

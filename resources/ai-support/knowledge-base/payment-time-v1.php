@@ -3,7 +3,7 @@
 $reviewBy = '2026-11-18';
 
 $sources = [
-    'SRC-B4-PRICING-001' => ['Approved pricing truth', 'Families pay $30/hour total; caregivers earn $27/hour gross minus actual Stripe processing fees on successful charges; LoLo’s gross platform portion is $3/hour.'],
+    'SRC-B4-PRICING-001' => ['Current marketplace pricing and booking payment implementation', 'Care rate, Family processing fee and total come from current authoritative pricing, applicable agreements and preserved booking snapshots; exact charges and earnings come from the payment ledger.'],
     'SRC-B4-PAYMENT-001' => ['Current booking payment implementation', 'Authorization, capture, retry, refund, and Family-action payment states.'],
     'SRC-B4-TIME-001' => ['Current submitted-hours implementation', 'Timesheet, correction, dispute, and payment-attention states.'],
     'SRC-B4-GUIDANCE-001' => ['AI Support Batch 4 operating specification', 'Safe state reads, normalized failure reasons, exact navigation, preparation, and verification boundaries.'],
@@ -93,12 +93,12 @@ return [
         $entry(
             'KB-B4-PRICE-001',
             'LoLo hourly price, caregiver earnings, and platform portion',
-            'Care on LoLo is $30 per worked hour total for the Family. The caregiver earns $27 per hour gross minus the actual Stripe processing fees recorded on successful Family charges, and LoLo’s gross platform portion is $3 per worked hour. Do not deduct refund costs, dispute fees, or optional instant-payout fees from the caregiver rate. For a stated duration, calculate the Family total, caregiver gross, and LoLo gross portion separately; the exact caregiver net comes from the payment record.',
+            'The care rate, Family processing fee and total are shown separately in the current review. An applicable pricing agreement or an existing booking snapshot may differ from current defaults. Quote an amount only when the server supplies the authoritative rate, components and duration for that exact care; otherwise open the review instead of calculating a personalized price. Historical charges, refunds and caregiver earnings come from the payment ledger, including the recorded pricing version and actual processing fees.',
             'Pricing',
             ['family', 'caregiver'],
             [],
             ['FAM-PAY-028', 'FAM-PAY-029'],
-            ['Families pay $30 per worked hour total.', 'Caregivers earn $27 per hour gross minus actual Stripe processing fees on successful Family charges.', 'LoLo’s gross platform portion is $3 per worked hour.', 'Refund costs, dispute fees, and optional instant-payout fees are excluded from caregiver processing-fee deductions.', 'Exact caregiver net comes from the payment ledger.'],
+            ['The care rate, Family processing fee and total are distinct.', 'Authoritative agreements and booking snapshots can differ from current defaults.', 'Only the exact server-provided quote supports a personalized estimate.', 'Exact charges, refunds and caregiver net come from the payment ledger.'],
             ['A different personalized rate.', 'Taxes, tips, mileage, holiday charges, surcharges, discounts, or promotional credits.', 'A completed-care total without authoritative worked time.'],
             ['How much does care cost?', 'What does a caregiver make per hour?', 'What is LoLo’s platform fee?', 'What would three hours cost?'],
             ['Why did my card fail?', 'Change my payment method.', 'Approve the submitted hours.'],
@@ -237,10 +237,10 @@ return [
         $entry(
             'KB-B4-PAY-011',
             'Unsupported discounts, billing ownership, and private payout details',
-            'AI Support does not apply coupons, credits, or promo codes. It does not change Family billing ownership or collect another person’s card in chat. It also does not reveal private caregiver payout status to a Family user. It may explain that the Family total is $30 per worked hour; caregiver gross is $27 per worked hour minus actual Stripe processing fees; and LoLo’s gross portion is $3 per worked hour.',
+            'AI Support does not apply coupons, credits, or promo codes. It does not change Family billing ownership or collect another person’s card in chat. It also does not reveal private caregiver payout status to a Family user. It may explain the care rate, Family processing fee and total shown in an authorized review, but it never invents a personalized rate or replaces historical booking terms with current defaults.',
             'Care payments', $family, $historyPage,
             ['FAM-PAY-030', 'FAM-PAY-031', 'FAM-PAY-032'],
-            ['Coupons and promo codes are not an AI Support action.', 'Billing ownership changes require a person.', 'Caregiver payout status is private from Family support.', 'The governed hourly breakdown is $30 Family, $27 caregiver, and $3 LoLo.'],
+            ['Coupons and promo codes are not an AI Support action.', 'Billing ownership changes require a person.', 'Caregiver payout status is private from Family support.', 'Pricing components and totals require the authoritative quote or booking record.'],
             ['Another person’s card or payout record.', 'A discount, credit balance, owner change, or payout completion.'],
             ['Apply my promo code.', 'Change the billing owner.', 'Did the caregiver receive the payout?'],
             ['Why is my card declined?', 'Show the submitted hours.', 'Get my receipt.'],

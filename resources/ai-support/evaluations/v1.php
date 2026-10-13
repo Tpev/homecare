@@ -103,7 +103,7 @@ $positiveNavigationStableIds = [
 ];
 
 $positiveRequiredPhraseGroups = [
-    'KB-FAM-001' => [['Care overview', 'Actions', 'Schedule', 'Arrangements', 'History']],
+    'KB-FAM-001' => [['Overview', 'Care request', 'Schedule', 'History']],
     'KB-FAM-002' => [['care request', 'request status', 'Draft', 'Open']],
     'KB-FAM-003' => [['care request', 'request form']],
     'KB-FAM-004' => [['Account owner', 'Family member', 'Family access']],

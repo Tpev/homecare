@@ -1,0 +1,1563 @@
+{
+  "at": "2026-09-10T18:48:11.180Z",
+  "buildHash": "17f7a1d446a3aa7de001b8356780ef3ff464b34251cf47681401db33361d89e3",
+  "checks": [
+    {
+      "name": "OT-desktop HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "OT-desktop no application error",
+      "passed": true
+    },
+    {
+      "name": "OT-desktop no horizontal overflow",
+      "passed": true,
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "name": "OT-desktop no form sidebar",
+      "passed": true
+    },
+    {
+      "name": "OT-desktop no Request sections subnav",
+      "passed": true
+    },
+    {
+      "name": "OT-desktop review after all fields",
+      "passed": true,
+      "fields": {
+        "x": 132,
+        "y": 316.5,
+        "width": 1176,
+        "height": 1777.125,
+        "bottom": 2093.625,
+        "right": 1308
+      },
+      "review": {
+        "x": 132,
+        "y": 2115.625,
+        "width": 1176,
+        "height": 942.25,
+        "bottom": 3057.875,
+        "right": 1308
+      }
+    },
+    {
+      "name": "OT-desktop review and fields same column width",
+      "passed": true,
+      "fields": {
+        "x": 132,
+        "y": 316.5,
+        "width": 1176,
+        "height": 1777.125,
+        "bottom": 2093.625,
+        "right": 1308
+      },
+      "review": {
+        "x": 132,
+        "y": 2115.625,
+        "width": 1176,
+        "height": 942.25,
+        "bottom": 3057.875,
+        "right": 1308
+      }
+    },
+    {
+      "name": "OT-desktop four lifecycle stages",
+      "passed": true
+    },
+    {
+      "name": "OT-desktop first lifecycle stage current",
+      "passed": true
+    },
+    {
+      "name": "OT-desktop stages connected without gaps",
+      "passed": true,
+      "rects": [
+        {
+          "x": 133,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 426.5
+        },
+        {
+          "x": 426.5,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 720
+        },
+        {
+          "x": 720,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 1013.5
+        },
+        {
+          "x": 1013.5,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 1307
+        }
+      ]
+    },
+    {
+      "name": "OT-desktop first three stages have chevrons",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "rect": {
+            "x": 133,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 426.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "rect": {
+            "x": 426.5,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 720
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "rect": {
+            "x": 720,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 1013.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "rect": {
+            "x": 1013.5,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 1307
+          },
+          "before": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "OT-desktop local brand fonts",
+      "passed": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "OT-desktop expected existing input models retained",
+      "passed": true,
+      "missing": [],
+      "models": [
+        "request_type",
+        "care_for",
+        "recipient_full_name",
+        "recipient_relationship_to_family",
+        "selectedTasks",
+        "requested_start_date",
+        "requested_start_time",
+        "requested_duration_minutes",
+        "address_line1",
+        "address_line2",
+        "city",
+        "state",
+        "zip",
+        "additional_info",
+        "recipient_care_notes",
+        "home_access_notes",
+        "time_expectations",
+        "includeThirdPartyContact",
+        "is_private"
+      ]
+    },
+    {
+      "name": "RC-desktop HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "RC-desktop no application error",
+      "passed": true
+    },
+    {
+      "name": "RC-desktop no horizontal overflow",
+      "passed": true,
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "name": "RC-desktop no form sidebar",
+      "passed": true
+    },
+    {
+      "name": "RC-desktop no Request sections subnav",
+      "passed": true
+    },
+    {
+      "name": "RC-desktop review after all fields",
+      "passed": true,
+      "fields": {
+        "x": 132,
+        "y": 316.5,
+        "width": 1176,
+        "height": 1997.125,
+        "bottom": 2313.625,
+        "right": 1308
+      },
+      "review": {
+        "x": 132,
+        "y": 2335.625,
+        "width": 1176,
+        "height": 966.390625,
+        "bottom": 3302.015625,
+        "right": 1308
+      }
+    },
+    {
+      "name": "RC-desktop review and fields same column width",
+      "passed": true,
+      "fields": {
+        "x": 132,
+        "y": 316.5,
+        "width": 1176,
+        "height": 1997.125,
+        "bottom": 2313.625,
+        "right": 1308
+      },
+      "review": {
+        "x": 132,
+        "y": 2335.625,
+        "width": 1176,
+        "height": 966.390625,
+        "bottom": 3302.015625,
+        "right": 1308
+      }
+    },
+    {
+      "name": "RC-desktop four lifecycle stages",
+      "passed": true
+    },
+    {
+      "name": "RC-desktop first lifecycle stage current",
+      "passed": true
+    },
+    {
+      "name": "RC-desktop stages connected without gaps",
+      "passed": true,
+      "rects": [
+        {
+          "x": 133,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 426.5
+        },
+        {
+          "x": 426.5,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 720
+        },
+        {
+          "x": 720,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 1013.5
+        },
+        {
+          "x": 1013.5,
+          "y": 235.5,
+          "width": 293.5,
+          "height": 60,
+          "bottom": 295.5,
+          "right": 1307
+        }
+      ]
+    },
+    {
+      "name": "RC-desktop first three stages have chevrons",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "rect": {
+            "x": 133,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 426.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "rect": {
+            "x": 426.5,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 720
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "rect": {
+            "x": 720,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 1013.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "20px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "rect": {
+            "x": 1013.5,
+            "y": 235.5,
+            "width": 293.5,
+            "height": 60,
+            "bottom": 295.5,
+            "right": 1307
+          },
+          "before": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RC-desktop local brand fonts",
+      "passed": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "RC-desktop expected existing input models retained",
+      "passed": true,
+      "missing": [],
+      "models": [
+        "request_type",
+        "care_for",
+        "recipient_full_name",
+        "recipient_relationship_to_family",
+        "selectedTasks",
+        "recurring_days",
+        "recurring_starts_on",
+        "recurring_end_choice",
+        "address_line1",
+        "address_line2",
+        "city",
+        "state",
+        "zip",
+        "additional_info",
+        "recipient_care_notes",
+        "home_access_notes",
+        "time_expectations",
+        "includeThirdPartyContact",
+        "is_private"
+      ]
+    },
+    {
+      "name": "OT-mobile HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "OT-mobile no application error",
+      "passed": true
+    },
+    {
+      "name": "OT-mobile no horizontal overflow",
+      "passed": true,
+      "width": 390,
+      "documentWidth": 390
+    },
+    {
+      "name": "OT-mobile no form sidebar",
+      "passed": true
+    },
+    {
+      "name": "OT-mobile no Request sections subnav",
+      "passed": true
+    },
+    {
+      "name": "OT-mobile review after all fields",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 358,
+        "height": 2408.75,
+        "bottom": 2734.15625,
+        "right": 374
+      },
+      "review": {
+        "x": 16,
+        "y": 2750.15625,
+        "width": 358,
+        "height": 1075.359375,
+        "bottom": 3825.515625,
+        "right": 374
+      }
+    },
+    {
+      "name": "OT-mobile review and fields same column width",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 358,
+        "height": 2408.75,
+        "bottom": 2734.15625,
+        "right": 374
+      },
+      "review": {
+        "x": 16,
+        "y": 2750.15625,
+        "width": 358,
+        "height": 1075.359375,
+        "bottom": 3825.515625,
+        "right": 374
+      }
+    },
+    {
+      "name": "OT-mobile four lifecycle stages",
+      "passed": true
+    },
+    {
+      "name": "OT-mobile first lifecycle stage current",
+      "passed": true
+    },
+    {
+      "name": "OT-mobile stages connected without gaps",
+      "passed": true,
+      "rects": [
+        {
+          "x": 17,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 106
+        },
+        {
+          "x": 106,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 195
+        },
+        {
+          "x": 195,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 284
+        },
+        {
+          "x": 284,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 373
+        }
+      ]
+    },
+    {
+      "name": "OT-mobile first three stages have chevrons",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "rect": {
+            "x": 17,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 106
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "rect": {
+            "x": 106,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 195
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "rect": {
+            "x": 195,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 284
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "rect": {
+            "x": 284,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 373
+          },
+          "before": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "OT-mobile local brand fonts",
+      "passed": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "OT-mobile expected existing input models retained",
+      "passed": true,
+      "missing": [],
+      "models": [
+        "request_type",
+        "care_for",
+        "recipient_full_name",
+        "recipient_relationship_to_family",
+        "selectedTasks",
+        "requested_start_date",
+        "requested_start_time",
+        "requested_duration_minutes",
+        "address_line1",
+        "address_line2",
+        "city",
+        "state",
+        "zip",
+        "additional_info",
+        "recipient_care_notes",
+        "home_access_notes",
+        "time_expectations",
+        "includeThirdPartyContact",
+        "is_private"
+      ]
+    },
+    {
+      "name": "RC-mobile HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "RC-mobile no application error",
+      "passed": true
+    },
+    {
+      "name": "RC-mobile no horizontal overflow",
+      "passed": true,
+      "width": 390,
+      "documentWidth": 390
+    },
+    {
+      "name": "RC-mobile no form sidebar",
+      "passed": true
+    },
+    {
+      "name": "RC-mobile no Request sections subnav",
+      "passed": true
+    },
+    {
+      "name": "RC-mobile review after all fields",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 358,
+        "height": 2564.75,
+        "bottom": 2890.15625,
+        "right": 374
+      },
+      "review": {
+        "x": 16,
+        "y": 2906.15625,
+        "width": 358,
+        "height": 1099.5,
+        "bottom": 4005.65625,
+        "right": 374
+      }
+    },
+    {
+      "name": "RC-mobile review and fields same column width",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 358,
+        "height": 2564.75,
+        "bottom": 2890.15625,
+        "right": 374
+      },
+      "review": {
+        "x": 16,
+        "y": 2906.15625,
+        "width": 358,
+        "height": 1099.5,
+        "bottom": 4005.65625,
+        "right": 374
+      }
+    },
+    {
+      "name": "RC-mobile four lifecycle stages",
+      "passed": true
+    },
+    {
+      "name": "RC-mobile first lifecycle stage current",
+      "passed": true
+    },
+    {
+      "name": "RC-mobile stages connected without gaps",
+      "passed": true,
+      "rects": [
+        {
+          "x": 17,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 106
+        },
+        {
+          "x": 106,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 195
+        },
+        {
+          "x": 195,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 284
+        },
+        {
+          "x": 284,
+          "y": 224.40625,
+          "width": 89,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 373
+        }
+      ]
+    },
+    {
+      "name": "RC-mobile first three stages have chevrons",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "rect": {
+            "x": 17,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 106
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "rect": {
+            "x": 106,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 195
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "rect": {
+            "x": 195,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 284
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "rect": {
+            "x": 284,
+            "y": 224.40625,
+            "width": 89,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 373
+          },
+          "before": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RC-mobile local brand fonts",
+      "passed": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "RC-mobile expected existing input models retained",
+      "passed": true,
+      "missing": [],
+      "models": [
+        "request_type",
+        "care_for",
+        "recipient_full_name",
+        "recipient_relationship_to_family",
+        "selectedTasks",
+        "recurring_days",
+        "recurring_starts_on",
+        "recurring_end_choice",
+        "address_line1",
+        "address_line2",
+        "city",
+        "state",
+        "zip",
+        "additional_info",
+        "recipient_care_notes",
+        "home_access_notes",
+        "time_expectations",
+        "includeThirdPartyContact",
+        "is_private"
+      ]
+    },
+    {
+      "name": "OT-narrow HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "OT-narrow no application error",
+      "passed": true
+    },
+    {
+      "name": "OT-narrow no horizontal overflow",
+      "passed": true,
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "name": "OT-narrow no form sidebar",
+      "passed": true
+    },
+    {
+      "name": "OT-narrow no Request sections subnav",
+      "passed": true
+    },
+    {
+      "name": "OT-narrow review after all fields",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 288,
+        "height": 2498.84375,
+        "bottom": 2824.25,
+        "right": 304
+      },
+      "review": {
+        "x": 16,
+        "y": 2840.25,
+        "width": 288,
+        "height": 1093.953125,
+        "bottom": 3934.203125,
+        "right": 304
+      }
+    },
+    {
+      "name": "OT-narrow review and fields same column width",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 288,
+        "height": 2498.84375,
+        "bottom": 2824.25,
+        "right": 304
+      },
+      "review": {
+        "x": 16,
+        "y": 2840.25,
+        "width": 288,
+        "height": 1093.953125,
+        "bottom": 3934.203125,
+        "right": 304
+      }
+    },
+    {
+      "name": "OT-narrow four lifecycle stages",
+      "passed": true
+    },
+    {
+      "name": "OT-narrow first lifecycle stage current",
+      "passed": true
+    },
+    {
+      "name": "OT-narrow stages connected without gaps",
+      "passed": true,
+      "rects": [
+        {
+          "x": 17,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 88.5
+        },
+        {
+          "x": 88.5,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 160
+        },
+        {
+          "x": 160,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 231.5
+        },
+        {
+          "x": 231.5,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 303
+        }
+      ]
+    },
+    {
+      "name": "OT-narrow first three stages have chevrons",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "rect": {
+            "x": 17,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 88.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "rect": {
+            "x": 88.5,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 160
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "rect": {
+            "x": 160,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 231.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "rect": {
+            "x": 231.5,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 303
+          },
+          "before": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "OT-narrow local brand fonts",
+      "passed": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "OT-narrow expected existing input models retained",
+      "passed": true,
+      "missing": [],
+      "models": [
+        "request_type",
+        "care_for",
+        "recipient_full_name",
+        "recipient_relationship_to_family",
+        "selectedTasks",
+        "requested_start_date",
+        "requested_start_time",
+        "requested_duration_minutes",
+        "address_line1",
+        "address_line2",
+        "city",
+        "state",
+        "zip",
+        "additional_info",
+        "recipient_care_notes",
+        "home_access_notes",
+        "time_expectations",
+        "includeThirdPartyContact",
+        "is_private"
+      ]
+    },
+    {
+      "name": "RC-narrow HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "RC-narrow no application error",
+      "passed": true
+    },
+    {
+      "name": "RC-narrow no horizontal overflow",
+      "passed": true,
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "name": "RC-narrow no form sidebar",
+      "passed": true
+    },
+    {
+      "name": "RC-narrow no Request sections subnav",
+      "passed": true
+    },
+    {
+      "name": "RC-narrow review after all fields",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 288,
+        "height": 2654.84375,
+        "bottom": 2980.25,
+        "right": 304
+      },
+      "review": {
+        "x": 16,
+        "y": 2996.25,
+        "width": 288,
+        "height": 1118.09375,
+        "bottom": 4114.34375,
+        "right": 304
+      }
+    },
+    {
+      "name": "RC-narrow review and fields same column width",
+      "passed": true,
+      "fields": {
+        "x": 16,
+        "y": 325.40625,
+        "width": 288,
+        "height": 2654.84375,
+        "bottom": 2980.25,
+        "right": 304
+      },
+      "review": {
+        "x": 16,
+        "y": 2996.25,
+        "width": 288,
+        "height": 1118.09375,
+        "bottom": 4114.34375,
+        "right": 304
+      }
+    },
+    {
+      "name": "RC-narrow four lifecycle stages",
+      "passed": true
+    },
+    {
+      "name": "RC-narrow first lifecycle stage current",
+      "passed": true
+    },
+    {
+      "name": "RC-narrow stages connected without gaps",
+      "passed": true,
+      "rects": [
+        {
+          "x": 17,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 88.5
+        },
+        {
+          "x": 88.5,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 160
+        },
+        {
+          "x": 160,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 231.5
+        },
+        {
+          "x": 231.5,
+          "y": 224.40625,
+          "width": 71.5,
+          "height": 84,
+          "bottom": 308.40625,
+          "right": 303
+        }
+      ]
+    },
+    {
+      "name": "RC-narrow first three stages have chevrons",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "rect": {
+            "x": 17,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 88.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "rect": {
+            "x": 88.5,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 160
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "rect": {
+            "x": 160,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 231.5
+          },
+          "before": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "\"\"",
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "width": "9px",
+            "borderLeft": "0px"
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "rect": {
+            "x": 231.5,
+            "y": 224.40625,
+            "width": 71.5,
+            "height": 84,
+            "bottom": 308.40625,
+            "right": 303
+          },
+          "before": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          },
+          "after": {
+            "content": "none",
+            "clip": "none",
+            "width": "auto",
+            "borderLeft": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RC-narrow local brand fonts",
+      "passed": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "RC-narrow expected existing input models retained",
+      "passed": true,
+      "missing": [],
+      "models": [
+        "request_type",
+        "care_for",
+        "recipient_full_name",
+        "recipient_relationship_to_family",
+        "selectedTasks",
+        "recurring_days",
+        "recurring_starts_on",
+        "recurring_end_choice",
+        "address_line1",
+        "address_line2",
+        "city",
+        "state",
+        "zip",
+        "additional_info",
+        "recipient_care_notes",
+        "home_access_notes",
+        "time_expectations",
+        "includeThirdPartyContact",
+        "is_private"
+      ]
+    },
+    {
+      "name": "Original care records unchanged",
+      "passed": true,
+      "changed": []
+    }
+  ],
+  "errors": [],
+  "blockedRequests": [],
+  "captures": [
+    {
+      "id": "OT-desktop",
+      "variation": "one_time",
+      "device": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "top": "screenshots/OT-desktop-top.png",
+      "full": "screenshots/OT-desktop-full.png",
+      "inventory": "evidence/OT-desktop.json"
+    },
+    {
+      "id": "RC-desktop",
+      "variation": "recurring",
+      "device": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "top": "screenshots/RC-desktop-top.png",
+      "full": "screenshots/RC-desktop-full.png",
+      "inventory": "evidence/RC-desktop.json"
+    },
+    {
+      "id": "OT-mobile",
+      "variation": "one_time",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "top": "screenshots/OT-mobile-top.png",
+      "full": "screenshots/OT-mobile-full.png",
+      "inventory": "evidence/OT-mobile.json"
+    },
+    {
+      "id": "RC-mobile",
+      "variation": "recurring",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "top": "screenshots/RC-mobile-top.png",
+      "full": "screenshots/RC-mobile-full.png",
+      "inventory": "evidence/RC-mobile.json"
+    },
+    {
+      "id": "OT-narrow",
+      "variation": "one_time",
+      "device": "narrow",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "top": "screenshots/OT-narrow-top.png",
+      "full": "screenshots/OT-narrow-full.png",
+      "inventory": "evidence/OT-narrow.json"
+    },
+    {
+      "id": "RC-narrow",
+      "variation": "recurring",
+      "device": "narrow",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "top": "screenshots/RC-narrow-top.png",
+      "full": "screenshots/RC-narrow-full.png",
+      "inventory": "evidence/RC-narrow.json"
+    }
+  ],
+  "dataPreservation": {
+    "tables": 26,
+    "changed": [],
+    "passed": true
+  },
+  "passed": true
+}

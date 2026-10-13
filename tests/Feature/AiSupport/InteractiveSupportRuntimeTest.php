@@ -488,12 +488,24 @@ class InteractiveSupportRuntimeTest extends TestCase
         }
     }
 
-    public function test_fabricated_success_is_suppressed_transferred_and_automatically_stops_answers(): void
+    public static function fabricatedSuccessClaims(): array
+    {
+        return [
+            ['I created and published your care request.'],
+            ['Your card has been charged.'],
+            ['Good news, your card has been charged.'],
+            ['Your request was published.'],
+            ['We have approved the hours.'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('fabricatedSuccessClaims')]
+    public function test_fabricated_success_is_suppressed_transferred_and_automatically_stops_answers(string $claim): void
     {
         [, $family] = $this->eligibleFamily();
         Http::fake(['*/responses' => Http::response($this->providerEnvelope([
             'operation' => 'answer',
-            'message' => 'I created and published your care request.',
+            'message' => $claim,
             'navigation_target_id' => null,
             'care_path' => null,
             'clarifying_question' => null,
@@ -512,7 +524,7 @@ class InteractiveSupportRuntimeTest extends TestCase
             'action' => 'automatic_capability_stop',
             'reason_code' => 'unsafe_model_claim',
         ]);
-        $this->assertFalse($ticket->publicMessages()->where('body', 'like', '%created and published%')->exists());
+        $this->assertFalse($ticket->publicMessages()->where('body', $claim)->exists());
     }
 
     public function test_caregiver_runtime_allows_only_role_approved_navigation_and_never_creates_family_draft(): void
@@ -548,6 +560,8 @@ class InteractiveSupportRuntimeTest extends TestCase
 
     public function test_published_pricing_kb_uses_exact_family_and_caregiver_math_without_provider_calls(): void
     {
+        config(['marketplace.pricing_v2.enabled' => true, 'marketplace.pricing_v2.family_care_hourly_cents' => 3000,
+            'marketplace.pricing_v2.family_processing_fee_hourly_cents' => 100, 'marketplace.pricing_v2.caregiver_gross_hourly_cents' => 2700]);
         [$admin, $family] = $this->eligibleFamily();
         app(PaymentTimeKnowledgeBaseImportService::class)->publishPackage($admin, 'Publish exact pricing test knowledge.');
         Http::fake();
@@ -556,9 +570,10 @@ class InteractiveSupportRuntimeTest extends TestCase
         app(AiSupportRuntimeService::class)->respond($family, $familyTicket, 'What would 2.5 hours cost?');
 
         $familyAnswer = $familyTicket->publicMessages()->latest()->firstOrFail()->body;
-        $this->assertStringContainsString('Family total is $75.00', $familyAnswer);
-        $this->assertStringContainsString('caregiver gross earnings are $67.50', $familyAnswer);
-        $this->assertStringContainsString('platform portion is $7.50', $familyAnswer);
+        $this->assertStringContainsString('Family total is $77.50', $familyAnswer);
+        $this->assertStringContainsString('care is $75.00', $familyAnswer);
+        $this->assertStringContainsString('processing fee is $2.50', $familyAnswer);
+        $this->assertStringContainsString('existing booking may differ', $familyAnswer);
         Http::assertNothingSent();
 
         [, $caregiver] = $this->eligibleCaregiver();
@@ -577,9 +592,10 @@ class InteractiveSupportRuntimeTest extends TestCase
         app(AiSupportRuntimeService::class)->respond($caregiver, $caregiverTicket, 'What do I earn for 2 hours?');
 
         $caregiverAnswer = $caregiverTicket->publicMessages()->latest()->firstOrFail()->body;
-        $this->assertStringContainsString('caregiver earnings are $54.00', $caregiverAnswer);
-        $this->assertStringContainsString('Family total is $60.00', $caregiverAnswer);
-        $this->assertStringContainsString('platform portion is $6.00', $caregiverAnswer);
+        $this->assertStringContainsString('Caregiver gross earnings are $54.00', $caregiverAnswer);
+        $this->assertStringContainsString('Family total is $62.00', $caregiverAnswer);
+        $this->assertStringContainsString('processing fee is $2.00', $caregiverAnswer);
+        $this->assertStringContainsString('processing deductions come from the payment ledger', $caregiverAnswer);
         Http::assertNothingSent();
     }
 

@@ -58,7 +58,7 @@
                 <h1>Request care</h1>
                 <p>Share the help you need. Find a caregiver who feels right.</p>
             </div>
-            <button type="button" x-data x-on:click="$dispatch('open-care-support-chat')" class="hc-care-text-link">Chat with support</button>
+            <button type="button" data-support-chat-opener="create-care" x-data x-on:click="$dispatch('open-care-support-chat')" class="hc-care-text-link">Chat with support</button>
         </header>
 
         <ol class="hc-create-journey" aria-label="Finding care">

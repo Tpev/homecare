@@ -58,6 +58,50 @@ const newClientMessageId = () => {
     });
 };
 
+// A mobile Back action can replace the Livewire component after its nextTick.
+// Keep the short focus handoff outside that component so the new opener wins.
+let supportFocusReturn = null;
+let supportFocusReturnTimer = null;
+const restoreSupportOpener = () => {
+    window.clearTimeout(supportFocusReturnTimer);
+    const pending = supportFocusReturn;
+    if (! pending || Date.now() > pending.until || window.location.href !== pending.url) {
+        supportFocusReturn = null;
+        return;
+    }
+    const visible = (element) => {
+        if (! (element instanceof HTMLElement) || ! element.isConnected
+            || element.closest('[hidden], [aria-hidden="true"], [inert]')) return false;
+        const bounds = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return bounds.width > 1 && bounds.height > 1 && style.visibility === 'visible'
+            && style.display !== 'none' && Number(style.opacity) > 0;
+    };
+    const target = [pending.selector ? document.querySelector(pending.selector) : null, pending.element,
+        ...document.querySelectorAll('[data-support-chat-opener]:not([data-support-chat-opener="launcher"])'),
+        document.querySelector('[data-testid="support-chat-launcher"]'),
+        ...document.querySelectorAll('main h1, main h2, h1, [aria-label="Care sections"]')].find(visible);
+    if (target) {
+        if (target.tabIndex < 0 && ! target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+        pending.focused = target;
+    }
+    supportFocusReturnTimer = window.setTimeout(restoreSupportOpener, 100);
+};
+document.addEventListener('livewire:navigated', () => {
+    if (supportFocusReturn) supportFocusReturnTimer = window.setTimeout(restoreSupportOpener, 0);
+});
+for (const eventName of ['pointerdown', 'keydown']) {
+    document.addEventListener(eventName, (event) => {
+        // Explicit user interaction cancels restoration; automatic heading focus
+        // during Livewire navigation does not.
+        if (event.isTrusted && supportFocusReturn) {
+            supportFocusReturn = null;
+            window.clearTimeout(supportFocusReturnTimer);
+        }
+    }, true);
+}
+
 document.addEventListener('alpine:init', () => {
     window.Alpine.data('supportChatWidget', () => ({
         actionInFlight: false,
@@ -77,6 +121,7 @@ document.addEventListener('alpine:init', () => {
         newMessagesBelow: false,
         online: window.navigator.onLine,
         open: false,
+        opener: null,
         pendingMessage: null,
         pollTimer: null,
         popstateHandler: null,
@@ -210,7 +255,15 @@ document.addEventListener('alpine:init', () => {
             return `lolo-support-chat:scroll:${this.userId}:${ticketId ?? 'new'}`;
         },
 
-        showPanel() {
+        showPanel(invoker = null) {
+            supportFocusReturn = null;
+            window.clearTimeout(supportFocusReturnTimer);
+            const origin = invoker instanceof Element ? invoker : document.activeElement;
+            const opener = origin?.closest('button, a, [tabindex]') || origin;
+            if (! this.open && opener instanceof HTMLElement
+                && ! this.$refs.panel?.contains(opener)) {
+                this.opener = opener;
+            }
             this.open = true;
             writeSession(this.openKey(), 'true');
             this.prepareHistoryState();
@@ -239,6 +292,7 @@ document.addEventListener('alpine:init', () => {
 
         minimize() {
             if (this.isMobile && window.history.state?.loloSupportChat) {
+                this.closeImmediately(true);
                 window.history.back();
 
                 return;
@@ -269,8 +323,16 @@ document.addEventListener('alpine:init', () => {
             this.announcement = 'Support chat minimized.';
             this.schedulePoll(10000);
 
-            if (restoreFocus && ! fromPopstate) {
-                this.$nextTick(() => this.$refs.launcher?.focus({ preventScroll: true }));
+            if (restoreFocus) {
+                const marker = this.opener?.dataset.supportChatOpener;
+                supportFocusReturn = {
+                    element: this.opener,
+                    selector: marker ? `[data-support-chat-opener="${CSS.escape(marker)}"]` : null,
+                    url: window.location.href,
+                    until: Date.now() + 1800,
+                    focused: null,
+                };
+                this.$nextTick(() => restoreSupportOpener());
             }
         },
 
@@ -538,8 +600,14 @@ document.addEventListener('alpine:init', () => {
             window.clearTimeout(this.guidedTimer);
             if (! this.guidedTask?.id || ! this.guidedTask?.targetId) return;
 
-            const target = Array.from(document.querySelectorAll('[data-ai-target]'))
-                .find((element) => element.dataset.aiTarget === this.guidedTask.targetId);
+            const candidates = Array.from(document.querySelectorAll('[data-ai-target]'))
+                .filter((element) => element.dataset.aiTarget === this.guidedTask.targetId);
+            candidates.forEach((element) => {
+                for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
+                    if (ancestor instanceof HTMLDetailsElement) ancestor.open = true;
+                }
+            });
+            const target = candidates.find((element) => this.visibleTarget(element));
             if (! target) {
                 // Livewire navigation can take several seconds on a slower mobile
                 // connection. Keep looking before reporting a false missing target.
@@ -554,7 +622,7 @@ document.addEventListener('alpine:init', () => {
 
             const disabled = target.disabled
                 || target.getAttribute('aria-disabled') === 'true'
-                || target.closest('[aria-disabled="true"]');
+                || target.closest('[aria-disabled="true"], [inert]');
             if (disabled) {
                 this.reportGuidance('target_disabled');
 
@@ -567,17 +635,35 @@ document.addEventListener('alpine:init', () => {
             }
             target.classList.add('ai-guide-target-highlight');
             target.dataset.aiGuided = 'true';
+            if (target.tabIndex < 0 && ! target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+            const taskId = this.guidedTask.id;
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center', inline: 'nearest' });
-            window.setTimeout(() => {
+            target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start', inline: 'nearest' });
+            this.guidedTimer = window.setTimeout(() => {
+                if (this.guidedTask?.id !== taskId || ! this.visibleTarget(target)) return;
                 try {
                     target.focus({ preventScroll: true });
                 } catch {
                     target.focus?.();
                 }
+                if (document.activeElement !== target) {
+                    this.announcement = 'The guided area could not receive focus. You can ask for help or try Show me again.';
+                    this.reportGuidance('target_missing');
+                    return;
+                }
+                this.announcement = this.guidedTask.instruction || 'The control is highlighted.';
+                this.reportGuidance('arrived');
             }, reducedMotion ? 0 : 220);
-            this.announcement = this.guidedTask.instruction || 'The control is highlighted.';
-            this.reportGuidance('arrived');
+        },
+
+        visibleTarget(element) {
+            if (! (element instanceof HTMLElement) || ! element.isConnected
+                || element.closest('[hidden], [aria-hidden="true"], [inert]')) return false;
+            const style = window.getComputedStyle(element);
+            const bounds = element.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden'
+                && style.visibility !== 'collapse' && Number(style.opacity) > 0
+                && bounds.width > 1 && bounds.height > 1 && element.getClientRects().length > 0;
         },
 
         showGuidedTarget() {

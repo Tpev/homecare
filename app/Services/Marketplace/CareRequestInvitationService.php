@@ -58,6 +58,7 @@ class CareRequestInvitationService
         }
 
         $result = DB::transaction(function () use ($family, $careRequest, $caregiver, $message, $reinvite): CareRequestInvitationResult {
+            $profile = $caregiver->caregiverProfile()->lockForUpdate()->first();
             $lockedRequest = CareRequest::query()->lockForUpdate()->findOrFail($careRequest->id);
 
             if (! app(FamilyAccountContext::class)->canAccessRecord($family, $lockedRequest)) {
@@ -153,7 +154,6 @@ class CareRequestInvitationService
                 }
             }
 
-            $profile = $caregiver->caregiverProfile;
             if ($caregiver->role !== 'caregiver') {
                 return new CareRequestInvitationResult(
                     self::STATE_NOT_CAREGIVER,

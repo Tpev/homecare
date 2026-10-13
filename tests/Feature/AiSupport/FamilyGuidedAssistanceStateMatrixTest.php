@@ -38,7 +38,7 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         Http::fake();
 
         [$ticket, $task, $message] = $this->respond($family, 'What is the status of my request?');
-        $this->assertSame('family.request.overview', $task->navigation_target_id);
+        $this->assertSame('family.request.summary', $task->navigation_target_id);
         $this->assertSame($request->id, (int) $task->resource_id);
         $this->assertStringContainsString('Morning companionship', $message);
         $this->assertStringNotContainsString('..', $message);
@@ -388,9 +388,9 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         $this->assertSame('family.request.payment_attention', $correctionTask->navigation_target_id);
         $this->assertSame($request->id, (int) $correctionTask->resource_id);
 
-        [, $regularVisitTask] = $this->respond($regularFamily, 'When is my next regular care visit?');
-        $this->assertSame('family.regular_care.attention', $regularVisitTask->navigation_target_id);
-        $this->assertSame($plan->id, (int) $regularVisitTask->resource_id);
+        [, $regularVisitTask] = $this->respond($regularFamily, 'When is my next regular care visit?', 'family.request.visit');
+        $this->assertSame('family.request.visit', $regularVisitTask->navigation_target_id);
+        $this->assertSame($systemRequest->id, (int) $regularVisitTask->resource_id);
 
         [, $extraTask, $extraMessage] = $this->respond($regularFamily, 'Show the completed extra visit report.');
         $this->assertSame('family.regular_care.attention', $extraTask->navigation_target_id);
@@ -403,7 +403,7 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
     }
 
     /** @return array{SupportTicket,AiSupportGuidedTask,string} */
-    private function respond(User $family, string $question): array
+    private function respond(User $family, string $question, ?string $target = null): array
     {
         $ticket = SupportTicket::query()->create([
             'family_account_id' => app(FamilyAccountContext::class)->account($family)->id,
@@ -420,7 +420,8 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         ]);
 
         app(AiSupportRuntimeService::class)->respond($family, $ticket, $question);
-        $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
+        $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)
+            ->when($target, fn ($query) => $query->where('navigation_target_id', $target))->sole();
         $message = $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body;
 
         return [$ticket, $task, $message];

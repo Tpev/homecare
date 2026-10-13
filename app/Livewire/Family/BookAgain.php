@@ -215,6 +215,7 @@ class BookAgain extends Component
                 ->all();
             $newRequest->tasks()->sync($taskPayload);
 
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $hiredApplication->caregiver_user_id);
             CareRequestInvitation::query()->create([
                 'care_request_id' => $newRequest->id,
                 ...$ownership,

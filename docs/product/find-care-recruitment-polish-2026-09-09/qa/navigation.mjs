@@ -1,0 +1,56 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {chromium} from 'playwright';
+import {base,output,manifest} from './environment.mjs';
+import {settle} from './specs.mjs';
+const report={at:new Date().toISOString(),checks:[],errors:[]};
+const check=(name,passed,detail={})=>{report.checks.push({name,passed,url:page.url(),...detail});if(!passed)console.log('FAILED '+name+' '+page.url());};
+const browser=await chromium.launch({channel:'msedge',headless:true});
+const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
+await context.route('**/*',route=>{const url=new URL(route.request().url());return ['127.0.0.1','localhost'].includes(url.hostname)||['data:','blob:'].includes(url.protocol)?route.continue():route.abort();});
+const page=await context.newPage();page.setDefaultTimeout(30000);
+page.on('pageerror',error=>report.errors.push(error.message));
+try{
+ await page.goto(base+'/login');await page.getByLabel('Email',{exact:true}).fill(manifest.familyEmail);await page.getByLabel('Password',{exact:true}).fill(manifest.password);await page.getByRole('button',{name:'Log in',exact:true}).click();await page.waitForURL(url=>!url.pathname.endsWith('/login'));
+ for(const variation of ['one_time','recurring']){
+  const request=manifest.requests[variation].many_applicants;
+  await page.goto(`${base}/family/requests/${request}?tab=home`);await settle(page);
+  await page.getByRole('navigation',{name:'Care recruitment'}).getByRole('button',{name:/Find caregivers/}).click();await page.waitForURL(url=>url.searchParams.get('tab')==='invite');await settle(page);
+  check(variation+' request to full discovery',new URL(page.url()).searchParams.get('tab')==='invite'&&await page.getByRole('heading',{name:'Find caregivers',exact:true}).isVisible());
+  await page.getByRole('navigation',{name:'Caregiver discovery'}).getByRole('button',{name:/^Invited/}).click();await page.waitForURL(url=>url.searchParams.get('view')==='invited');await settle(page);
+  check(variation+' invited view URL',new URL(page.url()).searchParams.get('view')==='invited');
+  await page.goBack();await settle(page);
+  check(variation+' browser back restores search',await page.getByRole('navigation',{name:'Caregiver discovery'}).getByRole('button',{name:'Search',exact:true}).getAttribute('aria-current')==='page');
+  await page.getByRole('navigation',{name:'Care recruitment'}).getByRole('button',{name:/Review applicants/}).click();await settle(page);
+  await page.locator('[wire\\:click="setApplicantView(\'shortlisted\')"]').click();await settle(page);
+  check(variation+' shortlist filters actual records',await page.getByTestId('applicant-row').count()===1);
+  await page.locator('button[wire\\:click^="reviewHire("]').first().click();await settle(page);
+  check(variation+' hire opens a review',await page.locator('#care-decision-review').isVisible());
+  check(variation+' get started becomes current',await page.getByRole('navigation',{name:'Care recruitment'}).getByRole('button',{name:/Get started/}).getAttribute('aria-current')==='step');
+  await page.getByRole('button',{name:'Back to caregivers',exact:true}).click();await settle(page);
+  check(variation+' back retains shortlist',!await page.locator('#care-decision-review').isVisible()&&await page.getByTestId('applicant-row').count()===1);
+  await page.locator('button[wire\\:click^="reviewHire("]').first().click();await settle(page);
+  await page.getByRole('navigation',{name:'Care recruitment'}).getByRole('button',{name:/Care request/}).click();await settle(page);
+  check(variation+' navigation closes stale hire review',!await page.locator('#care-decision-review').isVisible());
+ }
+ await page.goto(base+'/family/care/1?tab=visits&visit_filter=all');await settle(page);
+ const visit=page.locator('a[href*="/family/requests/"][href*="return_tab=visits"]').first();
+ const target=await visit.getAttribute('href');await visit.click();await page.waitForURL(url=>url.pathname===new URL(target,base).pathname);await settle(page);
+ check('recurring arrangement opens exact visit',new URL(page.url()).pathname===new URL(target,base).pathname,{target});
+ const back=page.locator('a[href*="/family/care/1"][href*="visit_filter=all"]').first();
+ check('visit retains arrangement return filter',await back.count()===1);
+ await back.click();await page.waitForURL(url=>url.pathname==='/family/care/1'&&url.searchParams.get('visit_filter')==='all');await settle(page);
+ check('visit returns to filtered arrangement',new URL(page.url()).pathname==='/family/care/1'&&new URL(page.url()).searchParams.get('visit_filter')==='all');
+ await page.goto(base+'/family/requests/2?tab=invite&view=search');await settle(page);
+ const search=page.getByRole('searchbox',{name:'Search caregivers by name, city, or certification'});
+ await search.fill('Sofia');await settle(page);
+ const trigger=page.locator('button[data-invite-trigger]').first();
+ await trigger.click();await page.getByRole('dialog').waitFor({state:'visible'});
+ await page.getByLabel('Invitation message (optional)',{exact:true}).fill('Local keyboard review draft; not sent.');
+ await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
+ await page.waitForFunction(()=>document.activeElement?.hasAttribute('data-invite-trigger'));
+ check('invitation Escape restores exact list control focus',await trigger.evaluate(el=>document.activeElement===el));
+ check('invitation Escape preserves name search',await search.inputValue()==='Sofia');
+}catch(error){report.errors.push(error.stack);}finally{await browser.close();}
+report.passed=report.checks.every(check=>check.passed)&&!report.errors.length;
+fs.writeFileSync(path.join(output,'navigation-validation.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));if(!report.passed)process.exitCode=1;

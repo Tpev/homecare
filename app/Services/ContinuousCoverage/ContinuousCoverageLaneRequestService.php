@@ -58,6 +58,7 @@ class ContinuousCoverageLaneRequestService
 
         $batchUuid = (string) Str::uuid();
         [$requests, $changedIds] = DB::transaction(function () use ($plan, $caregiver, $member, $ids, $batchUuid): array {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
             $lockedMember = ContinuousCoverageRosterMember::query()->lockForUpdate()->findOrFail($member->id);
             if (! $lockedMember->isActive() || (int) $lockedMember->caregiver_user_id !== (int) $caregiver->id) {
                 throw ValidationException::withMessages(['laneRequestSelections' => 'This care-team membership is no longer active.']);
@@ -137,6 +138,7 @@ class ContinuousCoverageLaneRequestService
         $this->assertFamilyOwns($request->plan, $family);
 
         [$approved, $approvedRequestId, $notSelectedIds] = DB::transaction(function () use ($request, $family): array {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $request->caregiver_user_id);
             $lockedRequest = ContinuousCoverageLaneRequest::query()->lockForUpdate()->findOrFail($request->id);
             if ($lockedRequest->status !== ContinuousCoverageLaneRequest::STATUS_PENDING) {
                 return [false, $lockedRequest->id, []];

@@ -1,0 +1,629 @@
+{
+  "text": "My care\n/\nRecurring care\n\nRECURRING CARE\n\nRecurring care for Eleanor Bennett\n\nMon, Wed, Fri · 10:00 AM–12:00 PM · Raleigh, NC\n\nFinding a caregiver\nRequest #13\nGet help\nCare story\nOverview\nCaregivers\nVisits\nCare details\n\nSUGGESTED CAREGIVERS\n\nInvite one or two caregivers\n\nYour request is live. Inviting a strong match can help you get a reply faster.\n\nLOOKING FOR A SPECIFIC PERSON?\n\nInvite someone you know\n\nSearch by name and invite them without leaving this request or choosing the request again.\n\nSearch and invite\nPeople you invited\n\nInvitations are separate from caregivers who replied.\n\n0 total\nNo active invitations yet.\nRecommended caregivers\n\nSuggestions based on this request’s schedule and location.\n\nCertifications & training\nCPR\n⌄\nRequired certifications & training\n\nChoose what the caregiver must currently have. Select more than one to require all of them.\n\nCPR\nFirst Aid\nBasic Life Support (BLS)\nCertified Nursing Assistant (CNA)\nHome Health Aide (HHA)\nPersonal Care Aide (PCA)\nMedication Aide or Technician\nDementia care training\nOther certification or training\nVerification\nAny current credential\nIncludes LoLo-verified and caregiver-reported credentials.\nLoLo verified only\nOnly current credentials reviewed by the LoLo team.\nClear certifications\nCPR\n×\nLoLo verified only\n×\n\n1 suggested caregivers found\n\nEM\n\nE2E Marketplace Caregiver\n\nSame ZIP service area - Match score 118\n\n4.9\n14 reviews\nIdentity verified\nBackground check\nTop caregiver\nCPR\n · \nLoLo verified\nMemory loss, dementia, or Alzheimer's support\nLimited mobility or fall-risk support\n\nSame ZIP service area - Recurring match 100%\n\nInvite E2E\nAfter a caregiver replies, this screen changes to compare, chat, and hire.\n\nCAREGIVER INVITATION\n\nInvite a caregiver to this request\nClose\n\nRecurring care for Ellie — Waiting\n\nWhen\nMon, Wed, Fri · 10:00 AM–12:00 PM\nWhere\nRaleigh, NC\nCare for\nEleanor Bennett\nSearch by caregiver name\n\nEnter at least 2 letters. You can also enter a city.\n\nClear search\n\n0 caregivers found\n\nCertifications & training\nCPR\n⌄\nRequired certifications & training\n\nChoose what the caregiver must currently have. Select more than one to require all of them.\n\nCPR\nFirst Aid\nBasic Life Support (BLS)\nCertified Nursing Assistant (CNA)\nHome Health Aide (HHA)\nPersonal Care Aide (PCA)\nMedication Aide or Technician\nDementia care training\nOther certification or training\nVerification\nAny current credential\nIncludes LoLo-verified and caregiver-reported credentials.\nLoLo verified only\nOnly current credentials reviewed by the LoLo team.\nClear certifications\nCPR\n×\nLoLo verified only\n×\n\nNo caregivers match your search and CPR with LoLo verification.\n\nTry another name or remove a certification requirement.\n\nInclude credentials reported by caregivers\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H2",
+      "text": "Invite one or two caregivers"
+    },
+    {
+      "level": "H3",
+      "text": "Invite someone you know"
+    },
+    {
+      "level": "H3",
+      "text": "People you invited"
+    },
+    {
+      "level": "H3",
+      "text": "Recommended caregivers"
+    },
+    {
+      "level": "H2",
+      "text": "Invite a caregiver to this request"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Search and invite",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "CPR",
+      "text": "",
+      "value": "cpr",
+      "checked": true,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "First Aid",
+      "text": "",
+      "value": "first-aid",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Basic Life Support (BLS)",
+      "text": "",
+      "value": "bls",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Certified Nursing Assistant (CNA)",
+      "text": "",
+      "value": "cna",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Home Health Aide (HHA)",
+      "text": "",
+      "value": "hha",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Personal Care Aide (PCA)",
+      "text": "",
+      "value": "pca",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Medication Aide or Technician",
+      "text": "",
+      "value": "medication-aide",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Dementia care training",
+      "text": "",
+      "value": "dementia-training",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Other certification or training",
+      "text": "",
+      "value": "other",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "Any current credential\nIncludes LoLo-verified and caregiver-reported credentials.",
+      "text": "",
+      "value": "any_current",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "LoLo verified only\nOnly current credentials reviewed by the LoLo team.",
+      "text": "",
+      "value": "verified_only",
+      "checked": true,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear certifications",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Remove CPR filter",
+      "text": "CPR\n×",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Remove LoLo verified only filter",
+      "text": "LoLo verified only\n×",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invite E2E",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Close caregiver invitation",
+      "text": "Close",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "search",
+      "label": "Search by caregiver name",
+      "text": "",
+      "value": "Sofia",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": "Example: Charles"
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear search",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "CPR",
+      "text": "",
+      "value": "cpr",
+      "checked": true,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "First Aid",
+      "text": "",
+      "value": "first-aid",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Basic Life Support (BLS)",
+      "text": "",
+      "value": "bls",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Certified Nursing Assistant (CNA)",
+      "text": "",
+      "value": "cna",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Home Health Aide (HHA)",
+      "text": "",
+      "value": "hha",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Personal Care Aide (PCA)",
+      "text": "",
+      "value": "pca",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Medication Aide or Technician",
+      "text": "",
+      "value": "medication-aide",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Dementia care training",
+      "text": "",
+      "value": "dementia-training",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "label": "Other certification or training",
+      "text": "",
+      "value": "other",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "Any current credential\nIncludes LoLo-verified and caregiver-reported credentials.",
+      "text": "",
+      "value": "any_current",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "label": "LoLo verified only\nOnly current credentials reviewed by the LoLo team.",
+      "text": "",
+      "value": "verified_only",
+      "checked": true,
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Clear certifications",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Remove CPR filter",
+      "text": "CPR\n×",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Remove LoLo verified only filter",
+      "text": "LoLo verified only\n×",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Include credentials reported by caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "My care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/13"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Certifications & training\nCPR\n⌄",
+      "open": true
+    },
+    {
+      "summary": "Certifications & training\nCPR\n⌄",
+      "open": true
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 2464,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Recurring care for Eleanor Bennett",
+    "status": "Finding a caregiver",
+    "headerText": "My care\n/\nRecurring care\n\nRECURRING CARE\n\nRecurring care for Eleanor Bennett\n\nMon, Wed, Fri · 10:00 AM–12:00 PM · Raleigh, NC\n\nFinding a caregiver\nRequest #13\nGet help\nCare story",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Caregivers"
+    ]
+  }
+}

@@ -50,6 +50,11 @@ class CarePlanScheduleChange extends Model
         return $this->belongsTo(CarePlan::class, 'care_plan_id');
     }
 
+    public function carePlan(): BelongsTo
+    {
+        return $this->plan();
+    }
+
     public function requestedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by_user_id');

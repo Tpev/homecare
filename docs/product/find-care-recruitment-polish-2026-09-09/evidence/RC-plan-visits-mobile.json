@@ -1,0 +1,379 @@
+{
+  "text": "← Back to your care\n\nRecurring care · Care #1\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nRecurring care is active\nCaregiver & conversations\nGet help\nOverview\nCaregivers\nVisits\nCare details\n\n3 items to follow up across this care.\n\nView care updates\n\nRECURRING SCHEDULE\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nAug 24, 2026 through Dec 7, 2026 · America/New_York\n\nRecurring care is active\n\nOnly booked dates appear in the list. Open a visit to manage that date’s hours, payment, care notes or support.\n\nManage recurring care\n\nChoose one change. We will explain what happens before you confirm.\n\nAdd an extra visit\nChange future schedule\nPause recurring care\nEnd recurring care\nYour booked visits\nUpcoming\nNeeds follow-up\nPast\nCancelled\nAll visits\n\n2 visits in this view\n\nRecurring visit · Visit #9\n\nMonday, September 7, 2026\n\n7:56 AM–9:56 AM EDT · Sofia Martinez\n\nHappening now\n\nCard authorized\n\nView visit details\nGet help with this visit\n\nRecurring visit · Visit #8\n\nWednesday, September 9, 2026\n\n10:00 AM–12:00 PM EDT · Sofia Martinez\n\nScheduled\n\nCard authorized\n\nView visit details\nGet help with this visit\nSkip this visit\nCare story\nAll past visits & payments\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett",
+      "rect": {
+        "x": 16,
+        "y": 181,
+        "width": 358,
+        "height": 75
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Mon, Wed, Fri · 10:00 AM–12:00 PM",
+      "rect": {
+        "x": 37,
+        "y": 700,
+        "width": 316,
+        "height": 63.71875
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Manage recurring care",
+      "rect": {
+        "x": 37,
+        "y": 991,
+        "width": 316,
+        "height": 32
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Your booked visits",
+      "rect": {
+        "x": 37,
+        "y": 1403,
+        "width": 316,
+        "height": 31.859375
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Monday, September 7, 2026",
+      "rect": {
+        "x": 37,
+        "y": 1647.859375,
+        "width": 316,
+        "height": 28
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Wednesday, September 9, 2026",
+      "rect": {
+        "x": 37,
+        "y": 1964.859375,
+        "width": 316,
+        "height": 28
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": "$toggle('showHelp')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('overview')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('caregivers')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('visits')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('details')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View care updates",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('overview')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Add an extra visit",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "openManagePanel('extra')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Change future schedule",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "openManagePanel('schedule')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Pause recurring care",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "openManagePanel('pause')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "End recurring care",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "openManagePanel('end')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Upcoming",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": "true",
+      "action": "setVisitFilter('upcoming')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Needs follow-up",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": "false",
+      "action": "setVisitFilter('attention')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Past",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": "false",
+      "action": "setVisitFilter('past')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Cancelled",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": "false",
+      "action": "setVisitFilter('cancelled')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All visits",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": "false",
+      "action": "setVisitFilter('all')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Skip this visit",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "skipVisit(8)",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← Back to your care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Caregiver & conversations",
+      "href": "http://127.0.0.1:8028/family/requests/16?tab=applicants"
+    },
+    {
+      "text": "View visit details",
+      "href": "http://127.0.0.1:8028/family/requests/17?tab=shift&return_tab=visits&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Get help with this visit",
+      "href": "http://127.0.0.1:8028/family/requests/17?tab=support&return_tab=visits&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "View visit details",
+      "href": "http://127.0.0.1:8028/family/requests/16?tab=shift&return_tab=visits&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Get help with this visit",
+      "href": "http://127.0.0.1:8028/family/requests/16?tab=support&return_tab=visits&visit_filter=upcoming&return_page=1"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/regular/1"
+    },
+    {
+      "text": "All past visits & payments",
+      "href": "http://127.0.0.1:8028/family/care/history?plan=1"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 2474,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-dG8yja1b.css"
+  ],
+  "selectedNavigation": [
+    {
+      "text": "Visits",
+      "current": "page",
+      "pressed": null
+    },
+    {
+      "text": "Upcoming",
+      "current": null,
+      "pressed": "true"
+    }
+  ]
+}

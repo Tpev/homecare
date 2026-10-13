@@ -69,7 +69,7 @@
     @endforeach
 </nav>
 @if ($activeTab === 'home' && ! $reviewingApplicationId)
-<div class="hc-recruit-overview">
+<div data-ai-target="family.request.summary" tabindex="-1" class="hc-recruit-overview">
     <section class="hc-recruit-next" aria-labelledby="recruit-next-title">
         <div class="hc-recruit-next-copy">
             <p class="hc-recruit-eyebrow">{{ $recruitCanHire ? ($openCaregiverResponses ? 'Up next · Step 3' : 'Up next · Step 2') : 'Request status' }}</p>
@@ -102,7 +102,7 @@
 </div>
 @endif
 @if ($activeTab === 'start' && ! $reviewingApplicationId)
-<section class="hc-recruit-paper hc-recruit-start" aria-labelledby="recruit-start-heading">
+<section data-ai-target="family.request.start" tabindex="-1" class="hc-recruit-paper hc-recruit-start" aria-labelledby="recruit-start-heading">
     <div class="hc-recruit-section-title">
         <div>
             <p class="hc-recruit-eyebrow">Step 4 · Get started</p>

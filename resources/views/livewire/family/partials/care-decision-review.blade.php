@@ -12,7 +12,7 @@
                 <div class="hc-hire-terms">
                     <dl>
                         <div><dt>Care</dt><dd>{{ $plainRequestType }} for {{ $recordRecipientName }}</dd></div>
-                        <div><dt>Schedule</dt><dd>{{ $recruitmentSchedule }}</dd></div>
+                        <div><dt>Schedule</dt><dd>{{ $decisionApplication?->offered_schedule ? \App\Support\WeeklySchedule::label($decisionApplication->offered_schedule['slots']) : $recruitmentSchedule }}</dd></div>
                         @if ($requestItem->request_type === 'recurring' && $hireDecisionStart && $hireDecisionEnd)
                             <div><dt>First visit</dt><dd>{{ $hireDecisionStart->format('D, M j, Y, g:i A') }}–{{ $hireDecisionEnd->format($hireDecisionStart->isSameDay($hireDecisionEnd) ? 'g:i A T' : 'D, M j, g:i A T') }}</dd></div>
                         @endif
@@ -40,7 +40,7 @@
             </div>
             <div class="hc-hire-actions">
                 @error('hire') <div role="alert"><x-alert color="red">{{ $message }}</x-alert></div> @enderror
-                <p>Confirming selects this caregiver, saves the care agreement and prepares card authorization. Other open applications will be marked not selected. {{ $requestItem->request_type === 'recurring' ? 'Your recurring care home will show booked visits and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
+                <p>Confirming selects this caregiver, saves the care agreement and prepares card authorization. {{ $decisionApplication?->selected_days !== null ? 'Only their selected days will be assigned. Your request stays open for the remaining days; other applications stay available.' : 'Other open applications will be marked not selected.' }} {{ $requestItem->request_type === 'recurring' ? 'Your care schedule will show booked visits, missing care and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
                 @if(! $hirePayment['ready'] && $decisionApplication)
                     <x-family-hire-payment-prompt :care-request="$requestItem" :application="$decisionApplication" :unavailable="$hirePayment['unavailable']" id="hire-review-payment" />
                 @endif

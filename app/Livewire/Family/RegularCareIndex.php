@@ -207,6 +207,7 @@ class RegularCareIndex extends Component
         $totalArrangementCount = $requestCount + $planCount + $continuousCount;
 
         return view('livewire.family.regular-care-index', [
+            'sharedCareSchedules' => \App\Models\CareArrangement::forFamilyAccount($account->id)->with('sourceRequest.recipient')->latest()->get(),
             'arrangements' => $arrangements,
             'continuousPlans' => $continuousPlans,
             'continuousCoverageVisible' => $continuousCoverageVisible,

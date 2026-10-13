@@ -45,6 +45,12 @@ class CarePlanOccurrenceService
         $existing = collect();
 
         foreach ($planned as $occurrence) {
+            if ($plan->care_arrangement_id) {
+                $need = \App\Models\CareArrangementNeed::where('care_arrangement_id', $plan->care_arrangement_id)->where('starts_at', $occurrence['start'])->first();
+                if ($need && ($need->status === 'waived' || in_array($plan->id, $need->suppressed_plan_ids ?? []))) {
+                    continue;
+                }
+            }
             $found = $this->findExistingOccurrence($plan, $occurrence);
             if ($found) {
                 if (! $dryRun) {
@@ -63,6 +69,11 @@ class CarePlanOccurrenceService
         if (! $dryRun) {
             $plan->forceFill(['last_generated_at' => now()])->save();
             $this->health->reconcile($plan);
+            if ($plan->care_arrangement_id) {
+                foreach ($created->merge($existing) as $booking) {
+                    app(SharedCareService::class)->linkBooking($booking);
+                }
+            }
         }
 
         return compact('created', 'existing', 'planned');
@@ -222,9 +233,14 @@ class CarePlanOccurrenceService
         ];
     }
 
-    public function createExtraVisit(CarePlan $plan, Carbon $start, Carbon $end): CareBooking
+    public function createExtraVisit(CarePlan $plan, Carbon $start, Carbon $end, ?int $sharedOfferId = null, ?int $needId = null): CareBooking
     {
         $occurrence = $this->extraVisitOccurrence($plan, $start, $end);
+        if ($plan->care_arrangement_id && $sharedOfferId) {
+            // A new accepted offer gets a new booking; prior cancellation/payment history remains intact.
+            $occurrence['key'] .= ':offer:'.$sharedOfferId;
+            $occurrence['revision'] = $sharedOfferId;
+        }
         $existing = CareBooking::query()->where('occurrence_key', $occurrence['key'])->first();
 
         if ($existing) {
@@ -243,7 +259,9 @@ class CarePlanOccurrenceService
             return $existing;
         }
 
-        if ($this->overlapsScheduledRegularOccurrence($plan, $start, $end)) {
+        if ($plan->care_arrangement_id && $sharedOfferId) {
+            app(SharedCareService::class)->assertVisitAvailable($plan, $start, $end, $needId);
+        } elseif ($this->overlapsScheduledRegularOccurrence($plan, $start, $end)) {
             throw ValidationException::withMessages([
                 'extraVisitDate' => 'That extra visit overlaps the plan regular schedule.',
             ]);
@@ -340,6 +358,10 @@ class CarePlanOccurrenceService
      */
     private function findExistingOccurrence(CarePlan $plan, array $occurrence): ?CareBooking
     {
+        if ($plan->care_arrangement_id && str_contains($occurrence['key'], ':offer:')) {
+            return CareBooking::where('occurrence_key', $occurrence['key'])->first();
+        }
+
         return CareBooking::query()
             ->where(function ($query) use ($plan, $occurrence) {
                 $query->where('occurrence_key', $occurrence['key'])
@@ -383,9 +405,16 @@ class CarePlanOccurrenceService
     {
         try {
             return DB::transaction(function () use ($plan, $occurrence, $kind): CareBooking {
+                // Existing accepted schedules keep running during screening suspension.
+                // Share the profile lock with admin decisions so the review flag cannot be missed.
+                \App\Models\CaregiverProfile::query()->where('user_id', $plan->caregiver_user_id)->lockForUpdate()->first();
                 $existing = $this->findExistingOccurrence($plan, $occurrence);
                 if ($existing) {
                     return $existing;
+                }
+
+                if ($kind === 'extra') {
+                    app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $plan->caregiver_user_id);
                 }
 
                 $address = $plan->address_snapshot ?? [];
@@ -454,6 +483,7 @@ class CarePlanOccurrenceService
                     'care_request_id' => $request->id,
                     'care_plan_id' => $plan->id,
                     'occurrence_key' => $occurrence['key'],
+                    'occurrence_revision' => $occurrence['revision'] ?? 0,
                     'plan_visit_kind' => $kind,
                     'plan_schedule_version' => $plan->schedule_version,
                     'care_request_application_id' => $application->id,
@@ -476,6 +506,8 @@ class CarePlanOccurrenceService
                     'visit_kind' => $kind,
                     'schedule_version' => $plan->schedule_version,
                 ]);
+
+                app(\App\Services\Screening\ScreeningBookingReviewService::class)->flagBooking($booking);
 
                 $plan->relationship?->forceFill([
                     'last_care_request_id' => $request->id,
@@ -529,6 +561,7 @@ class CarePlanOccurrenceService
         }
 
         $booking->forceFill($updates)->save();
+        app(\App\Services\Screening\ScreeningBookingReviewService::class)->flagBooking($booking);
 
         return $booking->fresh();
     }
@@ -537,7 +570,9 @@ class CarePlanOccurrenceService
     {
         $reason = (string) $booking->cancellation_reason;
 
-        return $reason === 'Skipped by family. Regular care continues.'
+        return ($booking->care_arrangement_need_id && $reason !== 'Schedule changed with caregiver approval.')
+            || $reason === 'Skipped by family. Regular care continues.'
+            || str_starts_with($reason, 'Shared care:')
             || $reason === 'Regular care paused by family.'
             || $reason === 'Regular care ended by family.'
             || str_starts_with($reason, 'Operations paused regular care:')

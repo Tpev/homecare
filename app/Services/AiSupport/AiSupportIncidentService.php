@@ -3,6 +3,7 @@
 namespace App\Services\AiSupport;
 
 use App\Models\AiSupportAdminAuditEvent;
+use App\Models\AiSupportControlVersion;
 use App\Models\AiSupportIncident;
 use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
@@ -50,6 +51,15 @@ class AiSupportIncidentService
                 return $existing;
             }
             $now = now();
+            $control = $controlKey === null ? null : AiSupportControlVersion::query()
+                ->current()->where('control_key', $controlKey)->latest('version')->first();
+            $contained = $control !== null && ($controlKey === 'human_only' ? $control->enabled : ! $control->enabled);
+            $safeMetadata['containment'] = [
+                'state' => $contained ? 'control_stopped' : 'no_confirmed_stop',
+                'control_version_id' => $control?->id,
+                'control_enabled' => $control?->enabled,
+                'observed_at' => $now->toIso8601String(),
+            ];
             $created = AiSupportIncident::query()->create([
                 'id' => (string) Str::uuid(),
                 'reason_code' => $reasonCode,
@@ -85,15 +95,19 @@ class AiSupportIncidentService
         if ($admins->isNotEmpty()) {
             try {
                 $critical = $incident->severity === AiSupportIncident::SEVERITY_CRITICAL;
+                $contained = data_get($incident->safe_metadata, 'containment.state') === 'control_stopped';
                 $this->notifications->notify(
                     recipients: $admins,
                     eventKey: MarketplaceEvent::SUPPORT_TICKET_REPLY,
-                    title: $critical ? 'Critical AI Support stop' : 'AI Support operational warning',
-                    body: $critical
-                        ? 'AI Support stopped a capability. Review the incident in Admin before restoring it.'
-                        : 'AI Support monitoring detected a warning. Review it in Admin.',
+                    title: $contained ? 'AI Support control stopped' : ($critical ? 'Critical AI Support incident' : 'AI Support operational warning'),
+                    body: $contained
+                        ? 'A stopped control was confirmed when this incident opened. Review the incident and current Availability in Admin before restoring it.'
+                        : 'AI Support monitoring detected an incident. No control stop was confirmed. Review the incident and current Availability in Admin.',
                     url: route('admin.ai-support.index'),
-                    payload: ['ai_support_incident_id' => $incident->id, 'reason_code' => $reasonCode],
+                    payload: [
+                        'ai_support_incident_id' => $incident->id, 'reason_code' => $reasonCode,
+                        'containment' => data_get($incident->safe_metadata, 'containment'),
+                    ],
                     subject: null,
                     dedupeKey: 'ai-support-incident-'.$incident->id,
                     channelOverrides: [

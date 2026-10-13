@@ -9,8 +9,8 @@ use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\User;
-use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Booking\BookingTrustService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\BookingPaymentService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -208,6 +208,9 @@ class ContinuousCoverageReplacementService
     {
         $this->assertEnabledFor($caregiver);
         $result = DB::transaction(function () use ($offer, $caregiver, $accept): ContinuousCoverageShiftOffer {
+            if ($accept) {
+                app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
+            }
             $lockedOffer = ContinuousCoverageShiftOffer::query()->lockForUpdate()->findOrFail($offer->id);
             $case = ContinuousCoverageReplacementCase::query()->lockForUpdate()->findOrFail($lockedOffer->replacement_case_id);
             $shift = ContinuousCoverageShift::query()->lockForUpdate()->with('plan')->findOrFail($lockedOffer->continuous_coverage_shift_id);
@@ -274,11 +277,17 @@ class ContinuousCoverageReplacementService
     public function familyConfirm(ContinuousCoverageReplacementCase $case, User $family): ContinuousCoverageShift
     {
         $this->assertEnabledFor($family);
-        $shift = DB::transaction(function () use ($case, $family): ContinuousCoverageShift {
+        $reference = ContinuousCoverageReplacementCase::query()->findOrFail($case->id);
+        $candidate = ContinuousCoverageShiftOffer::query()->find($reference->winning_offer_id);
+        $shift = DB::transaction(function () use ($case, $family, $candidate): ContinuousCoverageShift {
+            if ($candidate) {
+                \App\Models\CaregiverProfile::where('user_id', $candidate->caregiver_user_id)->lockForUpdate()->first();
+            }
             $lockedCase = ContinuousCoverageReplacementCase::query()->lockForUpdate()->findOrFail($case->id);
             $shift = ContinuousCoverageShift::query()->lockForUpdate()->with('plan')->findOrFail($lockedCase->continuous_coverage_shift_id);
             abort_unless($family->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($family, $shift->plan), 403);
-            if ($lockedCase->status !== ContinuousCoverageReplacementCase::STATUS_AWAITING_FAMILY || ! $lockedCase->winning_offer_id) {
+            if ($lockedCase->status !== ContinuousCoverageReplacementCase::STATUS_AWAITING_FAMILY
+                || ! $candidate || (int) $lockedCase->winning_offer_id !== (int) $candidate->id) {
                 throw ValidationException::withMessages(['replacement' => 'This replacement is no longer waiting for confirmation.']);
             }
             $offer = ContinuousCoverageShiftOffer::query()
@@ -483,6 +492,7 @@ class ContinuousCoverageReplacementService
 
     private function confirmLocked(ContinuousCoverageShift $shift, ContinuousCoverageReplacementCase $case, ContinuousCoverageShiftOffer $offer, $at): void
     {
+        app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $offer->caregiver_user_id);
         $shift->forceFill([
             'assigned_caregiver_user_id' => $offer->caregiver_user_id,
             'status' => ContinuousCoverageShift::STATUS_CONFIRMED,
@@ -500,7 +510,7 @@ class ContinuousCoverageReplacementService
     private function matchesShift(ContinuousCoverageRosterMember $member, ContinuousCoverageShift $shift): bool
     {
         $profile = $member->caregiver?->caregiverProfile;
-        if (! $profile || $profile->status !== 'active') {
+        if (! $profile || ! app(\App\Services\Screening\CaregiverWorkEligibility::class)->allowsNewWork($profile)) {
             return false;
         }
 

@@ -1,0 +1,116 @@
+{
+  "package_version": "family-experience-alignment-v2",
+  "prompt_version": "interactive-support-v10",
+  "managed_entry_count": 193,
+  "changed_entry_count": 26,
+  "canonical_revision_ids": [
+    "KB-FAM-004"
+  ],
+  "source_directory": "resources/ai-support/knowledge-base",
+  "changed_entries": {
+    "KB-B4-PAY-011": {
+      "source": "payment-time-v1.php",
+      "title": "Unsupported discounts, billing ownership, and private payout details"
+    },
+    "KB-B4-PRICE-001": {
+      "source": "payment-time-v1.php",
+      "title": "LoLo hourly price, caregiver earnings, and platform portion"
+    },
+    "KB-B5-REQUEST-001": {
+      "source": "profile-request-v1.php",
+      "title": "Choosing one-time, recurring, or human-led 24/7 care"
+    },
+    "KB-B5-REQUEST-002": {
+      "source": "profile-request-v1.php",
+      "title": "Information collected for a care request"
+    },
+    "KB-B5-REQUEST-005": {
+      "source": "profile-request-v1.php",
+      "title": "What happens after a request is published"
+    },
+    "KB-B5-REQUEST-006": {
+      "source": "profile-request-v1.php",
+      "title": "Care-request status and applicant visibility"
+    },
+    "KB-B5-REQUEST-008": {
+      "source": "profile-request-v1.php",
+      "title": "Live request changes use a reviewed replacement"
+    },
+    "KB-B5-REQUEST-009": {
+      "source": "profile-request-v1.php",
+      "title": "Withdraw an open request safely"
+    },
+    "KB-B5-REQUEST-010": {
+      "source": "profile-request-v1.php",
+      "title": "Expired or withdrawn requests create a fresh copy"
+    },
+    "KB-B67-MATCH-001": {
+      "source": "marketplace-care-v1.php",
+      "title": "Find and browse caregivers"
+    },
+    "KB-B67-MATCH-002": {
+      "source": "marketplace-care-v1.php",
+      "title": "Caregiver profile facts and recommendations"
+    },
+    "KB-B67-MATCH-003": {
+      "source": "marketplace-care-v1.php",
+      "title": "Invite or reinvite a caregiver"
+    },
+    "KB-B67-MATCH-004": {
+      "source": "marketplace-care-v1.php",
+      "title": "Invitation status and cancellation"
+    },
+    "KB-B67-MATCH-005": {
+      "source": "marketplace-care-v1.php",
+      "title": "Applicants, comparison, shortlist, and rejection"
+    },
+    "KB-B67-MATCH-007": {
+      "source": "marketplace-care-v1.php",
+      "title": "Hiring an applicant"
+    },
+    "KB-B67-REGULAR-001": {
+      "source": "marketplace-care-v1.php",
+      "title": "Recurring-care plan list and status"
+    },
+    "KB-B67-REGULAR-002": {
+      "source": "marketplace-care-v1.php",
+      "title": "Set up and send a recurring-care offer"
+    },
+    "KB-B67-REGULAR-007": {
+      "source": "marketplace-care-v1.php",
+      "title": "Pause, resume, or end recurring care"
+    },
+    "KB-B67-VISIT-009": {
+      "source": "marketplace-care-v1.php",
+      "title": "Submitted hours and payment approval"
+    },
+    "KB-B67-VISIT-014": {
+      "source": "marketplace-care-v1.php",
+      "title": "Payment effect of hours approval"
+    },
+    "KB-CARE-006": {
+      "source": "interactive-v1.php",
+      "title": "Current hourly price"
+    },
+    "KB-CARE-007": {
+      "source": "interactive-v1.php",
+      "title": "A published request is not a hired caregiver"
+    },
+    "KB-FAM-001": {
+      "source": "v1.php",
+      "title": "Your Family Care overview"
+    },
+    "KB-FAM-002": {
+      "source": "v1.php",
+      "title": "Your Care overview and care journeys"
+    },
+    "KB-FOP-PAY-011": {
+      "source": "family-operations-v1.php",
+      "title": "Understand the hourly price and start the next care step"
+    },
+    "KB-B89-HISTORY-003": {
+      "source": "family-administration-support-v1.php",
+      "title": "Historical charges, refunds, and net paid"
+    }
+  }
+}

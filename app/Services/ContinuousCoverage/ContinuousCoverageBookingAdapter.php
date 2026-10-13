@@ -22,10 +22,17 @@ class ContinuousCoverageBookingAdapter
     public function linkConfirmedShift(ContinuousCoverageShift $shift): CareBooking
     {
         $linked = false;
-        $booking = DB::transaction(function () use ($shift, &$linked): CareBooking {
+        $caregiverUserId = (int) ContinuousCoverageShift::whereKey($shift->id)->value('assigned_caregiver_user_id');
+        $booking = DB::transaction(function () use ($shift, $caregiverUserId, &$linked): CareBooking {
+            if ($caregiverUserId) {
+                \App\Models\CaregiverProfile::query()->where('user_id', $caregiverUserId)->lockForUpdate()->first();
+            }
             $locked = ContinuousCoverageShift::query()->lockForUpdate()->findOrFail($shift->id);
             if ($locked->care_booking_id) {
                 return CareBooking::query()->findOrFail($locked->care_booking_id);
+            }
+            if ((int) $locked->assigned_caregiver_user_id !== $caregiverUserId) {
+                throw ValidationException::withMessages(['shift' => 'The coverage assignment changed. Refresh this shift and try again.']);
             }
             if (! $locked->assigned_caregiver_user_id || ! in_array($locked->status, [
                 ContinuousCoverageShift::STATUS_CONFIRMED,
@@ -127,6 +134,7 @@ class ContinuousCoverageBookingAdapter
                 'continuous_coverage_shift_id' => $locked->id,
             ]);
             $locked->forceFill(['care_booking_id' => $booking->id])->save();
+            app(\App\Services\Screening\ScreeningBookingReviewService::class)->flagBooking($booking);
             $this->events->record($plan, 'booking_linked', shift: $locked, payload: ['care_booking_id' => $booking->id]);
             $linked = true;
 

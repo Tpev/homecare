@@ -61,26 +61,30 @@ class ContinuousCoverageRosterService
             ], true)
             && $existing->caregiver_accepted_at;
 
-        $member = ContinuousCoverageRosterMember::query()->updateOrCreate(
-            [
-                'continuous_coverage_plan_id' => $plan->id,
-                'caregiver_user_id' => $caregiver->id,
-            ],
-            [
-                'invited_by_user_id' => $family->id,
-                'status' => $preserveAcceptedMembership
-                    ? $existing->status
-                    : ContinuousCoverageRosterMember::STATUS_FAMILY_APPROVED,
-                'role' => $normalizedRole,
-                'replacement_opt_in' => $replacementOptIn,
-                'eligible_days' => $normalizedDays,
-                'eligible_shift_types' => $normalizedShiftTypes,
-                'family_approved_at' => now(),
-                'caregiver_accepted_at' => $preserveAcceptedMembership ? $existing->caregiver_accepted_at : null,
-                'paused_at' => $preserveAcceptedMembership ? $existing->paused_at : null,
-                'removed_at' => null,
-            ],
-        );
+        $member = DB::transaction(function () use ($plan, $family, $caregiver, $preserveAcceptedMembership, $existing, $normalizedRole, $replacementOptIn, $normalizedDays, $normalizedShiftTypes): ContinuousCoverageRosterMember {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
+
+            return ContinuousCoverageRosterMember::query()->updateOrCreate(
+                [
+                    'continuous_coverage_plan_id' => $plan->id,
+                    'caregiver_user_id' => $caregiver->id,
+                ],
+                [
+                    'invited_by_user_id' => $family->id,
+                    'status' => $preserveAcceptedMembership
+                        ? $existing->status
+                        : ContinuousCoverageRosterMember::STATUS_FAMILY_APPROVED,
+                    'role' => $normalizedRole,
+                    'replacement_opt_in' => $replacementOptIn,
+                    'eligible_days' => $normalizedDays,
+                    'eligible_shift_types' => $normalizedShiftTypes,
+                    'family_approved_at' => now(),
+                    'caregiver_accepted_at' => $preserveAcceptedMembership ? $existing->caregiver_accepted_at : null,
+                    'paused_at' => $preserveAcceptedMembership ? $existing->paused_at : null,
+                    'removed_at' => null,
+                ],
+            );
+        });
 
         $this->events->record($plan, 'caregiver_family_approved', $family, payload: [
             'caregiver_user_id' => $caregiver->id,
@@ -121,6 +125,7 @@ class ContinuousCoverageRosterService
         }
 
         $member = DB::transaction(function () use ($plan, $caregiver): ContinuousCoverageRosterMember {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
             $lockedPlan = ContinuousCoveragePlan::query()->lockForUpdate()->findOrFail($plan->id);
             if ($lockedPlan->status !== ContinuousCoveragePlan::STATUS_ACTIVE || ! $lockedPlan->marketplace_applications_enabled) {
                 throw ValidationException::withMessages(['application' => 'This coverage plan is not accepting applications.']);
@@ -260,6 +265,7 @@ class ContinuousCoverageRosterService
     {
         $this->assertEnabledFor($caregiver);
         $accepted = DB::transaction(function () use ($member, $caregiver): ContinuousCoverageRosterMember {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
             $locked = ContinuousCoverageRosterMember::query()
                 ->lockForUpdate()
                 ->with('plan')
@@ -314,6 +320,7 @@ class ContinuousCoverageRosterService
     ): ContinuousCoverageShiftTemplate {
         $this->assertEnabledFor($family);
         $offered = DB::transaction(function () use ($template, $member, $family): ContinuousCoverageShiftTemplate {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $member->caregiver_user_id);
             $lockedTemplate = ContinuousCoverageShiftTemplate::query()
                 ->lockForUpdate()
                 ->with('plan')
@@ -368,6 +375,7 @@ class ContinuousCoverageRosterService
         $approvedRequestId = null;
         $notSelectedRequestIds = [];
         $accepted = DB::transaction(function () use ($template, $caregiver, &$approvedRequestId, &$notSelectedRequestIds): ContinuousCoverageShiftTemplate {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
             $locked = ContinuousCoverageShiftTemplate::query()->lockForUpdate()->with('rosterMember')->findOrFail($template->id);
             if ($locked->status !== ContinuousCoverageShiftTemplate::STATUS_OFFERED
                 || ($locked->offer_expires_at && $locked->offer_expires_at->isPast())
@@ -595,6 +603,11 @@ class ContinuousCoverageRosterService
         ContinuousCoverageRosterMember $member,
         ContinuousCoverageShiftTemplate $template,
     ): bool {
+        $profile = $member->caregiver?->caregiverProfile;
+        if (! $profile || ! app(\App\Services\Screening\CaregiverWorkEligibility::class)->allowsNewWork($profile)) {
+            return false;
+        }
+
         $eligibleDays = array_map('intval', (array) $member->eligible_days);
         if ($eligibleDays !== [] && ! in_array((int) $template->day_of_week, $eligibleDays, true)) {
             return false;

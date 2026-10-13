@@ -1,0 +1,107 @@
+FAMILY WORKSPACE
+Care
+Caregivers
+Messages
+Request care
+MB
+Maria Bennett
+Family
+
+REQUEST CARE WITH SOFIA
+
+One visit or recurring care—without starting over.
+
+We copied the care details from Aug 31, 2026. Choose how often you need care; the existing invitation, approval, and payment flow stays the same.
+
+ONE VISIT
+
+Invite Sofia for a specific date
+
+They will see it in their work inbox. If they accept, you can hire them from the request page.
+
+Starting day
+Starting time
+Duration
+1h
+1h 30m
+2h
+2h 30m
+3h
+3h 30m
+4h
+4h 30m
+5h
+5h 30m
+6h
+6h 30m
+7h
+7h 30m
+8h
+8h 30m
+9h
+9h 30m
+10h
+10h 30m
+11h
+11h 30m
+12h
+
+Estimated visit total
+
+Care $60.00 + $2.00 processing fee
+
+$62.00
+
+$30/hour care* plus a $1/hour processing fee.
+
+Message to caregiver
+
+Copied from last visit
+
+CAREGIVER
+
+Sofia Martinez
+
+FOR
+
+Eleanor Bennett
+
+LOCATION
+
+142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601
+
+Back to visit
+Send one-time invite
+
+RECURRING CARE
+
+Set up a repeating schedule
+
+Choose this when Sofia should come every week. You can set the days, time, start date, and end date before sending the offer.
+
+Set up recurring care
+What happens next
+
+1. Sofia accepts or declines
+
+They get a direct invite with the copied care details.
+
+2. You hire when ready
+
+The normal request page handles chat, profile review, hiring, and payment authorization.
+
+3. The visit follows the usual flow
+
+Check-in, timesheet, approval, and Stripe balance transfer stay in the same system.
+
+© 2026 LoLo Care Inc
+
+﻿
+Terms of Service
+Privacy Policy
+Payments & Cancellation
+Caregiver Terms
+Family Terms
+Safety Policy
+All Legal Documents
+Support

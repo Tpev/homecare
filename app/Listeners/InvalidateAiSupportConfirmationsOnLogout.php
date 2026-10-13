@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
+use App\Services\AiSupport\AiSupportPreparationService;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\DB;
 
@@ -12,12 +13,14 @@ class InvalidateAiSupportConfirmationsOnLogout
 {
     public function handle(Logout $event): void
     {
+        session()->forget(AiSupportPreparationService::SESSION_KEY);
         $userId = $event->user?->getAuthIdentifier();
         if (! $userId) {
             return;
         }
 
         DB::transaction(function () use ($userId): void {
+            app(AiSupportPreparationService::class)->invalidateForActors([(int) $userId], 'actor_logged_out');
             $now = now();
             AiSupportActionPreview::query()
                 ->where('actor_user_id', $userId)

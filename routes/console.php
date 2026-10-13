@@ -9,6 +9,9 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('homecare:dispatch-notifications --type=all')->everyTenMinutes();
+Schedule::command('screening:refresh-datasets')->dailyAt('03:00')->withoutOverlapping();
+Schedule::command('screening:sync')->dailyAt('05:00')->withoutOverlapping();
+Schedule::command('screening:export-audit')->everyMinute()->withoutOverlapping();
 // Catch bulk imports and requests completed by the previous release during deployment.
 Schedule::command('homecare:refresh-caregiver-count')->everyMinute()->withoutOverlapping();
 Schedule::command('homecare:dispatch-unread-message-emails')->everyMinute()->withoutOverlapping();

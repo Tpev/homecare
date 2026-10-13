@@ -211,6 +211,7 @@ class CarePlanService
 
         try {
             [$plan, $created] = DB::transaction(function () use ($source, $family, $caregiver, $payload, $schedule, $hourlyRate): array {
+                app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
                 $lockedSource = CareRequest::query()->lockForUpdate()->findOrFail($source->id);
                 if (! app(FamilyAccountContext::class)->canAccessRecord($family, $lockedSource)) {
                     abort(403);
@@ -324,6 +325,9 @@ class CarePlanService
         CareRequestApplication $application,
         User $family
     ): CarePlan {
+        if (! $source->is_system_generated && ($application->selected_days !== null || $source->care_arrangement_id)) {
+            return app(SharedCareService::class)->hire($source, $application, $family);
+        }
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source) || ! $source->isRecurring()) {
             throw ValidationException::withMessages([
                 'request' => 'This recurring care request cannot be activated.',
@@ -368,6 +372,7 @@ class CarePlanService
                 $schedule,
                 $hourlyRate
             ): CarePlan {
+                app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
                 $lockedSource = CareRequest::query()->lockForUpdate()->findOrFail($source->id);
                 $existing = CarePlan::query()
                     ->where('source_care_request_id', $lockedSource->id)
@@ -420,6 +425,7 @@ class CarePlanService
                 ])->save();
 
                 $createdPlan = CarePlan::query()->create([
+                    'care_arrangement_id' => $source->care_arrangement_id,
                     'care_relationship_id' => $relationship->id,
                     'family_account_id' => $lockedSource->family_account_id,
                     'family_user_id' => $lockedSource->family_user_id,
@@ -506,6 +512,7 @@ class CarePlanService
         }
 
         [$activatedPlan, $transitioned] = DB::transaction(function () use ($plan): array {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $plan->caregiver_user_id);
             $lockedPlan = CarePlan::query()->lockForUpdate()->findOrFail($plan->id);
             if ($lockedPlan->status !== CarePlan::STATUS_PENDING_CAREGIVER) {
                 return [$lockedPlan, false];
@@ -554,6 +561,8 @@ class CarePlanService
         if ((int) $plan->caregiver_user_id !== (int) $caregiver->id) {
             abort(403);
         }
+
+        app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
 
         if ($plan->status !== CarePlan::STATUS_PENDING_CAREGIVER) {
             return $plan->fresh();
@@ -636,6 +645,7 @@ class CarePlanService
         }
 
         $activatedPlan = DB::transaction(function () use ($plan): CarePlan {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $plan->caregiver_user_id);
             $plan->forceFill([
                 'status' => CarePlan::STATUS_ACTIVE,
                 'schedule_days' => $plan->counter_schedule_days ?: $plan->schedule_days,
@@ -677,6 +687,8 @@ class CarePlanService
     public function requestScheduleChange(CarePlan $plan, User $family, array $payload): CarePlanScheduleChange
     {
         $this->assertFamilyOwnsPlan($plan, $family);
+        app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $plan->caregiver_user_id);
+        $this->assertStandaloneScheduleControls($plan);
         $schedule = $this->normalizeSchedulePayload($payload);
         $timezone = $plan->timezone ?: (string) config('app.timezone', 'America/New_York');
         $effectiveOn = Carbon::parse((string) ($payload['effective_on'] ?? $schedule['starts_on']), $timezone)->startOfDay();
@@ -743,9 +755,14 @@ class CarePlanService
         User $family,
         Carbon $start,
         Carbon $end,
-        ?string $note = null
+        ?string $note = null,
+        ?int $sharedNeedId = null
     ): CarePlanScheduleChange {
         $this->assertFamilyOwnsPlan($plan, $family);
+        app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $plan->caregiver_user_id);
+        if ($plan->care_arrangement_id && ! $sharedNeedId) {
+            return app(SharedCareService::class)->requestVisit(\App\Models\CareArrangement::findOrFail($plan->care_arrangement_id), $family, $plan->id, $start, $end, note: $note);
+        }
         if ($start->lte(now()) || $end->lte($start)) {
             throw ValidationException::withMessages(['extraVisitDate' => 'Choose a future visit with a valid duration.']);
         }
@@ -788,6 +805,13 @@ class CarePlanService
         bool $accept
     ): CarePlanScheduleChange {
         [$processedChange, $processed, $plan] = DB::transaction(function () use ($change, $caregiver, $accept): array {
+            if ($accept) {
+                app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
+            }
+            $sharedId = CarePlan::whereKey($change->care_plan_id)->value('care_arrangement_id');
+            if ($sharedId) {
+                \App\Models\CareArrangement::lockForUpdate()->findOrFail($sharedId);
+            }
             $lockedChange = CarePlanScheduleChange::query()->lockForUpdate()->findOrFail($change->id);
             $plan = CarePlan::query()->lockForUpdate()->find($lockedChange->care_plan_id);
             if (! $plan || (int) $plan->caregiver_user_id !== (int) $caregiver->id) {
@@ -798,10 +822,30 @@ class CarePlanService
             }
 
             if ($accept) {
+                if ($plan->care_arrangement_id) {
+                    User::lockForUpdate()->findOrFail($plan->caregiver_user_id);
+                    if (! $plan->isLive() || $plan->caregiver?->caregiverProfile?->status !== 'active') {
+                        throw ValidationException::withMessages(['scheduleChange' => 'This agreement has ended. This offer can no longer be accepted.']);
+                    }
+                    if ($lockedChange->type === CarePlanScheduleChange::TYPE_EXTRA_VISIT) {
+                        $sharedStart = Carbon::parse((string) data_get($lockedChange->proposed_schedule, 'start_at'));
+                        $sharedEnd = Carbon::parse((string) data_get($lockedChange->proposed_schedule, 'end_at'));
+                        $need = $lockedChange->care_arrangement_need_id ? \App\Models\CareArrangementNeed::lockForUpdate()->findOrFail($lockedChange->care_arrangement_need_id) : null;
+                        if ($sharedStart->lte(now()) || ($need && $need->status !== 'needed') || ($plan->ends_on && $sharedStart->toDateString() > $plan->ends_on->toDateString())) {
+                            throw ValidationException::withMessages(['scheduleChange' => 'This visit is no longer available. Ask the family for a new request.']);
+                        }
+                        app(SharedCareService::class)->assertVisitAvailable($plan, $sharedStart, $sharedEnd, $need?->id);
+                    } else {
+                        $this->assertStandaloneScheduleControls($plan);
+                    }
+                }
                 if ($lockedChange->type === CarePlanScheduleChange::TYPE_EXTRA_VISIT) {
                     $start = Carbon::parse((string) data_get($lockedChange->proposed_schedule, 'start_at'));
                     $end = Carbon::parse((string) data_get($lockedChange->proposed_schedule, 'end_at'));
-                    $booking = $this->occurrences->createExtraVisit($plan, $start, $end);
+                    $booking = $this->occurrences->createExtraVisit($plan, $start, $end, $plan->care_arrangement_id ? $lockedChange->id : null, $lockedChange->care_arrangement_need_id);
+                    if ($lockedChange->care_arrangement_need_id) {
+                        $booking->forceFill(['care_arrangement_need_id' => $lockedChange->care_arrangement_need_id])->save();
+                    }
                     $this->paymentWindow->prepareBookings(collect([$booking->load(['carePlan.family', 'family', 'caregiver.caregiverProfile', 'application', 'payment'])]));
                 } else {
                     $timezone = $plan->timezone ?: (string) config('app.timezone', 'America/New_York');
@@ -851,6 +895,16 @@ class CarePlanService
     public function skipVisit(CarePlan $plan, CareBooking $booking, User $family): CareBooking
     {
         $this->assertFamilyOwnsPlan($plan, $family);
+        abort_unless((int) $booking->care_plan_id === (int) $plan->id, 403);
+        if ($plan->care_arrangement_id) {
+            app(SharedCareService::class)->linkBooking($booking);
+            if ($booking->care_arrangement_need_id) {
+                app(SharedCareService::class)->cancelNeed(\App\Models\CareArrangementNeed::findOrFail($booking->care_arrangement_need_id), $family, false);
+
+                return $booking->fresh('payment');
+            }
+        }
+        $this->assertFamilyOwnsPlan($plan, $family);
         if ((int) $booking->care_plan_id !== (int) $plan->id || $booking->status !== CareBooking::STATUS_SCHEDULED) {
             throw ValidationException::withMessages(['visit' => 'Only an upcoming visit can be skipped.']);
         }
@@ -890,6 +944,7 @@ class CarePlanService
     public function pausePlan(CarePlan $plan, User $family, Carbon $from, ?Carbon $resumeOn = null): CarePlan
     {
         $this->assertFamilyOwnsPlan($plan, $family);
+        $this->assertStandaloneScheduleControls($plan);
         $timezone = $plan->timezone ?: (string) config('app.timezone', 'America/New_York');
         $from = Carbon::parse($from->toDateString(), $timezone)->startOfDay();
         $resumeOn = $resumeOn ? Carbon::parse($resumeOn->toDateString(), $timezone)->startOfDay() : null;
@@ -946,6 +1001,7 @@ class CarePlanService
     public function resumePlan(CarePlan $plan, User $family): CarePlan
     {
         $this->assertFamilyOwnsPlan($plan, $family);
+        $this->assertStandaloneScheduleControls($plan);
         [$plan, $changed] = DB::transaction(function () use ($plan, $family): array {
             $lockedPlan = CarePlan::query()->lockForUpdate()->findOrFail($plan->id);
             if (! $lockedPlan->pause_starts_on && $lockedPlan->status === CarePlan::STATUS_ACTIVE) {
@@ -998,6 +1054,7 @@ class CarePlanService
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
             abort(403);
         }
+        $this->assertStandaloneScheduleControls($plan);
 
         [$plan, $changed, $keptNext] = DB::transaction(function () use ($plan, $family, $cancelNextVisit): array {
             $lockedPlan = CarePlan::query()->lockForUpdate()->findOrFail($plan->id);
@@ -1053,6 +1110,13 @@ class CarePlanService
         }
 
         return $this->health->reconcile($plan->fresh())->load(['family', 'caregiver', 'nextBooking']);
+    }
+
+    private function assertStandaloneScheduleControls(CarePlan $plan): void
+    {
+        if ($plan->care_arrangement_id) {
+            throw ValidationException::withMessages(['plan' => 'Use the shared schedule to skip dates, request cover or end this caregiver assignment. Repeating schedule edits and bulk pauses are not available for shared care yet.']);
+        }
     }
 
     /**

@@ -1,0 +1,1227 @@
+{
+  "OT-waiting-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-05/09: Remove repeated invite guidance and the empty history panel before suggestions; show Find caregivers with meaningful availability/location/credential reasons. Retain score in details, all search/filter tools and invitation history.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-waiting-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invitations-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-05/08: Open an Invited local view with sent/replied dates and accepted/pending/past statuses; keep invitations distinct from applications. Retain search/reinvite eligibility and make new replies the priority when present.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invitations-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-applicants-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Put candidate decisions directly below a compact toolbar; retain all profile, note, review/credential and save/decline/chat actions. Use a common candidate model and review caregiver/schedule/cost before final hire.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-applicants-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-scheduled-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D01/D06: Show scheduled date/start/end, selected caregiver, address/access and actual payment readiness once before full care details. Keep map/record, lateness eligibility and pending schedule changes reachable, with stable Overview/Caregivers/Care details/Help tabs.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-scheduled-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-scheduled-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-scheduled-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-in_progress-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D09: Lead with live check-in, scheduled end and message/help; move End visit into an explicit contextual confirmation. Retain check-in GPS as recorded-location evidence, timestamps, available task updates/events and truthful missing-data labels.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-in_progress-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D09: Keep urgent safety access and paused/live context reachable, with no invented continuous-location claim.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-in_progress-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-in_progress-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-after_shift-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D10: Lead with Review hours, then recorded check-in/out, breaks, payable duration and care/fee/total before explicit Approve hours and pay. Keep Question hours adjacent, all original/task/event evidence and payment recovery; do not invent a submission-wait stage.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-after_shift-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-after_shift-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-after_shift-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-timesheet_review-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D10: Lead with Review hours, then recorded check-in/out, breaks, payable duration and care/fee/total before explicit Approve hours and pay. Keep Question hours adjacent, all original/task/event evidence and payment recovery; do not invent a submission-wait stage.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-timesheet_review-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-timesheet_review-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-timesheet_review-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-leave_review-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11/D10: Show saved hours/payment outcome separately from the pending caregiver review. Name caregiver and visit/date, retain stars/comment/validation and both parties feedback; do not let submitting a rating approve hours or end care.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-leave_review-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-leave_review-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-leave_review-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-closed-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10/D12: Present one closed-visit outcome and understandable time/payment ledger; preserve rate/fee basis, actual charge/refund states, confirmation actor/timestamps, tasks, events, reviews, messages and full record/help links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-closed-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-closed-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-closed-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-cancelled-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D12: Retain historic details and distinguish request withdrawal from cancelled booked care.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-cancelled-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. D12: Label the former selected caregiver in a cancelled record and preserve profile/chat/history availability under existing gates.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-cancelled_booking-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D12: Show one factual cancellation outcome, original schedule, actor/time/reason and actual authorization/payment/refund state; replace Check-in pending with a historical absence label. Preserve tasks/events/messages/help and eligible next-care routes.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-cancelled_booking-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. D12: Label the former selected caregiver in a cancelled record and preserve profile/chat/history availability under existing gates.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-cancelled_booking-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D12: Preserve cancellation outcome/reason, payment evidence and existing assistance paths.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-cancelled_booking-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D12: Retain historic details and distinguish request withdrawal from cancelled booked care.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-waiting-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-05/09: Remove repeated invite guidance and the empty history panel before suggestions; show Find caregivers with meaningful availability/location/credential reasons. Retain score in details, all search/filter tools and invitation history. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-waiting-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invitations-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-05/08: Open an Invited local view with sent/replied dates and accepted/pending/past statuses; keep invitations distinct from applications. Retain search/reinvite eligibility and make new replies the priority when present. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invitations-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-applicants-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Put candidate decisions directly below a compact toolbar; retain all profile, note, review/credential and save/decline/chat actions. Use a common candidate model and review caregiver/schedule/cost before final hire. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-applicants-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-scheduled-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D01/D06: Show scheduled date/start/end, selected caregiver, address/access and actual payment readiness once before full care details. Keep map/record, lateness eligibility and pending schedule changes reachable, with stable Overview/Caregivers/Care details/Help tabs. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-scheduled-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-scheduled-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-scheduled-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-in_progress-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D09: Lead with live check-in, scheduled end and message/help; move End visit into an explicit contextual confirmation. Retain check-in GPS as recorded-location evidence, timestamps, available task updates/events and truthful missing-data labels. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-in_progress-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D09: Keep urgent safety access and paused/live context reachable, with no invented continuous-location claim. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-in_progress-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-in_progress-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-after_shift-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D10: Lead with Review hours, then recorded check-in/out, breaks, payable duration and care/fee/total before explicit Approve hours and pay. Keep Question hours adjacent, all original/task/event evidence and payment recovery; do not invent a submission-wait stage. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-after_shift-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-after_shift-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-after_shift-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-timesheet_review-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D10: Lead with Review hours, then recorded check-in/out, breaks, payable duration and care/fee/total before explicit Approve hours and pay. Keep Question hours adjacent, all original/task/event evidence and payment recovery; do not invent a submission-wait stage. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-timesheet_review-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-timesheet_review-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-timesheet_review-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-leave_review-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11/D10: Show saved hours/payment outcome separately from the pending caregiver review. Name caregiver and visit/date, retain stars/comment/validation and both parties feedback; do not let submitting a rating approve hours or end care. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-leave_review-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-leave_review-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-leave_review-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-closed-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10/D12: Present one closed-visit outcome and understandable time/payment ledger; preserve rate/fee basis, actual charge/refund states, confirmation actor/timestamps, tasks, events, reviews, messages and full record/help links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-closed-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-closed-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-closed-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-cancelled-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D12: Retain historic details and distinguish request withdrawal from cancelled booked care. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-cancelled-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. D12: Label the former selected caregiver in a cancelled record and preserve profile/chat/history availability under existing gates. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-cancelled_booking-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D12: Show one factual cancellation outcome, original schedule, actor/time/reason and actual authorization/payment/refund state; replace Check-in pending with a historical absence label. Preserve tasks/events/messages/help and eligible next-care routes. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-cancelled_booking-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. D12: Label the former selected caregiver in a cancelled record and preserve profile/chat/history availability under existing gates. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-cancelled_booking-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D12: Preserve cancellation outcome/reason, payment evidence and existing assistance paths. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-cancelled_booking-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D12: Retain historic details and distinguish request withdrawal from cancelled booked care. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invitations-applicants-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-05/08: Open an Invited local view with sent/replied dates and accepted/pending/past statuses; keep invitations distinct from applications. Retain search/reinvite eligibility and make new replies the priority when present. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-applicants-applicants-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Put candidate decisions directly below a compact toolbar; retain all profile, note, review/credential and save/decline/chat actions. Use a common candidate model and review caregiver/schedule/cost before final hire. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-scheduled-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D01/D06: Show scheduled date/start/end, selected caregiver, address/access and actual payment readiness once before full care details. Keep map/record, lateness eligibility and pending schedule changes reachable, with stable Overview/Caregivers/Care details/Help tabs. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-scheduled-support-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-in_progress-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D09: Lead with live check-in, scheduled end and message/help; move End visit into an explicit contextual confirmation. Retain check-in GPS as recorded-location evidence, timestamps, available task updates/events and truthful missing-data labels. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-timesheet_review-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D10: Lead with Review hours, then recorded check-in/out, breaks, payable duration and care/fee/total before explicit Approve hours and pay. Keep Question hours adjacent, all original/task/event evidence and payment recovery; do not invent a submission-wait stage. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-timesheet_review-support-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-closed-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10/D12: Present one closed-visit outcome and understandable time/payment ledger; preserve rate/fee basis, actual charge/refund states, confirmation actor/timestamps, tasks, events, reviews, messages and full record/help links. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-waiting-overview-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invite-drawer": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08/09: Compress repeated request context to a readable summary so familiar/recommended caregivers and actions appear sooner; retain name/city search, certification filters, groups, verification provenance and all invite/reinvite/reply statuses.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invitations-applicants-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-05/08: Open an Invited local view with sent/replied dates and accepted/pending/past statuses; keep invitations distinct from applications. Retain search/reinvite eligibility and make new replies the priority when present. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-applicants-applicants-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Put candidate decisions directly below a compact toolbar; retain all profile, note, review/credential and save/decline/chat actions. Use a common candidate model and review caregiver/schedule/cost before final hire. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-scheduled-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D01/D06: Show scheduled date/start/end, selected caregiver, address/access and actual payment readiness once before full care details. Keep map/record, lateness eligibility and pending schedule changes reachable, with stable Overview/Caregivers/Care details/Help tabs. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-scheduled-support-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-in_progress-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D09: Lead with live check-in, scheduled end and message/help; move End visit into an explicit contextual confirmation. Retain check-in GPS as recorded-location evidence, timestamps, available task updates/events and truthful missing-data labels. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-timesheet_review-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D10: Lead with Review hours, then recorded check-in/out, breaks, payable duration and care/fee/total before explicit Approve hours and pay. Keep Question hours adjacent, all original/task/event evidence and payment recovery; do not invent a submission-wait stage. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-timesheet_review-support-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-closed-shift-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10/D12: Present one closed-visit outcome and understandable time/payment ledger; preserve rate/fee basis, actual charge/refund states, confirmation actor/timestamps, tasks, events, reviews, messages and full record/help links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-waiting-overview-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invite-drawer": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08/09: Compress repeated request context to a readable summary so familiar/recommended caregivers and actions appear sooner; retain name/city search, certification filters, groups, verification provenance and all invite/reinvite/reply statuses.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-plan-active": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-01/06/10: Put live/next visit and every pending decision above the full profile; use Overview, Visits, Care details, Help. Preserve full weekly agreement, saved-card versus visit-payment states, later visits, care instructions and management links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-pending": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-02/12: Replace active-care claims with Waiting for caregiver and explicit next actor; distinguish proposed/forecast dates from bookings. Preserve original/proposed schedule, response state, future-visit context and all valid agreement details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-paused": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-02/07: State that the plan is paused consistently, show pause/return dates and any retained confirmed visit; preserve Resume and complete schedule/history without calling the schedule active.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-ended": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-05/09: Show plan-ended outcome and any confirmed visit still scheduled; retain visits, timeline, payment and historical profile/schedule. Remove misleading active-management guidance while keeping valid help and records.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-panel-extra": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D05 and recurring RC-UX-07/08: Label this as an extra dated visit outside the weekly schedule; retain date/start/duration/note and existing eligibility/acceptance/payment behavior. Preview resulting visit and keep form actions clear of generic sticky management.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-plan-panel-schedule": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D05 and recurring RC-UX-07/11: Compare current and proposed weekday/time rows, effective date and affected booked dates; preserve existing visits until acceptance and every schedule/note field. Retain valid ranges when standardizing start/duration/end.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-panel-pause": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D05 and recurring RC-UX-07/08: Show plan-wide pause scope, effective/optional return date and exact affected visits before confirmation; retain indefinite-pause behavior, current policy and every input. Keep Resume discoverable in paused state.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-panel-end": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D05 and recurring RC-UX-05/08: Name the next confirmed visit kept by default and consequences of cancelling it; retain cancel-next choice and records. Keep End/Keep actions visible without a competing Manage recurring care bar.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-plan-details-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-01/11 and delivery D01: Move the complete agreement/profile/instructions into persistent Care details, with populated summaries and direct safety/access/contact links from Overview; preserve all displayed fields and historical snapshot context.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "SH-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-03/10 and delivery D06: Prioritize actionable care, then upcoming/recruiting records. Keep care-type/recipient filters, counts, statuses and all existing destinations; every dated action must open that exact visit rather than a parent plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "SH-arrangements": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-02/03/12: Clearly separate finding care, waiting for caregiver, active, paused and ended arrangements; retain list filters/counts/history and distinguish proposed dates from booked visits. Open the appropriate plan or source request.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "SH-schedule": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-03/04/06: Make Open visit and Fix payment target the dated occurrence; add a separate parent-plan link. Retain Today/This week/Later, regular/extra classification, complete time/location/payment values, filters and load-more behavior.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "SH-history": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10/D12 and recurring RC-UX-05/09: Keep a searchable historical ledger with dates, care type, recipient, plan filters and expandable visit/payment/task detail; preserve refunds/corrections and links. Distinguish ended plans, cancelled visits and completed care.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-create-empty": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Compact the introductory/readiness scaffolding and prototype Person & help, Schedule, Location & notes, Review; keep all values and validation across section changes. Keep one-time date, start, duration/end, exact-address fields and all cost/privacy details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-create-details": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Group populated scope/care/access/timing notes and alternate contact in an explicit optional section; retain each separate field, contact relationship, conditional phone/email and nonempty summaries when collapsed. Keep one-time date, start, duration/end, exact-address fields and all cost/privacy details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-create-empty": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Compact the introductory/readiness scaffolding and prototype Person & help, Schedule, Location & notes, Review; keep all values and validation across section changes. DISC-07: Preserve per-weekday times/durations and show start, ongoing/end date and weekly rate/fee estimate in the review; retain adjustment feedback.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-create-details": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Group populated scope/care/access/timing notes and alternate contact in an explicit optional section; retain each separate field, contact relationship, conditional phone/email and nonempty summaries when collapsed. DISC-07: Preserve per-weekday times/durations and show start, ongoing/end date and weekly rate/fee estimate in the review; retain adjustment feedback.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-create-ready": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Make final review reachable without rereading the form; show recipient, help, complete schedule, address, privacy and rate/fee/total with explicit Publish outcome. Keep one-time date, start, duration/end, exact-address fields and all cost/privacy details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-create-self-private": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Keep self identity explicit and invite-only privacy at final review; after Create private request, state that invitations are required before replies rather than implying passive discovery. Keep one-time date, start, duration/end, exact-address fields and all cost/privacy details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-create-saved-profile": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Show one selected saved-person card with name, relationship, last-reviewed/source and Change; explain what last-request/saved-details reuse copies and preserve existing entered values for review. Keep one-time date, start, duration/end, exact-address fields and all cost/privacy details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invite-confirmation": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08: Use one Invite [name] confirmation with complete request schedule/location, retained certification context, editable message and visible Send invitation. Preserve Back/query/filter/draft context, Cancel/Close, maximum length and validation; do not auto-send.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invite-search-certifications": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08/09: Keep result count and active name/city/credential filters beside results, with clear zero-match and reset actions. Preserve verified-versus-reported credentials, all-required matching semantics and existing invitation eligibility/status controls.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-invite-drawer-bottom": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08: Keep search/Close navigation reachable while viewing final result groups; retain every caregiver, credential/experience tag, prior relationship and eligibility label, plus Back/scroll restoration after profile or invitation preview.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-scheduled-reschedule-draft": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D05: Keep typed reason/new start/end and show old versus proposed schedule and acceptance effect before Send; preserve draft on Back/errors.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-existing-chat": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08: Compact the hiring banner; keep caregiver plus request type/date unambiguous and route Review hire to the common confirmation with that caregiver selected. Preserve inbox search, separate per-request conversations, full messages/timestamps, drafts and explicit Send; prevent Support overlapping Send.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-care-story": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D06/D12: Preserve chronological request, hiring, visit and payment history with direct record links; integrate it into Overview/history without a competing Activity tab. State closed versus cancelled outcomes accurately.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-single_applicant-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/02: Keep the same factual candidate card and all save/decline/profile/chat controls for one reply; retain review count, reliability and credentials. Persistent filters must survive one filtered result. Review hire shows complete terms before commitment.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-single_applicant-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-many_applicants-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Show applicants before invitation scaffolding; keep counts, Status/Sort/certification filters and Clear filters outside the results region. Status=Saved currently removes filter controls when one result remains; retain all candidate fields/actions and add explicit hire review.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-many_applicants-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-private_waiting-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-03/05: State Private request created - invite caregivers to get replies; with zero invitations, invite is required. Keep invited counts/status/history and recommendations/search reachable without implying marketplace discovery.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-private_waiting-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. DISC-03: Explain invite-only visibility and the invitation required for replies.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-paused-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D09: State visit paused, pause time/reason and caregiver resume responsibility; prioritize message/help and confirm any family End visit action. Preserve recorded check-in/location, schedule, payment and available task/event evidence without implying the recurring plan is paused.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-paused-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D09: Keep urgent safety access and paused/live context reachable, with no invented continuous-location claim.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-paused-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-paused-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-payment_attention-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10 and recurring RC-UX-06: Put exact visit payment action first, separate booking status from saved card/authorization/capture and retain amounts/errors. A synthetic authorized amount does not establish a successful current charge.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-payment_attention-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-payment_attention-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D10: Open the exact booking payment recovery and distinguish saved card, authorization and captured charge.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-payment_attention-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D10: Keep the dated payment-attention link prominent while preserving these care fields.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-time_correction-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D03: Replace contradictory Confirmed/receipt copy with Review corrected hours; compare scheduled, recorded and requested times/breaks, reason and charge. Preserve original versions, explicit approval preview, changes/escalation and payment-only recovery.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-time_correction-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D03: Route correction questions to original/requested time and change-request/escalation context without claiming hours already confirmed.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-time_correction-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. D03: Preserve pending correction attention independently of caregiver selection.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-time_correction-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D03: Show the pending correction as attention, never as final confirmation.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-many_applicants-applicants-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Show applicants before invitation scaffolding; keep counts, Status/Sort/certification filters and Clear filters outside the results region. Status=Saved currently removes filter controls when one result remains; retain all candidate fields/actions and add explicit hire review. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-time-correction-approval-preview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D03: Keep the existing explicit correction approval preview, with recorded/requested hours, breaks, care amount, fee and total. Make the final paid outcome and payment-only recovery clear; retain original versions and change-request/escalation actions.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-create-ready": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Make final review reachable without rereading the form; show recipient, help, complete schedule, address, privacy and rate/fee/total with explicit Publish outcome. DISC-07: Preserve per-weekday times/durations and show start, ongoing/end date and weekly rate/fee estimate in the review; retain adjustment feedback.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-create-self-private": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Keep self identity explicit and invite-only privacy at final review; after Create private request, state that invitations are required before replies rather than implying passive discovery. DISC-07: Preserve per-weekday times/durations and show start, ongoing/end date and weekly rate/fee estimate in the review; retain adjustment feedback.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-create-saved-profile": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Show one selected saved-person card with name, relationship, last-reviewed/source and Change; explain what last-request/saved-details reuse copies and preserve existing entered values for review. DISC-07: Preserve per-weekday times/durations and show start, ongoing/end date and weekly rate/fee estimate in the review; retain adjustment feedback.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invite-confirmation": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08: Use one Invite [name] confirmation with complete request schedule/location, retained certification context, editable message and visible Send invitation. Preserve Back/query/filter/draft context, Cancel/Close, maximum length and validation; do not auto-send.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invite-search-certifications": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08/09: Keep result count and active name/city/credential filters beside results, with clear zero-match and reset actions. Preserve verified-versus-reported credentials, all-required matching semantics and existing invitation eligibility/status controls.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-invite-drawer-bottom": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08: Keep search/Close navigation reachable while viewing final result groups; retain every caregiver, credential/experience tag, prior relationship and eligibility label, plus Back/scroll restoration after profile or invitation preview.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-scheduled-reschedule-draft": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D05: Keep typed reason/new start/end and show old versus proposed schedule and acceptance effect before Send; preserve draft on Back/errors. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-existing-chat": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-08: Compact the hiring banner; keep caregiver plus request type/date unambiguous and route Review hire to the common confirmation with that caregiver selected. Preserve inbox search, separate per-request conversations, full messages/timestamps, drafts and explicit Send; prevent Support overlapping Send.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-care-story": {
+    "review": "Audited — grouped evidence",
+    "findings": "Recurring RC-UX-05/09: Retain scoped plan and visit events/timestamps and direct record links; keep any retained upcoming visit visible after ending. Replace closed-plan Manage recurring care guidance with valid records/next-visit actions.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-single_applicant-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/02: Keep the same factual candidate card and all save/decline/profile/chat controls for one reply; retain review count, reliability and credentials. Persistent filters must survive one filtered result. Review hire shows complete terms before commitment. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-single_applicant-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-many_applicants-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Show applicants before invitation scaffolding; keep counts, Status/Sort/certification filters and Clear filters outside the results region. Status=Saved currently removes filter controls when one result remains; retain all candidate fields/actions and add explicit hire review. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-many_applicants-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-private_waiting-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-03/05: State Private request created - invite caregivers to get replies; with zero invitations, invite is required. Keep invited counts/status/history and recommendations/search reachable without implying marketplace discovery. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-private_waiting-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Keep withdrawal and its invitation-closing consequence reachable under Request options. DISC-03: Explain invite-only visibility and the invitation required for replies. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-paused-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D02/D09: State visit paused, pause time/reason and caregiver resume responsibility; prioritize message/help and confirm any family End visit action. Preserve recorded check-in/location, schedule, payment and available task/event evidence without implying the recurring plan is paused. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-paused-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D09: Keep urgent safety access and paused/live context reachable, with no invented continuous-location claim. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-paused-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-paused-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-payment_attention-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D10 and recurring RC-UX-06: Put exact visit payment action first, separate booking status from saved card/authorization/capture and retain amounts/errors. A synthetic authorized amount does not establish a successful current charge. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-payment_attention-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-payment_attention-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D10: Open the exact booking payment recovery and distinguish saved card, authorization and captured charge. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-payment_attention-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D10: Keep the dated payment-attention link prominent while preserving these care fields. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-time_correction-shift": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D03: Replace contradictory Confirmed/receipt copy with Review corrected hours; compare scheduled, recorded and requested times/breaks, reason and charge. Preserve original versions, explicit approval preview, changes/escalation and payment-only recovery. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-time_correction-support": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D08: Start Help with a clear intent, then show the correct existing change, hours/payment, safety or other form with visit/caregiver/date context; preserve distinct request, cancellation, dispute, ticket and incident outcomes plus all fields. D03: Route correction questions to original/requested time and change-request/escalation context without claiming hours already confirmed. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-time_correction-applicants": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D07: Lead with selected caregiver, direct correct conversation, profile and relevant credentials; collapse recruitment history while preserving every application, invitation, status, note, review and past conversation. Remove zero-to-review/empty-recruitment clutter. D03: Preserve pending correction attention independently of caregiver selection. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-time_correction-overview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-01 and delivery D01/D06: Keep this Care details destination stable and give every populated scope, task note, access/location/map, recipient and alternate-contact field a clear home; preserve profile snapshot, source/last-reviewed and selected caregiver links. D03: Show the pending correction as attention, never as final confirmation. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-many_applicants-applicants-expanded": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-04/05/02: Show applicants before invitation scaffolding; keep counts, Status/Sort/certification filters and Clear filters outside the results region. Status=Saved currently removes filter controls when one result remains; retain all candidate fields/actions and add explicit hire review. Recurring D04/RC-UX-04: Keep the parent-plan link and dated-visit identity explicit; completing/cancelling this visit does not by itself close the plan. Expanded-state requirement: preserve every revealed field, event, filter or form and its current value; collapsed replacements must show meaningful populated summaries and reopen reliably.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "RC-time-correction-approval-preview": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D03: Keep the existing explicit correction approval preview, with recorded/requested hours, breaks, care amount, fee and total. Make the final paid outcome and payment-only recovery clear; retain original versions and change-request/escalation actions.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P1"
+  },
+  "OT-book-again": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11: Make the previous caregiver/visit and new schedule explicit before rebooking; preserve copied care/task/address data, historic-profile versus latest-profile choice and all one-time/recurring options and eligibility. Do not silently update the old visit snapshot.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-review-form-empty": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11: Name caregiver and visit/date above the five-star review and full comment; preserve current validation/limits and separate rating from hours/payment. Show the unselected rating state and plain guidance without implying a saved review. Offer eligible rebooking after submission.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-review-form-draft": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11: Name caregiver and visit/date above the five-star review and full comment; preserve current validation/limits and separate rating from hours/payment. Retain selected stars and the entire draft when navigating or correcting errors; explicit Submit stores the review. Offer eligible rebooking after submission.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-review-form-empty": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11: Name caregiver and visit/date above the five-star review and full comment; preserve current validation/limits and separate rating from hours/payment. Show the unselected rating state and plain guidance without implying a saved review. Return to the next visit/plan after submission without ending the arrangement.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-review-form-draft": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D11: Name caregiver and visit/date above the five-star review and full comment; preserve current validation/limits and separate rating from hours/payment. Retain selected stars and the entire draft when navigating or correcting errors; explicit Submit stores the review. Return to the next visit/plan after submission without ending the arrangement.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "SH-navigation-menu": {
+    "review": "Audited — grouped evidence",
+    "findings": "Delivery D06: Preserve Care, Caregivers, Messages, Request care, notifications and account destinations in a consistent mobile menu; use stable request tabs and keep Support clear of fixed actions. Verify keyboard focus, current-page state and larger text.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "OT-create-quick-profile": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Retain both quick-profile questions, entered answers, Skip and sharing acknowledgment; make this optional context concise and preserve the distinction from name/relationship and later visit notes. Keep one-time date, start, duration/end, exact-address fields and all cost/privacy details.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  },
+  "RC-create-quick-profile": {
+    "review": "Audited — grouped evidence",
+    "findings": "Discovery DISC-06: Retain both quick-profile questions, entered answers, Skip and sharing acknowledgment; make this optional context concise and preserve the distinction from name/relationship and later visit notes. DISC-07: Preserve per-weekday times/durations and show start, ongoing/end date and weekly rate/fee estimate in the review; retain adjustment feedback.",
+    "redesign": "Proposed; not implemented",
+    "owner": "Unassigned",
+    "priority": "P2"
+  }
+}

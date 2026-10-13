@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\Marketplace\CaregiverCertificationPresenter;
+use App\Services\Screening\CaregiverWorkEligibility;
 use App\Support\CaregiverCertificationCriteria;
 use App\Support\MarketplacePricing;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,6 +47,12 @@ class CaregiverProfile extends Model
         'insurance_document_path',
         'insurance_verified_at',
         'status',
+        'screening_legacy_at',
+        'screening_legacy_access',
+        'screening_initial_approved_at',
+        'screening_suspended_at',
+        'screening_suspension_case_id',
+        'screening_next_due_at',
         'review_submitted_at',
         'reviewed_at',
         'reviewed_by',
@@ -85,6 +92,12 @@ class CaregiverProfile extends Model
             'intro_video_uploaded_at' => 'datetime',
             'insurance_verified_at' => 'datetime',
             'review_submitted_at' => 'datetime',
+            'screening_legacy_at' => 'datetime',
+            'screening_legacy_access' => 'boolean',
+            'screening_initial_approved_at' => 'datetime',
+            'screening_suspended_at' => 'datetime',
+            'screening_suspension_case_id' => 'integer',
+            'screening_next_due_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'identity_verified_at' => 'datetime',
             'identity_verification_checked_at' => 'datetime',
@@ -129,7 +142,7 @@ class CaregiverProfile extends Model
     {
         $excludedSlugs = config('marketplace.caregiver_discovery_excluded_slugs', []);
 
-        return $query->where(function (Builder $query) use ($excludedSlugs): void {
+        return app(CaregiverWorkEligibility::class)->constrain($query)->where(function (Builder $query) use ($excludedSlugs): void {
             $query->whereNull('caregiver_profiles.slug')
                 ->orWhereNotIn('caregiver_profiles.slug', $excludedSlugs);
         });
@@ -254,7 +267,7 @@ class CaregiverProfile extends Model
 
     public function isMarketplaceReady(): bool
     {
-        return $this->status === 'active'
+        return app(CaregiverWorkEligibility::class)->allowsNewWork($this)
             && $this->marketplaceCompletenessPercent() >= 100;
     }
 
@@ -262,7 +275,7 @@ class CaregiverProfile extends Model
     {
         // The invitation contains the requested hours; saved availability is
         // optional when the caregiver decides whether to accept that visit.
-        return $this->status === 'active'
+        return app(CaregiverWorkEligibility::class)->allowsNewWork($this)
             && collect($this->marketplaceReadinessChecks())->except('availability')->every(fn (bool $ready) => $ready);
     }
 

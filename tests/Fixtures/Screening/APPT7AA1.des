@@ -1,0 +1,20 @@
+Name          Description                        Type      Start   Length
+CDDORNUM      P&P OFFENDER NC DOC NUMBER ID      CHAR      1       7     
+CDSLSTNM      P&P OFFENDER LAST NAME             CHAR      8       20    
+CDSFSTNM      P&P OFFENDER FIRST NAME            CHAR      28      11    
+CDSMIDNM      P&P OFFENDER MIDDLE NAME           CHAR      39      15    
+CDSSUFFX      P&P OFFENDER NAME SUFFIX           CHAR      54      3     
+CDCLSEX       OFFENDER GENDER CODE               CHAR      57      30    
+CDCLRACE      OFFENDER RACE CODE                 CHAR      87      30    
+CDCLBRTH      OFFENDER DATE OF BIRTH             DATE      117     10    
+PPRCDSTA      P&P CLIENT RECORD STATUS CODE      CHAR      127     30    
+GDSTATUS      P&P CLIENT ADMIN. STATUS CODE      CHAR      157     30    
+CDPPSLOC      P&P OFFICE CODE                    CHAR      187     30    
+PRIOFFNSE     MOST SERIOUS OFFENSE CURR. PD.     CHAR      217     30    
+CDFELONY      P&P CLIENT IS FELON/MISD. CODE     CHAR      247     30    
+SNTPUNTY      SENTENCE PUNISHMENT TYPE CODE      CHAR      277     30    
+CDSUPLTH      OVERALL LENGTH OF SUPV.(Y/M/D)     CHAR      307     7     
+DDINSTNO      INTERSTATE COMPACT CASE CODE       CHAR      314     30    
+DTOFUPDT      DATE OF LAST UPDATE                DATE      344     10    
+TMOFUPDT      TIME OF LAST UPDATE                TIME      354     8     
+DCCPUNTYP     DCC PUNISHMENT TYPE SUMMARY CD     CHAR      362     30    

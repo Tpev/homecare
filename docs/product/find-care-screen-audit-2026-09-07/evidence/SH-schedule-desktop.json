@@ -1,0 +1,255 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n\nCARE SCHEDULE\n\nYour visits, organized by when they happen.\n\nOne-time, regular, extra, and continuous care share one schedule. Start with today, then look ahead.\n\nRequest care\nOverview\nArrangements\nSchedule\nHistory\n8 upcoming visits\n\nFilter by person or care type without changing the underlying schedule.\n\nCare recipient\nEveryone\nEleanor Bennett\nCare type\nAll upcoming care\nOne-time visits\nRecurring care visits\nExtra visits\nContinuous care\n\nRIGHT NOW\n\nToday\n\nCare happening now or scheduled today.\n\n4\n\nTODAY\n\nSep 7\n\nONE-TIME VISIT\nHappening now\nEleanor Bennett · Mon, Sep 7\n\n7:56 AM–9:56 AM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #2\n\nView care\nONE-TIME VISIT\nPaused\nEleanor Bennett · Mon, Sep 7\n\n7:56 AM–9:56 AM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #18\n\nView care\nREGULAR VISIT\nHappening now\nEleanor Bennett · Mon, Sep 7\n\n7:56 AM–9:56 AM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #9\n\nView care\nREGULAR VISIT\nPaused\nEleanor Bennett · Mon, Sep 7\n\n7:56 AM–9:56 AM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #21\n\nView care\n\nLOOKING AHEAD\n\nThis week\n\nThe rest of this week, grouped by day.\n\n4\n\nWEDNESDAY\n\nSep 9\n\nONE-TIME VISIT\nScheduled\nEleanor Bennett · Wed, Sep 9\n\n10:00 AM–12:00 PM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #1\n\nView care\nREGULAR VISIT\nScheduled\nEleanor Bennett · Wed, Sep 9\n\n10:00 AM–12:00 PM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #8\n\nView care\nONE-TIME VISIT\nPayment needs attention\nEleanor Bennett · Wed, Sep 9\n\n10:00 AM–12:00 PM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #19\n\nFix payment\n\nRequired to keep this visit financially protected.\n\nREGULAR VISIT\nPayment needs attention\nEleanor Bennett · Wed, Sep 9\n\n10:00 AM–12:00 PM · Sofia Martinez\n\nRaleigh, NC\n\nVisit #22\n\nFix payment\n\nRequired to keep this visit financially protected.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents\nSupport",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Your visits, organized by when they happen."
+    },
+    {
+      "level": "H2",
+      "text": "8 upcoming visits"
+    },
+    {
+      "level": "H2",
+      "text": "Today"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H2",
+      "text": "This week"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Wed, Sep 9"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Wed, Sep 9"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Wed, Sep 9"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Wed, Sep 9"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Care recipient",
+      "text": "",
+      "value": "all",
+      "disabled": false,
+      "required": false,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "Everyone",
+          "value": "all",
+          "selected": true
+        },
+        {
+          "label": "Eleanor Bennett",
+          "value": "Eleanor Bennett",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Care type",
+      "text": "",
+      "value": "all",
+      "disabled": false,
+      "required": false,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "All upcoming care",
+          "value": "all",
+          "selected": true
+        },
+        {
+          "label": "One-time visits",
+          "value": "one_time",
+          "selected": false
+        },
+        {
+          "label": "Recurring care visits",
+          "value": "regular",
+          "selected": false
+        },
+        {
+          "label": "Extra visits",
+          "value": "extra",
+          "selected": false
+        },
+        {
+          "label": "Continuous care",
+          "value": "coverage",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8027/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8027/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8027/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8027/family/requests/create"
+    },
+    {
+      "text": "Overview",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Arrangements",
+      "href": "http://127.0.0.1:8027/family/care"
+    },
+    {
+      "text": "Schedule",
+      "href": "http://127.0.0.1:8027/family/care/schedule"
+    },
+    {
+      "text": "History",
+      "href": "http://127.0.0.1:8027/family/care/history"
+    },
+    {
+      "text": "View care",
+      "href": "http://127.0.0.1:8027/family/care/journey/request/6"
+    },
+    {
+      "text": "View care",
+      "href": "http://127.0.0.1:8027/family/care/journey/request/30"
+    },
+    {
+      "text": "View care",
+      "href": "http://127.0.0.1:8027/family/care/journey/regular/1"
+    },
+    {
+      "text": "View care",
+      "href": "http://127.0.0.1:8027/family/care/journey/regular/5"
+    },
+    {
+      "text": "View care",
+      "href": "http://127.0.0.1:8027/family/care/journey/request/5"
+    },
+    {
+      "text": "View care",
+      "href": "http://127.0.0.1:8027/family/care/journey/regular/1"
+    },
+    {
+      "text": "Fix payment",
+      "href": "http://127.0.0.1:8027/family/requests/31"
+    },
+    {
+      "text": "Fix payment",
+      "href": "http://127.0.0.1:8027/family/care/6"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8027/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8027/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8027/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8027/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8027/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8027/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8027/legal"
+    }
+  ],
+  "details": [],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 2309
+}

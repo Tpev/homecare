@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Services\Family\FamilyCarePresentationService;
+use App\Services\Family\SharedCarePresentationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -164,6 +165,8 @@ class CareSchedule extends Component
             $gridStart = $calendarMonth->copy()->startOfWeek(CarbonInterface::SUNDAY);
             $gridUntil = $calendarMonth->copy()->endOfMonth()->endOfWeek(CarbonInterface::SATURDAY)->addDay()->startOfDay();
             $calendarVisits = $presentation->upcomingVisitsInRange($account, $gridStart, $gridUntil, $careType, $recipient);
+            $calendarVisits = $calendarVisits->concat(app(SharedCarePresentationService::class)->calendarNeeds($account, $gridStart, $gridUntil, $careType, $recipient))
+                ->sortBy('starts_at')->values();
             $calendarDays = collect();
             for ($day = $gridStart->copy(); $day->lt($gridUntil); $day->addDay()) {
                 $nextDay = $day->copy()->addDay();

@@ -294,6 +294,7 @@ class CaregiverCertificationDiscoveryTest extends TestCase
             'user_id' => $caregiver->id,
             'slug' => str($name)->slug().'-'.$caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => 'Experienced non-medical caregiver available for family support.',
             'platform_hourly_rate' => 30,
             'years_experience' => 5,

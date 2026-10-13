@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {output} from './environment.mjs';
+const rows = JSON.parse(fs.readFileSync(path.join(output, 'captures.json'), 'utf8'));
+const planDefaults = new Set(['RC-plan-active', 'RC-plan-pending', 'RC-plan-paused', 'RC-plan-ended']);
+const selected = rows.filter(row => (/^\/family\/requests\/\d+(?:\?|$)/.test(row.url) && row.tab === 'applicants') || planDefaults.has(row.id) || row.status === 'failed');
+const request = {preparedAt: new Date().toISOString(), reasons: ['Final applicants presentation order', 'Four parent defaults captured before priority reorder', 'Preparation-only failures retried with settled blur updates and explicit support minimization'], ids: selected.map(row => row.id), originalCaptureTimes: Object.fromEntries(selected.map(row => [row.id, row.capturedAt]))};
+fs.writeFileSync(path.join(output, 'refresh-request.json'), JSON.stringify(request, null, 2));
+fs.writeFileSync(path.join(output, 'refresh-ids.txt'), request.ids.join(','));
+console.log(JSON.stringify({refreshIds: request.ids.length, originalStates: rows.length, failed: rows.filter(row => row.status === 'failed').map(row => row.id)}));

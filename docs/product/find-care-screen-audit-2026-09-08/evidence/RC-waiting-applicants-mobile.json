@@ -1,0 +1,215 @@
+{
+  "text": "My care\n/\nRecurring care\n\nRECURRING CARE\n\nRecurring care for Eleanor Bennett\n\nMon, Wed, Fri · 10:00 AM–12:00 PM · Raleigh, NC\n\nFinding a caregiver\nRequest #13\nGet help\nCare story\nOverview\nCaregivers\nVisits\nCare details\n\nSUGGESTED CAREGIVERS\n\nInvite one or two caregivers\n\nYour request is live. Inviting a strong match can help you get a reply faster.\n\nLOOKING FOR A SPECIFIC PERSON?\n\nInvite someone you know\n\nSearch by name and invite them without leaving this request or choosing the request again.\n\nSearch and invite\nPeople you invited\n\nInvitations are separate from caregivers who replied.\n\n0 total\nNo active invitations yet.\nRecommended caregivers\n\nSuggestions based on this request’s schedule and location.\n\nCertifications & training\nAny\n⌄\n\n3 suggested caregivers found\n\nAR\n\nAisha Robinson\n\nSame ZIP service area - Match score 128\n\n5.0\n31 reviews\nIdentity verified\nBackground check\nTop caregiver\n\nSame ZIP service area - Recurring match 100%\n\nInvite Aisha\nSM\n\nSofia Martinez\n\nSame ZIP service area - Match score 128\n\n4.9\n24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\nSame ZIP service area - Recurring match 100%\n\nInvite Sofia\nJW\n\nJames Wilson\n\nSame ZIP service area - Match score 128\n\n4.8\n18 reviews\nIdentity verified\nBackground check\nTop caregiver\n\nSame ZIP service area - Recurring match 100%\n\nInvite James\nAfter a caregiver replies, this screen changes to compare, chat, and hire.\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H2",
+      "text": "Invite one or two caregivers"
+    },
+    {
+      "level": "H3",
+      "text": "Invite someone you know"
+    },
+    {
+      "level": "H3",
+      "text": "People you invited"
+    },
+    {
+      "level": "H3",
+      "text": "Recommended caregivers"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Search and invite",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invite Aisha",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invite Sofia",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Invite James",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "My care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/13"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Certifications & training\nAny\n⌄",
+      "open": false
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 2181,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Recurring care for Eleanor Bennett",
+    "status": "Finding a caregiver",
+    "headerText": "My care\n/\nRecurring care\n\nRECURRING CARE\n\nRecurring care for Eleanor Bennett\n\nMon, Wed, Fri · 10:00 AM–12:00 PM · Raleigh, NC\n\nFinding a caregiver\nRequest #13\nGet help\nCare story",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Caregivers"
+    ]
+  }
+}

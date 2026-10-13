@@ -13,6 +13,8 @@ use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +23,127 @@ class AiSupportReadinessService
     public const SCOPE_INITIAL_PILOT = 'initial_pilot';
 
     public const SCOPE_EXPANSION = 'expansion';
+
+    /** Public configuration only; never include credentials or customer content in evidence identity. */
+    public function currentEvidenceIdentity(): array
+    {
+        $identity = [
+            'model' => (string) config('ai_support.model'),
+            'prompt_version' => (string) config('ai_support.prompt_schema_version'),
+            'model_configuration_version' => (string) config('ai_support.model_configuration_version'),
+            'reasoning_effort' => (string) config('ai_support.reasoning_effort'),
+            'max_output_tokens' => (int) config('ai_support.max_output_tokens'),
+        ];
+        $hashes = [];
+        foreach (['app/Services/AiSupport', 'app/Livewire/Support', 'app/Livewire/Family', 'resources/ai-support', 'resources/views/livewire/support', 'resources/views/livewire/family', 'resources/js', 'resources/css'] as $directory) {
+            if (! is_dir(base_path($directory))) {
+                continue;
+            }
+            foreach (File::allFiles(base_path($directory)) as $file) {
+                $relative = str_replace('\\', '/', $directory.'/'.$file->getRelativePathname());
+                $hashes[$relative] = hash_file('sha256', $file->getPathname());
+            }
+        }
+        foreach (['config/ai_support.php', 'routes/web.php', 'app/Models/AiSupportPreparation.php', 'app/Listeners/InvalidateAiSupportConfirmationsOnLogout.php', 'app/Support/MarketplacePricing.php', 'app/Services/Payments/BookingPaymentService.php'] as $path) {
+            if (is_file(base_path($path))) {
+                $hashes[$path] = hash_file('sha256', base_path($path));
+            }
+        }
+        ksort($hashes);
+        $knowledge = KnowledgeBaseVersion::query()->retrievable()->with('entry:id,stable_id', 'sources')->get()
+            ->map(fn (KnowledgeBaseVersion $version): array => [
+                'stable_id' => $version->entry->stable_id,
+                'version_id' => $version->id,
+                'version_number' => $version->version_number,
+                'content_hash' => hash('sha256', json_encode([
+                    $version->only([
+                        'type', 'title', 'answer_body', 'sensitivity', 'product_area', 'locale', 'roles',
+                        'membership_states', 'route_target_ids', 'capability_ids', 'facts_may_state',
+                        'facts_must_not_infer', 'next_actions', 'escalation_conditions',
+                        'retrieval_examples_match', 'retrieval_examples_no_match', 'evaluation_ids',
+                    ]),
+                    $version->sources->map(fn ($source): array => $source->only([
+                        'position', 'source_id', 'title', 'url', 'section_anchor', 'fact_supported',
+                    ]))->all(),
+                ], JSON_THROW_ON_ERROR)),
+            ])->sortBy('stable_id')->values()->all();
+
+        return [
+            ...$identity,
+            'configuration_hash' => hash('sha256', json_encode($identity, JSON_THROW_ON_ERROR)),
+            'source_hash' => hash('sha256', json_encode($hashes, JSON_THROW_ON_ERROR)),
+            'knowledge_hash' => hash('sha256', json_encode($knowledge, JSON_THROW_ON_ERROR)),
+            'knowledge_versions' => $knowledge,
+            'release_commit' => app(AiSupportInitialPilotReleaseService::class)->currentReleaseCommit(),
+        ];
+    }
+
+    /** Evidence is descriptive. It does not grant access or reinstate the superseded release gates. */
+    public function operationalEvidence(): array
+    {
+        $current = $this->currentEvidenceIdentity();
+        $records = AiSupportReadinessEvidence::query()->current()
+            ->whereIn('evidence_key', ['staff_rehearsal', 'rollback_rehearsal', 'older_adult_usability', 'accessibility'])
+            ->latest('observed_at')->limit(10)->get()
+            ->map(function (AiSupportReadinessEvidence $record) use ($current): array {
+                $metadata = (array) $record->safe_metadata;
+                $matches = $record->isEffectivePass()
+                    && $record->observed_at?->isFuture() === false
+                    && filled($metadata['source_hash'] ?? null)
+                    && ($metadata['source_hash'] ?? null) === $current['source_hash']
+                    && ($metadata['knowledge_hash'] ?? null) === $current['knowledge_hash']
+                    && ($metadata['configuration_hash'] ?? null) === $current['configuration_hash'];
+
+                return [
+                    'kind' => str_replace('_', ' ', $record->evidence_key),
+                    'observed_at' => $record->observed_at?->toIso8601String(),
+                    'age_days' => $record->observed_at ? max(0, (int) $record->observed_at->diffInDays(now())) : null,
+                    'result' => $record->status,
+                    'scope' => $matches ? 'Matches the current recorded identity' : 'Historical or incomplete identity; current behavior not established',
+                    'model' => $metadata['model'] ?? data_get($metadata, 'provider.model'),
+                    'prompt_version' => $metadata['prompt_version'] ?? data_get($metadata, 'provider.prompt_version'),
+                    'release_commit' => $metadata['release_commit'] ?? null,
+                    'source_hash' => $metadata['source_hash'] ?? null,
+                    'evidence_hash' => $metadata['result_hash'] ?? data_get($metadata, 'provider.result_hash'),
+                ];
+            })->all();
+
+        $validationPath = Storage::disk('local')->path('ai-support/evaluations/current-validation.json');
+        $validation = null;
+        if (is_file($validationPath) && filesize($validationPath) <= 100_000) {
+            try {
+                $report = json_decode(File::get($validationPath), true, 32, JSON_THROW_ON_ERROR);
+                if (is_array($report) && ($report['kind'] ?? null) === 'deterministic_regression') {
+                    if (! is_string($report['observed_at'] ?? null) || trim($report['observed_at']) === '') {
+                        throw new \UnexpectedValueException('Regression evidence needs its observation date.');
+                    }
+                    $observed = \Carbon\CarbonImmutable::parse((string) ($report['observed_at'] ?? 'invalid'));
+                    $matches = ! $observed->isFuture()
+                        && ($report['source_hash'] ?? null) === $current['source_hash']
+                        && ($report['knowledge_hash'] ?? null) === $current['knowledge_hash']
+                        && ($report['configuration_hash'] ?? null) === $current['configuration_hash'];
+                    $validation = [
+                        'observed_at' => $observed->toIso8601String(),
+                        'age_days' => max(0, (int) $observed->diffInDays(now())),
+                        'scope' => $matches ? 'Matches current source, configuration, and published knowledge' : 'Historical regression; source, configuration, or published knowledge differs',
+                        'result' => ($report['passed'] ?? null) === true && (int) ($report['tests'] ?? 0) > 0 && (int) ($report['assertions'] ?? 0) > 0
+                            ? 'Passed' : 'Not passed or incomplete',
+                        'tests' => max(0, (int) ($report['tests'] ?? 0)),
+                        'assertions' => max(0, (int) ($report['assertions'] ?? 0)),
+                        'model' => (string) ($report['model'] ?? 'Not recorded'),
+                        'prompt_version' => (string) ($report['prompt_version'] ?? 'Not recorded'),
+                        'source_hash' => (string) ($report['source_hash'] ?? 'Not recorded'),
+                        'knowledge_hash' => (string) ($report['knowledge_hash'] ?? 'Not recorded'),
+                        'evidence_hash' => hash_file('sha256', $validationPath),
+                    ];
+                }
+            } catch (\Throwable) {
+                // An unreadable local report is missing evidence, never a current pass.
+            }
+        }
+
+        return ['current' => $current, 'historical_records' => $records, 'deterministic_validation' => $validation];
+    }
 
     /** @return array<string,array{label:string,required:bool,guidance:string,deferable_for_initial_pilot:bool}> */
     public function definitions(): array

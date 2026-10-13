@@ -1,0 +1,21 @@
+# Post-implementation capture method
+
+This September 8 folder is a separate post-implementation artifact. The original [September 7 master tracker](../find-care-screen-audit-2026-09-07/master-tracker.md), screenshots and per-screen source inventories remain the comparison baseline.
+
+The new runtime uses the actual local application code and its built frontend assets at `http://127.0.0.1:8028`, with a separate copy of the verified synthetic SQLite data. It does not use the project's default database or modify `.env`. See [local access and account credentials](local-access.md).
+
+The capture target is every one of the 175 baseline screen IDs on both desktop (1440 × 1000) and mobile (390 × 844), plus the redesigned recurring-plan tabs and new confirmation/overview states. Each selected tab and expanded panel gets its own state; existing IDs retain comparison identity even if the visible label has changed. New IDs represent new surfaces. Source-only branches are not silently counted as visually captured.
+
+Each captured state includes its first viewport, focused viewport, full page, visible text and structured control/link inventory. Capture version 5 identifies this post-implementation run. `check-baseline-coverage.mjs` verifies that every baseline ID has successful evidence for both devices; `validate.mjs` verifies PNGs, dimensions, inventories and report links. The capture scripts use only navigation, drafts, tabs, filters and opening confirmation previews; they do not confirm hires, send invitations/messages, end care, approve payments or change plans.
+
+The verifier also fails on a stale frontend build, horizontal overflow greater than 1 CSS pixel, or unloaded Inter/Source Serif 4 brand fonts in family views. `validate-screen-semantics.mjs` compares the captured header status and record reference against the isolated database, checks the expected primary task for each lifecycle fixture, verifies selected plan tabs and creation variation, and keeps offer-only plans distinct from booked visits. It records each assertion in `screen-semantics.json`. Auxiliary screens receive route checks and their interaction preparation checks; those are not silently described as lifecycle assertions.
+
+State counts are tracking identities, not a claim that every image is a different layout. The redesign can make previously hidden information permanently visible, so a preserved default/expanded comparison ID may now show the same content. Empty filter results are captured intentionally for each documented plan condition.
+
+Fonts are allowed. Third-party map and payment embeds remain blocked for reproducible local screenshots; their fallback states are not provider-failure evidence. Family, caregiver and administrator login smoke checks are recorded separately, with desktop/mobile screenshots and route verification.
+
+The synthetic DB snapshot retains the September 7 dates and independent example states so before/after screenshots use the same records. It is not a chronological real customer's history. The final report must distinguish successful screenshots, failed captures, source-only coverage and intentionally excluded external operations.
+
+Three additional synthetic offers cover countered, declined and cancelled recurring offers. They have separate request, relationship and plan records, a completed historical source booking required by the known-caregiver offer flow, and no generated recurring visits. Their payment rows have no provider identifiers. They are created by `capture/seed-plan-states.mjs` only after its PHP helper verifies the exact isolated database path. The counterproposal uses different Tuesday and Thursday time slots to exercise per-day schedule labels. These new records are listed under `newPlans` in the manifest and do not replace the original fixtures.
+
+`capture/verify-data-preservation.php` reads both databases with SQLite query-only mode and compares every baseline row and field in care requests, applications, invitations, bookings, payments, reviews, corrections, plans and plan events. It also verifies that the original database SHA256 still matches the initialization record. New synthetic rows are allowed; session, login and telemetry updates are outside this business-data comparison.

@@ -60,6 +60,9 @@ class ManageCareRequest extends Component
 
     public ?int $reviewingApplicationId = null;
 
+    #[\Livewire\Attributes\Locked]
+    public ?int $reviewedOfferVersion = null;
+
     public bool $reviewingCompletion = false;
 
     #[Url(as: 'view', history: true)]
@@ -371,6 +374,7 @@ class ManageCareRequest extends Component
             throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'This caregiver has withdrawn from this request. Choose another caregiver.']);
         }
         $this->reviewingApplicationId = $applicationId;
+        $this->reviewedOfferVersion = $application->offer_version;
         $this->reviewingCompletion = false;
         $this->dispatch('care-decision-opened');
     }
@@ -465,6 +469,9 @@ class ManageCareRequest extends Component
         }
 
         $application = $this->findOwnedApplication($applicationId)->loadMissing('caregiver:id,email,name');
+        if ($application->selected_days !== null && $this->reviewedOfferVersion !== null && $this->reviewedOfferVersion !== $application->offer_version) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'The caregiver updated their days. Review the application again before hiring.']);
+        }
         if (! in_array($application->status, [CareRequestApplication::STATUS_APPLIED, CareRequestApplication::STATUS_SHORTLISTED,
             CareRequestApplication::STATUS_NOT_SELECTED, CareRequestApplication::STATUS_REJECTED], true)) {
             throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'This caregiver is no longer available to hire for this request.']);
@@ -495,6 +502,11 @@ class ManageCareRequest extends Component
 
             $this->closeDecisionReview();
             $this->refreshRequestItem(preferLifecyclePrimary: true);
+            if ($plan->care_arrangement_id) {
+                $this->redirectRoute('family.shared-care.show', ['arrangement' => $plan->care_arrangement_id], navigate: true);
+
+                return;
+            }
             $payment = $this->requestItem->booking?->payment;
             if ($payment?->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
                 $this->dispatchPaymentConfirmation($payment);
@@ -521,6 +533,7 @@ class ManageCareRequest extends Component
 
         try {
             DB::transaction(function () use ($application, &$paymentWarning, &$paymentConfirmationId) {
+                app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $application->caregiver_user_id);
                 $this->requestItem = CareRequest::query()->lockForUpdate()->findOrFail($this->requestItem->id);
                 $application = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
                 if ($this->requestItem->status !== CareRequest::STATUS_OPEN || $this->requestItem->booking()->exists()
@@ -1121,33 +1134,37 @@ class ManageCareRequest extends Component
             return;
         }
 
-        $changeRequest->update([
-            'status' => CareBookingChangeRequest::STATUS_ACCEPTED,
-            'resolved_at' => now(),
-            'resolved_by_user_id' => auth()->id(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($booking, $changeRequest): void {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertBookingChangeAllowed($booking, $changeRequest);
+            $changeRequest->update([
+                'status' => CareBookingChangeRequest::STATUS_ACCEPTED,
+                'resolved_at' => now(),
+                'resolved_by_user_id' => auth()->id(),
+            ]);
 
-        if ($changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL) {
-            $lateCancel = app(BookingTrustService::class)->markLateCancelFlag($booking);
-            $booking->update([
-                'status' => CareBooking::STATUS_CANCELLED,
-                'cancelled_at' => now(),
-                'cancelled_by_user_id' => $changeRequest->requester_user_id,
-                'cancellation_reason' => $changeRequest->reason,
-                'late_cancel_flag' => $lateCancel,
-            ]);
-            app(BookingPaymentService::class)->cancelForBooking($booking);
-            FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
-        } else {
-            $booking->update([
-                'status' => CareBooking::STATUS_SCHEDULED,
-                'scheduled_start_at' => $changeRequest->proposed_start_at,
-                'scheduled_end_at' => $changeRequest->proposed_end_at,
-                'last_rescheduled_at' => now(),
-                'last_reschedule_reason' => $changeRequest->reason,
-            ]);
-            FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
-        }
+            if ($changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL) {
+                $lateCancel = app(BookingTrustService::class)->markLateCancelFlag($booking);
+                $booking->update([
+                    'status' => CareBooking::STATUS_CANCELLED,
+                    'cancelled_at' => now(),
+                    'cancelled_by_user_id' => $changeRequest->requester_user_id,
+                    'cancellation_reason' => $changeRequest->reason,
+                    'late_cancel_flag' => $lateCancel,
+                ]);
+                app(BookingPaymentService::class)->cancelForBooking($booking);
+                FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
+            } else {
+                $booking->update([
+                    'status' => CareBooking::STATUS_SCHEDULED,
+                    'scheduled_start_at' => $changeRequest->proposed_start_at,
+                    'scheduled_end_at' => $changeRequest->proposed_end_at,
+                    'last_rescheduled_at' => now(),
+                    'last_reschedule_reason' => $changeRequest->reason,
+                ]);
+                FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
+            }
+
+        });
 
         app(BookingTrustService::class)->recordEvent(
             $booking,
@@ -1512,6 +1529,7 @@ class ManageCareRequest extends Component
                 ->all();
             $newRequest->tasks()->sync($taskPayload);
 
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $hiredApplication->caregiver_user_id);
             CareRequestInvitation::query()->create([
                 'care_request_id' => $newRequest->id,
                 ...app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
@@ -2156,6 +2174,15 @@ class ManageCareRequest extends Component
                 : [$this->requestItem->booking?->scheduled_start_at ?: $this->deriveScheduledStartAt(), $this->requestItem->booking?->scheduled_end_at ?: $this->deriveScheduledEndAt()];
             if ($range !== null) {
                 [$hireDecisionStart, $hireDecisionEnd] = $range;
+                if ($decisionApplication->offered_schedule) {
+                    $offered = $decisionApplication->offered_schedule;
+                    $date = Carbon::parse($offered['starts_on'], $offered['timezone']);
+                    $slot = WeeklySchedule::forDay($offered['slots'], $date->dayOfWeek);
+                    if ($slot) {
+                        $hireDecisionStart = $date->copy()->setTimeFromTimeString($slot['start_time']);
+                        $hireDecisionEnd = $date->copy()->setTimeFromTimeString($slot['end_time']);
+                    }
+                }
                 $decisionMinutes = $hireDecisionStart && $hireDecisionEnd ? max(1, (int) $hireDecisionStart->diffInMinutes($hireDecisionEnd, false)) : 60;
                 $hireDecisionQuote = $this->recruitmentQuote((int) $decisionApplication->caregiver_user_id, (float) $decisionApplication->proposed_rate, $decisionMinutes);
             }

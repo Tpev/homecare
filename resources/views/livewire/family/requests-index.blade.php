@@ -1,4 +1,34 @@
 <div class="hc-care-workspace mx-auto outline-none" data-ai-target="family.care_requests" tabindex="-1">
+    @if($activeSharedCare)
+        <div class="hc-page pb-10">
+            @if($attentionCount > 0 || $otherUpcomingVisits->isNotEmpty())
+                <div class="flex flex-wrap gap-4 pt-5 text-sm text-[#647B52]">
+                    @if($attentionCount > 0)<a href="#other-care-inbox" class="underline underline-offset-4">{{ $attentionCount }} other {{ Str::plural('update', $attentionCount) }} to review</a>@endif
+                    @if($otherUpcomingVisits->isNotEmpty())<a href="#other-care-visits" class="underline underline-offset-4">Also coming up: {{ $otherUpcomingVisits->first()['headline'] }}</a>@endif
+                </div>
+            @endif
+            @if($sharedCareSchedules->count() > 1)
+                <label class="block pt-6 text-sm text-[#66746d]">Whose care would you like to see?
+                    <select wire:model.live="sharedCareId" class="mt-2 block rounded-xl border-[#D8DECF] bg-white text-[#315c46]">
+                        @foreach($sharedCareSchedules as $sharedCare)<option value="{{ $sharedCare->id }}">{{ $sharedCare->sourceRequest->recipient?->full_name ?: $sharedCare->title }}</option>@endforeach
+                    </select>
+                </label>
+            @endif
+            <livewire:family.shared-care-show :arrangement="$activeSharedCare->id" :embedded="true" :key="'care-home-'.$activeSharedCare->id" />
+            @if($otherUpcomingVisits->isNotEmpty())
+                <section id="other-care-visits" class="mb-5 scroll-mt-28 rounded-2xl border border-[#E4E5D8] bg-[#FFFEFB] p-5" aria-label="Other upcoming care">
+                    <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-display text-xl text-[#315c46]">Other upcoming care</h2><a href="{{ route('family.care.schedule') }}" wire:navigate class="text-sm text-[#647B52]">View all visits →</a></div>
+                    @foreach($otherUpcomingVisits as $visit)<div class="mt-4 flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-medium">{{ $visit['headline'] }}</h3><p class="text-sm text-[#66746d]">{{ $visit['schedule'] }} · {{ $visit['caregiver'] }}</p></div><a href="{{ $visit['action_url'] }}" wire:navigate class="hc-secondary-button">{{ $visit['action_label'] }}</a></div>@endforeach
+                </section>
+            @endif
+            @if($attentionCount > 0)
+                <section id="other-care-inbox" class="scroll-mt-28 rounded-2xl border border-[#E4E5D8] bg-[#FFFEFB] p-5" aria-label="Care inbox">
+                    <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-display text-xl text-[#315c46]">Your care inbox</h2><a href="{{ route('family.care.actions') }}" wire:navigate class="text-sm text-[#647B52]">{{ $attentionCount }} {{ Str::plural('update', $attentionCount) }} to review →</a></div>
+                    <div class="mt-4 grid gap-3 lg:grid-cols-3">@foreach($familyActions as $action)<x-family-action-card :item="$action" compact show-caregiver-photo />@endforeach</div>
+                </section>
+            @endif
+        </div>
+    @else
     <div class="hc-page space-y-5 pb-28 pt-5 sm:space-y-6 sm:pb-24 sm:pt-8">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
@@ -71,7 +101,7 @@
                             @if($nextVisit['location'])<p class="text-xs text-[#607080]">{{ $nextVisit['location'] }}</p>@endif
                         </div>
                     </div>
-                    <a href="{{ $nextVisit['details_url'] }}" wire:navigate class="hc-secondary-button mt-5 w-full sm:w-auto">Open visit</a>
+                    <a href="{{ $nextVisit['action_url'] }}" wire:navigate class="hc-secondary-button mt-5 w-full sm:w-auto">Open visit</a>
                 </div>
             @else
                 <div class="mt-5 rounded-2xl border border-dashed border-[#C7D5CA] bg-white/70 px-4 py-7 text-center">
@@ -82,4 +112,5 @@
         </section>
 
     </div>
+    @endif
 </div>

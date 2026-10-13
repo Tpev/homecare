@@ -1,0 +1,107 @@
+FAMILY WORKSPACE
+Care
+Caregivers
+Messages
+Request care
+MB
+Maria Bennett
+Family
+
+CARE SCHEDULE
+
+Your visits, organized by when they happen.
+
+One-time, regular, extra, and continuous care share one schedule. Start with today, then look ahead.
+
+Request care
+Overview
+Arrangements
+Schedule
+History
+4 upcoming visits
+
+Filter by person or care type without changing the underlying schedule.
+
+Care recipient
+Everyone
+Eleanor Bennett
+Care type
+All upcoming care
+One-time visits
+Recurring care visits
+Extra visits
+Continuous care
+
+LOOKING AHEAD
+
+This week
+
+The rest of this week, grouped by day.
+
+4
+
+TOMORROW
+
+Sep 9
+
+ONE-TIME VISIT
+Scheduled
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #1
+
+View care
+REGULAR VISIT
+Scheduled
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #8
+
+View care
+ONE-TIME VISIT
+Payment needs attention
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #19
+
+Fix payment
+
+Required to keep this visit financially protected.
+
+REGULAR VISIT
+Payment needs attention
+Eleanor Bennett · Wed, Sep 9
+
+10:00 AM–12:00 PM · Sofia Martinez
+
+Raleigh, NC
+
+Visit #22
+
+Fix payment
+
+Required to keep this visit financially protected.
+
+© 2026 LoLo Care Inc
+
+﻿
+Terms of Service
+Privacy Policy
+Payments & Cancellation
+Caregiver Terms
+Family Terms
+Safety Policy
+All Legal Documents
+Support

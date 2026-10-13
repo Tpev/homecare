@@ -2,15 +2,15 @@
 
 namespace App\Services\ContinuousCoverage;
 
+use App\Models\CareRecipientProfile;
 use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\User;
-use App\Models\CareRecipientProfile;
 use App\Services\CareRecipientProfiles\CareRecipientProfileAttachmentService;
-use App\Support\MarketplacePricing;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Support\MarketplacePricing;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -124,23 +124,38 @@ class ContinuousCoverageScheduleService
                 $activeRoster = $template->status === ContinuousCoverageShiftTemplate::STATUS_ACTIVE
                     && $template->rosterMember?->isActive();
 
-                $shift = ContinuousCoverageShift::query()->firstOrCreate(
-                    [
-                        'continuous_coverage_plan_id' => $plan->id,
-                        'occurrence_key' => 'v'.$template->schedule_version.':'.$template->id.':'.$date->toDateString(),
-                    ],
-                    [
-                        'shift_template_id' => $template->id,
-                        'assigned_caregiver_user_id' => $activeRoster ? $template->rosterMember->caregiver_user_id : null,
-                        'status' => $activeRoster ? ContinuousCoverageShift::STATUS_CONFIRMED : ContinuousCoverageShift::STATUS_UNCOVERED,
-                        'scheduled_start_at' => $start->copy()->setTimezone(config('app.timezone')),
-                        'scheduled_end_at' => $end->copy()->setTimezone(config('app.timezone')),
-                        'scheduled_minutes' => $template->duration_minutes,
-                        'caregiver_accepted_at' => $activeRoster ? $template->accepted_at : null,
-                        'family_confirmed_at' => $activeRoster ? $template->accepted_at : null,
-                        'confirmed_at' => $activeRoster ? $template->accepted_at : null,
-                    ],
-                );
+                $shift = DB::transaction(function () use ($plan, $template, $date, $activeRoster, $start, $end): ContinuousCoverageShift {
+                    if ($activeRoster) {
+                        \App\Models\CaregiverProfile::query()->where('user_id', $template->rosterMember->caregiver_user_id)->lockForUpdate()->first();
+                    }
+                    $shift = ContinuousCoverageShift::query()->firstOrCreate(
+                        [
+                            'continuous_coverage_plan_id' => $plan->id,
+                            'occurrence_key' => 'v'.$template->schedule_version.':'.$template->id.':'.$date->toDateString(),
+                        ],
+                        [
+                            'shift_template_id' => $template->id,
+                            'assigned_caregiver_user_id' => $activeRoster ? $template->rosterMember->caregiver_user_id : null,
+                            'status' => $activeRoster ? ContinuousCoverageShift::STATUS_CONFIRMED : ContinuousCoverageShift::STATUS_UNCOVERED,
+                            'scheduled_start_at' => $start->copy()->setTimezone(config('app.timezone')),
+                            'scheduled_end_at' => $end->copy()->setTimezone(config('app.timezone')),
+                            'scheduled_minutes' => $template->duration_minutes,
+                            'caregiver_accepted_at' => $activeRoster ? $template->accepted_at : null,
+                            'family_confirmed_at' => $activeRoster ? $template->accepted_at : null,
+                            'confirmed_at' => $activeRoster ? $template->accepted_at : null,
+                        ],
+                    );
+                    if ($shift->wasRecentlyCreated) {
+                        app(\App\Services\Screening\ScreeningBookingReviewService::class)->flagCoverageShift($shift);
+                    }
+
+                    return $shift;
+                });
+                // A replacement may own an existing shift. Release the original
+                // lane caregiver's lock before refreshing that caregiver's flag.
+                if (! $shift->wasRecentlyCreated) {
+                    app(\App\Services\Screening\ScreeningBookingReviewService::class)->flagCoverageShift($shift);
+                }
                 $created += $shift->wasRecentlyCreated ? 1 : 0;
                 if ($shift->wasRecentlyCreated && $activeRoster) {
                     $this->events->record($plan, 'shift_confirmed', $template->rosterMember->caregiver, $shift, [

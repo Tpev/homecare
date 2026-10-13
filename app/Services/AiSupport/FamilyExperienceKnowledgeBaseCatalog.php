@@ -6,27 +6,28 @@ use DomainException;
 
 class FamilyExperienceKnowledgeBaseCatalog
 {
-    public const VERSION = 'family-experience-alignment-v1';
+    public const VERSION = 'family-experience-alignment-v2';
 
     public const STABLE_IDS = [
-        'KB-FAM-001', 'KB-FAM-002',
-        'KB-CARE-001', 'KB-CARE-003', 'KB-CARE-006', 'KB-CARE-011',
-        'KB-FOP-COM-003', 'KB-FOP-COM-004',
-        'KB-FOP-REG-001', 'KB-FOP-REG-002', 'KB-FOP-REG-003', 'KB-FOP-REG-004',
-        'KB-FOP-VIS-002', 'KB-FOP-VIS-010', 'KB-FOP-HIS-002', 'KB-FOP-ORI-001', 'KB-FOP-PRO-001',
-        'KB-FOP-PAY-011',
-        'KB-B4-PRICE-001', 'KB-B4-PAY-006', 'KB-B4-PAY-011',
-        'KB-B5-PROFILE-001',
-        'KB-B5-REQUEST-001', 'KB-B5-REQUEST-002', 'KB-B5-REQUEST-004', 'KB-B5-REQUEST-008', 'KB-B5-REQUEST-009',
-        'KB-B67-MATCH-001', 'KB-B67-MATCH-004', 'KB-B67-MATCH-007',
-        'KB-B67-VISIT-001', 'KB-B67-VISIT-004', 'KB-B67-VISIT-005', 'KB-B67-VISIT-010', 'KB-B67-VISIT-013', 'KB-B67-VISIT-014',
-        'KB-B67-REGULAR-001', 'KB-B67-REGULAR-002', 'KB-B67-REGULAR-003',
-        'KB-B67-REGULAR-004', 'KB-B67-REGULAR-005', 'KB-B67-REGULAR-006',
-        'KB-B67-REGULAR-007', 'KB-B67-REGULAR-008', 'KB-B67-REGULAR-009',
-        'KB-B89-ACCOUNT-005', 'KB-B89-ACCESS-004',
-        'KB-B89-HISTORY-003', 'KB-B89-HISTORY-004', 'KB-B89-HISTORY-006',
-        'KB-B89-COVERAGE-001', 'KB-B89-COVERAGE-002', 'KB-B89-COVERAGE-004',
-        'KB-B89-COVERAGE-005', 'KB-B89-COVERAGE-006',
+        ...InitialKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+        ...InteractiveKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+        ...FamilyOperationsKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+        ...PaymentTimeKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+        ...ProfileRequestKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+        ...MarketplaceCareKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+        ...FamilyAdministrationKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
+    ];
+
+    /** Source content changed in this release, including shared-source metadata. */
+    public const CHANGED_STABLE_IDS = [
+        'KB-FAM-001', 'KB-FAM-002', 'KB-CARE-006', 'KB-CARE-007', 'KB-FOP-PAY-011',
+        'KB-B4-PRICE-001', 'KB-B4-PAY-011',
+        'KB-B5-REQUEST-001', 'KB-B5-REQUEST-002', 'KB-B5-REQUEST-005',
+        'KB-B5-REQUEST-006', 'KB-B5-REQUEST-008', 'KB-B5-REQUEST-009', 'KB-B5-REQUEST-010',
+        'KB-B67-MATCH-001', 'KB-B67-MATCH-002', 'KB-B67-MATCH-003', 'KB-B67-MATCH-004',
+        'KB-B67-MATCH-005', 'KB-B67-MATCH-007', 'KB-B67-VISIT-009', 'KB-B67-VISIT-014',
+        'KB-B67-REGULAR-001', 'KB-B67-REGULAR-002', 'KB-B67-REGULAR-007',
+        'KB-B89-HISTORY-003',
     ];
 
     private ?array $definitions = null;
@@ -71,7 +72,8 @@ class FamilyExperienceKnowledgeBaseCatalog
     private function resolve(string $stableId): array
     {
         [$definition, $catalog] = match (true) {
-            str_starts_with($stableId, 'KB-FAM-') => [$this->initial->entry($stableId), $this->initial],
+            in_array($stableId, FamilyOperationsKnowledgeBaseCatalog::REVISION_STABLE_IDS, true) => [$this->operations->definition($stableId), $this->operations],
+            in_array($stableId, InitialKnowledgeBaseCatalog::APPROVED_STABLE_IDS, true) => [$this->initial->entry($stableId), $this->initial],
             str_starts_with($stableId, 'KB-CARE-') => [collect($this->interactive->entries())->firstWhere('stable_id', $stableId), $this->interactive],
             str_starts_with($stableId, 'KB-FOP-') => [$this->operations->definition($stableId), $this->operations],
             str_starts_with($stableId, 'KB-B4-') => [$this->paymentTime->definition($stableId), $this->paymentTime],

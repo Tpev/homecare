@@ -31,11 +31,14 @@ class MonitorAiSupportHealth extends Command
         }
 
         $this->table(['Metric', 'Value'], [
-            ['Conversation sample / P95', $result['conversation_sample'].' / '.$result['conversation_p95_ms'].' ms'],
-            ['Tool sample / P95', $result['tool_sample'].' / '.$result['tool_p95_ms'].' ms'],
-            ['Failed operations notifications', $result['failed_notifications']],
-            ['Daily model cost', '$'.number_format($result['daily_cost_microunits'] / 1_000_000, 6)],
-            ['Daily cost stop', $result['daily_cost_stopped'] ? 'ACTIVE' : 'Not reached'],
+            ['Successful provider calls / P95, last hour', $result['conversation_sample'].' / '.($result['conversation_sample'] ? $result['conversation_p95_ms'].' ms' : 'No sample')],
+            ['Provider latency warning sample', $result['conversation_sample_sufficient'] ? 'Sufficient' : 'Below '.$result['minimum_sample'].' calls; no latency pass implied'],
+            ['Failed model turns, last hour', $result['failed_model_turns']],
+            ['Recorded tool sample / P95, last hour', $result['tool_sample'].' / '.($result['tool_sample'] ? $result['tool_p95_ms'].' ms' : 'No sample')],
+            ['Failed operations notifications, last hour', $result['failed_notifications']],
+            ['Operations notifications queued at least 10 minutes', $result['queued_notifications_over_ten_minutes']],
+            ['Estimated recorded model cost today', '$'.number_format($result['daily_cost_microunits'] / 1_000_000, 6)],
+            ['Daily cost ceiling', $result['daily_cost_stopped'] ? 'Reached; inspect current Availability' : 'Not reached'],
         ]);
 
         return self::SUCCESS;

@@ -1,0 +1,1759 @@
+{
+  "checkedAt": "2026-09-07T16:40:15.403Z",
+  "purpose": "Design concept only; not application tests",
+  "layoutChecks": 250,
+  "overflows": [],
+  "scriptErrors": [],
+  "interactions": [
+    "Four local tabs",
+    "Saved filter and reset",
+    "Hours review expansion",
+    "Explicit preview-only confirmation",
+    "Rating selection",
+    "Care variation",
+    "Side/stack layout",
+    "Initial render without host controls"
+  ],
+  "results": [
+    {
+      "theme": "light",
+      "width": 1024,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 736,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 360,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 736,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 360,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "state": "initial",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hiring",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "scheduled",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "live",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "live",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "live",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "live",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hours",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hours",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hours",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "hours",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "review",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "review",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "review",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "review",
+      "tab": "help",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "closed",
+      "tab": "overview",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "closed",
+      "tab": "caregivers",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "closed",
+      "tab": "details",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stage": "closed",
+      "tab": "help",
+      "overflow": 0
+    }
+  ]
+}

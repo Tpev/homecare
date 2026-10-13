@@ -1,0 +1,157 @@
+{
+  "text": "CAREGIVER WORK INBOX\n\nYou have 3 requests to answer.\n\nStart with invitations and time-sensitive requests that need a yes or no.\n\nRIGHT NOW\n\n$162.00 in requests waiting for your response.\n\nAll\n34\nNeeds response\n3\nNew requests\n3\nApplied\n6\nHired\n10\nCompleted\n12\n\nRecurring care for Ellie — Pending\n\nRaleigh, NC - Regular: Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nREGULAR OFFER\n\nFrom Maria Bennett\n\nFamily member receives care\nEleanor Bennett\n\nA family wants to rebook you on a regular schedule.\n\nWe would love to keep the same friendly routine each week.\n\n2H @ $27.00/HR* • $54.00 GROSS EARNINGS\n\nReview offer\nRegular clients\n\nESTIMATED EARNINGS\n\n$54.00\n\n2h visit\n\n@ $27.00/hr*\n\n*Gross earnings before Stripe processing fees.\n\nRecurring care for Ellie — Invitations\n\nRaleigh, NC - Recurring: Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nINVITED\n\nFrom Maria Bennett\n\nFamily member receives care\nEleanor Bennett\n\nFamily invited you directly.\n\nYour experience looks like a lovely fit for Ellie. Are you available for this care request?\n\n2H @ $27.00/HR* • $54.00 GROSS EARNINGS\n\nAccept invite\nDecline\n\nESTIMATED EARNINGS\n\n$54.00\n\n2h visit\n\n@ $27.00/hr*\n\n*Gross earnings before Stripe processing fees.\n\nA helping hand for Ellie — Invitations\n\nRaleigh, NC - One-time: Sep 10, 10:00 - Sep 10, 12:00\n\nINVITED\n\nFrom Maria Bennett\n\nFamily member receives care\nEleanor Bennett\n\nFamily invited you directly.\n\nYour experience looks like a lovely fit for Ellie. Are you available for this care request?\n\n2H @ $27.00/HR* • $54.00 GROSS EARNINGS\n\nAccept invite\nDecline\n\nESTIMATED EARNINGS\n\n$54.00\n\n2h visit\n\n@ $27.00/hr*\n\n*Gross earnings before Stripe processing fees.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "You have 3 requests to answer."
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "All\n34",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Needs response\n3",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "New requests\n3",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Applied\n6",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Hired\n10",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Completed\n12",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "submit",
+      "label": "Accept invite",
+      "text": "Accept invite",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "submit",
+      "label": "Decline",
+      "text": "Decline",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "submit",
+      "label": "Accept invite",
+      "text": "Accept invite",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "submit",
+      "label": "Decline",
+      "text": "Decline",
+      "value": "",
+      "disabled": false
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "",
+      "value": "",
+      "disabled": false
+    }
+  ],
+  "links": [
+    {
+      "text": "",
+      "href": "http://127.0.0.1:8028/dashboard"
+    },
+    {
+      "text": "",
+      "href": "http://127.0.0.1:8028/caregiver/notifications"
+    },
+    {
+      "text": "Review offer",
+      "href": "http://127.0.0.1:8028/caregiver/regular-clients"
+    },
+    {
+      "text": "Regular clients",
+      "href": "http://127.0.0.1:8028/caregiver/regular-clients"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentHeight": 2573,
+  "horizontalOverflow": 0
+}

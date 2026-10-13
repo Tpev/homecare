@@ -61,6 +61,7 @@ class FamilyCareOperationsActionService
         private readonly CareBookingTimeCorrectionService $timeCorrections,
         private readonly CarePlanService $plans,
         private readonly CompletedExtraVisitService $completedExtraVisits,
+        private readonly FamilyCareFinancialQuoteService $financialQuotes,
     ) {}
 
     /** @param array<string,mixed> $record */
@@ -181,7 +182,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-MATCH-001', 'FAM-MATCH-002', 'FAM-MATCH-003', 'FAM-MATCH-004', 'FAM-MATCH-005', 'FAM-MATCH-006', 'FAM-MATCH-007'], true)) {
             $request = $this->selectRequest($actor, $message, [CareRequest::STATUS_OPEN]);
             $body = 'I can help you browse and compare only the caregiver facts shown to your Family account. Search results and availability notes are not a promise that someone will accept.';
-            $this->offerRead($actor, $ticket, $body, $intentId, $request ? 'family.request.applicants' : 'family.caregivers', $request);
+            $this->offerRead($actor, $ticket, $body, $intentId, $request ? 'family.request.discovery' : 'family.caregivers', $request);
 
             return true;
         }
@@ -244,7 +245,7 @@ class FamilyCareOperationsActionService
             if (! $request || ! $caregiver) {
                 $this->automatedMessage($ticket, 'Tell me the caregiver name and the open request number. I will show a recap before sending anything.');
                 if ($request) {
-                    $this->offerRead($actor, $ticket, 'You can also choose the caregiver from this request.', $intentId, 'family.request.applicants', $request);
+                    $this->offerRead($actor, $ticket, 'You can also choose the caregiver from this request.', $intentId, 'family.request.discovery', $request);
                 }
 
                 return true;
@@ -252,7 +253,7 @@ class FamilyCareOperationsActionService
             $reinvite = $intentId === 'FAM-MATCH-010';
             $tool = 'caregiver.invite';
             if (! $this->available($actor, $ticket, $tool)) {
-                $this->offerRead($actor, $ticket, 'I can open the invitation area, but confirmed chat sending is not enabled for you yet.', $intentId, 'family.request.applicants', $request);
+                $this->offerRead($actor, $ticket, 'I can open the invitation area, but confirmed chat sending is not enabled for you yet.', $intentId, 'family.request.discovery', $request);
 
                 return true;
             }
@@ -284,7 +285,7 @@ class FamilyCareOperationsActionService
             $body = $invitation
                 ? ($invitation->caregiver?->name ?: 'The caregiver').' invitation is '.$this->invitationStatus($invitation).'.'
                 : 'I could not find one authorized caregiver invitation to check.';
-            $this->offerRead($actor, $ticket, $body, $intentId, 'family.request.applicants', $request);
+            $this->offerRead($actor, $ticket, $body, $intentId, 'family.request.invitations', $request);
 
             return true;
         }
@@ -297,7 +298,7 @@ class FamilyCareOperationsActionService
                 return true;
             }
             if (! $this->available($actor, $ticket, 'caregiver.invitation.cancel')) {
-                $this->offerRead($actor, $ticket, 'Open the request to review this invitation.', $intentId, 'family.request.applicants', $invitation->careRequest);
+                $this->offerRead($actor, $ticket, 'Open the request to review this invitation.', $intentId, 'family.request.invitations', $invitation->careRequest);
 
                 return true;
             }
@@ -351,7 +352,6 @@ class FamilyCareOperationsActionService
             ];
             if ($isHire) {
                 $fields[] = ['label' => 'Schedule', 'value' => $this->requestSchedule($application->careRequest)];
-                $fields[] = ['label' => 'Family price', 'value' => '$30/hour total'];
             }
             $this->issueAction($actor, $ticket, $tool, $preview, $intentId,
                 match ($tool) {
@@ -622,10 +622,7 @@ class FamilyCareOperationsActionService
                 'expected_worked_minutes' => (int) $booking->worked_minutes,
             ], $intentId, 'Approve these submitted hours and payment?',
                 'This confirms the worked time and lets the existing payment service capture the authorized amount or request secure card action.', [
-                    ['label' => 'Visit', 'value' => $this->bookingTime($booking)],
-                    ['label' => 'Submitted time', 'value' => $this->duration((int) $booking->worked_minutes)],
-                    ['label' => 'Family price', 'value' => '$30/hour total'],
-                    ['label' => 'Estimated care amount', 'value' => '$'.number_format(((int) $booking->worked_minutes / 60) * 30, 2)],
+                    ['label' => 'Caregiver', 'value' => (string) ($booking->caregiver?->name ?: 'Caregiver')],
                 ], 'Confirm hours and payment');
 
             return true;
@@ -683,6 +680,11 @@ class FamilyCareOperationsActionService
 
                 return true;
             }
+            if (! $booking->family_confirmed_at) {
+                $this->offerRead($actor, $ticket, 'First review and approve the submitted hours and payment for this visit. Then return to leave your caregiver review. A review does not approve hours or charge your card.', $intentId, 'family.request.timesheet', $booking->careRequest);
+
+                return true;
+            }
             $comment = $this->reviewText($message);
             $this->issueAction($actor, $ticket, 'visit.review', [
                 'care_booking_id' => (int) $booking->id,
@@ -691,7 +693,7 @@ class FamilyCareOperationsActionService
                 'expected_status' => (string) $booking->status,
                 'expected_updated_at' => $this->stamp($booking->updated_at),
             ], $intentId, 'Submit this caregiver review?',
-                'This saves the rating and optional text. If completed care still needs confirmation, the existing payment service may process it.', [
+                'This saves the rating and optional text for care whose hours were already approved. It does not approve hours or process payment.', [
                     ['label' => 'Caregiver', 'value' => (string) ($booking->caregiver?->name ?: 'Caregiver')],
                     ['label' => 'Rating', 'value' => $rating.' of 5 stars'],
                     ['label' => 'Review', 'value' => $comment ?: 'No written review'],
@@ -771,7 +773,7 @@ class FamilyCareOperationsActionService
         }
 
         if ($intentId === 'FAM-REGULAR-006') {
-            $this->offerRead($actor, $ticket, 'A Family payment method is required so LoLo can authorize each generated visit safely. The Family pays $30/hour total. Caregiver gross earnings are $27/hour minus actual Stripe processing fees on successful Family charges, and LoLo’s gross platform portion is $3/hour.', $intentId, 'family.billing.payment_method');
+            $this->offerRead($actor, $ticket, 'A family payment method is required so LoLo can authorize each generated visit. Review the exact visit’s care amount, processing fee and total before confirming payment. Applicable pricing can differ for existing agreements and earlier bookings; each visit is handled separately.', $intentId, 'family.billing.payment_method');
 
             return true;
         }
@@ -1061,7 +1063,6 @@ class FamilyCareOperationsActionService
                 ['label' => 'Caregiver', 'value' => (string) ($hired?->caregiver?->name ?: 'Caregiver')],
                 ['label' => 'Schedule', 'value' => $schedule['label'] ?? $this->requestSchedule($request)],
                 ['label' => 'Starts', 'value' => Carbon::parse($startsOn)->format('M j, Y')],
-                ['label' => 'Family price', 'value' => '$30/hour total'],
                 ['label' => 'Message', 'value' => $payload['family_message'] ?: 'No optional message'],
             ], 'Confirm and send offer');
 
@@ -1115,6 +1116,18 @@ class FamilyCareOperationsActionService
     ): AiSupportMessageAction {
         if (! $this->available($actor, $ticket, $tool)) {
             throw new AuthorizationException;
+        }
+        $preview = $this->withFinancialQuote($actor, $tool, $preview);
+        if (isset($preview['financial_quote'])) {
+            $financialFields = $this->financialQuotes->fields($preview['financial_quote']);
+            $labels = array_merge(array_column($financialFields, 'label'), ['Family price', 'Estimated care amount', 'Processing fee', 'Platform fee', 'Authorization hold', 'Estimated authorization hold']);
+            $fields = array_values(array_filter($fields, fn (array $field): bool => ! in_array($field['label'], $labels, true)));
+            if ($tool === 'caregiver.hire') {
+                $request = $this->ownedApplication($actor, (int) $preview['application_id'])->careRequest;
+                $fields = array_map(fn (array $field): array => $field['label'] === 'Schedule'
+                    ? ['label' => 'Schedule', 'value' => $this->requestSchedule($request)] : $field, $fields);
+            }
+            $fields = array_merge($fields, $financialFields);
         }
         $created = $this->evidence->createPreview(
             $actor, $ticket, self::CAPABILITY, $tool, 'v1', $preview,
@@ -1191,6 +1204,15 @@ class FamilyCareOperationsActionService
             $preview['expected_updated_at'] = $this->stamp($booking->updated_at);
             $preview['expected_booking_status'] = (string) $booking->status;
             $preview['expected_booking_updated_at'] = $this->stamp($booking->updated_at);
+            if ($tool === 'visit.hours.approve') {
+                $preview['expected_worked_minutes'] = (int) $booking->worked_minutes;
+            }
+        } elseif ($tool === 'regular-care.offer' && isset($preview['care_request_id'])) {
+            $request = $this->ownedRequest($actor, (int) $preview['care_request_id']);
+            $application = $this->plans->hiredApplicationFor($request);
+            $preview['expected_request_updated_at'] = $this->stamp($request->updated_at);
+            $preview['expected_application_id'] = (int) $application?->id;
+            $preview['expected_application_updated_at'] = $this->stamp($application?->updated_at);
         } elseif (isset($preview['care_plan_id'])) {
             $plan = $this->ownedPlan($actor, (int) $preview['care_plan_id']);
             $preview['expected_status'] = (string) $plan->status;
@@ -1213,9 +1235,30 @@ class FamilyCareOperationsActionService
         return $preview;
     }
 
+    /** Quotes are included in the evidence-bound preview, including when a recap is renewed. */
+    private function withFinancialQuote(User $actor, string $tool, array $preview): array
+    {
+        if ($tool === 'caregiver.hire') {
+            $preview['financial_quote'] = $this->financialQuotes->hire($this->ownedApplication($actor, (int) $preview['application_id']));
+        } elseif ($tool === 'visit.hours.approve') {
+            $preview['financial_quote'] = $this->financialQuotes->hours($this->ownedBooking($actor, (int) $preview['care_booking_id']));
+        } elseif ($tool === 'regular-care.offer') {
+            $request = $this->ownedRequest($actor, (int) $preview['care_request_id']);
+            $application = $this->plans->hiredApplicationFor($request);
+            if (! $application) {
+                throw ValidationException::withMessages(['confirmation' => 'The hired caregiver is no longer available. Open the request to continue.']);
+            }
+            $preview['financial_quote'] = $this->financialQuotes->recurringOffer($application, $preview, $actor);
+        }
+
+        return $preview;
+    }
+
     /** @param array<string,mixed> $preview @return array{outcome_code:string,domain_reference_type:string,domain_reference_id:string,receipt_reference:string} */
     private function commit(User $actor, SupportTicket $ticket, string $tool, array $preview): array
     {
+        $this->lockCommitCaregiver($actor, $tool, $preview);
+
         return match ($tool) {
             'caregiver.invite' => $this->commitInvitation($actor, $preview),
             'caregiver.invitation.cancel' => $this->commitInvitationCancel($actor, $preview),
@@ -1244,6 +1287,32 @@ class FamilyCareOperationsActionService
             'regular-care.extra-visit.request-changes' => $this->commitExtraVisitChanges($actor, $preview),
             default => throw new AuthorizationException,
         };
+    }
+
+    /** Lock before domain rows, including nested services; existing work stays permitted. */
+    private function lockCommitCaregiver(User $actor, string $tool, array $preview): void
+    {
+        $caregiverId = null;
+        if (! empty($preview['care_booking_id'])) {
+            $caregiverId = $this->ownedBooking($actor, (int) $preview['care_booking_id'])->caregiver_user_id;
+        } elseif (! empty($preview['care_plan_id'])) {
+            $caregiverId = $this->ownedPlan($actor, (int) $preview['care_plan_id'])->caregiver_user_id;
+        } elseif (! empty($preview['application_id']) || $tool === 'regular-care.offer') {
+            $caregiverId = $this->ownedApplication($actor, (int) ($preview['application_id'] ?? $preview['expected_application_id'] ?? 0))->caregiver_user_id;
+        } elseif ($tool === 'visit.change-request.resolve') {
+            $change = CareBookingChangeRequest::findOrFail((int) ($preview['change_request_id'] ?? 0));
+            $caregiverId = $this->ownedBooking($actor, (int) $change->care_booking_id)->caregiver_user_id;
+        } elseif (! empty($preview['correction_id'])) {
+            $caregiverId = $this->ownedTimeCorrection($actor, (int) $preview['correction_id'])->booking?->caregiver_user_id;
+        } elseif (! empty($preview['completed_extra_visit_id'])) {
+            $caregiverId = $this->ownedCompletedExtraVisit($actor, (int) $preview['completed_extra_visit_id'])->plan?->caregiver_user_id;
+        } elseif (in_array($tool, ['caregiver.invite', 'visit.rebook'], true)) {
+            $caregiverId = (int) ($preview['caregiver_user_id'] ?? 0);
+        }
+
+        if ($caregiverId) {
+            CaregiverProfile::where('user_id', $caregiverId)->lockForUpdate()->first();
+        }
     }
 
     /** @param array<string,mixed> $preview */
@@ -1354,6 +1423,7 @@ class FamilyCareOperationsActionService
         $application = $this->ownedApplication($actor, (int) ($preview['application_id'] ?? 0), true);
         $this->assertState($application, (string) ($preview['expected_status'] ?? ''), (string) ($preview['expected_updated_at'] ?? ''), 'This applicant changed. Review the hire recap again.');
         $this->assertState($application->careRequest, (string) ($preview['expected_request_status'] ?? ''), (string) ($preview['expected_request_updated_at'] ?? ''), 'This request changed. Review the hire recap again.');
+        $this->financialQuotes->assertUnchanged($preview['financial_quote'] ?? null, $this->financialQuotes->hire($application));
         $result = $this->hiring->hire($actor, $application);
         $id = $result['care_plan_id'] ?: $result['booking']?->id;
         $type = $result['care_plan_id'] ? 'care_plan' : 'care_booking';
@@ -1428,6 +1498,7 @@ class FamilyCareOperationsActionService
         if ($decision !== 'accept') {
             throw ValidationException::withMessages(['confirmation' => 'The change decision is invalid.']);
         }
+        app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertBookingChangeAllowed($booking, $change);
         $change->update(['status' => CareBookingChangeRequest::STATUS_ACCEPTED, 'resolved_at' => now(), 'resolved_by_user_id' => $actor->id]);
         if ($change->type === CareBookingChangeRequest::TYPE_CANCEL) {
             $late = $this->trust->markLateCancelFlag($booking);
@@ -1533,6 +1604,7 @@ class FamilyCareOperationsActionService
             || (int) $booking->worked_minutes !== (int) ($preview['expected_worked_minutes'] ?? -1)) {
             throw ValidationException::withMessages(['confirmation' => 'These submitted hours can no longer be approved from this recap.']);
         }
+        $this->financialQuotes->assertUnchanged($preview['financial_quote'] ?? null, $this->financialQuotes->hours($booking));
         $payment = $this->payments->captureForBooking($booking);
         $booking->update(['family_confirmed_at' => now(), 'family_confirmed_by_user_id' => $actor->id]);
         $this->trust->recordEvent($booking, $actor->id, 'family', 'timesheet_confirmed_by_family', ['source' => 'ai_support_confirmed']);
@@ -1577,7 +1649,7 @@ class FamilyCareOperationsActionService
             throw ValidationException::withMessages(['confirmation' => 'Rating must be from 1 to 5.']);
         }
         if (! $booking->family_confirmed_at) {
-            $this->payments->captureForBooking($booking);
+            throw ValidationException::withMessages(['confirmation' => 'Approve the submitted hours and payment for this visit first, then review a fresh caregiver review recap.']);
         }
         $review = CareReview::query()->updateOrCreate(
             ['care_booking_id' => $booking->id, 'reviewer_user_id' => $actor->id],
@@ -1597,8 +1669,6 @@ class FamilyCareOperationsActionService
         }
         $booking->update([
             'status' => CareBooking::STATUS_REVIEWED, 'reviewed_at' => now(),
-            'family_confirmed_at' => $booking->family_confirmed_at ?: now(),
-            'family_confirmed_by_user_id' => $booking->family_confirmed_by_user_id ?: $actor->id,
         ]);
         $this->trust->recordEvent($booking, $actor->id, 'family', 'review_submitted_by_family', ['rating' => $rating, 'source' => 'ai_support_confirmed']);
         $this->trust->recomputeReliabilityForBooking($booking);
@@ -1662,6 +1732,7 @@ class FamilyCareOperationsActionService
             || ! hash_equals($this->stamp($application->updated_at), (string) ($preview['expected_application_updated_at'] ?? ''))) {
             throw ValidationException::withMessages(['confirmation' => 'The hired caregiver changed. Review the recurring care offer again.']);
         }
+        $this->financialQuotes->assertUnchanged($preview['financial_quote'] ?? null, $this->financialQuotes->recurringOffer($application, $preview, $actor));
         $slots = array_values((array) ($preview['schedule_slots'] ?? []));
         $plan = $this->plans->sendOfferFromRequest($request, $actor, [
             'title' => (string) ($preview['title'] ?? ''),

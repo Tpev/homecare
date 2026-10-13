@@ -57,11 +57,14 @@ class CareRequestHiringService
 
             return [
                 'kind' => 'regular_care', 'request' => $request, 'application' => $application->fresh(),
-                'booking' => $request->booking, 'payment' => $request->booking?->payment, 'care_plan_id' => (int) $plan->id,
+                'booking' => $plan->care_arrangement_id ? $plan->nextBooking : $request->booking,
+                'payment' => $plan->care_arrangement_id ? $plan->nextBooking?->payment : $request->booking?->payment,
+                'care_plan_id' => (int) $plan->id,
             ];
         }
 
         $booking = DB::transaction(function () use ($family, $request, $application): CareBooking {
+            app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $application->caregiver_user_id);
             $lockedRequest = CareRequest::query()->lockForUpdate()->with(['recipient', 'tasks'])->findOrFail($request->id);
             $lockedApplication = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
             if (! $this->familyAccounts->canAccessRecord($family, $lockedRequest)

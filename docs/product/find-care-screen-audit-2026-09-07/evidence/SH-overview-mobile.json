@@ -1,0 +1,148 @@
+{
+  "text": "CARE OVERVIEW\n\nHi, Maria.\n\nHere’s an overview of your care.\n\nRequest care\nOverview\nArrangements\nSchedule\nHistory\n\nDO NOW\n\nNeeds your attention\n\nThe most urgent decisions across all care.\n\nView all 18\n\nPAYMENT ACTION REQUIRED\n\nPayment needs attention\n\nA helping hand for Ellie — Payment Attention · Wed, Sep 9\n\nSep 9, 10:00 AM to 12:00 PM\n\nFix payment\n\nCURRENT\n\nCurrent visit\nSchedule (8)\nONE-TIME VISIT\nHappening now\nEleanor Bennett · Mon, Sep 7\n\n7:56 AM–9:56 AM\n\nSofia Martinez · Raleigh, NC\n\nOpen visit\n\nYOUR CARE\n\nArrangements\nView all (18)\n\nBeing arranged\n\nOpen one-time and recurring care requests\n\n13\n\nOngoing recurring care\n\nActive or paused schedules\n\n5\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Hi, Maria."
+    },
+    {
+      "level": "H2",
+      "text": "Needs your attention"
+    },
+    {
+      "level": "H2",
+      "text": "Current visit"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H2",
+      "text": "Arrangements"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8027/family/requests/create"
+    },
+    {
+      "text": "Overview",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Arrangements",
+      "href": "http://127.0.0.1:8027/family/care"
+    },
+    {
+      "text": "Schedule",
+      "href": "http://127.0.0.1:8027/family/care/schedule"
+    },
+    {
+      "text": "History",
+      "href": "http://127.0.0.1:8027/family/care/history"
+    },
+    {
+      "text": "View all 18",
+      "href": "http://127.0.0.1:8027/family/care/actions"
+    },
+    {
+      "text": "PAYMENT ACTION REQUIRED\n\nPayment needs attention\n\nA helping hand for Ellie — Payment Attention · Wed, Sep 9\n\nSep 9, 10:00 AM to 12:00 PM\n\nFix payment",
+      "href": "http://127.0.0.1:8027/family/requests/31"
+    },
+    {
+      "text": "Schedule (8)",
+      "href": "http://127.0.0.1:8027/family/care/schedule"
+    },
+    {
+      "text": "Open visit",
+      "href": "http://127.0.0.1:8027/family/care/journey/request/6"
+    },
+    {
+      "text": "View all (18)",
+      "href": "http://127.0.0.1:8027/family/care"
+    },
+    {
+      "text": "Being arranged\n\nOpen one-time and recurring care requests\n\n13",
+      "href": "http://127.0.0.1:8027/family/care?view=arranging"
+    },
+    {
+      "text": "Ongoing recurring care\n\nActive or paused schedules\n\n5",
+      "href": "http://127.0.0.1:8027/family/care?view=ongoing&type=regular"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8027/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8027/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8027/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8027/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8027/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8027/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8027/legal"
+    }
+  ],
+  "details": [],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1711
+}

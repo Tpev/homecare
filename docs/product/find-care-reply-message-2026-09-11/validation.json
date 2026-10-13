@@ -1,0 +1,25 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "text": "CAREGIVER REPLY\n\nSofia Martinez accepted your invitation\n\nMaria Bennett · Thu, Oct 8\n\nReview the response, then choose Hire and confirm your caregiver.\n\nRequest #47\n\nReview & hire",
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "text": "CAREGIVER REPLY\n\nSofia Martinez accepted your invitation\n\nMaria Bennett · Thu, Oct 8\n\nReview the response, then choose Hire and confirm your caregiver.\n\nRequest #47\n\nReview & hire",
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "text": "CAREGIVER REPLY\n\nSofia Martinez accepted your invitation\n\nMaria Bennett · Thu, Oct 8\n\nReview the response, then choose Hire and confirm your caregiver.\n\nRequest #47\n\nReview & hire",
+      "noOverflow": true
+    },
+    {
+      "reviewAndHireOpensApplicantsWithoutConfirmingHire": true
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

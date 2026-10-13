@@ -217,10 +217,10 @@ class FamilyLifecycleActionService
                 'request_state_read',
                 [[
                     'task_type' => AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
-                    'target_id' => $intentId === 'FAM-REQUEST-035' ? 'family.request.applicants' : 'family.request.overview',
+                    'target_id' => $intentId === 'FAM-REQUEST-035' ? 'family.request.applicants' : 'family.request.summary',
                     'resource_type' => 'care_request',
                     'resource_id' => (int) $row['id'],
-                    'label' => $intentId === 'FAM-REQUEST-035' ? 'Review caregivers' : 'Open this request',
+                    'label' => $intentId === 'FAM-REQUEST-035' ? 'Review applicants' : 'Open this request',
                     'verifier_id' => 'authoritative_family_state_v1',
                 ]],
             );

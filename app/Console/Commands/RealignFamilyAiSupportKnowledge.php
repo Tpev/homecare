@@ -29,11 +29,16 @@ class RealignFamilyAiSupportKnowledge extends Command
         }
 
         $this->info('Family experience KB package: '.$plan['manifest_version']);
+        $this->line('Changed source entries: '.implode(', ', $plan['changed_source_ids']));
+        if ($plan['unmanaged_published_ids'] !== []) {
+            $this->warn('Published entries outside the source package remain unchanged and need a separate review: '.implode(', ', $plan['unmanaged_published_ids']));
+        }
         $this->table(['Result', 'Count'], [
             ['Would create a missing package entry', $plan['counts']['creates']],
-            ['Would update an unpublished draft', $plan['counts']['updates']],
+            ['Would refresh an untouched managed draft, preserving its version', $plan['counts']['updates']],
             ['Would revise', $plan['counts']['revisions']],
-            ['Exact no-op', $plan['counts']['noops']],
+            ['Exact published no-op', $plan['counts']['published_noops']],
+            ['Exact source match awaiting publication', $plan['counts']['pending_publication']],
             ['Conflict/refusal', $plan['counts']['conflicts']],
         ]);
         foreach ($plan['conflicts'] as $conflict) {

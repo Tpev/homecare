@@ -39,6 +39,7 @@ class AiSupportHandoffService
 
         [$fresh, $message, $changed] = DB::transaction(function () use ($actor, $ticket, $reasonCode): array {
             $locked = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
+            app(AiSupportPreparationService::class)->invalidateForTicket($locked->id, 'human_handoff');
             if ($locked->isHumanOnly()) {
                 return [$locked, null, false];
             }

@@ -6,7 +6,7 @@ return [
     'version' => 'family-intents-v1',
     'generated_on' => '2026-08-28',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => '73a05003e223401ca7bda84c0078c505b13916111d322a622d36eec6708d1364',
+    'source_sha256' => 'da8b55d62ec808c9e1443fc76f0008a6d06f83abc33ac854df1cb46f0c01b4e6',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -226,7 +226,7 @@ return [
                 'product' => 'UI',
                 'explain' => 'Yes',
                 'action' => 'Navigate',
-                'target_behavior' => 'Explain Overview, Actions, Schedule, Arrangements, and History',
+                'target_behavior' => 'Explain Overview, Care request, Schedule and History; distinguish the recurring plan from its dated visits',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -9107,7 +9107,7 @@ return [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9190,7 +9190,7 @@ return [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9271,7 +9271,7 @@ return [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9356,7 +9356,7 @@ return [
                 'reader' => 'family_requests_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                     2 => 'family.request.applicants',
                 ],
                 'guided_task' => 'family_request_v1',
@@ -9442,7 +9442,7 @@ return [
                 'reader' => 'family_requests_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                     2 => 'family.request.applicants',
                 ],
                 'guided_task' => 'family_request_v1',
@@ -9522,7 +9522,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_requests',
                     1 => 'family.new_care_request',
-                    2 => 'family.request.overview',
+                    2 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
@@ -9599,7 +9599,7 @@ return [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
                     0 => 'family.new_care_request',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
@@ -9680,7 +9680,7 @@ return [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.overview',
+                    1 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9760,7 +9760,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_requests',
                     1 => 'family.new_care_request',
-                    2 => 'family.request.overview',
+                    2 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
@@ -10077,7 +10077,7 @@ return [
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
-                    0 => 'family.request.overview',
+                    0 => 'family.request.summary',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10160,7 +10160,7 @@ return [
                 'destinations' => [
                     0 => 'support.center',
                     1 => 'family.care_requests',
-                    2 => 'family.request.overview',
+                    2 => 'family.request.summary',
                     3 => 'family.request.applicants',
                     4 => 'family.new_care_request',
                 ],
@@ -10320,8 +10320,8 @@ return [
             'contracts' => [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
-                    0 => 'family.caregivers',
-                    1 => 'family.request.applicants',
+                    0 => 'family.request.discovery',
+                    1 => 'family.caregivers',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10405,8 +10405,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'support.center',
-                    1 => 'family.caregivers',
-                    2 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.caregivers',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10488,8 +10488,8 @@ return [
             'contracts' => [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
-                    0 => 'family.caregivers',
-                    1 => 'family.request.applicants',
+                    0 => 'family.request.discovery',
+                    1 => 'family.caregivers',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10573,7 +10573,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10657,7 +10658,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10741,7 +10743,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'support.center',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10825,7 +10828,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'support.center',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10907,7 +10911,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.invitations',
                 ],
                 'guided_task' => null,
                 'prefill' => 'caregiver_message_v1',
@@ -10988,7 +10993,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.invitations',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -11069,7 +11075,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.discovery',
+                    2 => 'family.request.invitations',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -11153,7 +11160,7 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.invitations',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -11233,7 +11240,7 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
+                    1 => 'family.request.invitations',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -11892,8 +11899,9 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
-                    2 => 'family.request.visit',
+                    1 => 'family.request.start',
+                    2 => 'family.request.applicants',
+                    3 => 'family.request.visit',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -11977,8 +11985,9 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
-                    2 => 'family.request.visit',
+                    1 => 'family.request.start',
+                    2 => 'family.request.applicants',
+                    3 => 'family.request.visit',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -12062,8 +12071,9 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.request.applicants',
-                    2 => 'family.request.visit',
+                    1 => 'family.request.start',
+                    2 => 'family.request.applicants',
+                    3 => 'family.request.visit',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -14620,10 +14630,10 @@ return [
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Approved pricing truth',
+                'product' => 'Current authoritative pricing',
                 'explain' => 'Yes',
                 'action' => 'Explain / Guide',
-                'target_behavior' => 'State $30/hour Family total, $27/hour caregiver gross minus actual Stripe processing fees, and $3/hour LoLo gross platform portion; do not invent other charges; offer the next valid care step',
+                'target_behavior' => 'Distinguish care rate, Family processing fee and total from the current quote or preserved booking terms; do not invent additional charges; offer the exact review',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -14700,10 +14710,10 @@ return [
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Approved pricing truth',
+                'product' => 'Current authoritative pricing',
                 'explain' => 'Yes',
                 'action' => 'Explain / Calculate / Guide',
-                'target_behavior' => 'State $30/hour Family total, $27/hour caregiver gross minus actual Stripe processing fees, and $3/hour LoLo gross platform portion; calculate only from an explicit duration; offer request creation',
+                'target_behavior' => 'General default examples use current server pricing and an explicit duration; exact care uses its agreement, booking snapshot and ledger; never replace legacy terms or infer future recurring prepayment',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [

@@ -38,9 +38,9 @@ class PaymentTimeKnowledgeContentTest extends TestCase
 
         $pricing = $entries->firstWhere('stable_id', 'KB-B4-PRICE-001');
         $this->assertSame(['family', 'caregiver'], $pricing['roles']);
-        $this->assertStringContainsString('$30 per worked hour', $pricing['answer_body']);
-        $this->assertStringContainsString('$27 per hour', $pricing['answer_body']);
-        $this->assertStringContainsString('$3 per worked hour', $pricing['answer_body']);
+        $this->assertStringContainsString('Family processing fee', $pricing['answer_body']);
+        $this->assertStringContainsString('booking snapshot', $pricing['answer_body']);
+        $this->assertStringContainsString('payment ledger', $pricing['answer_body']);
         $this->assertContains('support_answers_v1', $pricing['capability_ids']);
 
         foreach ($entries as $entry) {
@@ -55,25 +55,23 @@ class PaymentTimeKnowledgeContentTest extends TestCase
     {
         $pricing = app(AiSupportPricingTruth::class);
 
-        $this->assertSame(3000, AiSupportPricingTruth::CAREGIVER_HOURLY_CENTS + AiSupportPricingTruth::PLATFORM_HOURLY_CENTS);
-        $this->assertSame(
-            'Care costs $30 per hour total for the Family. The caregiver earns $27 per hour gross, minus the actual Stripe processing fees on successful family charges, and LoLo’s gross platform portion is $3 per hour. Refund costs, dispute fees, and optional instant-payout fees are not deducted from the caregiver rate.',
-            $pricing->familyAnswer('How much does care cost?'),
-        );
+        config(['marketplace.pricing_v2.enabled' => true, 'marketplace.pricing_v2.family_care_hourly_cents' => 3000,
+            'marketplace.pricing_v2.family_processing_fee_hourly_cents' => 100, 'marketplace.pricing_v2.caregiver_gross_hourly_cents' => 2700]);
+        $this->assertStringContainsString('$30.00 care plus $1.00 Family processing fee', $pricing->familyAnswer('How much does care cost?'));
         $answer = $pricing->familyAnswer('What would 2.5 hours cost?');
-        $this->assertStringContainsString('Family total is $75.00', $answer);
-        $this->assertStringContainsString('caregiver gross earnings are $67.50', $answer);
-        $this->assertStringContainsString('platform portion is $7.50', $answer);
+        $this->assertStringContainsString('Family total is $77.50', $answer);
+        $this->assertStringContainsString('care is $75.00', $answer);
+        $this->assertStringContainsString('processing fee is $2.50', $answer);
         $this->assertStringContainsString(
             'I do not add taxes, tips, mileage, holiday charges, or surcharges',
             $pricing->familyAnswer('Are taxes or mileage added?'),
         );
         $this->assertTrue($pricing->isPricingQuestion('What is the caregiver rate?'));
         $caregiver = $pricing->answer('caregiver', 'What do I earn for 2 hours?');
-        $this->assertStringContainsString('caregiver earnings are $54.00', $caregiver);
-        $this->assertStringContainsString('Family total is $60.00', $caregiver);
+        $this->assertStringContainsString('Caregiver gross earnings are $54.00', $caregiver);
+        $this->assertStringContainsString('Family total is $62.00', $caregiver);
         $this->assertStringContainsString(
-            'Family total is $60.00',
+            'Family total is $62.00',
             $pricing->familyAnswer('How much does care cost for a two-hour visit?'),
         );
     }
@@ -100,6 +98,28 @@ class PaymentTimeKnowledgeContentTest extends TestCase
         $this->assertCount(0, $again['created']);
         $this->assertDatabaseCount('ai_support_pilot_grants', 0);
         $this->assertDatabaseCount('ai_support_control_versions', 0);
+    }
+
+    public function test_pricing_reads_changed_server_defaults_without_repricing_specific_or_historical_care(): void
+    {
+        config(['marketplace.pricing_v2.enabled' => true, 'marketplace.pricing_v2.family_care_hourly_cents' => 4200,
+            'marketplace.pricing_v2.family_processing_fee_hourly_cents' => 175, 'marketplace.pricing_v2.caregiver_gross_hourly_cents' => 3800]);
+        $pricing = app(AiSupportPricingTruth::class);
+
+        $family = $pricing->familyAnswer('What would 90 minutes cost?');
+        $this->assertStringContainsString('care is $63.00', $family);
+        $this->assertStringContainsString('processing fee is $2.63', $family);
+        $this->assertStringContainsString('Family total is $65.63', $family);
+        $this->assertStringContainsString('Caregiver gross earnings are $57.00', $pricing->answer('caregiver', 'What do I earn for 90 minutes?'));
+
+        foreach (['What did my 2 hour visit cost?', 'Why was the previous booking charged this rate?', 'What is our agreement rate?'] as $question) {
+            $answer = $pricing->familyAnswer($question);
+            $this->assertStringNotContainsString('$', $answer);
+            $this->assertStringContainsString('booking snapshot and payment ledger', $answer);
+        }
+        config(['marketplace.pricing_v2.enabled' => false]);
+        $this->assertStringNotContainsString('$', $pricing->familyAnswer('What would 2 hours cost?'));
+        $this->assertDatabaseCount('care_bookings', 0);
     }
 
     public function test_exact_publish_command_publishes_only_the_kb_package(): void

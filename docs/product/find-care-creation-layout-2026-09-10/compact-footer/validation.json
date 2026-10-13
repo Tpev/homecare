@@ -1,0 +1,42 @@
+{
+  "captures": [
+    {
+      "type": "one_time",
+      "height": 212.6875,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "type": "one_time",
+      "height": 319.078125,
+      "overflow": false,
+      "width": 390
+    },
+    {
+      "type": "one_time",
+      "height": 319.078125,
+      "overflow": false,
+      "width": 320
+    },
+    {
+      "type": "recurring",
+      "height": 212.6875,
+      "overflow": false,
+      "width": 1440
+    },
+    {
+      "type": "recurring",
+      "height": 319.078125,
+      "overflow": false,
+      "width": 390
+    },
+    {
+      "type": "recurring",
+      "height": 337.671875,
+      "overflow": false,
+      "width": 320
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

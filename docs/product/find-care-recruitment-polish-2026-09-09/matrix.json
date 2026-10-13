@@ -1,0 +1,370 @@
+[
+  {
+    "id": "OT-create-empty",
+    "variation": "one_time",
+    "title": "Create care — initial form",
+    "url": "/family/requests/create?type=one_time",
+    "stage": "Create"
+  },
+  {
+    "id": "OT-create-review",
+    "variation": "one_time",
+    "title": "Create care — filled review before publication",
+    "url": "/family/requests/create?type=one_time",
+    "stage": "Create",
+    "focusSelector": "#care-review"
+  },
+  {
+    "id": "OT-request",
+    "variation": "one_time",
+    "title": "Care request — public overview",
+    "url": "/family/requests/2?tab=home",
+    "stage": "Care request",
+    "request": 2
+  },
+  {
+    "id": "OT-request-private",
+    "variation": "one_time",
+    "title": "Care request — invitation-only overview",
+    "url": "/family/requests/29?tab=home",
+    "stage": "Care request",
+    "request": 29
+  },
+  {
+    "id": "OT-request-details",
+    "variation": "one_time",
+    "title": "Care request — all care details expanded",
+    "url": "/family/requests/2?tab=overview",
+    "stage": "Care request",
+    "request": 2
+  },
+  {
+    "id": "OT-find-search",
+    "variation": "one_time",
+    "title": "Find caregivers — recommendations",
+    "url": "/family/requests/2?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "candidate": "discovery-row",
+    "request": 2
+  },
+  {
+    "id": "OT-find-name",
+    "variation": "one_time",
+    "title": "Find caregivers — name search",
+    "url": "/family/requests/2?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "candidate": "discovery-row",
+    "request": 2
+  },
+  {
+    "id": "OT-find-none",
+    "variation": "one_time",
+    "title": "Find caregivers — no search results",
+    "url": "/family/requests/2?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "request": 2
+  },
+  {
+    "id": "OT-find-invited",
+    "variation": "one_time",
+    "title": "Find caregivers — invitations already sent",
+    "url": "/family/requests/3?tab=invite&view=invited",
+    "stage": "Find caregivers",
+    "request": 3
+  },
+  {
+    "id": "OT-find-saved",
+    "variation": "one_time",
+    "title": "Find caregivers — saved caregivers",
+    "url": "/family/requests/4?tab=invite&view=saved",
+    "stage": "Find caregivers",
+    "request": 4
+  },
+  {
+    "id": "OT-legacy-invite-search",
+    "variation": "one_time",
+    "title": "Private request — preserved invitation search entry",
+    "url": "/family/requests/29?tab=applicants&invite=1",
+    "stage": "Find caregivers",
+    "request": 29,
+    "verifyLegacyEscape": true
+  },
+  {
+    "id": "OT-invite-review",
+    "variation": "one_time",
+    "title": "Invite caregiver — message and request review",
+    "url": "/family/requests/2?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "request": 2
+  },
+  {
+    "id": "OT-applicants-zero",
+    "variation": "one_time",
+    "title": "Review applicants — no applicants yet",
+    "url": "/family/requests/2?tab=applicants",
+    "stage": "Review applicants",
+    "request": 2,
+    "candidate": null,
+    "expectedApplicants": 0
+  },
+  {
+    "id": "OT-applicants-one",
+    "variation": "one_time",
+    "title": "Review applicants — one applicant",
+    "url": "/family/requests/27?tab=applicants",
+    "stage": "Review applicants",
+    "request": 27,
+    "candidate": "applicant-row",
+    "expectedApplicants": 1
+  },
+  {
+    "id": "OT-applicants-many",
+    "variation": "one_time",
+    "title": "Review applicants — four applicants",
+    "url": "/family/requests/28?tab=applicants",
+    "stage": "Review applicants",
+    "request": 28,
+    "candidate": "applicant-row",
+    "expectedApplicants": 4
+  },
+  {
+    "id": "OT-applicants-saved",
+    "variation": "one_time",
+    "title": "Review applicants — shortlisted applicants",
+    "url": "/family/requests/28?tab=applicants",
+    "stage": "Review applicants",
+    "request": 28,
+    "candidate": "applicant-row",
+    "expectedApplicants": 1
+  },
+  {
+    "id": "OT-applicants-past",
+    "variation": "one_time",
+    "title": "Review applicants — past applicants",
+    "url": "/family/requests/28?tab=applicants",
+    "stage": "Review applicants",
+    "request": 28,
+    "expectedApplicants": 0
+  },
+  {
+    "id": "OT-applicants-details",
+    "variation": "one_time",
+    "title": "Review applicants — application and qualifications expanded",
+    "url": "/family/requests/28?tab=applicants",
+    "stage": "Review applicants",
+    "request": 28,
+    "expectedApplicants": 4
+  },
+  {
+    "id": "OT-hire-review",
+    "variation": "one_time",
+    "title": "Get started — hire terms review before confirmation",
+    "url": "/family/requests/4?tab=applicants",
+    "stage": "Get started",
+    "request": 4,
+    "focusSelector": "#care-decision-review"
+  },
+  {
+    "id": "OT-scheduled",
+    "variation": "one_time",
+    "title": "Get started — booked visit",
+    "url": "/family/requests/5?tab=shift",
+    "stage": "Get started",
+    "request": 5
+  },
+  {
+    "id": "RC-create-empty",
+    "variation": "recurring",
+    "title": "Create care — initial form",
+    "url": "/family/requests/create?type=recurring",
+    "stage": "Create"
+  },
+  {
+    "id": "RC-create-review",
+    "variation": "recurring",
+    "title": "Create care — filled review before publication",
+    "url": "/family/requests/create?type=recurring",
+    "stage": "Create",
+    "focusSelector": "#care-review"
+  },
+  {
+    "id": "RC-request",
+    "variation": "recurring",
+    "title": "Care request — public overview",
+    "url": "/family/requests/13?tab=home",
+    "stage": "Care request",
+    "request": 13
+  },
+  {
+    "id": "RC-request-private",
+    "variation": "recurring",
+    "title": "Care request — invitation-only overview",
+    "url": "/family/requests/35?tab=home",
+    "stage": "Care request",
+    "request": 35
+  },
+  {
+    "id": "RC-request-details",
+    "variation": "recurring",
+    "title": "Care request — all care details expanded",
+    "url": "/family/requests/13?tab=overview",
+    "stage": "Care request",
+    "request": 13
+  },
+  {
+    "id": "RC-find-search",
+    "variation": "recurring",
+    "title": "Find caregivers — recommendations",
+    "url": "/family/requests/13?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "candidate": "discovery-row",
+    "request": 13
+  },
+  {
+    "id": "RC-find-name",
+    "variation": "recurring",
+    "title": "Find caregivers — name search",
+    "url": "/family/requests/13?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "candidate": "discovery-row",
+    "request": 13
+  },
+  {
+    "id": "RC-find-none",
+    "variation": "recurring",
+    "title": "Find caregivers — no search results",
+    "url": "/family/requests/13?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "request": 13
+  },
+  {
+    "id": "RC-find-invited",
+    "variation": "recurring",
+    "title": "Find caregivers — invitations already sent",
+    "url": "/family/requests/14?tab=invite&view=invited",
+    "stage": "Find caregivers",
+    "request": 14
+  },
+  {
+    "id": "RC-find-saved",
+    "variation": "recurring",
+    "title": "Find caregivers — saved caregivers",
+    "url": "/family/requests/15?tab=invite&view=saved",
+    "stage": "Find caregivers",
+    "request": 15
+  },
+  {
+    "id": "RC-legacy-invite-search",
+    "variation": "recurring",
+    "title": "Private request — preserved invitation search entry",
+    "url": "/family/requests/35?tab=applicants&invite=1",
+    "stage": "Find caregivers",
+    "request": 35,
+    "verifyLegacyEscape": true
+  },
+  {
+    "id": "RC-invite-review",
+    "variation": "recurring",
+    "title": "Invite caregiver — message and request review",
+    "url": "/family/requests/13?tab=invite&view=search",
+    "stage": "Find caregivers",
+    "request": 13
+  },
+  {
+    "id": "RC-applicants-zero",
+    "variation": "recurring",
+    "title": "Review applicants — no applicants yet",
+    "url": "/family/requests/13?tab=applicants",
+    "stage": "Review applicants",
+    "request": 13,
+    "candidate": null,
+    "expectedApplicants": 0
+  },
+  {
+    "id": "RC-applicants-one",
+    "variation": "recurring",
+    "title": "Review applicants — one applicant",
+    "url": "/family/requests/33?tab=applicants",
+    "stage": "Review applicants",
+    "request": 33,
+    "candidate": "applicant-row",
+    "expectedApplicants": 1
+  },
+  {
+    "id": "RC-applicants-many",
+    "variation": "recurring",
+    "title": "Review applicants — four applicants",
+    "url": "/family/requests/34?tab=applicants",
+    "stage": "Review applicants",
+    "request": 34,
+    "candidate": "applicant-row",
+    "expectedApplicants": 4
+  },
+  {
+    "id": "RC-applicants-saved",
+    "variation": "recurring",
+    "title": "Review applicants — shortlisted applicants",
+    "url": "/family/requests/34?tab=applicants",
+    "stage": "Review applicants",
+    "request": 34,
+    "candidate": "applicant-row",
+    "expectedApplicants": 1
+  },
+  {
+    "id": "RC-applicants-past",
+    "variation": "recurring",
+    "title": "Review applicants — past applicants",
+    "url": "/family/requests/34?tab=applicants",
+    "stage": "Review applicants",
+    "request": 34,
+    "expectedApplicants": 0
+  },
+  {
+    "id": "RC-applicants-details",
+    "variation": "recurring",
+    "title": "Review applicants — application and qualifications expanded",
+    "url": "/family/requests/34?tab=applicants",
+    "stage": "Review applicants",
+    "request": 34,
+    "expectedApplicants": 4
+  },
+  {
+    "id": "RC-hire-review",
+    "variation": "recurring",
+    "title": "Get started — hire terms review before confirmation",
+    "url": "/family/requests/15?tab=applicants",
+    "stage": "Get started",
+    "request": 15,
+    "focusSelector": "#care-decision-review"
+  },
+  {
+    "id": "RC-scheduled",
+    "variation": "recurring",
+    "title": "Get started — booked visit",
+    "url": "/family/requests/16?tab=shift",
+    "stage": "Get started",
+    "request": 16
+  },
+  {
+    "id": "RC-request-visits",
+    "variation": "recurring",
+    "stage": "Care request",
+    "title": "Requested recurring schedule — no booked visits yet",
+    "url": "/family/requests/13?tab=visits",
+    "request": 13
+  },
+  {
+    "id": "RC-plan-overview",
+    "variation": "recurring",
+    "stage": "Get started",
+    "title": "Recurring arrangement — stable home after hiring",
+    "url": "/family/care/1?tab=overview"
+  },
+  {
+    "id": "RC-plan-visits",
+    "variation": "recurring",
+    "stage": "Get started",
+    "title": "Recurring arrangement — individual dated visits",
+    "url": "/family/care/1?tab=visits"
+  }
+]

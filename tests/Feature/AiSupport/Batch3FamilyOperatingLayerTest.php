@@ -116,12 +116,12 @@ class Batch3FamilyOperatingLayerTest extends TestCase
             ['Understand what non-medical care means', 'everyday help such as companionship', 'support.center'],
             ['Understand what the AI can and cannot do', 'perform specifically enabled actions only after a clear recap and confirmation', 'support.center'],
             ['Understand what a care-receiver profile is and who sees it', 'profile stores reusable information', 'family.care_profiles'],
-            ['Understand whether publication hired a caregiver', 'publication itself does not hire anyone', 'family.request.overview'],
+            ['Understand whether publication hired a caregiver', 'publication itself does not hire anyone', 'family.request.summary'],
             ['Understand whether publication charged or authorized the card', 'does not charge or authorize the card', 'family.care_requests'],
             ['Ask for a guaranteed caregiver response or response time', 'cannot guarantee', 'support.center'],
             ['Understand whether publishing a request charges the card', 'does not charge or authorize the card', 'family.care_requests'],
             ['Are taxes, tips, mileage, or holiday charges added?', 'I do not add taxes, tips, mileage, holiday charges, or surcharges', 'family.new_care_request'],
-            ['What would 2.5 hours cost?', 'Family total is $75.00', 'family.new_care_request'],
+            ['What would 2.5 hours cost?', 'Family total is $77.50', 'family.new_care_request'],
             ['Apply a coupon, credit, or promo code', 'does not currently provide a coupon', 'family.care_history'],
         ];
 

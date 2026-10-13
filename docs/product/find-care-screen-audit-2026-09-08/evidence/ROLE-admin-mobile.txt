@@ -1,0 +1,439 @@
+User Management
+
+All accounts on the platform with role, registration date, and quick delete action.
+
+Total: 21
+Search
+User type
+All user types
+Rows per page
+25
+
+LoLo Demo Administrator
+
+admin.find-care-audit@example.com
+
+ADMIN
+
+REGISTERED
+
+Sep 08, 2026
+
+LOCATION
+
+—
+
+View profile
+Protected account
+
+Nora Brooks
+
+nora.empty-profile.find-care-audit@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+Oliver Chen
+
+oliver.find-care-audit@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Active profile
+
+View profile
+Login as
+Delete
+
+Maria Bennett
+
+maria.find-care-audit@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+Sofia Martinez
+
+sofia.find-care-audit@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Active profile
+
+View profile
+Login as
+Delete
+
+James Wilson
+
+james.find-care-audit@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Active profile
+
+View profile
+Login as
+Delete
+
+Aisha Robinson
+
+aisha.find-care-audit@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Active profile
+
+View profile
+Login as
+Delete
+
+E2E Journey Family
+
+family.journey.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+E2E AI Family Member
+
+family.ai-member.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+E2E AI Family
+
+family.ai.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+E2E Marketplace Caregiver
+
+caregiver.marketplace.e2e@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Active profile
+
+View profile
+Login as
+Delete
+
+E2E New Caregiver
+
+caregiver.new.e2e@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Ready for review submission
+
+View profile
+Login as
+Delete
+
+E2E Under Review Caregiver
+
+caregiver.review.e2e@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Under review
+
+View profile
+Login as
+Delete
+
+E2E Background Review Caregiver
+
+caregiver.background.review.e2e@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Under review
+
+View profile
+Login as
+Delete
+
+E2E Removed Relative
+
+family.removed.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+—
+
+View profile
+Login as
+Delete
+
+E2E Admin
+
+test@test.com
+
+ADMIN
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+—
+
+View profile
+Protected account
+
+E2E Ready Caregiver
+
+caregiver.ready.e2e@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Active profile
+
+View profile
+Login as
+Delete
+
+E2E Mobile Visual Caregiver
+
+caregiver.mobile-visual.e2e@example.com
+
+CAREGIVER
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+REVIEW READINESS
+
+Missing required steps
+
+Missing: Profile basics, Identity verification, Task comfort selection
+
+View profile
+Login as
+Delete
+
+E2E Family Member
+
+family.member.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+E2E Eligible Relative
+
+family.eligible.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+—
+
+View profile
+Login as
+Delete
+
+E2E Family
+
+family.e2e@example.com
+
+FAMILY
+
+REGISTERED
+
+Sep 07, 2026
+
+LOCATION
+
+Raleigh, NC
+
+View profile
+Login as
+Delete
+
+© 2026 LoLo Care Inc
+
+﻿
+Terms of Service
+Privacy Policy
+Payments & Cancellation
+Caregiver Terms
+Family Terms
+Safety Policy
+All Legal Documents

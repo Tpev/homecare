@@ -169,7 +169,7 @@
             <section class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div class="rounded-3xl border border-[#D7CCE9] bg-white p-5 shadow-sm lg:col-span-2">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[#7B8794]">New request</p>
-                    <h2 class="mt-2 font-display text-3xl font-semibold leading-tight text-[#17313F]">Interested in this visit?</h2>
+                    <h2 class="mt-2 font-display text-3xl font-semibold leading-tight text-[#17313F]">{{ $requestItem->isRecurring() ? 'Which days could you help?' : 'Interested in this visit?' }}</h2>
                     <p class="mt-2 max-w-2xl text-sm leading-6 text-[#4B5B6B]">
                         Review the essentials. If the time and location work for you, send your interest to the family.
                     </p>
@@ -199,9 +199,10 @@
                         </div>
                     </div>
 
+                    @include('livewire.caregiver.partials.selected-care-days')
                     <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
                         <x-button color="green" wire:click="submit" wire:loading.attr="disabled" wire:target="submit" class="w-full sm:w-auto">
-                            <span wire:loading.remove wire:target="submit">I can do this visit</span>
+                            <span wire:loading.remove wire:target="submit">{{ $requestItem->isRecurring() ? 'Offer selected days' : 'I can do this visit' }}</span>
                             <span wire:loading wire:target="submit">Sending...</span>
                         </x-button>
                         <a href="{{ route('care-requests.index') }}" wire:navigate class="inline-flex h-11 w-full items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-white px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB] sm:w-auto">
@@ -528,6 +529,7 @@
                                         <label for="caregiver-cover-note-{{ $requestItem->id }}" class="block text-sm font-semibold text-[#17313F]">
                                             Edit note <span class="font-normal text-[#7B8794]">(optional)</span>
                                         </label>
+                                        @include('livewire.caregiver.partials.selected-care-days')
                                         <textarea
                                             id="caregiver-cover-note-{{ $requestItem->id }}"
                                             wire:model="cover_note"
@@ -536,7 +538,7 @@
                                             placeholder="Add a short note if you want to introduce yourself."
                                         ></textarea>
                                         @error('cover_note') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                        <x-button color="green" wire:click="submit" class="w-full sm:w-auto">Update note</x-button>
+                                        <x-button color="green" wire:click="submit" class="w-full sm:w-auto">{{ $requestItem->isRecurring() ? 'Update days & note' : 'Update note' }}</x-button>
                                     </div>
                                 @endif
                             </div>
@@ -556,6 +558,7 @@
                         <label for="caregiver-cover-note-{{ $requestItem->id }}" class="block text-sm font-semibold text-[#17313F]">
                             Cover note <span class="font-normal text-[#7B8794]">(optional)</span>
                         </label>
+                        @include('livewire.caregiver.partials.selected-care-days')
                         <textarea
                             id="caregiver-cover-note-{{ $requestItem->id }}"
                             wire:model="cover_note"

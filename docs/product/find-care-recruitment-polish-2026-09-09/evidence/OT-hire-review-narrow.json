@@ -1,0 +1,209 @@
+{
+  "text": "← My care\nRequest #4\nGet help\nCare story\nA helping hand for Ellie — Applicants\n\nOne-time care\n·\nEleanor Bennett · Thu, Sep 10\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n2\n4\nGet started\n\nGET STARTED · REVIEW BEFORE HIRING\n\nCare with Sofia Martinez\n\nOne last look at the care, schedule, and price for Eleanor Bennett.\n\nCare\nOne-time care for Eleanor Bennett\nSchedule\nSep 10, 10:00 AM–12:00 PM · 2026 EDT\nLocation\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\nAgreed care\n\nCompanionship, preparing lunch, and light housekeeping.\n\nCompanionship · Meal preparation · Light housekeeping\n\nPlease arrive on time and leave a short update after the visit.\n\nVisit estimate\n\n2h scheduled · USD\n\nCare · $30.00/hr\n$60.00\nProcessing · $1.00/hr\n$2.00\nEstimated total\n$62.00\n\nBased on scheduled hours and the pricing that applies to this caregiver. Final charges depend on approved hours.\n\nConfirming selects this caregiver, saves the care agreement and prepares card authorization. Other open applications will be marked not selected. Your visit will show any payment action needed.\n\nConfirm hire\nBack to caregivers\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "A helping hand for Ellie — Applicants",
+      "rect": {
+        "x": 16,
+        "y": 137,
+        "width": 288,
+        "height": 68.3125
+      }
+    },
+    {
+      "level": "H2",
+      "text": "Care with Sofia Martinez",
+      "rect": {
+        "x": 36,
+        "y": 443.8125,
+        "width": 248,
+        "height": 61
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Agreed care",
+      "rect": {
+        "x": 36,
+        "y": 825.25,
+        "width": 248,
+        "height": 19.5
+      }
+    },
+    {
+      "level": "H3",
+      "text": "Visit estimate",
+      "rect": {
+        "x": 54,
+        "y": 1037.3125,
+        "width": 212,
+        "height": 21
+      }
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('support')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "1\nCare request",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('home')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "2\nFind caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('invite')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "3\nReview applicants\n2",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "setActiveTab('applicants')",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "4\nGet started",
+      "value": "",
+      "disabled": true,
+      "current": "step",
+      "expanded": null,
+      "pressed": null,
+      "action": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Confirm hire",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "confirmReviewedHire",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Back to caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "action": "closeDecisionReview",
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← My care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/request/4"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "rows": [],
+  "width": 320,
+  "height": 844,
+  "documentWidth": 320,
+  "documentHeight": 1754,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded"
+    }
+  ],
+  "selectedNavigation": [
+    {
+      "text": "4\nGet started",
+      "current": "step",
+      "pressed": null
+    }
+  ]
+}

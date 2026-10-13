@@ -30,6 +30,9 @@
     @endif
     @error('cancellationReason') <x-alert color="red">{{ $message }}</x-alert> @enderror
     @include('livewire.family.partials.replacement-visit-history')
+    @if($requestItem->care_arrangement_id && ! $requestItem->is_system_generated)
+        <a href="{{ route('family.shared-care.show', $requestItem->care_arrangement_id) }}" wire:navigate class="hc-primary-button">Open shared care schedule · see caregivers and missing visits</a>
+    @endif
 
     @if ($requestItem->is_private && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $requestItem->invitations->isEmpty())
         <x-alert color="amber">
@@ -1123,7 +1126,7 @@
     @if ($activeTab === 'support')
         <div class="hc-surface flex flex-wrap items-center justify-between gap-3 p-4">
             <p class="text-sm">Need a hand? Chat with support or use the visit options below.</p>
-            <button type="button" x-on:click="$dispatch('open-care-support-chat')" class="hc-secondary-button">Chat with support</button>
+            <button type="button" data-support-chat-opener="care-request" x-on:click="$dispatch('open-care-support-chat')" class="hc-secondary-button">Chat with support</button>
         </div>
         @if (! $booking)
             <x-card>

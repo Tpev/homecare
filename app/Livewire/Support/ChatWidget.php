@@ -2,8 +2,13 @@
 
 namespace App\Livewire\Support;
 
+use App\Exceptions\Payments\PaymentException;
 use App\Models\AiSupportGoalJourney;
 use App\Models\AiSupportGuidedTask;
+use App\Models\AiSupportMessageAction;
+use App\Models\CareBooking;
+use App\Models\CareBookingTimeCorrection;
+use App\Models\CareRequestApplication;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Services\AiSupport\AiSupportEligibilityService;
@@ -17,9 +22,12 @@ use App\Services\AiSupport\FamilyAssistantHomeService;
 use App\Services\AiSupport\FamilyGoalJourneyService;
 use App\Services\AiSupport\FamilyIntentJourneyService;
 use App\Services\AiSupport\FamilyLifecycleActionService;
+use App\Services\AiSupport\NavigationTargetRegistry;
 use App\Services\Support\SupportChatService;
 use App\Services\Support\SupportTicketMessagingService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -27,6 +35,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ChatWidget extends Component
 {
@@ -342,13 +351,16 @@ class ChatWidget extends Component
             $this->resetValidation();
             $this->dispatch('support-chat-action-completed');
         } catch (ValidationException $exception) {
-            $message = (string) collect($exception->errors())->flatten()->first();
-            $this->addError('confirmation', $message);
-            $this->dispatch(
-                'support-chat-confirmation-failed',
-                actionId: $actionId,
-                message: $message,
-            );
+            $this->confirmationFailed($ticket, $actionId, (string) collect($exception->errors())->flatten()->first());
+        } catch (PaymentException $exception) {
+            $this->confirmationFailed($ticket, $actionId, $exception->userMessage, true);
+        } catch (AuthorizationException|ModelNotFoundException $exception) {
+            $this->confirmationFailed($ticket, $actionId, 'This confirmation is no longer available for your account. Refresh the chat or continue from your care requests.', false, false);
+        } catch (HttpException $exception) {
+            if (! in_array($exception->getStatusCode(), [403, 404], true)) {
+                throw $exception;
+            }
+            $this->confirmationFailed($ticket, $actionId, 'This confirmation is no longer available for your account. Refresh the chat or continue from your care requests.', false, false);
         }
     }
 
@@ -373,9 +385,78 @@ class ChatWidget extends Component
             $this->resetValidation();
             $this->dispatch('support-chat-action-completed');
         } catch (ValidationException $exception) {
-            $message = (string) collect($exception->errors())->flatten()->first();
-            $this->addError('confirmation', $message);
-            $this->dispatch('support-chat-confirmation-failed', actionId: $actionId, message: $message);
+            $this->confirmationFailed($ticket, $actionId, (string) collect($exception->errors())->flatten()->first());
+        } catch (PaymentException $exception) {
+            $this->confirmationFailed($ticket, $actionId, $exception->userMessage, true);
+        } catch (AuthorizationException|ModelNotFoundException $exception) {
+            $this->confirmationFailed($ticket, $actionId, 'This confirmation is no longer available for your account. Refresh the chat or continue from your care requests.', false, false);
+        } catch (HttpException $exception) {
+            if (! in_array($exception->getStatusCode(), [403, 404], true)) {
+                throw $exception;
+            }
+            $this->confirmationFailed($ticket, $actionId, 'This confirmation is no longer available for your account. Refresh the chat or continue from your care requests.', false, false);
+        }
+    }
+
+    /** Recover expected failures without claiming a charge succeeded or exposing provider diagnostics. */
+    private function confirmationFailed(SupportTicket $ticket, string $actionId, string $message, bool $payment = false, bool $useResource = true): void
+    {
+        $message = $payment ? $message.' Open the visit or billing page to check payment status before trying again.' : $message;
+        $this->addError('confirmation', $message);
+        $this->dispatch('support-chat-confirmation-failed', actionId: $actionId, message: $message);
+        $actor = auth()->user();
+        $action = AiSupportMessageAction::query()->whereKey($actionId)
+            ->where('actor_user_id', $actor->id)->where('support_ticket_id', $ticket->id)->first();
+        if (! $action) {
+            return;
+        }
+        $preview = $useResource ? (array) data_get($action->payload, 'renew_payload', []) : [];
+        $requestId = (int) ($preview['care_request_id'] ?? $preview['source_care_request_id'] ?? 0);
+        $bookingId = (int) ($preview['care_booking_id'] ?? 0);
+        if (! $bookingId && isset($preview['correction_id'])) {
+            $bookingId = (int) CareBookingTimeCorrection::query()->whereKey($preview['correction_id'])->value('care_booking_id');
+        }
+        if ($bookingId) {
+            $requestId = (int) CareBooking::query()->whereKey($bookingId)->value('care_request_id');
+        } elseif (isset($preview['application_id'])) {
+            $requestId = (int) CareRequestApplication::query()->whereKey($preview['application_id'])->value('care_request_id');
+        }
+        $navigation = app(NavigationTargetRegistry::class);
+        $resource = ['resource_type' => 'care_request', 'resource_id' => $requestId];
+        $target = $bookingId ? ($payment ? 'family.request.payment_attention' : 'family.request.timesheet') : 'family.request.summary';
+        if (! $bookingId && isset($preview['care_plan_id'])) {
+            $resource = ['resource_type' => 'care_plan', 'resource_id' => (int) $preview['care_plan_id']];
+            $target = 'family.regular_care.attention';
+        }
+        if ($payment && ! $bookingId) {
+            $target = 'family.billing.payment_method';
+            $resource = [];
+        }
+        if (! $navigation->allowedFor($actor, $target, $resource)) {
+            $target = $payment ? 'family.billing.payment_method' : 'family.dashboard';
+            $resource = [];
+        }
+        if (! $navigation->allowedFor($actor, $target, $resource)) {
+            return;
+        }
+        $url = $navigation->urlFor($actor, $target, $resource);
+        $existing = AiSupportMessageAction::query()->where('support_ticket_id', $ticket->id)
+            ->where('actor_user_id', $actor->id)->where('action_type', AiSupportMessageAction::TYPE_NAVIGATE)
+            ->whereNull('invalidated_at')->whereNull('consumed_at')->get()
+            ->contains(fn (AiSupportMessageAction $item): bool => $item->isActive()
+                && data_get($item->payload, 'recovery_action_id') === $actionId && data_get($item->payload, 'url') === $url);
+        if ($existing) {
+            return;
+        }
+        $reply = $this->createAutomatedMessage($ticket, $message);
+        if ($reply) {
+            AiSupportMessageAction::query()->create([
+                'id' => (string) Str::uuid(), 'support_ticket_message_id' => $reply->id,
+                'support_ticket_id' => $ticket->id, 'actor_user_id' => $actor->id,
+                'action_type' => AiSupportMessageAction::TYPE_NAVIGATE,
+                'payload' => ['url' => $url, 'label' => $payment && $bookingId ? 'Review this visit’s payment' : ($navigation->definition($target)['label'] ?? 'Open your care page'), 'recovery_action_id' => $actionId],
+                'expires_at' => now()->addMinutes(30),
+            ]);
         }
     }
 

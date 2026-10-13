@@ -1,0 +1,272 @@
+{
+  "text": "REQUEST CARE WITH SOFIA\n\nOne visit or recurring care—without starting over.\n\nWe copied the care details from Aug 31, 2026. Choose how often you need care; the existing invitation, approval, and payment flow stays the same.\n\nONE VISIT\n\nInvite Sofia for a specific date\n\nThey will see it in their work inbox. If they accept, you can hire them from the request page.\n\nStarting day\nStarting time\nDuration\n1h\n1h 30m\n2h\n2h 30m\n3h\n3h 30m\n4h\n4h 30m\n5h\n5h 30m\n6h\n6h 30m\n7h\n7h 30m\n8h\n8h 30m\n9h\n9h 30m\n10h\n10h 30m\n11h\n11h 30m\n12h\n\nEstimated visit total\n\nCare $60.00 + $2.00 processing fee\n\n$62.00\n\n$30/hour care* plus a $1/hour processing fee.\n\nMessage to caregiver\n\nCopied from last visit\n\nCAREGIVER\n\nSofia Martinez\n\nFOR\n\nEleanor Bennett\n\nLOCATION\n\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\n\nBack to visit\nSend one-time invite\n\nRECURRING CARE\n\nSet up a repeating schedule\n\nChoose this when Sofia should come every week. You can set the days, time, start date, and end date before sending the offer.\n\nSet up recurring care\nWhat happens next\n\n1. Sofia accepts or declines\n\nThey get a direct invite with the copied care details.\n\n2. You hire when ready\n\nThe normal request page handles chat, profile review, hiring, and payment authorization.\n\n3. The visit follows the usual flow\n\nCheck-in, timesheet, approval, and Stripe balance transfer stay in the same system.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "One visit or recurring care—without starting over."
+    },
+    {
+      "level": "H2",
+      "text": "Invite Sofia for a specific date"
+    },
+    {
+      "level": "H2",
+      "text": "Set up a repeating schedule"
+    },
+    {
+      "level": "H2",
+      "text": "What happens next"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "date",
+      "label": "Starting day",
+      "text": "",
+      "value": "2026-09-07",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "time",
+      "label": "Starting time",
+      "text": "",
+      "value": "10:00",
+      "checked": false,
+      "disabled": false,
+      "required": false,
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Duration",
+      "text": "",
+      "value": "120",
+      "disabled": false,
+      "required": false,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "1h",
+          "value": "60",
+          "selected": false
+        },
+        {
+          "label": "1h 30m",
+          "value": "90",
+          "selected": false
+        },
+        {
+          "label": "2h",
+          "value": "120",
+          "selected": true
+        },
+        {
+          "label": "2h 30m",
+          "value": "150",
+          "selected": false
+        },
+        {
+          "label": "3h",
+          "value": "180",
+          "selected": false
+        },
+        {
+          "label": "3h 30m",
+          "value": "210",
+          "selected": false
+        },
+        {
+          "label": "4h",
+          "value": "240",
+          "selected": false
+        },
+        {
+          "label": "4h 30m",
+          "value": "270",
+          "selected": false
+        },
+        {
+          "label": "5h",
+          "value": "300",
+          "selected": false
+        },
+        {
+          "label": "5h 30m",
+          "value": "330",
+          "selected": false
+        },
+        {
+          "label": "6h",
+          "value": "360",
+          "selected": false
+        },
+        {
+          "label": "6h 30m",
+          "value": "390",
+          "selected": false
+        },
+        {
+          "label": "7h",
+          "value": "420",
+          "selected": false
+        },
+        {
+          "label": "7h 30m",
+          "value": "450",
+          "selected": false
+        },
+        {
+          "label": "8h",
+          "value": "480",
+          "selected": false
+        },
+        {
+          "label": "8h 30m",
+          "value": "510",
+          "selected": false
+        },
+        {
+          "label": "9h",
+          "value": "540",
+          "selected": false
+        },
+        {
+          "label": "9h 30m",
+          "value": "570",
+          "selected": false
+        },
+        {
+          "label": "10h",
+          "value": "600",
+          "selected": false
+        },
+        {
+          "label": "10h 30m",
+          "value": "630",
+          "selected": false
+        },
+        {
+          "label": "11h",
+          "value": "660",
+          "selected": false
+        },
+        {
+          "label": "11h 30m",
+          "value": "690",
+          "selected": false
+        },
+        {
+          "label": "12h",
+          "value": "720",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "label": "Message to caregiver",
+      "text": "",
+      "value": "Hi Sofia, we would like to book you again for one more visit.",
+      "disabled": false,
+      "required": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Send one-time invite",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "Back to visit",
+      "href": "http://127.0.0.1:8027/family/requests/10"
+    },
+    {
+      "text": "Set up recurring care",
+      "href": "http://127.0.0.1:8027/family/requests/10/regular-care"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8027/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8027/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8027/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8027/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8027/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8027/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8027/legal"
+    }
+  ],
+  "details": [],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 2491
+}

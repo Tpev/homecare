@@ -1,0 +1,95 @@
+{
+  "at": "2026-09-10T19:21:22.501Z",
+  "checks": [
+    {
+      "name": "Stage 1 keyboard focus above adjacent arrow",
+      "passed": true,
+      "state": {
+        "text": "1\nCare request",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 5,
+        "right": 66.5,
+        "buttonWidth": 71.5,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      }
+    },
+    {
+      "name": "Stage 2 keyboard focus above adjacent arrow",
+      "passed": true,
+      "state": {
+        "text": "2\nFind caregivers",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 10,
+        "right": 66.5,
+        "buttonWidth": 71.5,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      }
+    },
+    {
+      "name": "Stage 3 keyboard focus above adjacent arrow",
+      "passed": true,
+      "state": {
+        "text": "3\nReview applicants",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 10,
+        "right": 66.5,
+        "buttonWidth": 71.5,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      }
+    },
+    {
+      "name": "Applicant count stays above label with keyboard focus",
+      "passed": true,
+      "state": {
+        "focusVisible": true,
+        "count": "Active applicants:\n4",
+        "belowBadge": true,
+        "left": 207.5,
+        "right": 223.5
+      }
+    }
+  ],
+  "errors": [],
+  "blockedRequests": [],
+  "captures": [
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-1.png"
+    },
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-2.png"
+    },
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-3.png"
+    },
+    {
+      "file": "screenshots/compat-28-navigation-final.png"
+    },
+    {
+      "file": "screenshots/compat-28-focus-final.png"
+    }
+  ],
+  "stylesheets": [
+    "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+    "http://127.0.0.1:8028/build/assets/app-C-2Nh_2S.css"
+  ],
+  "dataPreservation": {
+    "tables": 26,
+    "changed": [
+      "care_request_invitations"
+    ],
+    "passed": false
+  },
+  "passed": false
+}

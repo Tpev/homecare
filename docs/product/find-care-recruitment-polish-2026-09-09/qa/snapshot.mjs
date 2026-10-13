@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {root,output} from './environment.mjs';
+const label=process.argv[2]||'before';
+if(!['before','after'].includes(label))throw new Error('Use before or after');
+const migrationFile=path.join(output,'runtime-migration.json');
+const migration=fs.existsSync(migrationFile)?JSON.parse(fs.readFileSync(migrationFile,'utf8')):null;
+const snapshot=JSON.parse(execFileSync('php',[path.join(output,'qa/fixtures.php'),...(migration?.backup?[migration.backup]:[])],{cwd:root,encoding:'utf8',windowsHide:true}));
+const target=path.join(output,'fixtures-'+label+'.json');
+if(label==='before'&&fs.existsSync(target))throw new Error('Refusing to overwrite the pre-capture data snapshot');
+fs.writeFileSync(target,JSON.stringify(snapshot,null,2));
+if(label==='after'){
+ const before=JSON.parse(fs.readFileSync(path.join(output,'fixtures-before.json'),'utf8'));
+ const changed=Object.keys(before.tables).filter(table=>before.tables[table].rows!==snapshot.tables[table].rows||before.tables[table].sha256!==snapshot.tables[table].sha256);
+ const report={at:new Date().toISOString(),passed:changed.length===0,tables:Object.keys(before.tables).length,changed,newColumns:Object.fromEntries(Object.entries(snapshot.tables).filter(([table,entry])=>entry.newColumns?.length).map(([table,entry])=>[table,entry.newColumns])),existingMigration:migration?.pending||[],excluded:'Login/session records, read receipts and activity telemetry. Hashes compare every original field; nullable columns added by the existing September9 pricing migration are reported separately. No final marketplace action is used by this capture.'};
+ fs.writeFileSync(path.join(output,'data-preservation.json'),JSON.stringify(report,null,2));
+ report.addedTables=snapshot.addedTables;
+ fs.writeFileSync(path.join(output,'data-preservation.json'),JSON.stringify(report,null,2));
+ console.log(JSON.stringify(report));if(!report.passed)process.exitCode=1;
+}else console.log('Read-only snapshot saved for '+Object.keys(snapshot.tables).length+' care tables.');

@@ -1,0 +1,4462 @@
+{
+  "at": "2026-09-10T19:17:33.656Z",
+  "buildHash": "a4b2140963eab9fa6428d311d44ced565810ea2c48a386fa89811db714babb39",
+  "checks": [
+    {
+      "name": "desktop request44 HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "request44-desktop-home no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-home active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-home no overflow",
+      "passed": true,
+      "documentWidth": 1440,
+      "width": 1440
+    },
+    {
+      "name": "request44-desktop-home connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-home labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-desktop-invite no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-invite active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-invite no overflow",
+      "passed": true,
+      "documentWidth": 1440,
+      "width": 1440
+    },
+    {
+      "name": "request44-desktop-invite connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-invite labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-desktop-applicants no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-applicants active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-applicants no overflow",
+      "passed": true,
+      "documentWidth": 1440,
+      "width": 1440
+    },
+    {
+      "name": "request44-desktop-applicants connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-applicants labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-desktop-start no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-start active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-start no overflow",
+      "passed": true,
+      "documentWidth": 1440,
+      "width": 1440
+    },
+    {
+      "name": "request44-desktop-start connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-start labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-desktop-start preparation heading",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-start no hire confirmation",
+      "passed": true
+    },
+    {
+      "name": "request44-desktop-hover-1 interaction visible",
+      "passed": true,
+      "state": {
+        "focusVisible": false,
+        "hover": true,
+        "outline": "rgb(35, 72, 63) none 3px",
+        "outlineOffset": "0px",
+        "shadow": "none",
+        "background": "rgb(237, 242, 233)",
+        "zIndex": "auto",
+        "text": "1\nCare request\nCare & schedule details"
+      }
+    },
+    {
+      "name": "request44-desktop-hover-2 interaction visible",
+      "passed": true,
+      "state": {
+        "focusVisible": false,
+        "hover": true,
+        "outline": "rgb(35, 72, 63) none 3px",
+        "outlineOffset": "0px",
+        "shadow": "none",
+        "background": "rgb(237, 242, 233)",
+        "zIndex": "auto",
+        "text": "2\nFind caregivers\nSearch & invite"
+      }
+    },
+    {
+      "name": "request44-desktop-hover-3 interaction visible",
+      "passed": true,
+      "state": {
+        "focusVisible": false,
+        "hover": true,
+        "outline": "rgb(35, 72, 63) none 3px",
+        "outlineOffset": "0px",
+        "shadow": "none",
+        "background": "rgb(237, 242, 233)",
+        "zIndex": "auto",
+        "text": "3\nReview applicants\nCompare & chat"
+      }
+    },
+    {
+      "name": "mobile request44 HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "request44-mobile-home no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-home active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-home no overflow",
+      "passed": true,
+      "documentWidth": 390,
+      "width": 390
+    },
+    {
+      "name": "request44-mobile-home connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-home labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-mobile-invite no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-invite active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-invite no overflow",
+      "passed": true,
+      "documentWidth": 390,
+      "width": 390
+    },
+    {
+      "name": "request44-mobile-invite connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-invite labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-mobile-applicants no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-applicants active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-applicants no overflow",
+      "passed": true,
+      "documentWidth": 390,
+      "width": 390
+    },
+    {
+      "name": "request44-mobile-applicants connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-applicants labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-mobile-start no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-start active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-start no overflow",
+      "passed": true,
+      "documentWidth": 390,
+      "width": 390
+    },
+    {
+      "name": "request44-mobile-start connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-start labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-mobile-start preparation heading",
+      "passed": true
+    },
+    {
+      "name": "request44-mobile-start no hire confirmation",
+      "passed": true
+    },
+    {
+      "name": "narrow request44 HTTP",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "request44-narrow-home no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-home active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-home no overflow",
+      "passed": true,
+      "documentWidth": 320,
+      "width": 320
+    },
+    {
+      "name": "request44-narrow-home connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-home labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-narrow-invite no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-invite active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-invite no overflow",
+      "passed": true,
+      "documentWidth": 320,
+      "width": 320
+    },
+    {
+      "name": "request44-narrow-invite connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-invite labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-narrow-applicants no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-applicants active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-applicants no overflow",
+      "passed": true,
+      "documentWidth": 320,
+      "width": 320
+    },
+    {
+      "name": "request44-narrow-applicants connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-applicants labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-narrow-start no page error",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-start active arrow",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-start no overflow",
+      "passed": true,
+      "documentWidth": 320,
+      "width": 320
+    },
+    {
+      "name": "request44-narrow-start connected chevrons",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-start labels and badges fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request44-narrow-start preparation heading",
+      "passed": true
+    },
+    {
+      "name": "request44-narrow-start no hire confirmation",
+      "passed": true
+    },
+    {
+      "name": "Stage 1 keyboard focus above adjacent arrow",
+      "passed": true,
+      "state": {
+        "text": "1\nCare request",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 5,
+        "right": 66.5,
+        "buttonWidth": 71.5,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      },
+      "source": "focus-validation-initial.json"
+    },
+    {
+      "name": "Stage 2 keyboard focus clear of arrow and label",
+      "passed": true,
+      "state": {
+        "text": "2\nFind caregivers",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 10,
+        "right": 70.5,
+        "buttonWidth": 71.5,
+        "labelClearance": true,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      },
+      "source": "focus-validation.json"
+    },
+    {
+      "name": "Stage 3 keyboard focus clear of arrow and label",
+      "passed": true,
+      "state": {
+        "text": "3\nReview applicants",
+        "focused": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "borderWidth": "2px",
+        "zIndex": "3",
+        "left": 10,
+        "right": 70.5,
+        "buttonWidth": 71.5,
+        "labelClearance": true,
+        "shadow": "rgb(255, 253, 250) 0px 0px 0px 1px"
+      },
+      "source": "focus-validation.json"
+    },
+    {
+      "name": "compat 28 arrows and page fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 22,
+            "y": 353.8125,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 384.59375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 100.5,
+            "y": 353.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 384.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Active applicants: 4",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 172,
+            "y": 353.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 384.59375
+          },
+          "count": {
+            "text": "Active applicants: 4",
+            "rect": {
+              "x": 210.5,
+              "y": 321.8125,
+              "width": 16,
+              "height": 16,
+              "right": 226.5,
+              "bottom": 337.8125
+            }
+          },
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 243.5,
+            "y": 353.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 384.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compat 13 arrows and page fit",
+      "passed": true,
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 22,
+            "y": 330.8125,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 100.5,
+            "y": 330.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 172,
+            "y": 330.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 243.5,
+            "y": 330.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Original care data unchanged",
+      "passed": true,
+      "changed": []
+    },
+    {
+      "name": "Applicant count stays above label with keyboard focus",
+      "passed": true,
+      "state": {
+        "focusVisible": true,
+        "count": "Active applicants:\n4",
+        "belowBadge": true,
+        "left": 207.5,
+        "right": 223.5
+      },
+      "source": "focus-validation.json"
+    }
+  ],
+  "errors": [],
+  "blockedRequests": [],
+  "captures": [
+    {
+      "id": "request44-desktop-home",
+      "file": "screenshots/request44-desktop-home-top.png"
+    },
+    {
+      "id": "request44-desktop-invite",
+      "file": "screenshots/request44-desktop-invite-top.png"
+    },
+    {
+      "id": "request44-desktop-applicants",
+      "file": "screenshots/request44-desktop-applicants-top.png"
+    },
+    {
+      "id": "request44-desktop-start",
+      "file": "screenshots/request44-desktop-start-top.png"
+    },
+    {
+      "id": "request44-desktop-hover-1",
+      "file": "screenshots/request44-desktop-hover-1.png"
+    },
+    {
+      "id": "request44-desktop-hover-2",
+      "file": "screenshots/request44-desktop-hover-2.png"
+    },
+    {
+      "id": "request44-desktop-hover-3",
+      "file": "screenshots/request44-desktop-hover-3.png"
+    },
+    {
+      "id": "request44-mobile-home",
+      "file": "screenshots/request44-mobile-home-top.png"
+    },
+    {
+      "id": "request44-mobile-invite",
+      "file": "screenshots/request44-mobile-invite-top.png"
+    },
+    {
+      "id": "request44-mobile-applicants",
+      "file": "screenshots/request44-mobile-applicants-top.png"
+    },
+    {
+      "id": "request44-mobile-start",
+      "file": "screenshots/request44-mobile-start-top.png"
+    },
+    {
+      "id": "request44-narrow-home",
+      "file": "screenshots/request44-narrow-home-navigation.png"
+    },
+    {
+      "id": "request44-narrow-invite",
+      "file": "screenshots/request44-narrow-invite-navigation.png"
+    },
+    {
+      "id": "request44-narrow-applicants",
+      "file": "screenshots/request44-narrow-applicants-navigation.png"
+    },
+    {
+      "id": "request44-narrow-start",
+      "file": "screenshots/request44-narrow-start-navigation.png"
+    },
+    {
+      "id": "request44-narrow-focus-1",
+      "file": "screenshots/request44-narrow-focus-1.png",
+      "retainedInitialEvidence": true
+    },
+    {
+      "id": "request44-narrow-focus-2",
+      "file": "screenshots/request44-narrow-focus-2.png",
+      "retainedInitialEvidence": true
+    },
+    {
+      "id": "request44-narrow-focus-3",
+      "file": "screenshots/request44-narrow-focus-3.png",
+      "retainedInitialEvidence": true
+    },
+    {
+      "id": "compat-28",
+      "file": "screenshots/compat-28-navigation.png",
+      "retainedInitialEvidence": true
+    },
+    {
+      "id": "compat-13",
+      "file": "screenshots/compat-13-navigation.png"
+    },
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-1.png"
+    },
+    {
+      "file": "screenshots/compat-28-navigation-final.png"
+    },
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-2.png"
+    },
+    {
+      "file": "screenshots/request44-narrow-focus-fixed-3.png"
+    },
+    {
+      "file": "screenshots/compat-28-focus-final.png"
+    }
+  ],
+  "states": [
+    {
+      "id": "request44-desktop-home",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=home",
+      "width": 1440,
+      "documentWidth": 1440,
+      "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\nCare & schedule details\n2\nFind caregivers\nSearch & invite\n3\nReview applicants\nCompare & chat\n4\nGet started\nReview & confirm care\n\nUP NEXT · STEP 2\n\nFind the right caregiver\n\nYour request is posted. You can also invite someone who looks like a good fit.\n\nFind caregivers\n→\n0\nActive applicants\n0\nInvitations sent\n\nHiring opens your booked visit.\n\nYour care request\nFull care details ↗\nCare for\nMaria Bennett\nWhen\nSep 30, 1:00 AM–4:00 AM · 2026 EDT\nLocation\n8 the green street b kent, Raleigh, DE 19901\nVisibility\nCaregivers can find and apply\nWhat help is needed\n\nPrimary tasks: Companionship, Light housekeeping.\n\nCompanionship\nLight housekeeping\n\nFlexible schedule. Exact timing can be confirmed in chat.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-desktop-invite",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=invite",
+      "width": 1440,
+      "documentWidth": 1440,
+      "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\nCare & schedule details\n2\nFind caregivers\nSearch & invite\n3\nReview applicants\nCompare & chat\n4\nGet started\nReview & confirm care\nFind caregivers\n\nSearch profiles, send invitations and track replies.\n\nSep 30, 1:00 AM–4:00 AM · 2026 EDT\n\nSearch\nInvited\n0\nSaved profiles\nSearch caregivers by name, city, or certification\nFilters\n\n0 search results\n\nCaregivers you hired before\n\nCaregivers previously booked by your family.\n\nSM\nSofia Martinez\n\nRaleigh, NC\n\n★ 4.9 · 24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Sofia\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nRecommended for this request\n\nBased on location and overlapping schedules.\n\nAR\nAisha Robinson\n\nRaleigh, NC\n\n★ 5.0 · 31 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Aisha\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nJW\nJames Wilson\n\nRaleigh, NC\n\n★ 4.8 · 18 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite James\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nOC\nOliver Chen\n\nRaleigh, NC\n\n★ 4.8 · 12 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Oliver\n\nOverlaps your requested time\n\nAvailable to invite\n· Accepting new clients.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-desktop-applicants",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=applicants",
+      "width": 1440,
+      "documentWidth": 1440,
+      "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\nCare & schedule details\n2\nFind caregivers\nSearch & invite\n3\nReview applicants\nCompare & chat\n4\nGet started\nReview & confirm care\nReview applicants\n\nCompare experience, review application notes, and choose who feels right.\n\nFind more caregivers\nAll\n0\nShortlisted\n0\nPast\n0\nFilter or sort caregivers\n\n0 caregivers match the applicant filters\n\nNo applications yet\n\nInvite caregivers to take a look. Their applications will appear here when they respond.\n\nFind caregivers\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-desktop-start",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=start",
+      "width": 1440,
+      "documentWidth": 1440,
+      "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\n← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\nCare & schedule details\n2\nFind caregivers\nSearch & invite\n3\nReview applicants\nCompare & chat\n4\nGet started\nReview & confirm care\n\nSTEP 4 · GET STARTED\n\nChoose a caregiver to get started\n\nSelect an applicant to review the care, schedule and price before confirming.\n\nChoose your caregiver\nCompare applicants and chat about the help you need.\nReview the details\nCheck the visit date and time, care rate and fees together.\nConfirm your care\nHiring opens your booked visit, with everything you need for the shift.\nFind caregivers\n→\n\nNo applicants yet. Invite caregivers or come back when someone applies.\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents",
+      "steps": [
+        {
+          "text": "1 Care request Care & schedule details",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 133,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 426.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 237.546875,
+            "y": 280.21875,
+            "width": 122.390625,
+            "height": 17.546875,
+            "right": 359.9375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers Search & invite",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 426.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 720,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 551.734375,
+            "y": 280.21875,
+            "width": 97.03125,
+            "height": 17.546875,
+            "right": 648.765625,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Compare & chat",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 720,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1013.5,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 836.890625,
+            "y": 280.21875,
+            "width": 113.71875,
+            "height": 17.546875,
+            "right": 950.609375,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started Review & confirm care",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 1013.5,
+            "y": 258.1875,
+            "width": 293.5,
+            "height": 82,
+            "right": 1307,
+            "bottom": 340.1875
+          },
+          "label": {
+            "x": 1128.96875,
+            "y": 280.21875,
+            "width": 116.5625,
+            "height": 17.546875,
+            "right": 1245.53125,
+            "bottom": 297.765625
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-mobile-home",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=home",
+      "width": 390,
+      "documentWidth": 390,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\n\nUP NEXT · STEP 2\n\nFind the right caregiver\n\nYour request is posted. You can also invite someone who looks like a good fit.\n\nFind caregivers\n→\n0\nActive applicants\n0\nInvitations sent\n\nHiring opens your booked visit.\n\nYour care request\nFull care details ↗\nCare for\nMaria Bennett\nWhen\nSep 30, 1:00 AM–4:00 AM · 2026 EDT\nLocation\n8 the green street b kent, Raleigh, DE 19901\nVisibility\nCaregivers can find and apply\nWhat help is needed\n\nPrimary tasks: Companionship, Light housekeeping.\n\nCompanionship\nLight housekeeping\n\nFlexible schedule. Exact timing can be confirmed in chat.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-mobile-invite",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=invite",
+      "width": 390,
+      "documentWidth": 390,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nFind caregivers\n\nSearch profiles, send invitations and track replies.\n\nSep 30, 1:00 AM–4:00 AM · 2026 EDT\n\nSearch\nInvited\n0\nSaved profiles\nSearch caregivers by name, city, or certification\nFilters\n\n0 search results\n\nCaregivers you hired before\n\nCaregivers previously booked by your family.\n\nSM\nSofia Martinez\n\nRaleigh, NC\n\n★ 4.9 · 24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Sofia\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nRecommended for this request\n\nBased on location and overlapping schedules.\n\nAR\nAisha Robinson\n\nRaleigh, NC\n\n★ 5.0 · 31 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Aisha\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nJW\nJames Wilson\n\nRaleigh, NC\n\n★ 4.8 · 18 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite James\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nOC\nOliver Chen\n\nRaleigh, NC\n\n★ 4.8 · 12 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Oliver\n\nOverlaps your requested time\n\nAvailable to invite\n· Accepting new clients.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-mobile-applicants",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=applicants",
+      "width": 390,
+      "documentWidth": 390,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nReview applicants\n\nCompare experience, review application notes, and choose who feels right.\n\nFind more caregivers\nAll\n0\nShortlisted\n0\nPast\n0\nFilter or sort caregivers\n\n0 caregivers match the applicant filters\n\nNo applications yet\n\nInvite caregivers to take a look. Their applications will appear here when they respond.\n\nFind caregivers\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-mobile-start",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=start",
+      "width": 390,
+      "documentWidth": 390,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\n\nSTEP 4 · GET STARTED\n\nChoose a caregiver to get started\n\nSelect an applicant to review the care, schedule and price before confirming.\n\nChoose your caregiver\nCompare applicants and chat about the help you need.\nReview the details\nCheck the visit date and time, care rate and fees together.\nConfirm your care\nHiring opens your booked visit, with everything you need for the shift.\nFind caregivers\n→\n\nNo applicants yet. Invite caregivers or come back when someone applies.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 106,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 28.25,
+            "y": 364.96875,
+            "width": 68.484375,
+            "height": 15.390625,
+            "right": 96.734375,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 106,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 195,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 118,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 192,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 195,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 284,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 207,
+            "y": 364.96875,
+            "width": 74,
+            "height": 30.78125,
+            "right": 281,
+            "bottom": 395.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 284,
+            "y": 327.96875,
+            "width": 89,
+            "height": 84,
+            "right": 373,
+            "bottom": 411.96875
+          },
+          "label": {
+            "x": 303.296875,
+            "y": 364.96875,
+            "width": 59.40625,
+            "height": 15.390625,
+            "right": 362.703125,
+            "bottom": 380.359375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-narrow-home",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=home",
+      "width": 320,
+      "documentWidth": 320,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\n\nUP NEXT · STEP 2\n\nFind the right caregiver\n\nYour request is posted. You can also invite someone who looks like a good fit.\n\nFind caregivers\n→\n0\nActive applicants\n0\nInvitations sent\n\nHiring opens your booked visit.\n\nYour care request\nFull care details ↗\nCare for\nMaria Bennett\nWhen\nSep 30, 1:00 AM–4:00 AM · 2026 EDT\nLocation\n8 the green street b kent, Raleigh, DE 19901\nVisibility\nCaregivers can find and apply\nWhat help is needed\n\nPrimary tasks: Companionship, Light housekeeping.\n\nCompanionship\nLight housekeeping\n\nFlexible schedule. Exact timing can be confirmed in chat.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-narrow-invite",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=invite",
+      "width": 320,
+      "documentWidth": 320,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nFind caregivers\n\nSearch profiles, send invitations and track replies.\n\nSep 30, 1:00 AM–4:00 AM · 2026 EDT\n\nSearch\nInvited\n0\nSaved profiles\nSearch caregivers by name, city, or certification\nFilters\n\n0 search results\n\nCaregivers you hired before\n\nCaregivers previously booked by your family.\n\nSM\nSofia Martinez\n\nRaleigh, NC\n\n★ 4.9 · 24 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Sofia\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nRecommended for this request\n\nBased on location and overlapping schedules.\n\nAR\nAisha Robinson\n\nRaleigh, NC\n\n★ 5.0 · 31 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Aisha\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nJW\nJames Wilson\n\nRaleigh, NC\n\n★ 4.8 · 18 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite James\n\nOverlaps your requested time\n\nWhy suggested\n\nAvailable to invite\n· Accepting new clients.\n\nOC\nOliver Chen\n\nRaleigh, NC\n\n★ 4.8 · 12 reviews\nIdentity verified\nBackground check\nTop caregiver\n\n$30.00/hr care\n\n+ $1.00/hr processing · USD\n\nView profile\nInvite Oliver\n\nOverlaps your requested time\n\nAvailable to invite\n· Accepting new clients.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-narrow-applicants",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=applicants",
+      "width": 320,
+      "documentWidth": 320,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\nReview applicants\n\nCompare experience, review application notes, and choose who feels right.\n\nFind more caregivers\nAll\n0\nShortlisted\n0\nPast\n0\nFilter or sort caregivers\n\n0 caregivers match the applicant filters\n\nNo applications yet\n\nInvite caregivers to take a look. Their applications will appear here when they respond.\n\nFind caregivers\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "request44-narrow-start",
+      "url": "http://127.0.0.1:8028/family/requests/44?tab=start",
+      "width": 320,
+      "documentWidth": 320,
+      "text": "← My care\nRequest #44\nGet help\nCare story\nOne-time care support for Companionship and Light housekeeping\n\nOne-time care\n·\nMaria Bennett · Wed, Sep 30\n·\nRaleigh, DE\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\n\nSTEP 4 · GET STARTED\n\nChoose a caregiver to get started\n\nSelect an applicant to review the care, schedule and price before confirming.\n\nChoose your caregiver\nCompare applicants and chat about the help you need.\nReview the details\nCheck the visit date and time, care rate and fees together.\nConfirm your care\nHiring opens your booked visit, with everything you need for the shift.\nFind caregivers\n→\n\nNo applicants yet. Invite caregivers or come back when someone applies.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 22,
+            "y": 387.96875,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 100.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 172,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 350.96875,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 434.96875
+          },
+          "label": {
+            "x": 243.5,
+            "y": 387.96875,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 418.75
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "compat-28",
+      "url": "http://127.0.0.1:8028/family/requests/28?tab=home",
+      "width": 320,
+      "documentWidth": 320,
+      "text": "← My care\nRequest #28\nGet help\nCare story\nA helping hand for Ellie — Many Applicants\n\nOne-time care\n·\nEleanor Bennett · Thu, Sep 10\n·\nRaleigh, NC\n\nRequested date passed\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\nActive applicants:\n4\n4\nGet started\n\nREQUEST STATUS\n\nChoose a new date\n\nThis requested date has passed. Start a new request for the care you need.\n\nChoose another date\n4\nActive applicants\n0\nInvitations sent\n\nYour care details and activity stay available below.\n\nYour care request\nFull care details ↗\nCare for\nEleanor Bennett\nWhen\nSep 10, 10:00 AM–12:00 PM · 2026 EDT\nLocation\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\nVisibility\nCaregivers can find and apply\nWhat help is needed\n\nCompanionship, preparing lunch, and light housekeeping.\n\nCompanionship\nMeal preparation\nLight housekeeping\n\nPlease arrive on time and leave a short update after the visit.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 22,
+            "y": 353.8125,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 384.59375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 100.5,
+            "y": 353.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 384.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants Active applicants: 4",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 172,
+            "y": 353.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 384.59375
+          },
+          "count": {
+            "text": "Active applicants: 4",
+            "rect": {
+              "x": 210.5,
+              "y": 321.8125,
+              "width": 16,
+              "height": 16,
+              "right": 226.5,
+              "bottom": 337.8125
+            }
+          },
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 316.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 400.8125
+          },
+          "label": {
+            "x": 243.5,
+            "y": 353.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 384.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    },
+    {
+      "id": "compat-13",
+      "url": "http://127.0.0.1:8028/family/requests/13?tab=home",
+      "width": 320,
+      "documentWidth": 320,
+      "text": "← My care\nRequest #13\nGet help\nCare story\nRecurring care for Ellie — Waiting\n\nRecurring care\n·\nEleanor Bennett\n·\nRaleigh, NC\n\nOpen for applications\n1\nCare request\n2\nFind caregivers\n3\nReview applicants\n4\nGet started\n\nUP NEXT · STEP 2\n\nFind the right caregiver\n\nYour request is posted. You can also invite someone who looks like a good fit.\n\nFind caregivers\n→\n0\nActive applicants\n0\nInvitations sent\n\nHiring opens your recurring care home and its confirmed visits.\n\nYour care request\nFull care details ↗\nCare for\nEleanor Bennett\nWeekly schedule\nMon, Wed, Fri · 10:00 AM–12:00 PM\nLocation\n142 Maple Grove Lane, Apartment 2B, Raleigh, NC 27601\nVisibility\nCaregivers can find and apply\n\nStarts Sep 10, 2026 · Ends Dec 7, 2026. Visits are confirmed after hiring.\n\nView requested weekly visits →\nWhat help is needed\n\nCompanionship, preparing lunch, and light housekeeping.\n\nCompanionship\nMeal preparation\nLight housekeeping\n\nPlease arrive on time and leave a short update after the visit.\n\n© 2026 LoLo\n\nLegal links",
+      "steps": [
+        {
+          "text": "1 Care request",
+          "current": "step",
+          "disabled": false,
+          "rect": {
+            "x": 17,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 88.5,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 22,
+            "y": 330.8125,
+            "width": 63.5,
+            "height": 30.78125,
+            "right": 85.5,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(35, 72, 63)",
+          "color": "rgb(255, 247, 234)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "2 Find caregivers",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 88.5,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 160,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 100.5,
+            "y": 330.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 157,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "3 Review applicants",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 160,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 231.5,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 172,
+            "y": 330.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 228.5,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          },
+          "after": {
+            "clip": "polygon(0px 0px, 100% 50%, 0px 100%)",
+            "content": "\"\""
+          }
+        },
+        {
+          "text": "4 Get started",
+          "current": null,
+          "disabled": false,
+          "rect": {
+            "x": 231.5,
+            "y": 293.8125,
+            "width": 71.5,
+            "height": 84,
+            "right": 303,
+            "bottom": 377.8125
+          },
+          "label": {
+            "x": 243.5,
+            "y": 330.8125,
+            "width": 56.5,
+            "height": 30.78125,
+            "right": 300,
+            "bottom": 361.59375
+          },
+          "count": null,
+          "background": "rgb(255, 253, 250)",
+          "color": "rgb(72, 94, 83)",
+          "before": {
+            "clip": "none",
+            "content": "none"
+          },
+          "after": {
+            "clip": "none",
+            "content": "none"
+          }
+        }
+      ],
+      "stylesheets": [
+        "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+        "http://127.0.0.1:8028/build/assets/app-DdO2x45f.css"
+      ]
+    }
+  ],
+  "interactions": [
+    {
+      "id": "request44-desktop-hover-1",
+      "focusVisible": false,
+      "hover": true,
+      "outline": "rgb(35, 72, 63) none 3px",
+      "outlineOffset": "0px",
+      "shadow": "none",
+      "background": "rgb(237, 242, 233)",
+      "zIndex": "auto",
+      "text": "1\nCare request\nCare & schedule details"
+    },
+    {
+      "id": "request44-desktop-hover-2",
+      "focusVisible": false,
+      "hover": true,
+      "outline": "rgb(35, 72, 63) none 3px",
+      "outlineOffset": "0px",
+      "shadow": "none",
+      "background": "rgb(237, 242, 233)",
+      "zIndex": "auto",
+      "text": "2\nFind caregivers\nSearch & invite"
+    },
+    {
+      "id": "request44-desktop-hover-3",
+      "focusVisible": false,
+      "hover": true,
+      "outline": "rgb(35, 72, 63) none 3px",
+      "outlineOffset": "0px",
+      "shadow": "none",
+      "background": "rgb(237, 242, 233)",
+      "zIndex": "auto",
+      "text": "3\nReview applicants\nCompare & chat"
+    },
+    {
+      "id": "request44-narrow-focus-1",
+      "focusVisible": true,
+      "hover": false,
+      "outline": "rgb(55, 92, 146) solid 3px",
+      "outlineOffset": "-5px",
+      "shadow": "rgb(255, 253, 250) 0px 0px 0px 7px inset",
+      "background": "rgb(255, 253, 250)",
+      "zIndex": "auto",
+      "text": "1\nCare request"
+    },
+    {
+      "id": "request44-narrow-focus-2",
+      "focusVisible": true,
+      "hover": false,
+      "outline": "rgb(55, 92, 146) solid 3px",
+      "outlineOffset": "-5px",
+      "shadow": "rgb(255, 253, 250) 0px 0px 0px 7px inset",
+      "background": "rgb(255, 253, 250)",
+      "zIndex": "auto",
+      "text": "2\nFind caregivers"
+    },
+    {
+      "id": "request44-narrow-focus-3",
+      "focusVisible": true,
+      "hover": false,
+      "outline": "rgb(55, 92, 146) solid 3px",
+      "outlineOffset": "-5px",
+      "shadow": "rgb(255, 253, 250) 0px 0px 0px 7px inset",
+      "background": "rgb(255, 253, 250)",
+      "zIndex": "auto",
+      "text": "3\nReview applicants"
+    }
+  ],
+  "dataPreservation": {
+    "tables": 26,
+    "allOriginalRowsUnchanged": true,
+    "wholeDatabaseUnchanged": false,
+    "observedAdditions": [
+      {
+        "id": 7,
+        "care_request_id": 44,
+        "caregiver_user_id": 16,
+        "status": "pending",
+        "expires_at": "2026-09-13 15:21:08",
+        "created_at": "2026-09-10 15:21:08",
+        "updated_at": "2026-09-10 15:21:08"
+      }
+    ],
+    "initialMatrix": {
+      "tables": 26,
+      "changed": [],
+      "passed": true
+    },
+    "finalFocusedRun": {
+      "tables": 26,
+      "changed": [],
+      "passed": true
+    },
+    "proof": "data-addition-proof.json",
+    "note": "One invitation was independently added between the initial matrix and focus verification. The guarded QA browser did not send it. Every original row still matches the baseline; no data was removed or changed by QA.",
+    "passed": true
+  },
+  "passed": true,
+  "initialReport": "validation-initial.json",
+  "focusReport": "focus-validation.json",
+  "focusFix": {
+    "resolved": true,
+    "description": "The original previous-arrow tip masked the keyboard ring. A dedicated ring now sits above arrows; its final width keeps it clear of mobile labels.",
+    "visualReview": "Stages 1–3 inspected. Final 320px stages 2 and 3 have complete rings clear of text.",
+    "finalStylesheets": [
+      "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+      "http://127.0.0.1:8028/build/assets/app-DXCErWQe.css"
+    ],
+    "stage1Stylesheets": [
+      "http://127.0.0.1:8028/tallstackui/style/tallstackui-tooltip-BHH8rdGj.css",
+      "http://127.0.0.1:8028/build/assets/app-C-2Nh_2S.css"
+    ],
+    "normalCaptureNote": "Normal states retain the initial build provenance; subsequent changes only affect keyboard focus and mobile applicant badge position. The badge was recaptured separately."
+  }
+}

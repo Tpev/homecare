@@ -6,9 +6,12 @@ use App\Models\AiSupportIncident;
 use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportReadinessEvidence;
 use App\Models\MarketplaceNotificationDelivery;
+use Illuminate\Support\Facades\Cache;
 
 class AiSupportHealthMonitorService
 {
+    public const HEARTBEAT_KEY = 'ai_support.health_monitor';
+
     public function __construct(
         private readonly AiSupportIncidentService $incidents,
         private readonly AiSupportControlService $controls,
@@ -16,6 +19,34 @@ class AiSupportHealthMonitorService
 
     /** @return array<string,int|bool> */
     public function run(): array
+    {
+        $heartbeat = [
+            'last_attempt_at' => now()->toIso8601String(),
+            'last_success_at' => data_get(Cache::get(self::HEARTBEAT_KEY, []), 'last_success_at'),
+            'status' => 'running',
+        ];
+        Cache::put(self::HEARTBEAT_KEY, $heartbeat, now()->addDays(7));
+        try {
+            $result = $this->evaluate(true);
+            Cache::put(self::HEARTBEAT_KEY, [
+                ...$heartbeat, 'status' => 'succeeded', 'last_success_at' => now()->toIso8601String(),
+            ], now()->addDays(7));
+
+            return $result;
+        } catch (\Throwable $exception) {
+            Cache::put(self::HEARTBEAT_KEY, [...$heartbeat, 'status' => 'failed'], now()->addDays(7));
+            throw $exception;
+        }
+    }
+
+    /** Read current measurements without opening incidents or changing controls. */
+    public function snapshot(): array
+    {
+        return ['metrics' => $this->evaluate(false), 'last_run' => Cache::get(self::HEARTBEAT_KEY, [])];
+    }
+
+    /** @return array<string,int|bool> */
+    private function evaluate(bool $recordIncidents): array
     {
         $hourStartedAt = now()->subHour();
         $minimum = (int) config('ai_support.performance_minimum_sample', 20);
@@ -29,11 +60,15 @@ class AiSupportHealthMonitorService
         $conversationP95 = $this->percentile($conversationLatencies, 95);
         $conversationWarning = count($conversationLatencies) >= $minimum
             && $conversationP95 > (int) config('ai_support.conversation_p95_target_ms', 5_000);
-        if ($conversationWarning) {
+        if ($recordIncidents && $conversationWarning) {
             $this->incidents->open(
                 'conversation_latency_p95_warning',
-                'AI Support conversational P95 latency exceeded its five-second target across the minimum sample.',
-                safeMetadata: ['sample_size' => count($conversationLatencies), 'p95_ms' => $conversationP95],
+                'Successful AI Support provider-call P95 exceeded its configured latency target across the minimum sample in the last hour.',
+                safeMetadata: [
+                    'sample_size' => count($conversationLatencies), 'p95_ms' => $conversationP95,
+                    'metric_scope' => 'successful_provider_calls_last_hour',
+                    'target_ms' => (int) config('ai_support.conversation_p95_target_ms', 5_000),
+                ],
                 severity: AiSupportIncident::SEVERITY_WARNING,
             );
         }
@@ -48,10 +83,10 @@ class AiSupportHealthMonitorService
         $toolP95 = $this->percentile($toolLatencies, 95);
         $toolWarning = count($toolLatencies) >= $minimum
             && $toolP95 > (int) config('ai_support.tool_p95_target_ms', 8_000);
-        if ($toolWarning) {
+        if ($recordIncidents && $toolWarning) {
             $this->incidents->open(
                 'tool_latency_p95_warning',
-                'AI Support tool-action P95 latency exceeded its eight-second target across the minimum sample.',
+                'Recorded AI Support tool-action P95 exceeded its configured latency target across the minimum sample in the last hour.',
                 safeMetadata: ['sample_size' => count($toolLatencies), 'p95_ms' => $toolP95],
                 severity: AiSupportIncident::SEVERITY_WARNING,
             );
@@ -80,7 +115,7 @@ class AiSupportHealthMonitorService
                 });
             })
             ->count();
-        if ($failedNotifications > 0) {
+        if ($recordIncidents && $failedNotifications > 0) {
             $this->incidents->open(
                 'operations_notification_failed',
                 'One or more AI Support operations notifications failed during the last hour.',
@@ -88,11 +123,25 @@ class AiSupportHealthMonitorService
             );
         }
 
+        $queuedNotifications = MarketplaceNotificationDelivery::query()
+            ->where('status', 'queued')->where('created_at', '<=', now()->subMinutes(10))
+            ->where(fn ($query) => $query->where('dedupe_key', 'like', 'ai-support-%')
+                ->orWhere('dedupe_key', 'like', 'support-handoff-%'))
+            ->count();
+        if ($recordIncidents && $queuedNotifications > 0) {
+            $this->incidents->open(
+                'operations_notification_delayed',
+                'AI Support operations or human-handoff notifications have been queued for at least ten minutes.',
+                safeMetadata: ['queued_delivery_count' => $queuedNotifications, 'minimum_age_minutes' => 10],
+                severity: AiSupportIncident::SEVERITY_WARNING,
+            );
+        }
+
         $dailyCost = (int) AiSupportInteractionEvent::query()
             ->where('occurred_at', '>=', now()->startOfDay())
             ->sum('cost_microunits');
         $dailyCostStopped = $dailyCost >= (int) config('ai_support.pilot_daily_cost_stop_microunits', 5_000_000);
-        if ($dailyCostStopped) {
+        if ($recordIncidents && $dailyCostStopped) {
             $this->controls->systemStop(
                 'capability.support_answers_v1',
                 'pilot_daily_cost_stop',
@@ -104,10 +153,15 @@ class AiSupportHealthMonitorService
             'conversation_sample' => count($conversationLatencies),
             'conversation_p95_ms' => $conversationP95,
             'conversation_warning' => $conversationWarning,
+            'conversation_sample_sufficient' => count($conversationLatencies) >= $minimum,
+            'minimum_sample' => $minimum,
+            'failed_model_turns' => AiSupportInteractionEvent::query()
+                ->where('event_type', 'model_turn_failed')->where('occurred_at', '>=', $hourStartedAt)->count(),
             'tool_sample' => count($toolLatencies),
             'tool_p95_ms' => $toolP95,
             'tool_warning' => $toolWarning,
             'failed_notifications' => $failedNotifications,
+            'queued_notifications_over_ten_minutes' => $queuedNotifications,
             'daily_cost_microunits' => $dailyCost,
             'daily_cost_stopped' => $dailyCostStopped,
         ];

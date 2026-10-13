@@ -1,0 +1,34 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "visibleHeaderAction": true,
+      "confirmationCopy": true,
+      "cancelPreservesRequest": true,
+      "escapeAndFocusReturn": true,
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "visibleHeaderAction": true,
+      "confirmationCopy": true,
+      "cancelPreservesRequest": true,
+      "escapeAndFocusReturn": true,
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "visibleHeaderAction": true,
+      "confirmationCopy": true,
+      "cancelPreservesRequest": true,
+      "escapeAndFocusReturn": true,
+      "overflow": false
+    },
+    {
+      "timelineNameAndReturnToExactRequest": true
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

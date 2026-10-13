@@ -1,0 +1,862 @@
+{
+  "applicantCounts": {
+    "one_time": {
+      "waiting": {
+        "applications": 0,
+        "invitations": 0,
+        "is_private": false
+      },
+      "invitations": {
+        "applications": 0,
+        "invitations": 2,
+        "is_private": false
+      },
+      "applicants": {
+        "applications": 2,
+        "invitations": 0,
+        "is_private": false
+      },
+      "single_applicant": {
+        "applications": 1,
+        "invitations": 0,
+        "is_private": false
+      },
+      "many_applicants": {
+        "applications": 4,
+        "invitations": 0,
+        "is_private": false
+      },
+      "private_waiting": {
+        "applications": 0,
+        "invitations": 0,
+        "is_private": true
+      }
+    },
+    "recurring": {
+      "waiting": {
+        "applications": 0,
+        "invitations": 0,
+        "is_private": false
+      },
+      "invitations": {
+        "applications": 0,
+        "invitations": 2,
+        "is_private": false
+      },
+      "applicants": {
+        "applications": 2,
+        "invitations": 0,
+        "is_private": false
+      },
+      "single_applicant": {
+        "applications": 1,
+        "invitations": 0,
+        "is_private": false
+      },
+      "many_applicants": {
+        "applications": 4,
+        "invitations": 0,
+        "is_private": false
+      },
+      "private_waiting": {
+        "applications": 0,
+        "invitations": 0,
+        "is_private": true
+      }
+    }
+  },
+  "lifecycle": {
+    "one_time": {
+      "scheduled": {
+        "request_id": 5,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "scheduled",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "in_progress": {
+        "request_id": 6,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "in_progress",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "after_shift": {
+        "request_id": 7,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "completed",
+        "submitted": true,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "timesheet_review": {
+        "request_id": 8,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "completed",
+        "submitted": true,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "leave_review": {
+        "request_id": 9,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "reviewed",
+        "submitted": true,
+        "family_confirmed": true,
+        "payment_status": "captured",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "closed": {
+        "request_id": 10,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "reviewed",
+        "submitted": true,
+        "family_confirmed": true,
+        "payment_status": "captured",
+        "family_review_count": 1,
+        "total_reviews": 2
+      },
+      "cancelled": {
+        "request_id": 11,
+        "request_status": "cancelled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": null,
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": null,
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "cancelled_booking": {
+        "request_id": 12,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "cancelled",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "cancelled",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "paused": {
+        "request_id": 30,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "paused",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "payment_attention": {
+        "request_id": 31,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "scheduled",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "failed",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "time_correction": {
+        "request_id": 32,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": "completed",
+        "submitted": true,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      }
+    },
+    "recurring": {
+      "scheduled": {
+        "request_id": 16,
+        "request_status": "filled",
+        "request_type": "recurring",
+        "care_plan_id": 1,
+        "system_generated": false,
+        "booking_status": "scheduled",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "in_progress": {
+        "request_id": 17,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 1,
+        "system_generated": true,
+        "booking_status": "in_progress",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "after_shift": {
+        "request_id": 18,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 1,
+        "system_generated": true,
+        "booking_status": "completed",
+        "submitted": true,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "timesheet_review": {
+        "request_id": 19,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 1,
+        "system_generated": true,
+        "booking_status": "completed",
+        "submitted": true,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "leave_review": {
+        "request_id": 20,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 1,
+        "system_generated": true,
+        "booking_status": "reviewed",
+        "submitted": true,
+        "family_confirmed": true,
+        "payment_status": "captured",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "closed": {
+        "request_id": 21,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 4,
+        "system_generated": true,
+        "booking_status": "reviewed",
+        "submitted": true,
+        "family_confirmed": true,
+        "payment_status": "captured",
+        "family_review_count": 1,
+        "total_reviews": 2
+      },
+      "cancelled": {
+        "request_id": 22,
+        "request_status": "cancelled",
+        "request_type": "recurring",
+        "care_plan_id": null,
+        "system_generated": false,
+        "booking_status": null,
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": null,
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "cancelled_booking": {
+        "request_id": 23,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 4,
+        "system_generated": true,
+        "booking_status": "cancelled",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "cancelled",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "paused": {
+        "request_id": 36,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 5,
+        "system_generated": true,
+        "booking_status": "paused",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "payment_attention": {
+        "request_id": 37,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 6,
+        "system_generated": true,
+        "booking_status": "scheduled",
+        "submitted": false,
+        "family_confirmed": false,
+        "payment_status": "failed",
+        "family_review_count": 0,
+        "total_reviews": 0
+      },
+      "time_correction": {
+        "request_id": 38,
+        "request_status": "filled",
+        "request_type": "one_time",
+        "care_plan_id": 7,
+        "system_generated": true,
+        "booking_status": "completed",
+        "submitted": true,
+        "family_confirmed": false,
+        "payment_status": "authorized",
+        "family_review_count": 0,
+        "total_reviews": 0
+      }
+    }
+  },
+  "plans": {
+    "active": {
+      "id": 1,
+      "status": "active",
+      "payment_status": "authorized",
+      "source_request_id": 16,
+      "source_booking_id": 8,
+      "next_booking_id": 8,
+      "generated_booking_count": 5
+    },
+    "pending": {
+      "id": 2,
+      "status": "pending_caregiver",
+      "payment_status": "unchecked",
+      "source_request_id": 24,
+      "source_booking_id": 15,
+      "next_booking_id": null,
+      "generated_booking_count": 1
+    },
+    "paused": {
+      "id": 3,
+      "status": "paused",
+      "payment_status": "authorized",
+      "source_request_id": 25,
+      "source_booking_id": 16,
+      "next_booking_id": null,
+      "generated_booking_count": 1
+    },
+    "ended": {
+      "id": 4,
+      "status": "ended",
+      "payment_status": "authorized",
+      "source_request_id": 26,
+      "source_booking_id": 17,
+      "next_booking_id": null,
+      "generated_booking_count": 3
+    },
+    "countered": {
+      "id": 8,
+      "status": "countered",
+      "payment_status": "unchecked",
+      "source_request_id": 39,
+      "source_booking_id": 24,
+      "next_booking_id": null,
+      "generated_booking_count": 0
+    },
+    "declined": {
+      "id": 9,
+      "status": "declined",
+      "payment_status": "unchecked",
+      "source_request_id": 40,
+      "source_booking_id": 25,
+      "next_booking_id": null,
+      "generated_booking_count": 0
+    },
+    "cancelled": {
+      "id": 10,
+      "status": "cancelled",
+      "payment_status": "unchecked",
+      "source_request_id": 41,
+      "source_booking_id": 26,
+      "next_booking_id": null,
+      "generated_booking_count": 0
+    },
+    "visit_paused": {
+      "id": 5,
+      "status": "active",
+      "payment_status": "authorized",
+      "source_request_id": 36,
+      "source_booking_id": 21,
+      "next_booking_id": null,
+      "generated_booking_count": 1
+    },
+    "visit_payment_attention": {
+      "id": 6,
+      "status": "payment_attention",
+      "payment_status": "action_required",
+      "source_request_id": 37,
+      "source_booking_id": 22,
+      "next_booking_id": 22,
+      "generated_booking_count": 1
+    },
+    "visit_time_correction": {
+      "id": 7,
+      "status": "active",
+      "payment_status": "authorized",
+      "source_request_id": 38,
+      "source_booking_id": 23,
+      "next_booking_id": null,
+      "generated_booking_count": 1
+    }
+  },
+  "requests": {
+    "2": {
+      "variation": "one_time",
+      "fixtureState": "waiting",
+      "requestId": 2,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "3": {
+      "variation": "one_time",
+      "fixtureState": "invitations",
+      "requestId": 3,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "4": {
+      "variation": "one_time",
+      "fixtureState": "applicants",
+      "requestId": 4,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "5": {
+      "variation": "one_time",
+      "fixtureState": "scheduled",
+      "requestId": 5,
+      "status": "filled",
+      "bookingId": 1,
+      "bookingStatus": "scheduled",
+      "expectedHeaderStatus": "Scheduled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "6": {
+      "variation": "one_time",
+      "fixtureState": "in_progress",
+      "requestId": 6,
+      "status": "filled",
+      "bookingId": 2,
+      "bookingStatus": "in_progress",
+      "expectedHeaderStatus": "In progress",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "7": {
+      "variation": "one_time",
+      "fixtureState": "after_shift",
+      "requestId": 7,
+      "status": "filled",
+      "bookingId": 3,
+      "bookingStatus": "completed",
+      "expectedHeaderStatus": "Completed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": false
+    },
+    "8": {
+      "variation": "one_time",
+      "fixtureState": "timesheet_review",
+      "requestId": 8,
+      "status": "filled",
+      "bookingId": 4,
+      "bookingStatus": "completed",
+      "expectedHeaderStatus": "Completed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": false
+    },
+    "9": {
+      "variation": "one_time",
+      "fixtureState": "leave_review",
+      "requestId": 9,
+      "status": "filled",
+      "bookingId": 5,
+      "bookingStatus": "reviewed",
+      "expectedHeaderStatus": "Reviewed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": true
+    },
+    "10": {
+      "variation": "one_time",
+      "fixtureState": "closed",
+      "requestId": 10,
+      "status": "filled",
+      "bookingId": 6,
+      "bookingStatus": "reviewed",
+      "expectedHeaderStatus": "Reviewed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": true
+    },
+    "11": {
+      "variation": "one_time",
+      "fixtureState": "cancelled",
+      "requestId": 11,
+      "status": "cancelled",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Cancelled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "12": {
+      "variation": "one_time",
+      "fixtureState": "cancelled_booking",
+      "requestId": 12,
+      "status": "filled",
+      "bookingId": 7,
+      "bookingStatus": "cancelled",
+      "expectedHeaderStatus": "Cancelled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "13": {
+      "variation": "recurring",
+      "fixtureState": "waiting",
+      "requestId": 13,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "14": {
+      "variation": "recurring",
+      "fixtureState": "invitations",
+      "requestId": 14,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "15": {
+      "variation": "recurring",
+      "fixtureState": "applicants",
+      "requestId": 15,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "16": {
+      "variation": "recurring",
+      "fixtureState": "scheduled",
+      "requestId": 16,
+      "status": "filled",
+      "bookingId": 8,
+      "bookingStatus": "scheduled",
+      "expectedHeaderStatus": "Scheduled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "17": {
+      "variation": "recurring",
+      "fixtureState": "in_progress",
+      "requestId": 17,
+      "status": "filled",
+      "bookingId": 9,
+      "bookingStatus": "in_progress",
+      "expectedHeaderStatus": "In progress",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "18": {
+      "variation": "recurring",
+      "fixtureState": "after_shift",
+      "requestId": 18,
+      "status": "filled",
+      "bookingId": 10,
+      "bookingStatus": "completed",
+      "expectedHeaderStatus": "Completed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": false
+    },
+    "19": {
+      "variation": "recurring",
+      "fixtureState": "timesheet_review",
+      "requestId": 19,
+      "status": "filled",
+      "bookingId": 11,
+      "bookingStatus": "completed",
+      "expectedHeaderStatus": "Completed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": false
+    },
+    "20": {
+      "variation": "recurring",
+      "fixtureState": "leave_review",
+      "requestId": 20,
+      "status": "filled",
+      "bookingId": 12,
+      "bookingStatus": "reviewed",
+      "expectedHeaderStatus": "Reviewed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": true
+    },
+    "21": {
+      "variation": "recurring",
+      "fixtureState": "closed",
+      "requestId": 21,
+      "status": "filled",
+      "bookingId": 13,
+      "bookingStatus": "reviewed",
+      "expectedHeaderStatus": "Reviewed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": true
+    },
+    "22": {
+      "variation": "recurring",
+      "fixtureState": "cancelled",
+      "requestId": 22,
+      "status": "cancelled",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Cancelled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "23": {
+      "variation": "recurring",
+      "fixtureState": "cancelled_booking",
+      "requestId": 23,
+      "status": "filled",
+      "bookingId": 14,
+      "bookingStatus": "cancelled",
+      "expectedHeaderStatus": "Cancelled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "27": {
+      "variation": "one_time",
+      "fixtureState": "single_applicant",
+      "requestId": 27,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "28": {
+      "variation": "one_time",
+      "fixtureState": "many_applicants",
+      "requestId": 28,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "29": {
+      "variation": "one_time",
+      "fixtureState": "private_waiting",
+      "requestId": 29,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "30": {
+      "variation": "one_time",
+      "fixtureState": "paused",
+      "requestId": 30,
+      "status": "filled",
+      "bookingId": 18,
+      "bookingStatus": "paused",
+      "expectedHeaderStatus": "Paused",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "31": {
+      "variation": "one_time",
+      "fixtureState": "payment_attention",
+      "requestId": 31,
+      "status": "filled",
+      "bookingId": 19,
+      "bookingStatus": "scheduled",
+      "expectedHeaderStatus": "Scheduled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "32": {
+      "variation": "one_time",
+      "fixtureState": "time_correction",
+      "requestId": 32,
+      "status": "filled",
+      "bookingId": 20,
+      "bookingStatus": "completed",
+      "expectedHeaderStatus": "Completed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": false
+    },
+    "33": {
+      "variation": "recurring",
+      "fixtureState": "single_applicant",
+      "requestId": 33,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "34": {
+      "variation": "recurring",
+      "fixtureState": "many_applicants",
+      "requestId": 34,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "35": {
+      "variation": "recurring",
+      "fixtureState": "private_waiting",
+      "requestId": 35,
+      "status": "open",
+      "bookingId": null,
+      "bookingStatus": null,
+      "expectedHeaderStatus": "Finding a caregiver",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "36": {
+      "variation": "recurring",
+      "fixtureState": "paused",
+      "requestId": 36,
+      "status": "filled",
+      "bookingId": 21,
+      "bookingStatus": "paused",
+      "expectedHeaderStatus": "Paused",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "37": {
+      "variation": "recurring",
+      "fixtureState": "payment_attention",
+      "requestId": 37,
+      "status": "filled",
+      "bookingId": 22,
+      "bookingStatus": "scheduled",
+      "expectedHeaderStatus": "Scheduled",
+      "oneTimeDatePassed": false,
+      "submitted": false,
+      "familyConfirmed": false
+    },
+    "38": {
+      "variation": "recurring",
+      "fixtureState": "time_correction",
+      "requestId": 38,
+      "status": "filled",
+      "bookingId": 23,
+      "bookingStatus": "completed",
+      "expectedHeaderStatus": "Completed",
+      "oneTimeDatePassed": false,
+      "submitted": true,
+      "familyConfirmed": false
+    }
+  }
+}

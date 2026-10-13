@@ -12,6 +12,8 @@ class CareRequestApplication extends Model
 {
     use HasFactory;
 
+    protected $attributes = ['offer_version' => 1];
+
     public const STATUS_APPLIED = 'applied';
 
     public const STATUS_SHORTLISTED = 'shortlisted';
@@ -30,12 +32,19 @@ class CareRequestApplication extends Model
         'status',
         'proposed_rate',
         'cover_note',
+        'selected_days',
+        'offered_schedule',
+        'schedule_fingerprint',
+        'offer_version',
     ];
 
     protected function casts(): array
     {
         return [
             'proposed_rate' => 'decimal:2',
+            'selected_days' => 'array',
+            'offered_schedule' => 'array',
+            'offer_version' => 'integer',
         ];
     }
 

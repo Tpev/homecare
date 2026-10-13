@@ -1,4 +1,4 @@
-<section class="hc-recruit-browser" aria-labelledby="recruit-applicants-title" data-ai-target="family.request.applicants">
+<section class="hc-recruit-browser" aria-labelledby="recruit-applicants-title" data-ai-target="family.request.applicants" tabindex="-1">
     <div class="hc-recruit-section-heading">
         <div>
             <h2 id="recruit-applicants-title">{{ $booking ? 'Selected caregiver' : 'Review applicants' }}</h2>
@@ -73,13 +73,13 @@
                 <div class="hc-candidate-side">
                     <div class="hc-candidate-actions">
                         @if($profileHref)<a href="{{ $profileHref }}" wire:navigate class="hc-secondary-button">View profile</a>@endif
-                        @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $application->status !== \App\Models\CareRequestApplication::STATUS_WITHDRAWN)
+                        @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && ! in_array($application->status, ['withdrawn', 'hired'], true))
                             <button type="button" data-testid="hire-caregiver" wire:click="reviewHire({{ $application->id }})" @disabled(! $hirePayment['ready'])
                                 @if(! $hirePayment['ready']) aria-describedby="hire-payment-{{ $application->id }}" @endif
                                 class="{{ $hirePayment['ready'] ? 'hc-primary-button' : 'hc-secondary-button !border-slate-200 !bg-slate-100 !text-slate-400 !shadow-none cursor-not-allowed' }}">{{ $isActiveApplication ? 'Hire '.$firstName : 'Reconsider & hire' }}</button>
                         @endif
                     </div>
-                    @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $application->status !== \App\Models\CareRequestApplication::STATUS_WITHDRAWN && ! $hirePayment['ready'])
+                    @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && ! in_array($application->status, ['withdrawn', 'hired'], true) && ! $hirePayment['ready'])
                         <x-family-hire-payment-prompt :care-request="$requestItem" :application="$application" :unavailable="$hirePayment['unavailable']" :id="'hire-payment-'.$application->id" />
                         <button type="button" wire:click="reviewHire({{ $application->id }})" class="hc-care-text-link">Review care &amp; price</button>
                     @endif
@@ -90,6 +90,9 @@
                     @endif
                 </div>
                 <div class="hc-candidate-detail">
+                    @if($application->offered_schedule)
+                        <p class="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">Offered days: {{ \App\Support\WeeklySchedule::label($application->offered_schedule['slots']) }}<br><span class="font-normal">Every week from {{ $application->offered_schedule['starts_on'] }}</span></p>
+                    @endif
                     <x-caregiver-certification-tags :summary="$applicationCertificationSummary" :show-label="false" compact />
                     @if($application->cover_note)
                         <div class="hc-candidate-note"><p class="hc-candidate-meta">Application note</p><p class="whitespace-pre-line">{{ $application->cover_note }}</p></div>

@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ReconcileDiditScreeningIdentity;
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverModerationLog;
+use App\Models\CaregiverProfile;
+use App\Services\Screening\CaregiverScreeningService;
+use App\Services\Screening\DiditVerifiedIdentityService;
 use App\Support\CaregiverOnboardingState;
 use App\Support\FunnelTracker;
 use Illuminate\Http\JsonResponse;
@@ -38,9 +42,24 @@ class DiditWebhookController extends Controller
         $decision = is_array($payload['decision'] ?? null) ? $payload['decision'] : null;
 
         DB::transaction(function () use ($verification, $normalizedStatus, $payload, $decision, $sessionId): void {
+            $profile = CaregiverProfile::lockForUpdate()->findOrFail($verification->caregiver_profile_id);
+            $verification = CaregiverIdentityVerification::lockForUpdate()->findOrFail($verification->id);
+            if ($verification->webhook_payload === $payload) {
+                return;
+            }
+            $incomingTime = $payload['timestamp'] ?? null;
+            $previousTime = data_get($verification->webhook_payload, 'timestamp');
+            if (is_numeric($incomingTime) && is_numeric($previousTime) && (float) $incomingTime < (float) $previousTime) {
+                return;
+            }
+            if ($verification->status === 'approved' && in_array($normalizedStatus, ['not_started', 'in_progress'], true) && ! $incomingTime) {
+                return;
+            }
             $verification->forceFill([
                 'status' => $normalizedStatus,
-                'decision_payload' => $decision,
+                'decision_payload' => $decision ?? $verification->decision_payload,
+                'provider_confirmed_at' => now(),
+                'provider_decision_payload' => ['status' => $payload['status'] ?? '', 'decision' => $decision ?? data_get($verification->provider_decision_payload, 'decision', [])],
                 'webhook_payload' => $payload,
                 'last_webhook_at' => now(),
                 'completed_at' => in_array($normalizedStatus, [
@@ -57,7 +76,12 @@ class DiditWebhookController extends Controller
                     : $verification->declined_at,
             ])->save();
 
-            $profile = $verification->caregiverProfile;
+            // A delayed callback from an older attempt cannot replace the current session.
+            $currentSession = $profile->identity_verification_session_id;
+            if (($currentSession && $currentSession !== $sessionId)
+                || (! $currentSession && $profile->identityVerifications()->where('id', '>', $verification->id)->exists())) {
+                return;
+            }
             $profile->forceFill([
                 'identity_verification_status' => $normalizedStatus,
                 'identity_verification_session_id' => $sessionId,
@@ -96,6 +120,12 @@ class DiditWebhookController extends Controller
                     $profile,
                     ['step' => CaregiverOnboardingState::STEP_IDENTITY]
                 );
+                DB::afterCommit(function () use ($profile): void {
+                    app(CaregiverScreeningService::class)->sync($profile->fresh());
+                    if (! app(DiditVerifiedIdentityService::class)->snapshot($profile->fresh())) {
+                        ReconcileDiditScreeningIdentity::dispatch($profile->id);
+                    }
+                });
             }
         });
 

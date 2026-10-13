@@ -1,0 +1,115 @@
+{
+  "checks": [
+    {
+      "variation": "one-time",
+      "width": 1440,
+      "list": "all",
+      "rows": 4,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "one-time",
+      "width": 1440,
+      "list": "shortlisted",
+      "rows": 1,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "one-time",
+      "width": 1440,
+      "list": "past",
+      "rows": 0,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "one-time",
+      "width": 390,
+      "list": "all",
+      "rows": 4,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "one-time",
+      "width": 390,
+      "list": "shortlisted",
+      "rows": 1,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "one-time",
+      "width": 390,
+      "list": "past",
+      "rows": 0,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "recurring",
+      "width": 1440,
+      "list": "all",
+      "rows": 4,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "recurring",
+      "width": 1440,
+      "list": "shortlisted",
+      "rows": 1,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "recurring",
+      "width": 1440,
+      "list": "past",
+      "rows": 0,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "recurring",
+      "width": 390,
+      "list": "all",
+      "rows": 4,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "recurring",
+      "width": 390,
+      "list": "shortlisted",
+      "rows": 1,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    },
+    {
+      "variation": "recurring",
+      "width": 390,
+      "list": "past",
+      "rows": 0,
+      "noPrices": true,
+      "noRateSorting": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

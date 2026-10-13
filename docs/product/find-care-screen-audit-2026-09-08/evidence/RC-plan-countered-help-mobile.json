@@ -1,0 +1,231 @@
+{
+  "text": "← Back to your care\n\nRecurring care · Care #8\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nNew schedule proposed\nCaregiver & conversations\nGet help\nOverview\nCaregivers\nVisits\nCare details\nHelp with your recurring care\n\nFor hours, payment, a change or a care concern, choose the affected visit. Its support history stays with that date.\n\nChoose a visit\nChat with support\nContact LoLo Support\nClose help\n\nYOUR RESPONSE IS NEEDED\n\nSofia Martinez proposed a different schedule\n\nTue · 9:00 AM–11:00 AM; Thu · 1:00 PM–3:30 PM\n\nI can help on Tuesday mornings and Thursday afternoons. Would those times work for Ellie?\n\nProposed dates · not booked yet\n\nTuesday, September 15 · 9:00 AM–11:00 AM\nThursday, September 17 · 1:00 PM–3:30 PM\nTuesday, September 22 · 9:00 AM–11:00 AM\nAccept proposed schedule\nImportant for Ellie’s safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nRead full care details →\nCare story\nAll past visits & payments\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H2",
+      "text": "Help with your recurring care"
+    },
+    {
+      "level": "H2",
+      "text": "Sofia Martinez proposed a different schedule"
+    },
+    {
+      "level": "H2",
+      "text": "Important for Ellie’s safety"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "true",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Choose a visit",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Chat with support",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Close help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Accept proposed schedule",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Read full care details →",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← Back to your care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Caregiver & conversations",
+      "href": "http://127.0.0.1:8028/family/requests/39?tab=applicants"
+    },
+    {
+      "text": "Contact LoLo Support",
+      "href": "http://127.0.0.1:8028/support"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/regular/8"
+    },
+    {
+      "text": "All past visits & payments",
+      "href": "http://127.0.0.1:8028/family/care/history?plan=8"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1835,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Recurring care for Eleanor Bennett",
+    "status": "",
+    "headerText": "← Back to your care\n\nRecurring care · Care #8\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nNew schedule proposed\nCaregiver & conversations\nGet help",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Overview"
+    ]
+  }
+}

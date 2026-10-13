@@ -1,0 +1,37 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "avatarStates": [
+        "initials",
+        "initials"
+      ],
+      "ctaTopRight": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "avatarStates": [
+        "initials",
+        "initials"
+      ],
+      "ctaTopRight": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "avatarStates": [
+        "initials",
+        "initials"
+      ],
+      "ctaTopRight": true,
+      "noOverflow": true
+    },
+    {
+      "newCareButtonOpensCreationForm": true
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

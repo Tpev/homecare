@@ -224,13 +224,13 @@ return [
             'KB-FAM-001',
             'navigation',
             'Your Family Care overview',
-            'Care is the signed-in home for your Family care activity. Overview shows what needs attention and your care journeys. Actions collects decisions and problems, Schedule shows upcoming visits, Arrangements shows recurring care and care still being arranged, and History shows past care. What appears depends on your authorized Family Account and current care activity. I can take you to the Care overview.',
+            'Care is the signed-in home for your Family care activity. Overview shows what needs attention and your care journeys. Care request shows requests and recurring care plans; Schedule shows confirmed visits in List or Calendar, with person and care-type filters; History shows past care. A recurring plan describes the repeating relationship, while each booked visit has its own date, status, hours and payment. What appears depends on your authorized Family Account and current care activity. I can take you to the Care overview.',
             'Family Care overview',
             ['family'],
             'family.care_requests',
             [
                 'The Care overview is the signed-in Family home page.',
-                'Overview, Actions, Schedule, Arrangements, and History organize the current Family care workspace.',
+                'Overview, Care request, Schedule and History organize the current Family care workspace.',
                 'It conditionally prioritizes current next steps from authoritative account state.',
             ],
             [
@@ -267,7 +267,7 @@ return [
             [
                 $source('SRC-AI-DECISIONS-001', 'Intelligent Support decision log', 'Family-only orientation scope and generic navigation boundary.', 'DEC-032, DEC-038'),
                 $source('SRC-FAMILY-WORKFLOW-001', 'Family care receiver workflow', 'Family lifecycle and Care workspace orientation design input.', 'Family Care workspace and care lifecycle'),
-                $source('SRC-CODE-DASHBOARD-001', 'Current Family Care workspace implementation', 'Current Overview, Actions, Schedule, Arrangements, and History navigation with account isolation.', 'Family Care routes and views'),
+                $source('SRC-CODE-DASHBOARD-001', 'Current Family Care workspace implementation', 'Current Overview, Care request, Schedule and History navigation with account isolation.', 'Family Care routes and views'),
             ],
         ),
         $entry(
@@ -279,7 +279,7 @@ return [
             ['family'],
             'family.care_requests',
             [
-                'The Family Care workspace includes Overview, Actions, Schedule, Arrangements, and History for the authorized Family Account.',
+                'The Family Care workspace includes Overview, Care request, Schedule and History for the authorized Family Account.',
                 'Available request filters are Open, Visit scheduled, Draft, Withdrawn, and Expired.',
                 'Draft is not posted; Open is eligible for caregiver responses but guarantees none.',
                 'Visit scheduled means a caregiver was selected, while the booking may show a newer visit state.',

@@ -1,0 +1,15 @@
+{
+  "at": "2026-09-09T12:59:57.751Z",
+  "currentBuildHash": "0557227ff4a924634adc7d995161957dc1763aad50f45ac4d3583ad128122b7f",
+  "currentCss": "assets/app-dG8yja1b.css",
+  "acceptedPriorBuildHashes": [
+    "2f1c4507add551d6263c35b9339b1c5faf96a6ab67b2ce8c61b2c85006467c8f"
+  ],
+  "priorCss": "assets/app-Cvub6Kkl.css",
+  "reason": "The only CSS difference in app-dG8yja1b is the recruitment phase :focus-visible rule. Normal-state and primary-action screenshots remain visually unchanged. Their original capture hashes are retained, and the final stage-focus appearance is separately captured using real keyboard Tab at 320px.",
+  "focusEvidence": "evidence/phase-focus-validation.json",
+  "focusScreenshots": [
+    "evidence/phase-focus-inactive-320.png",
+    "evidence/phase-focus-active-320.png"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "removedSections": true,
+      "tabRenamed": true,
+      "nextVisitFullWidth": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "removedSections": true,
+      "tabRenamed": true,
+      "nextVisitFullWidth": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "removedSections": true,
+      "tabRenamed": true,
+      "nextVisitFullWidth": true,
+      "noOverflow": true
+    },
+    {
+      "careRequestNavigationWorks": true,
+      "destinationUrl": "http://127.0.0.1:8028/family/care"
+    }
+  ],
+  "errors": [],
+  "blockedActions": [],
+  "passed": true
+}

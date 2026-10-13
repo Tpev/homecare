@@ -214,7 +214,7 @@ new class extends Component
                         'active' => request()->routeIs('admin.care-plans.*'),
                     ],
                     [
-                        'label' => 'Admin Reviews',
+                        'label' => 'Caregiver Screening',
                         'href' => route('admin.caregivers.reviews'),
                         'active' => request()->routeIs('admin.caregivers.reviews'),
                     ],

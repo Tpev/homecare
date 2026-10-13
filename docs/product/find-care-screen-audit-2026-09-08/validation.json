@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-09-08T16:02:11.443Z",
+  "screenStates": 319,
+  "pngFiles": 1914,
+  "informationFiles": 1276,
+  "coreCoverage": {
+    "one_time": {
+      "Create": 6,
+      "Waiting / inviting": 34,
+      "Hired / before shift": 11,
+      "During shift": 10,
+      "After shift": 4,
+      "Timesheet / review": 19,
+      "Closed": 15
+    },
+    "recurring": {
+      "Create": 6,
+      "Waiting / inviting": 61,
+      "Hired / before shift": 69,
+      "During shift": 10,
+      "After shift": 4,
+      "Timesheet / review": 18,
+      "Closed": 46
+    }
+  },
+  "horizontalOverflows": [],
+  "failures": [],
+  "passed": true
+}

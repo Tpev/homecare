@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {output} from './environment.mjs';
+const records=JSON.parse(fs.readFileSync(path.join(output,'captures.json'),'utf8'));
+const prior=records.find(record=>record.id==='OT-create-empty'&&record.devices.desktop.expandedInventory).buildHash;
+const manifest=JSON.parse(fs.readFileSync('public/build/manifest.json','utf8'));
+const current=crypto.createHash('sha256').update(fs.readFileSync('public/build/manifest.json')).digest('hex');
+const report={at:new Date().toISOString(),currentBuildHash:current,currentCss:manifest['resources/css/app.css'].file,acceptedPriorBuildHashes:[prior],priorCss:'assets/app-Cvub6Kkl.css',reason:'The only CSS difference in app-dG8yja1b is the recruitment phase :focus-visible rule. Normal-state and primary-action screenshots remain visually unchanged. Their original capture hashes are retained, and the final stage-focus appearance is separately captured using real keyboard Tab at 320px.',focusEvidence:'evidence/phase-focus-validation.json',focusScreenshots:['evidence/phase-focus-inactive-320.png','evidence/phase-focus-active-320.png']};
+fs.writeFileSync(path.join(output,'asset-provenance.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));

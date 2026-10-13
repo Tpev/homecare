@@ -1,0 +1,168 @@
+{
+    "familyEmail": "maria.find-care-audit@example.com",
+    "password": "password",
+    "familyId": 15,
+    "familyAccountId": 5,
+    "recipientProfileId": 2,
+    "caregivers": {
+        "sofia": {
+            "id": 16,
+            "email": "sofia.find-care-audit@example.com",
+            "name": "Sofia Martinez"
+        },
+        "james": {
+            "id": 17,
+            "email": "james.find-care-audit@example.com",
+            "name": "James Wilson"
+        },
+        "aisha": {
+            "id": 18,
+            "email": "aisha.find-care-audit@example.com",
+            "name": "Aisha Robinson"
+        },
+        "oliver": {
+            "id": 19,
+            "email": "oliver.find-care-audit@example.com",
+            "name": "Oliver Chen"
+        }
+    },
+    "requests": {
+        "one_time": {
+            "waiting": 2,
+            "invitations": 3,
+            "applicants": 4,
+            "scheduled": 5,
+            "in_progress": 6,
+            "after_shift": 7,
+            "timesheet_review": 8,
+            "leave_review": 9,
+            "closed": 10,
+            "cancelled": 11,
+            "cancelled_booking": 12,
+            "single_applicant": 27,
+            "many_applicants": 28,
+            "private_waiting": 29,
+            "paused": 30,
+            "payment_attention": 31,
+            "time_correction": 32
+        },
+        "recurring": {
+            "waiting": 13,
+            "invitations": 14,
+            "applicants": 15,
+            "scheduled": 16,
+            "in_progress": 17,
+            "after_shift": 18,
+            "timesheet_review": 19,
+            "leave_review": 20,
+            "closed": 21,
+            "cancelled": 22,
+            "cancelled_booking": 23,
+            "single_applicant": 33,
+            "many_applicants": 34,
+            "private_waiting": 35,
+            "paused": 36,
+            "payment_attention": 37,
+            "time_correction": 38
+        }
+    },
+    "bookings": {
+        "one_time": {
+            "scheduled": 1,
+            "in_progress": 2,
+            "after_shift": 3,
+            "timesheet_review": 4,
+            "leave_review": 5,
+            "closed": 6,
+            "cancelled_booking": 7,
+            "paused": 18,
+            "payment_attention": 19,
+            "time_correction": 20
+        },
+        "recurring": {
+            "scheduled": 8,
+            "in_progress": 9,
+            "after_shift": 10,
+            "timesheet_review": 11,
+            "leave_review": 12,
+            "closed": 13,
+            "cancelled_booking": 14,
+            "paused": 21,
+            "payment_attention": 22,
+            "time_correction": 23
+        }
+    },
+    "applications": {
+        "one_time": {
+            "shortlisted": 1,
+            "applied": 2
+        },
+        "recurring": {
+            "shortlisted": 10,
+            "applied": 11
+        }
+    },
+    "conversations": {
+        "one_time": 1,
+        "recurring": 2
+    },
+    "plans": {
+        "active": 1,
+        "pending": 2,
+        "paused": 3,
+        "ended": 4
+    },
+    "notes": [
+        "All names, addresses, messages, visits, reviews and payment rows are synthetic audit data.",
+        "Recurring post-hire visits are attached to a care plan. Generated occurrences use request_type=one_time, as the application does.",
+        "after_shift and timesheet_review are both completed, submitted, family-unconfirmed visits; the current UI shares their review-hours state.",
+        "Payment rows contain no Stripe customer, payment method, intent, or account identifiers."
+    ],
+    "planSources": {
+        "active": 16,
+        "pending": 24,
+        "paused": 25,
+        "ended": 26
+    },
+    "navigation": {
+        "create": "/family/requests/create",
+        "requests": "/family/requests",
+        "requestDetailPattern": "/family/requests/{id}",
+        "planDetailPattern": "/family/care/{id}",
+        "planIndex": "/family/care"
+    },
+    "seededAt": "2026-09-07T08:51:32-04:00",
+    "extraPlans": {
+        "paused": 5,
+        "payment_attention": 6,
+        "time_correction": 7
+    },
+    "timeCorrections": {
+        "one_time": 1,
+        "recurring": 2
+    },
+    "emptyProfileFamily": {
+        "email": "nora.empty-profile.find-care-audit@example.com",
+        "password": "password",
+        "id": 20
+    },
+    "admin": {
+        "id": 21,
+        "name": "LoLo Demo Administrator",
+        "email": "admin.find-care-audit@example.com",
+        "password": "password",
+        "role": "admin"
+    },
+    "runtime": {
+        "base": "http://127.0.0.1:8028",
+        "galleryBase": "http://127.0.0.1:8031",
+        "database": "C:\\Users\\Epicpp\\homecare\\.tmp\\find-care-screen-audit-2026-09-08\\find-care-audit.sqlite",
+        "auditDate": "2026-09-08",
+        "baseline": "../find-care-screen-audit-2026-09-07/master-tracker.md"
+    },
+    "newPlans": {
+        "countered": 8,
+        "declined": 9,
+        "cancelled": 10
+    }
+}

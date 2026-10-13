@@ -1,0 +1,110 @@
+# Support assistant experience and product alignment audit
+
+Reviewed 11 September 2026. Scope: customer chat UI, Family and Caregiver capability coverage, navigation and knowledge alignment with the current care experience, and the support operator experience. This review changed no application code, data, controls, or published knowledge. Tests were inspected, not executed by this reviewer; no messages, provider requests, invitations, hires, payments, or production mutations were initiated.
+
+The assistant already has substantial Family workflows and a useful human handoff. The main experience problem is drift between its guidance and the redesigned product: it can identify the wrong current visit, lose the identity of a recurring visit, and highlight invisible destinations. These are more consequential than another visual reskin.
+
+## What is implemented, and what is bounded
+
+| Audience / area | Evidence of current implementation | Boundary to retain |
+| --- | --- | --- |
+| Family | Answers, semantic navigation, authorized context, care intake, draft/recap/publication, lifecycle, care operations and family administration are registered in the [Family bundle](C:/Users/Epicpp/homecare/config/ai_support.php:178). The executable [intent catalog](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyIntentCatalog.php:21) enforces 324 mapped records. | Catalog coverage is not 324 fully automated transactions. Understand, Read, Guide, Prepare, Execute and Human are distinct stages; runtime eligibility, tool controls, current state and confirmation still apply. |
+| Family actions | [Care operations handlers](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyCareOperationsActionService.php:240) contain actual invitation and other action preparation/execution paths, alongside navigation fallback. Request drafts, profile operations, visit hours, payments and history have dedicated services and tests. | A registered action or passing fixture is not proof that a particular production customer has it enabled. This review did not inspect live eligibility controls or invoke these actions. |
+| Caregiver | The [Caregiver bundle](C:/Users/Epicpp/homecare/config/ai_support.php:196) provides answers and semantic navigation. My visits guidance agrees with the present [visits page](C:/Users/Epicpp/homecare/resources/views/livewire/caregiver/shifts-index.blade.php:20). | Family context/actions are intentionally not Caregiver capabilities. Caregiver-specific starter choices and exact-resource guidance are opportunities, not broken Family features. |
+| Continuous care | [Knowledge explicitly bounds staffing/calendar/team operations](C:/Users/Epicpp/homecare/resources/ai-support/knowledge-base/family-administration-support-v1.php:50) to authorized summaries, the flagged product and human workflows. [Handoff](C:/Users/Epicpp/homecare/app/Services/AiSupport/AiSupportHandoffService.php:46) has a dedicated continuous-care message. | Do not market automated staffing, guaranteed availability, or complete coverage operations on the basis of a catalog entry. |
+| Admin | Staff have a support queue/thread, claim/reply/resolve, deliberate return to automation, AI evidence, knowledge governance, access controls and readiness/activity views. See [operator thread](C:/Users/Epicpp/homecare/resources/views/livewire/admin/support-ticket-show.blade.php:483) and [AI overview](C:/Users/Epicpp/homecare/resources/views/livewire/admin/ai-support/overview.blade.php:5). | Admin is an operator experience, not an additional customer-bot role. Customer widget access is limited to Family/Caregiver in [ChatWidget](C:/Users/Epicpp/homecare/app/Livewire/Support/ChatWidget.php:99). |
+
+Production enablement is not inferred from configuration defaults or historical pilot wording. Knowledge source files are also distinct from published database versions: the [alignment importer](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyExperienceKnowledgeBaseImportService.php:123) preserves published knowledge during draft realignment, with a separate publication operation.
+
+## Prioritized findings
+
+### UX-01 · P1 · A stale live visit can replace the actual next visit
+
+**Confirmed in source.** [FamilyGuidedAssistanceService::nextRelevantBooking](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyGuidedAssistanceService.php:859) selects the earliest `in_progress` or `paused` booking without any start/end recency condition, and returns it before scheduled bookings. A months-old incident still carrying a live status therefore wins over tomorrow’s confirmed care. That result is used for both [next-visit answers](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyGuidedAssistanceService.php:441) and the [attention summary](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyGuidedAssistanceService.php:288).
+
+The current [CareJourney](C:/Users/Epicpp/homecare/app/Livewire/Family/CareJourney.php:149) already applies a bounded live/paused cutoff, including its null-end fallback. The assistant and care page can consequently disagree about what is happening now.
+
+**Improve:** use the same authorized visit-selection policy as the current schedule/journey; show stale unfinished incidents as issues needing review, not as the next current visit. Preserve the stored booking/status. **Acceptance:** one stale live booking, one valid overnight live booking, one recent null-end booking and one future scheduled booking; bot and schedule select the same eligible visit without altering any rows.
+
+### UX-02 · P2 · Recurring visit guidance loses the exact visit and timesheet
+
+**Confirmed in source.** [guideForBooking](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyGuidedAssistanceService.php:952) deliberately excludes system-generated request IDs from `family.request.visit` / `family.request.timesheet`. It sends those bookings to `family.regular_care.attention` with a plan ID, dropping the visit ID and, on this branch, the timesheet-specific target. This affects answers whose button says “Open visit” or “Review hours”.
+
+The new [calendar View visit action](C:/Users/Epicpp/homecare/resources/views/livewire/family/partials/care-schedule-calendar.blade.php:86) uses the exact visit URL, with a [regression assertion](C:/Users/Epicpp/homecare/tests/Feature/Family/CareScheduleCalendarTest.php:249) for the generated request’s `tab=shift` link. The assistant currently makes the family find that date again inside the plan.
+
+**Improve:** keep request, plan and booking identity distinct. If a generated request exists, guide to that exact visit or hours section; retain a clearly labeled “Open care plan” secondary action. Use a plan fallback only for legacy records without a usable visit link. **Acceptance:** two visits on one plan, extra visits, coverage visits, completed hours needing review, and legacy missing relationships; every primary CTA opens the intended date and section.
+
+### UX-03 · P2 · “Highlighted” destinations can be invisible or fail to receive focus
+
+**Confirmed in source and observed on production DOM.** The markers for [Schedule](C:/Users/Epicpp/homecare/resources/views/livewire/family/care-schedule.blade.php:2), [Care requests / regular care](C:/Users/Epicpp/homecare/resources/views/livewire/family/regular-care-index.blade.php:16), and [History](C:/Users/Epicpp/homecare/resources/views/livewire/family/care-history.blade.php:23) sit on `sr-only` headings/spans. Root’s authorized read-only production inspection confirmed all four marker elements are 1 × 1 pixels.
+
+[initializeGuidance](C:/Users/Epicpp/homecare/resources/js/support-chat.js:537) checks existence and disabled state, adds the highlight, attempts focus, then reports `arrived`. It does not validate useful visible geometry or successful focus. The [applicant marker](C:/Users/Epicpp/homecare/resources/views/livewire/family/partials/recruitment-applicants.blade.php:1) is a section without `tabindex`, so ordinary `.focus()` also cannot reliably move keyboard focus there. The current [alignment test](C:/Users/Epicpp/homecare/tests/Feature/AiSupport/FamilyExperienceKnowledgeAlignmentTest.php:146) proves only that marker text exists in rendered HTML.
+
+**Improve:** put markers on a visible, meaningful heading/control/container and make noninteractive targets programmatically focusable. Open enclosing disclosures when needed; report arrival only after visible targeting succeeds. **Acceptance:** real keyboard and screen-reader checks at 1440, 390 and 320 pixels for every registered guided target, including after Livewire navigation/re-render. The production inspection did not click a guide or trigger a new assistant response; false arrival is source-derived, not claimed as an observed live guide event.
+
+### UX-04 · P2 · Guidance still describes the old care and recruitment navigation
+
+**Confirmed in source.** The current [Care navigation](C:/Users/Epicpp/homecare/resources/views/components/family-care-nav.blade.php:4) is **Overview → Care request → Schedule → History**. [KB overview content](C:/Users/Epicpp/homecare/resources/ai-support/knowledge-base/v1.php:227) still teaches five areas including **Actions** and **Arrangements**. The [navigation registry](C:/Users/Epicpp/homecare/config/ai_support.php:369) also calls the Care requests destination “Arrangements”. These are misleading directions even where the underlying route still exists.
+
+The current [recruitment stages](C:/Users/Epicpp/homecare/resources/views/livewire/family/partials/recruitment-header.blade.php:10) use `home`, `invite`, `applicants` and `start`. The bot’s [request overview target](C:/Users/Epicpp/homecare/config/ai_support.php:414) instead opens `tab=overview`, the full details surface, and its applicant target is labeled “Caregiver responses”. More directly, the [invitation fallback](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyCareOperationsActionService.php:255) promises to open the invitation area but routes to applicants; [invitation-status guidance](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyCareOperationsActionService.php:287) does the same. The new [Invited tab](C:/Users/Epicpp/homecare/resources/views/livewire/family/partials/recruitment-discovery.blade.php:35) is in Find caregivers. [Invite/reinvite knowledge](C:/Users/Epicpp/homecare/resources/ai-support/knowledge-base/marketplace-care-v1.php:17) retains the old applicant destination.
+
+**Improve:** register semantic destinations for request summary, request-local search, invited, saved and getting started, retaining old IDs as compatibility aliases where appropriate. Match guidance text to visible labels. Add short explanations of **saved profiles vs shortlisted applicants**, **invitation vs application**, and **request vs recurring plan vs dated visit**. Update the governed KB package, not only the PHP strings. **Acceptance:** invitation help lands on Invited, browse help lands on request search, applicant help stays on applicants, and request summary lands on the first stage with the next step visible.
+
+### UX-05 · P2 · First-contact copy does not reliably disclose the responder
+
+**Confirmed conditional source behavior.** [Start experience](C:/Users/Epicpp/homecare/app/Livewire/Support/ChatWidget.php:529) is Family-only. Before a ticket exists, [the header](C:/Users/Epicpp/homecare/resources/views/livewire/support/chat-widget.blade.php:130) does not identify AI, and the [fallback greeting](C:/Users/Epicpp/homecare/resources/views/livewire/support/chat-widget.blade.php:201) promises a LoLo support team member will reply. But [startConversation](C:/Users/Epicpp/homecare/app/Services/Support/SupportChatService.php:92) can create an automated ticket for an eligible Caregiver when provider access is enabled. This creates an avoidable first-response surprise; it is not proof that all current Caregivers have AI enabled.
+
+**Improve:** derive the opening disclosure from the same actual eligibility/provider decision used to create the conversation. Use “LoLo AI assistant” with a separate, persistent “Talk to a person” action when available; use human-support copy otherwise. Provide Caregiver starters appropriate to its narrower scope: My visits, Work Inbox, applications, check-in help and earnings guidance.
+
+Root observed an existing resolved production ticket labeled AI assistant. Its subtitle truncated at both inspected sizes, while Human help remained visible. **Acceptance:** eligible Family, eligible Caregiver, ineligible account, provider-disabled, assigned human and resolved/reopened states; essential identity remains visible without relying on a truncated subtitle.
+
+### UX-06 · P2 · Personalized starters discard the item the person chose
+
+**Confirmed in source.** [FamilyAssistantHomeService](C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyAssistantHomeService.php:28) turns inbox entries into generic label/message pairs and later deduplicates by label. [Inbox entries](C:/Users/Epicpp/homecare/app/Support/FamilyActionInboxBuilder.php:162) already contain date/context, navigation target, resource type and resource ID. A named draft-profile starter similarly sends only “Help me finish a care receiver profile”. [chooseStartAction](C:/Users/Epicpp/homecare/app/Livewire/Support/ChatWidget.php:160) forwards only that string.
+
+The person appears to pick a particular item but the assistant must re-identify it. Two “Review hours” items can collapse into one generic suggestion. This is a loss of useful selection context, not a claim that the current authorization checks permit a wrong-account action.
+
+**Improve:** bind starters server-side to an authorized resource and intent, display recipient/date/status, and deduplicate by resource plus action. Revalidate at click time. **Acceptance:** two people, two pending timesheets, two draft profiles and an item that changes state between render and click; selection is preserved or explicitly explained as no longer available.
+
+### UX-07 · P2 · Closing inline support tries to focus a hidden launcher
+
+**Confirmed in source; browser reproduction requested.** New care screens hide the floating launcher through [care-workspace.css](C:/Users/Epicpp/homecare/resources/css/care-workspace.css:43) and open the panel using inline controls, including [creation](C:/Users/Epicpp/homecare/resources/views/livewire/family/create-care-request-wizard.blade.php:59), [request help](C:/Users/Epicpp/homecare/resources/views/livewire/family/manage-care-request.blade.php:1102) and [recurring-plan help](C:/Users/Epicpp/homecare/resources/views/livewire/family/regular-care-show.blade.php:31). [closeImmediately](C:/Users/Epicpp/homecare/resources/js/support-chat.js:264) always tries to restore focus to that launcher. It does not remember the visible invoking control.
+
+**Improve:** capture the opener when support opens; restore it if still connected and visible, otherwise choose a visible page heading/help fallback. Preserve the separate guided-navigation focus behavior. **Acceptance:** open with Enter from every inline entry point, minimize or Escape, and confirm focus returns to the same visible control after both normal close and Livewire navigation.
+
+### UX-08 · P2 · “Sending” includes the entire assistant response wait
+
+**Confirmed in source.** [sendMessage](C:/Users/Epicpp/homecare/app/Livewire/Support/ChatWidget.php:125) persists the message/ticket, synchronously calls the AI runtime, and only afterwards dispatches `support-chat-message-sent`. The optimistic bubble therefore stays [“Sending…”](C:/Users/Epicpp/homecare/resources/views/livewire/support/chat-widget.blade.php:456), with [send disabled](C:/Users/Epicpp/homecare/resources/views/livewire/support/chat-widget.blade.php:526), during response generation. A transport error after persistence can also present “Not sent” even though a message may already exist; client IDs mitigate duplicate writes but do not clarify that experience.
+
+**Improve:** separate delivery acknowledgement from response progress: **Sending → Sent / LoLo is thinking → Reply or recoverable response issue**. Keep retry idempotent and distinguish retrying delivery from retrying an answer. No artificial typing animation or promised response time is needed. **Acceptance:** offline before send, slow provider, provider failure after persistence, lost acknowledgement and human-only conversations; status text accurately describes what happened and screen readers receive useful progress announcements.
+
+### UX-09 · P2 · Human handoff exists, but queue triage hides important distinctions
+
+**Confirmed in source.** [Handoff](C:/Users/Epicpp/homecare/app/Services/AiSupport/AiSupportHandoffService.php:61) stores the human-transfer time/reason, records an [internal summary](C:/Users/Epicpp/homecare/app/Services/AiSupport/AiSupportHandoffService.php:267), and alerts administrators. These are good foundations. The [queue query](C:/Users/Epicpp/homecare/app/Livewire/Admin/SupportTicketsQueue.php:67), however, offers only status and priority filters, sorting unread/latest public activity rather than human-waiting time. [Queue cards](C:/Users/Epicpp/homecare/resources/views/livewire/admin/support-tickets-queue.blade.php:50) show Chat/Support center, unread and assignment but not automated vs human-only, transfer reason or time awaiting a person. Responder mode appears deeper in the [thread’s AI evidence](C:/Users/Epicpp/homecare/resources/views/livewire/admin/support-ticket-show.blade.php:493).
+
+There is also a small concrete data-display issue: the query eagerly loads `opener:id,name,email` without `role`, while the [card](C:/Users/Epicpp/homecare/resources/views/livewire/admin/support-tickets-queue.blade.php:68) reads `opener->role`, falling back to “User”. The intended Family/Caregiver distinction is unavailable from that loaded projection.
+
+**Improve:** put **Waiting for a person**, responder mode, transfer reason and elapsed wait on cards; add a human-waiting filter/order and open the handoff summary prominently in the thread. Include opener role in the data needed for display. Show an honest queued/assigned state to the customer without inventing an SLA. Preserve the existing audited, deliberate return-to-automation process.
+
+## Additional opportunities and validation needs
+
+- **Calendar guidance:** the current [Schedule](C:/Users/Epicpp/homecare/resources/views/livewire/family/care-schedule.blade.php:26) has List/Calendar and date selection. The support schedule target has no calendar/month/day query contract, and the reviewed Family overview knowledge does not explain those controls. Add concise date-specific guidance and validated calendar query parameters; make clear that calendar cards are actual booked visits, not every future recurrence implied by a plan.
+- **Mobile first contact:** [showPanel](C:/Users/Epicpp/homecare/resources/js/support-chat.js:224) immediately focuses the composer. On a real phone this can open the keyboard before starter choices are read. Root’s viewport check cannot establish native keyboard behavior. Consider focusing the panel heading for first contact on mobile and focusing text entry when the person chooses to type; test on a real mobile viewport with the keyboard visible.
+- **Unread wording:** [getUnreadCountProperty](C:/Users/Epicpp/homecare/app/Livewire/Support/ChatWidget.php:473) counts unread conversations, but the [launcher accessible label](C:/Users/Epicpp/homecare/resources/views/livewire/support/chat-widget.blade.php:85) says unread messages. Either label the actual unit or calculate message count.
+- **Old review cards:** the widget distinguishes active, expired, consumed and invalidated action types; preserve its existing renew/review-again paths. Explicitly inspect human handoff, replaced recap and stale-resource states so disappearing action controls always leave a short explanation and a safe next step. This is a validation recommendation, not a confirmed general inability to cancel.
+
+## What to preserve
+
+The current widget has a mobile sheet, a desktop panel, keyboard trapping on mobile, Escape/minimize, scroll locking, visual viewport handling, draft persistence, client-message IDs, offline retry/reconnect, history pagination, resolved/closed states, clear human-help access, recap confirmation and receipts. Existing [responsive tests](C:/Users/Epicpp/homecare/tests/e2e/specs/support-chat-responsive.spec.ts:94) cover draft persistence, focus, rotation/back navigation, offline recovery, long history and large text. [Interactive tests](C:/Users/Epicpp/homecare/tests/e2e/specs/ai-support-interactive.spec.ts:205) cover a real guided billing control and selected Family journeys. These should remain the baseline.
+
+Root’s authorized read-only production inspection found a 392 × 672 desktop support panel and a full-viewport 390 × 844 mobile panel, no horizontal overflow in those inspected states, and 44-pixel controls. The same inspection confirmed hidden 1-pixel navigation markers and truncated AI subtitle text. It opened an existing resolved conversation only: **no new message, provider response, guide action, or business mutation was tested**. No additional screenshot or browser claims are made by this source reviewer.
+
+## Suggested delivery order
+
+1. Align next/current visit selection and exact visit links; preserve stale incidents as issues.
+2. Repair visible guided targets and inline focus return; extend browser coverage beyond marker existence.
+3. Align semantic destinations, labels and governed knowledge with the four recruitment stages and current Care navigation.
+4. Fix first-contact disclosure, resource-bound starters and delivery/response progress.
+5. Improve human-waiting triage, then add Caregiver starters and date-specific calendar guidance within the existing capability boundaries.
+
+Each change should be verified with isolated fixtures and provider fakes before any deliberate end-to-end business-action exercise. This audit makes no recommendation to enable controls or publish knowledge automatically.

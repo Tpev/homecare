@@ -1,0 +1,93 @@
+{
+  "text": "<<\nBack to inbox\n\nCONVERSATION\n\nSofia Martinez\n\nRecurring care for Ellie — Applicants\n\nRequest status\n\nOPEN\n\nHIRE DECISION\n\nChat here, then hire from the request page.\n\nUse messages to confirm fit, then return to the request when you are ready to hire.\n\nOpen request to hire\n\nAbsolutely. I will take time to get to know Ellie and follow her usual routine.\n\nSofia Martinez\n08:51\n\nHi! Ellie enjoys a calm routine and usually has lunch at noon. Does that work for you?\n\nMaria Bennett\n08:51\n\nMessages send when you tap Send.\n\nSend\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H2",
+      "text": "Sofia Martinez"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "<<\nBack to inbox",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "TEXTAREA",
+      "type": "textarea",
+      "label": "Type your message...",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "required": false,
+      "placeholder": "Type your message..."
+    },
+    {
+      "tag": "BUTTON",
+      "type": "submit",
+      "label": "",
+      "text": "Send",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8027/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8027/family/notifications"
+    },
+    {
+      "text": "Open request to hire",
+      "href": "http://127.0.0.1:8027/family/requests/15"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8027/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 938
+}

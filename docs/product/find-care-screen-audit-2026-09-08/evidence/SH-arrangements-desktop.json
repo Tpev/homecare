@@ -1,0 +1,302 @@
+{
+  "text": "FAMILY WORKSPACE\nCare\nCaregivers\nMessages\nRequest care\nMB\nMaria Bennett\nFamily\nCare arrangements\n\nARRANGEMENTS\n\nEvery care arrangement, in one place.\n\nSee care still being arranged and ongoing caregiver relationships. Confirmed dates belong in Schedule.\n\nRequest care\nOverview\nArrangements\nSchedule\nHistory\nStatus\nCurrent care\nBeing arranged\nOngoing care\nPast care\nAll care\nCare type\nAll care types\nOne-time care\nRecurring care\n\nREQUESTS AND RELATIONSHIPS\n\n19 arrangements\nOpen visit schedule\nRECURRING CARE\nNew schedule proposed\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nPayment checked before each visit\n\nRecurring care #8\nManage recurring care\nRECURRING CARE\nPayment needs attention\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nNext visit: Wednesday, September 9 · 10:00 AM–12:00 PM\n\nPayment action needed\n\nRecurring care #6\nFix payment\nRECURRING CARE\nActive\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nPayment authorized\n\nRecurring care #5\nManage recurring care\nRECURRING CARE\nActive\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nPayment authorized\n\nRecurring care #7\nManage recurring care\nRECURRING CARE\nActive\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nNext visit: Wednesday, September 9 · 10:00 AM–12:00 PM\n\nPayment authorized\n\nRecurring care #1\nManage recurring care\nRECURRING CARE\nWaiting for Sofia Martinez\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nPayment checked before each visit\n\nRecurring care #2\nManage recurring care\nRECURRING CARE\nPaused\nRecurring care for Eleanor Bennett\n\nCaregiver: Sofia Martinez\n\nMon, Wed, Fri · 10:00 AM–12:00 PM\n\nPayment authorized\n\nRecurring care #3\nManage recurring care\nONE-TIME CARE\n1 caregiver replied\nEleanor Bennett · Thu, Sep 10\n\nThursday, September 10 · 10:00 AM–12:00 PM\n\nRaleigh, NC\n\nRequest #27\nReview caregivers\n\nShowing 8 of 19 arrangements.\n\nShow more arrangements\n\n© 2026 LoLo Care Inc\n\n﻿\nTerms of Service\nPrivacy Policy\nPayments & Cancellation\nCaregiver Terms\nFamily Terms\nSafety Policy\nAll Legal Documents\nSupport",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Every care arrangement, in one place."
+    },
+    {
+      "level": "H2",
+      "text": "19 arrangements"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H3",
+      "text": "Eleanor Bennett · Thu, Sep 10"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "MB\nMaria Bennett\nFamily",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Status",
+      "text": "",
+      "value": "current",
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "Current care",
+          "value": "current",
+          "selected": true
+        },
+        {
+          "label": "Being arranged",
+          "value": "arranging",
+          "selected": false
+        },
+        {
+          "label": "Ongoing care",
+          "value": "ongoing",
+          "selected": false
+        },
+        {
+          "label": "Past care",
+          "value": "past",
+          "selected": false
+        },
+        {
+          "label": "All care",
+          "value": "all",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "label": "Care type",
+      "text": "",
+      "value": "all",
+      "disabled": false,
+      "required": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null,
+      "options": [
+        {
+          "label": "All care types",
+          "value": "all",
+          "selected": true
+        },
+        {
+          "label": "One-time care",
+          "value": "one_time",
+          "selected": false
+        },
+        {
+          "label": "Recurring care",
+          "value": "regular",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Show more arrangements",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Chat with LoLo Support",
+      "text": "Support",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "FAMILY WORKSPACE",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Care",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Caregivers",
+      "href": "http://127.0.0.1:8028/caregivers/search"
+    },
+    {
+      "text": "Messages",
+      "href": "http://127.0.0.1:8028/messages"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "Request care",
+      "href": "http://127.0.0.1:8028/family/requests/create"
+    },
+    {
+      "text": "Overview",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Arrangements",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Schedule",
+      "href": "http://127.0.0.1:8028/family/care/schedule"
+    },
+    {
+      "text": "History",
+      "href": "http://127.0.0.1:8028/family/care/history"
+    },
+    {
+      "text": "Open visit schedule",
+      "href": "http://127.0.0.1:8028/family/care/schedule?person=all"
+    },
+    {
+      "text": "Manage recurring care",
+      "href": "http://127.0.0.1:8028/family/care/8"
+    },
+    {
+      "text": "Fix payment",
+      "href": "http://127.0.0.1:8028/family/care/6"
+    },
+    {
+      "text": "Manage recurring care",
+      "href": "http://127.0.0.1:8028/family/care/5"
+    },
+    {
+      "text": "Manage recurring care",
+      "href": "http://127.0.0.1:8028/family/care/7"
+    },
+    {
+      "text": "Manage recurring care",
+      "href": "http://127.0.0.1:8028/family/care/1"
+    },
+    {
+      "text": "Manage recurring care",
+      "href": "http://127.0.0.1:8028/family/care/2"
+    },
+    {
+      "text": "Manage recurring care",
+      "href": "http://127.0.0.1:8028/family/care/3"
+    },
+    {
+      "text": "Review caregivers",
+      "href": "http://127.0.0.1:8028/family/requests/27"
+    },
+    {
+      "text": "Terms of Service",
+      "href": "http://127.0.0.1:8028/legal/platform-terms-of-service"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "http://127.0.0.1:8028/legal/privacy-policy"
+    },
+    {
+      "text": "Payments & Cancellation",
+      "href": "http://127.0.0.1:8028/legal/payment-terms-and-cancellation-policy"
+    },
+    {
+      "text": "Caregiver Terms",
+      "href": "http://127.0.0.1:8028/legal/caregiver-terms"
+    },
+    {
+      "text": "Family Terms",
+      "href": "http://127.0.0.1:8028/legal/client-and-family-terms"
+    },
+    {
+      "text": "Safety Policy",
+      "href": "http://127.0.0.1:8028/legal/acceptable-use-and-safety-policy"
+    },
+    {
+      "text": "All Legal Documents",
+      "href": "http://127.0.0.1:8028/legal"
+    }
+  ],
+  "details": [],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 1440,
+  "height": 1000,
+  "documentWidth": 1440,
+  "documentHeight": 1928,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Every care arrangement, in one place.",
+    "status": "",
+    "headerText": "",
+    "primaryTitle": "",
+    "selectedTabs": []
+  }
+}

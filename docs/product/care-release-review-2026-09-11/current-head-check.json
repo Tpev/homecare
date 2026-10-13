@@ -1,0 +1,216 @@
+{
+  "target": "HEAD",
+  "reviewedBase": "d966d945e3683fbed02ce07ec8b56232f722296d",
+  "checked": 52,
+  "passed": false,
+  "issues": [
+    {
+      "path": ".gitignore",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Livewire/Family/CareJourney.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Livewire/Family/CareSchedule.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Livewire/Family/CreateCareRequestWizard.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Livewire/Family/ManageCareRequest.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Livewire/Family/RegularCareShow.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Services/Family/FamilyCarePresentationService.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "app/Support/FamilyActionInboxBuilder.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "deploy.sh",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "public/fonts/Inter-OFL.txt",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "public/fonts/Inter-Variable.woff",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "public/fonts/README.md",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "public/fonts/SourceSerif4-OFL.txt",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "public/fonts/SourceSerif4-Variable.woff",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/css/app.css",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/css/care-creation.css",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/css/care-recruitment.css",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/css/care-schedule.css",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/css/care-workspace.css",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/components/caregiver-identity.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/components/family-action-card.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/components/family-care-nav.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/layouts/app.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/care-history.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/care-journey.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/care-schedule.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/create-care-request-wizard.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/manage-care-request.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-decision-review.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-request-review.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-schedule-calendar.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-workspace-header.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/caregiver-invitations.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/caregiver-invite-card.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/caregiver-invite-panel.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/completed-extra-visits.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/live-visit-record.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/recruitment-applicants.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/recruitment-discovery.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/recruitment-header.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-caregivers.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-details.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-management.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-next-visit.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-overview.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-visit-card.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-visits.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/visit-care-essentials.blade.php",
+      "issue": "Required file missing"
+    },
+    {
+      "path": "resources/views/livewire/family/regular-care-index.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/regular-care-show.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/family/requests-index.blade.php",
+      "issue": "Content differs from reviewed version"
+    },
+    {
+      "path": "resources/views/livewire/support/chat-widget.blade.php",
+      "issue": "Content differs from reviewed version"
+    }
+  ]
+}

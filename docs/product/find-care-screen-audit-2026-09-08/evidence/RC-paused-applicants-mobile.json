@@ -1,0 +1,185 @@
+{
+  "text": "My care\n/\nBack to recurring care · Visits\n/\nVisit #21\n\nONE VISIT IN YOUR RECURRING CARE\n\nEleanor Bennett · Mon, Sep 7\n\nSep 07, 7:56 AM - 9:56 AM · Raleigh, NC\n\nCaregiver: Sofia Martinez\n\nPaused\nVisit #21\nMessage caregiver\nGet help\nCare story\nThis visit\nCare instructions\nHelp & changes\n\nCAREGIVER SELECTION\n\nSelected caregiver\n\nSofia Martinez is selected. Keep profile and chat history here.\n\nREADY\n\n0 to review\n\nFilter or sort caregivers\n\n1 caregivers match the applicant filters\n\nCaregivers who replied\n\nReview their reply, profile, or start a conversation.\n\nSM\n\nSofia Martinez\n\nHired\n\nRaleigh, NC\n\n7 years experience\n4.9\n24 reviews\nReliability 98%\nProfile details\n\nI would be happy to help Ellie with lunch, a little tidying, and conversation. I am available for your requested schedule.\n\nView profile\nPeople you invited\n\nInvitations are separate from caregivers who replied.\n\n0 total\nNo active invitations yet.\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Eleanor Bennett · Mon, Sep 7"
+    },
+    {
+      "level": "H2",
+      "text": "Selected caregiver"
+    },
+    {
+      "level": "H3",
+      "text": "Caregivers who replied"
+    },
+    {
+      "level": "H3",
+      "text": "People you invited"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Message caregiver",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "This visit",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care instructions",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Help & changes",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "View profile",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "My care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Back to recurring care · Visits",
+      "href": "http://127.0.0.1:8028/family/care/5?tab=visits&visit_filter=upcoming&visitsPage=1#care-visit-21"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/regular/5"
+    },
+    {
+      "text": "View profile",
+      "href": "http://127.0.0.1:8028/caregivers/sofia-find-care-audit?careRequest=36"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Filter or sort caregivers",
+      "open": false
+    },
+    {
+      "summary": "Profile details",
+      "open": false
+    },
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 1582,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Eleanor Bennett · Mon, Sep 7",
+    "status": "Paused",
+    "headerText": "My care\n/\nBack to recurring care · Visits\n/\nVisit #21\n\nONE VISIT IN YOUR RECURRING CARE\n\nEleanor Bennett · Mon, Sep 7\n\nSep 07, 7:56 AM - 9:56 AM · Raleigh, NC\n\nCaregiver: Sofia Martinez\n\nPaused\nVisit #21\nMessage caregiver\nGet help\nCare story",
+    "primaryTitle": "",
+    "selectedTabs": []
+  }
+}

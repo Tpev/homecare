@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-09-08T16:01:37.446Z",
+  "screens": 319,
+  "captured": 319,
+  "screenshots": 1914,
+  "warnings": [],
+  "stages": [
+    {
+      "stage": "Create",
+      "screens": 14,
+      "captured": 14
+    },
+    {
+      "stage": "Waiting / inviting",
+      "screens": 96,
+      "captured": 96
+    },
+    {
+      "stage": "Hired / before shift",
+      "screens": 82,
+      "captured": 82
+    },
+    {
+      "stage": "During shift",
+      "screens": 20,
+      "captured": 20
+    },
+    {
+      "stage": "After shift",
+      "screens": 8,
+      "captured": 8
+    },
+    {
+      "stage": "Timesheet / review",
+      "screens": 37,
+      "captured": 37
+    },
+    {
+      "stage": "Closed",
+      "screens": 62,
+      "captured": 62
+    }
+  ]
+}

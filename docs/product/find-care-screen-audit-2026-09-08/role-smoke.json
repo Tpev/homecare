@@ -1,0 +1,123 @@
+{
+  "checkedAt": "2026-09-08T15:55:46.893Z",
+  "base": "http://127.0.0.1:8028",
+  "buildHash": "58c0b4adc3736b3717582dffe837c3b2284299b26b123064150359543361e636",
+  "checks": [
+    {
+      "role": "family",
+      "email": "maria.find-care-audit@example.com",
+      "device": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "requestedRoute": "/family/requests",
+      "passed": true,
+      "loginRedirect": "/family/requests",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:8028/family/requests",
+      "viewportScreenshot": "screenshots/ROLE-family-desktop-viewport.png",
+      "fullScreenshot": "screenshots/ROLE-family-desktop-full.png",
+      "text": "evidence/ROLE-family-desktop.txt",
+      "inventory": "evidence/ROLE-family-desktop.json",
+      "horizontalOverflow": 0
+    },
+    {
+      "role": "family",
+      "email": "maria.find-care-audit@example.com",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "requestedRoute": "/family/requests",
+      "passed": true,
+      "loginRedirect": "/family/requests",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:8028/family/requests",
+      "viewportScreenshot": "screenshots/ROLE-family-mobile-viewport.png",
+      "fullScreenshot": "screenshots/ROLE-family-mobile-full.png",
+      "text": "evidence/ROLE-family-mobile.txt",
+      "inventory": "evidence/ROLE-family-mobile.json",
+      "horizontalOverflow": 0
+    },
+    {
+      "role": "caregiver",
+      "email": "sofia.find-care-audit@example.com",
+      "device": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "requestedRoute": "/caregiver/work-inbox",
+      "passed": true,
+      "loginRedirect": "/dashboard",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:8028/caregiver/work-inbox",
+      "viewportScreenshot": "screenshots/ROLE-caregiver-desktop-viewport.png",
+      "fullScreenshot": "screenshots/ROLE-caregiver-desktop-full.png",
+      "text": "evidence/ROLE-caregiver-desktop.txt",
+      "inventory": "evidence/ROLE-caregiver-desktop.json",
+      "horizontalOverflow": 0
+    },
+    {
+      "role": "caregiver",
+      "email": "sofia.find-care-audit@example.com",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "requestedRoute": "/caregiver/work-inbox",
+      "passed": true,
+      "loginRedirect": "/dashboard",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:8028/caregiver/work-inbox",
+      "viewportScreenshot": "screenshots/ROLE-caregiver-mobile-viewport.png",
+      "fullScreenshot": "screenshots/ROLE-caregiver-mobile-full.png",
+      "text": "evidence/ROLE-caregiver-mobile.txt",
+      "inventory": "evidence/ROLE-caregiver-mobile.json",
+      "horizontalOverflow": 0
+    },
+    {
+      "role": "admin",
+      "email": "admin.find-care-audit@example.com",
+      "device": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "requestedRoute": "/admin/users",
+      "passed": true,
+      "loginRedirect": "/admin/crm",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:8028/admin/users",
+      "viewportScreenshot": "screenshots/ROLE-admin-desktop-viewport.png",
+      "fullScreenshot": "screenshots/ROLE-admin-desktop-full.png",
+      "text": "evidence/ROLE-admin-desktop.txt",
+      "inventory": "evidence/ROLE-admin-desktop.json",
+      "horizontalOverflow": 0
+    },
+    {
+      "role": "admin",
+      "email": "admin.find-care-audit@example.com",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "requestedRoute": "/admin/users",
+      "passed": true,
+      "loginRedirect": "/admin/crm",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:8028/admin/users",
+      "viewportScreenshot": "screenshots/ROLE-admin-mobile-viewport.png",
+      "fullScreenshot": "screenshots/ROLE-admin-mobile-full.png",
+      "text": "evidence/ROLE-admin-mobile.txt",
+      "inventory": "evidence/ROLE-admin-mobile.json",
+      "horizontalOverflow": 0
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

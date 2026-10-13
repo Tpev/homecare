@@ -538,6 +538,7 @@ class Batch67FamilyCareOperationsTest extends TestCase
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id, 'slug' => Str::slug($name).'-'.$caregiver->id,
             'status' => 'active', 'bio' => str_repeat('Experienced caregiver. ', 4),
+            'screening_initial_approved_at' => now(),
             'platform_hourly_rate' => 30, 'years_experience' => 5,
             'service_area_zip' => '27601', 'service_radius_miles' => 15,
             'is_accepting_new_clients' => true, 'insurance_status' => CaregiverProfile::INSURANCE_NO,

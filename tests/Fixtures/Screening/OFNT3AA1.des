@@ -1,0 +1,25 @@
+CMDORNUM      OFFENDER NC DOC ID NUMBER          CHAR      1       7     
+CMCLBRTH      OFFENDER BIRTH DATE                DATE      8       10    
+CMCLSEX       OFFENDER GENDER CODE               CHAR      18      30    
+CMCLRACE      OFFENDER RACE CODE                 CHAR      48      30    
+CMCLHITE      OFFENDER HEIGHT (IN INCHES)        CHAR      78      2     
+CMWEIGHT      OFFENDER WEIGHT (IN LBS)           CHAR      80      3     
+CMSKCMPX      OFFENDER SKIN COMPLEXION CODE      CHAR      83      30    
+CMHAIR        OFFENDER HAIR COLOR CODE           CHAR      113     30    
+CMCLEYEC      OFFENDER EYE COLOR CODE            CHAR      143     30    
+CMBODBLD      OFFENDER BODY BUILD CODE           CHAR      173     30    
+CMBRTCTY      CITY WHERE OFFENDER BORN           CHAR      203     15    
+CMBRTNCC      NC COUNTY WHERE OFFENDER BORN      CHAR      218     30    
+CMBRTHST      STATE WHERE OFFENDER BORN          CHAR      248     30    
+CMBCNTRY      COUNTRY WHERE OFFENDER BORN        CHAR      278     30    
+CMCITIZN      OFFENDER CITIZENSHIP CODE          CHAR      308     30    
+CMETHNIC      OFFENDER ETHNIC CODE               CHAR      338     30    
+CMPRILNG      OFFENDER PRIMARY LANGUAGE CODE     CHAR      368     30    
+CMSHIRTS      OFFENDER SHIRT SIZE                CHAR      398     2     
+CMPANTSZ      OFFENDER PANTS SIZE                CHAR      400     2     
+CMJACKET      OFFENDER JACKET SIZE               CHAR      402     2     
+CMSHOESI      OFFENDER SHOE SIZE                 CHAR      404     4     
+CMDRESSZ      OFFENDER DRESS SIZE                CHAR      408     2     
+CMNXTPHO      NEXT PHOTO YEAR                    CHAR      410     2     
+DTOFUPDT      DATE OF LAST UPDATE                DATE      412     10    
+TMOFUPDT      TIME OF LAST UPDATE                TIME      422     8     

@@ -20,13 +20,13 @@
         ];
     @endphp
 
-    <h1 data-ai-target="family.care_history" tabindex="-1" class="sr-only">Care history</h1>
+    <h1 class="sr-only">Care history</h1>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <x-family-care-nav active="history" />
         <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
     </div>
 
-    <section aria-labelledby="history-summary-heading" class="space-y-3">
+    <section data-ai-target="family.care_history" tabindex="-1" aria-labelledby="history-summary-heading" class="space-y-3">
         <div class="flex items-end justify-between gap-3">
             <div>
                 <h2 id="history-summary-heading" class="font-display text-xl font-semibold text-[#17313F]">History summary</h2>

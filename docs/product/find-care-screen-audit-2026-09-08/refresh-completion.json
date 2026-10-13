@@ -1,0 +1,349 @@
+{
+  "preparedAt": "2026-09-08T15:54:27.635Z",
+  "checkedAt": "2026-09-08T16:04:21.424Z",
+  "captures": [
+    {
+      "id": "OT-hire-review",
+      "originalCaptureAt": "2026-09-08T15:42:54.061Z",
+      "refreshedAt": "2026-09-08T15:59:17.216Z",
+      "passed": true
+    },
+    {
+      "id": "OT-waiting-applicants",
+      "originalCaptureAt": "2026-09-08T15:27:19.660Z",
+      "refreshedAt": "2026-09-08T15:54:53.675Z",
+      "passed": true
+    },
+    {
+      "id": "OT-invitations-applicants",
+      "originalCaptureAt": "2026-09-08T15:27:26.085Z",
+      "refreshedAt": "2026-09-08T15:54:57.394Z",
+      "passed": true
+    },
+    {
+      "id": "OT-applicants-applicants",
+      "originalCaptureAt": "2026-09-08T15:27:33.455Z",
+      "refreshedAt": "2026-09-08T15:55:00.536Z",
+      "passed": true
+    },
+    {
+      "id": "OT-scheduled-applicants",
+      "originalCaptureAt": "2026-09-08T15:27:41.778Z",
+      "refreshedAt": "2026-09-08T15:55:03.956Z",
+      "passed": true
+    },
+    {
+      "id": "OT-in_progress-applicants",
+      "originalCaptureAt": "2026-09-08T15:27:56.467Z",
+      "refreshedAt": "2026-09-08T15:55:07.341Z",
+      "passed": true
+    },
+    {
+      "id": "OT-after_shift-applicants",
+      "originalCaptureAt": "2026-09-08T15:28:09.073Z",
+      "refreshedAt": "2026-09-08T15:55:10.795Z",
+      "passed": true
+    },
+    {
+      "id": "OT-timesheet_review-applicants",
+      "originalCaptureAt": "2026-09-08T15:28:20.486Z",
+      "refreshedAt": "2026-09-08T15:55:13.742Z",
+      "passed": true
+    },
+    {
+      "id": "OT-leave_review-applicants",
+      "originalCaptureAt": "2026-09-08T15:28:29.831Z",
+      "refreshedAt": "2026-09-08T15:55:16.988Z",
+      "passed": true
+    },
+    {
+      "id": "OT-closed-applicants",
+      "originalCaptureAt": "2026-09-08T15:28:41.587Z",
+      "refreshedAt": "2026-09-08T15:55:19.949Z",
+      "passed": true
+    },
+    {
+      "id": "OT-cancelled-applicants",
+      "originalCaptureAt": "2026-09-08T15:28:52.793Z",
+      "refreshedAt": "2026-09-08T15:55:22.853Z",
+      "passed": true
+    },
+    {
+      "id": "OT-cancelled_booking-applicants",
+      "originalCaptureAt": "2026-09-08T15:28:57.815Z",
+      "refreshedAt": "2026-09-08T15:55:25.594Z",
+      "passed": true
+    },
+    {
+      "id": "RC-waiting-applicants",
+      "originalCaptureAt": "2026-09-08T15:29:05.434Z",
+      "refreshedAt": "2026-09-08T15:55:28.491Z",
+      "passed": true
+    },
+    {
+      "id": "RC-invitations-applicants",
+      "originalCaptureAt": "2026-09-08T15:29:11.079Z",
+      "refreshedAt": "2026-09-08T15:55:31.709Z",
+      "passed": true
+    },
+    {
+      "id": "RC-applicants-applicants",
+      "originalCaptureAt": "2026-09-08T15:29:17.346Z",
+      "refreshedAt": "2026-09-08T15:55:34.650Z",
+      "passed": true
+    },
+    {
+      "id": "RC-scheduled-applicants",
+      "originalCaptureAt": "2026-09-08T15:29:26.695Z",
+      "refreshedAt": "2026-09-08T15:55:37.751Z",
+      "passed": true
+    },
+    {
+      "id": "RC-in_progress-applicants",
+      "originalCaptureAt": "2026-09-08T15:29:42.207Z",
+      "refreshedAt": "2026-09-08T15:55:40.759Z",
+      "passed": true
+    },
+    {
+      "id": "RC-after_shift-applicants",
+      "originalCaptureAt": "2026-09-08T15:29:54.975Z",
+      "refreshedAt": "2026-09-08T15:55:43.968Z",
+      "passed": true
+    },
+    {
+      "id": "RC-timesheet_review-applicants",
+      "originalCaptureAt": "2026-09-08T15:30:06.288Z",
+      "refreshedAt": "2026-09-08T15:55:47.676Z",
+      "passed": true
+    },
+    {
+      "id": "RC-leave_review-applicants",
+      "originalCaptureAt": "2026-09-08T15:30:14.432Z",
+      "refreshedAt": "2026-09-08T15:55:53.553Z",
+      "passed": true
+    },
+    {
+      "id": "RC-closed-applicants",
+      "originalCaptureAt": "2026-09-08T15:30:24.993Z",
+      "refreshedAt": "2026-09-08T15:55:58.055Z",
+      "passed": true
+    },
+    {
+      "id": "RC-cancelled-applicants",
+      "originalCaptureAt": "2026-09-08T15:30:39.083Z",
+      "refreshedAt": "2026-09-08T15:56:02.340Z",
+      "passed": true
+    },
+    {
+      "id": "RC-cancelled_booking-applicants",
+      "originalCaptureAt": "2026-09-08T15:30:44.667Z",
+      "refreshedAt": "2026-09-08T15:56:07.594Z",
+      "passed": true
+    },
+    {
+      "id": "OT-invitations-applicants-expanded",
+      "originalCaptureAt": "2026-09-08T15:30:52.941Z",
+      "refreshedAt": "2026-09-08T15:56:11.999Z",
+      "passed": true
+    },
+    {
+      "id": "OT-applicants-applicants-expanded",
+      "originalCaptureAt": "2026-09-08T15:30:56.343Z",
+      "refreshedAt": "2026-09-08T15:56:16.788Z",
+      "passed": true
+    },
+    {
+      "id": "OT-invite-drawer",
+      "originalCaptureAt": "2026-09-08T15:31:25.984Z",
+      "refreshedAt": "2026-09-08T15:56:24.018Z",
+      "passed": true
+    },
+    {
+      "id": "RC-invitations-applicants-expanded",
+      "originalCaptureAt": "2026-09-08T15:31:31.370Z",
+      "refreshedAt": "2026-09-08T15:56:29.820Z",
+      "passed": true
+    },
+    {
+      "id": "RC-applicants-applicants-expanded",
+      "originalCaptureAt": "2026-09-08T15:31:37.233Z",
+      "refreshedAt": "2026-09-08T15:56:34.259Z",
+      "passed": true
+    },
+    {
+      "id": "RC-invite-drawer",
+      "originalCaptureAt": "2026-09-08T15:32:54.127Z",
+      "refreshedAt": "2026-09-08T15:56:41.881Z",
+      "passed": true
+    },
+    {
+      "id": "RC-plan-active",
+      "originalCaptureAt": "2026-09-08T15:33:01.243Z",
+      "refreshedAt": "2026-09-08T15:56:47.038Z",
+      "passed": true
+    },
+    {
+      "id": "RC-plan-pending",
+      "originalCaptureAt": "2026-09-08T15:33:13.049Z",
+      "refreshedAt": "2026-09-08T15:56:50.537Z",
+      "passed": true
+    },
+    {
+      "id": "RC-plan-paused",
+      "originalCaptureAt": "2026-09-08T15:33:20.704Z",
+      "refreshedAt": "2026-09-08T15:56:56.274Z",
+      "passed": true
+    },
+    {
+      "id": "RC-plan-ended",
+      "originalCaptureAt": "2026-09-08T15:33:32.344Z",
+      "refreshedAt": "2026-09-08T15:57:00.391Z",
+      "passed": true
+    },
+    {
+      "id": "OT-create-self-private",
+      "originalCaptureAt": "2026-09-08T15:35:32.102Z",
+      "refreshedAt": "2026-09-08T15:57:04.185Z",
+      "passed": true
+    },
+    {
+      "id": "OT-invite-confirmation",
+      "originalCaptureAt": "2026-09-08T15:36:08.977Z",
+      "refreshedAt": "2026-09-08T15:57:21.806Z",
+      "passed": true
+    },
+    {
+      "id": "OT-invite-search-certifications",
+      "originalCaptureAt": "2026-09-08T15:36:14.674Z",
+      "refreshedAt": "2026-09-08T15:57:31.109Z",
+      "passed": true
+    },
+    {
+      "id": "OT-invite-drawer-bottom",
+      "originalCaptureAt": "2026-09-08T15:36:21.606Z",
+      "refreshedAt": "2026-09-08T15:57:38.958Z",
+      "passed": true
+    },
+    {
+      "id": "OT-single_applicant-applicants",
+      "originalCaptureAt": "2026-09-08T15:36:46.187Z",
+      "refreshedAt": "2026-09-08T15:57:45.183Z",
+      "passed": true
+    },
+    {
+      "id": "OT-many_applicants-applicants",
+      "originalCaptureAt": "2026-09-08T15:36:54.324Z",
+      "refreshedAt": "2026-09-08T15:57:51.500Z",
+      "passed": true
+    },
+    {
+      "id": "OT-private_waiting-applicants",
+      "originalCaptureAt": "2026-09-08T15:37:03.918Z",
+      "refreshedAt": "2026-09-08T15:57:55.722Z",
+      "passed": true
+    },
+    {
+      "id": "OT-paused-applicants",
+      "originalCaptureAt": "2026-09-08T15:37:25.538Z",
+      "refreshedAt": "2026-09-08T15:58:00.486Z",
+      "passed": true
+    },
+    {
+      "id": "OT-payment_attention-applicants",
+      "originalCaptureAt": "2026-09-08T15:37:46.054Z",
+      "refreshedAt": "2026-09-08T15:58:04.229Z",
+      "passed": true
+    },
+    {
+      "id": "OT-time_correction-applicants",
+      "originalCaptureAt": "2026-09-08T15:38:28.197Z",
+      "refreshedAt": "2026-09-08T15:58:09.521Z",
+      "passed": true
+    },
+    {
+      "id": "OT-many_applicants-applicants-expanded",
+      "originalCaptureAt": "2026-09-08T15:38:45.176Z",
+      "refreshedAt": "2026-09-08T15:58:14.259Z",
+      "passed": true
+    },
+    {
+      "id": "RC-invite-confirmation",
+      "originalCaptureAt": "2026-09-08T15:39:42.237Z",
+      "refreshedAt": "2026-09-08T15:58:19.192Z",
+      "passed": true
+    },
+    {
+      "id": "RC-invite-search-certifications",
+      "originalCaptureAt": "2026-09-08T15:39:50.636Z",
+      "refreshedAt": "2026-09-08T15:58:25.872Z",
+      "passed": true
+    },
+    {
+      "id": "RC-invite-drawer-bottom",
+      "originalCaptureAt": "2026-09-08T15:39:58.695Z",
+      "refreshedAt": "2026-09-08T15:58:34.700Z",
+      "passed": true
+    },
+    {
+      "id": "RC-single_applicant-applicants",
+      "originalCaptureAt": "2026-09-08T15:40:15.980Z",
+      "refreshedAt": "2026-09-08T15:58:40.677Z",
+      "passed": true
+    },
+    {
+      "id": "RC-many_applicants-applicants",
+      "originalCaptureAt": "2026-09-08T15:40:24.209Z",
+      "refreshedAt": "2026-09-08T15:58:45.541Z",
+      "passed": true
+    },
+    {
+      "id": "RC-private_waiting-applicants",
+      "originalCaptureAt": "2026-09-08T15:40:32.995Z",
+      "refreshedAt": "2026-09-08T15:58:50.129Z",
+      "passed": true
+    },
+    {
+      "id": "RC-paused-applicants",
+      "originalCaptureAt": "2026-09-08T15:40:49.362Z",
+      "refreshedAt": "2026-09-08T15:58:55.300Z",
+      "passed": true
+    },
+    {
+      "id": "RC-payment_attention-applicants",
+      "originalCaptureAt": "2026-09-08T15:41:01.138Z",
+      "refreshedAt": "2026-09-08T15:59:00.303Z",
+      "passed": true
+    },
+    {
+      "id": "RC-time_correction-applicants",
+      "originalCaptureAt": "2026-09-08T15:41:22.154Z",
+      "refreshedAt": "2026-09-08T15:59:06.504Z",
+      "passed": true
+    },
+    {
+      "id": "RC-many_applicants-applicants-expanded",
+      "originalCaptureAt": "2026-09-08T15:41:30.060Z",
+      "refreshedAt": "2026-09-08T15:59:10.808Z",
+      "passed": true
+    },
+    {
+      "id": "RC-hire-review",
+      "originalCaptureAt": "2026-09-08T15:44:22.722Z",
+      "refreshedAt": "2026-09-08T15:59:22.917Z",
+      "passed": true
+    },
+    {
+      "id": "OT-inline-support-visit",
+      "originalCaptureAt": "2026-09-08T15:51:46.490Z",
+      "refreshedAt": "2026-09-08T15:59:27.468Z",
+      "passed": true
+    },
+    {
+      "id": "RC-inline-support-plan",
+      "originalCaptureAt": "2026-09-08T15:52:10.565Z",
+      "refreshedAt": "2026-09-08T15:59:31.078Z",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

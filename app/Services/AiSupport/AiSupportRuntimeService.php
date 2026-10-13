@@ -73,6 +73,10 @@ class AiSupportRuntimeService
             return;
         }
 
+        if ($actor->role === 'family' && $this->respondToActionRestriction($actor, $ticket, $newestMessage)) {
+            return;
+        }
+
         if ($actor->role === 'family' && $this->goalJourneys->handleEarly($actor, $ticket, $newestMessage)) {
             return;
         }
@@ -523,6 +527,74 @@ class AiSupportRuntimeService
         $this->handoff->transfer($actor, $ticket, 'knowledge_or_scope_gap');
     }
 
+    private function respondToActionRestriction(User $actor, SupportTicket $ticket, string $message): bool
+    {
+        $restriction = app(FamilyActionIntentGuard::class)->inspect($message);
+        if ($restriction === null) {
+            return false;
+        }
+
+        // Existing informational handlers contain governed policy answers. They
+        // may continue only if the resolved intent has no write/preparation.
+        if ($restriction['kind'] === 'information_question' && ! $restriction['explanation']) {
+            $resolution = $this->familyIntents->resolve($message);
+            $record = $resolution['intent_id'] ? $this->familyIntentCatalog->find($resolution['intent_id']) : null;
+            $stages = (array) data_get($record, 'capability_stages.current', []);
+            if ($record && ! array_intersect(['Prepare', 'Execute'], $stages)) {
+                // Deliver the read directly. Passing through handleEarly would
+                // parse dates and weekdays in the question into an active draft.
+                if (! $this->familyLifecycle->respond($actor, $ticket, $record, $message)) {
+                    $this->familyJourneys->respond($actor, $ticket, $record, $message, 'information_question');
+                }
+
+                return true;
+            }
+        }
+
+        if ($restriction['kind'] !== 'information_question') {
+            if ($this->goalJourneys->activeFor($actor, $ticket)?->journey_type === 'applicant_hiring') {
+                $this->goalJourneys->cancelActive($actor, $ticket, 'user_requested_no_action');
+            }
+            AiSupportMessageAction::query()
+                ->where('support_ticket_id', $ticket->id)
+                ->where('actor_user_id', $actor->id)
+                ->whereIn('action_type', [
+                    AiSupportMessageAction::TYPE_DOMAIN_RECAP,
+                    AiSupportMessageAction::TYPE_RECAP,
+                    AiSupportMessageAction::TYPE_RENEW_RECAP,
+                    AiSupportMessageAction::TYPE_PREPARATION,
+                ])
+                ->whereNull('consumed_at')
+                ->whereNull('invalidated_at')
+                ->update(['invalidated_at' => now(), 'invalidation_reason' => 'user_requested_no_action']);
+            app(AiSupportPreparationService::class)->invalidateForTicket($ticket->id, 'user_requested_no_action');
+        }
+
+        $this->events->record($ticket, 'action_intent_withheld', [
+            'capability_id' => 'support_answers_v1',
+            'result_code' => $restriction['kind'],
+        ], $actor);
+
+        if ($restriction['explanation']) {
+            $this->automatedMessage($ticket, $restriction['explanation']);
+        } elseif (! $restriction['guidance']) {
+            $this->automatedMessage($ticket, $restriction['kind'] === 'information_question'
+                ? 'I can explain the steps without preparing a change. Which request, visit, or account setting would you like help with?'
+                : 'I won’t take that action. What would you like to see or understand first?');
+        }
+
+        if ($restriction['guidance']) {
+            try {
+                $this->familyGuidance->respond($actor, $ticket, $restriction['guidance'], $restriction['intent_id']);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->handoff->transfer($actor, $ticket, 'family_status_unavailable');
+            }
+        }
+
+        return true;
+    }
+
     private function isStopWithoutActiveTask(string $message): bool
     {
         return preg_match(
@@ -558,10 +630,23 @@ class AiSupportRuntimeService
 
     private function unsafeSuccessOrHeldClaim(string $message): bool
     {
-        return (bool) preg_match(
-            '/(?:\bI (?:created|published|submitted|changed|updated|hired|authorized|charged)\b|\bqueue position is\b|\breply (?:in|within) \d+\b)/i',
-            $message,
-        );
+        foreach (preg_split('/(?<=[.!?])\s+|\n+/u', trim($message)) ?: [] as $sentence) {
+            $sentence = trim($sentence);
+            if (str_ends_with($sentence, '?')
+                || preg_match('/^(?:if|when|once|unless|whether|until)\b/iu', $sentence)) {
+                continue;
+            }
+            if (preg_match('/\b(?:I|we)(?:\s+have|[’\']ve)?\s+(?:created|published|submitted|changed|updated|hired|authorized|charged|approved|sent|cancelled|canceled)\b|\bqueue position is\b|\breply (?:in|within) \d+\b/iu', $sentence)) {
+                return true;
+            }
+            // Model prose cannot substitute for a verified service receipt.
+            // Authoritative state reads and receipts do not use this output path.
+            if (preg_match('/(?:^|[,;:]\s*)(?:your|the|this)\s+(?:care\s+request|request|booking|caregiver|applicant|payment|card|submitted\s+hours|hours|review|message|invitation|profile|regular\s+care|recurring\s+plan)(?:\s+[\p{L}]+){0,6}\s+(?:(?:has|have)\s+(?:now\s+)?been|was|were|is\s+now|are\s+now)\s+(?:successfully\s+)?(?:charged|authorized|hired|published|submitted|approved|sent|cancelled|canceled|updated|created|deleted|withdrawn)\b/iu', $sentence)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function automatedMessage(SupportTicket $ticket, string $body): SupportTicketMessage
@@ -601,9 +686,10 @@ class AiSupportRuntimeService
         return match ($target) {
             'family.new_care_request' => 'Open care request form',
             'family.care_requests' => 'Open Care overview',
-            'family.care_actions' => 'Open Care actions',
-            'family.care_schedule' => 'Open Care schedule',
-            'family.care_arrangements', 'family.regular_care' => 'Open Arrangements',
+            'family.care_actions' => 'Review needs attention',
+            'family.care_schedule' => 'Open Schedule',
+            'family.care_arrangements', 'family.regular_care' => 'Open Care request',
+            'family.care_history' => 'Open History',
             'family.caregivers' => 'Find caregivers',
             'family.caregiver_profile' => 'Open caregiver profile',
             'caregiver.work_inbox' => 'Open Work Inbox',

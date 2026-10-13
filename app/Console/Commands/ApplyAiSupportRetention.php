@@ -7,52 +7,81 @@ use App\Models\AiSupportAdminAuditEvent;
 use App\Models\AiSupportConfirmedActionEvidence;
 use App\Models\AiSupportControlVersion;
 use App\Models\AiSupportGoalJourney;
+use App\Models\AiSupportIncident;
 use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
 use App\Models\AiSupportPreparation;
+use App\Models\AiSupportReadinessEvidence;
+use App\Models\AiSupportReleaseDecision;
 use App\Models\AiSupportRequestDraft;
 use App\Models\DataRetentionHold;
 use App\Models\KnowledgeBaseEntry;
 use App\Models\KnowledgeBaseVersion;
 use App\Models\SupportTicket;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ApplyAiSupportRetention extends Command
 {
+    public const HEARTBEAT_KEY = 'ai_support.retention_execution';
+
     protected $signature = 'ai-support:apply-retention {--execute : Apply due content deletion and evidence expiry}';
 
     protected $description = 'Dry-run or apply the approved AI support retention policies.';
 
     public function handle(): int
     {
-        $counts = $this->dueCounts();
-        $this->table(['Data class', 'Due records'], collect($counts)->map(fn (int $count, string $class): array => [$class, $count])->values()->all());
-
-        if (! $this->option('execute')) {
-            $this->warn('Dry run only. No records or content were changed.');
-
-            return self::SUCCESS;
+        $executing = (bool) $this->option('execute');
+        $heartbeat = [
+            'last_attempt_at' => now()->toIso8601String(),
+            'last_success_at' => data_get(Cache::get(self::HEARTBEAT_KEY, []), 'last_success_at'),
+            'status' => 'running',
+        ];
+        if ($executing) {
+            Cache::put(self::HEARTBEAT_KEY, $heartbeat, now()->addDays(7));
         }
 
-        $runReference = (string) Str::uuid();
-        $this->retireOrphanedGrants();
-        $this->pruneTranscripts($runReference);
-        $this->prunePreviews($runReference);
-        $this->pruneRequestDrafts($runReference);
-        $this->pruneGoalJourneys($runReference);
-        $this->prunePreparations($runReference);
-        $this->pruneInteractionEvents($runReference);
-        $this->pruneActionEvidence($runReference);
-        $this->pruneKnowledgeContent($runReference);
-        $this->pruneKnowledgeTombstones($runReference);
-        $this->pruneGrantAndControlHistory($runReference);
-        $this->pruneDeletionEvidence();
-        $this->info('Due AI support retention work was applied. Active legal/security holds were skipped.');
+        try {
+            $counts = $this->dueCounts();
+            $this->table(['Data class', 'Due records'], collect($counts)->map(fn (int $count, string $class): array => [$class, $count])->values()->all());
 
-        return self::SUCCESS;
+            if (! $executing) {
+                $this->warn('Dry run only. No records or content were changed.');
+
+                return self::SUCCESS;
+            }
+
+            $runReference = (string) Str::uuid();
+            $this->retireOrphanedGrants();
+            $this->pruneTranscripts($runReference);
+            $this->prunePreviews($runReference);
+            $this->pruneRequestDrafts($runReference);
+            $this->pruneGoalJourneys($runReference);
+            $this->prunePreparations($runReference);
+            $this->pruneInteractionEvents($runReference);
+            $this->pruneActionEvidence($runReference);
+            $this->pruneKnowledgeContent($runReference);
+            $this->pruneKnowledgeTombstones($runReference);
+            $this->pruneGrantAndControlHistory($runReference);
+            $this->pruneOperationalEvidence($runReference);
+            $this->pruneDeletionEvidence();
+            Cache::put(self::HEARTBEAT_KEY, [
+                ...$heartbeat, 'status' => 'succeeded', 'last_success_at' => now()->toIso8601String(),
+                'run_reference' => $runReference, 'candidate_counts' => $counts,
+            ], now()->addDays(7));
+            $this->info('Due AI support retention work was applied. Active legal/security holds were skipped.');
+
+            return self::SUCCESS;
+        } catch (\Throwable $exception) {
+            if ($executing) {
+                Cache::put(self::HEARTBEAT_KEY, [...$heartbeat, 'status' => 'failed'], now()->addDays(7));
+            }
+            throw $exception;
+        }
     }
 
     /** @return array<string, int> */
@@ -77,7 +106,54 @@ class ApplyAiSupportRetention extends Command
             'pilot_grants' => AiSupportPilotGrant::query()->where('retain_until', '<=', now())->count(),
             'control_versions' => AiSupportControlVersion::query()->where('retain_until', '<=', now())->count(),
             'admin_audit_events' => AiSupportAdminAuditEvent::query()->where('retain_until', '<=', now())->count(),
+            'resolved_incident_evidence' => $this->operationalEvidenceQuery(AiSupportIncident::class)->count(),
+            'readiness_evidence' => $this->operationalEvidenceQuery(AiSupportReadinessEvidence::class)->count(),
+            'inactive_release_decisions' => $this->operationalEvidenceQuery(AiSupportReleaseDecision::class)->count(),
         ];
+    }
+
+    private function operationalEvidenceQuery(string $modelClass): Builder
+    {
+        $query = $modelClass::query()->where('retain_until', '<=', now());
+        if ($modelClass === AiSupportIncident::class) {
+            $query->where('status', AiSupportIncident::STATUS_RESOLVED)->whereNotNull('resolved_at');
+        }
+        if ($modelClass === AiSupportReleaseDecision::class) {
+            $query->where(fn (Builder $inactive) => $inactive->whereNotNull('superseded_at')
+                ->orWhere('status', '!=', AiSupportReleaseDecision::STATUS_APPROVED)
+                ->orWhere('expires_at', '<=', now()));
+        }
+
+        return $query;
+    }
+
+    private function pruneOperationalEvidence(string $runReference): void
+    {
+        foreach ([
+            AiSupportIncident::class => 'resolved_incident_evidence',
+            AiSupportReadinessEvidence::class => 'readiness_evidence',
+            AiSupportReleaseDecision::class => 'inactive_release_decisions',
+        ] as $modelClass => $dataClass) {
+            $this->operationalEvidenceQuery($modelClass)->orderBy('id')
+                ->chunkById(100, function ($records) use ($modelClass, $dataClass, $runReference): void {
+                    DB::transaction(function () use ($records, $modelClass, $dataClass, $runReference): void {
+                        // Recheck expiry and active status after locking; discovery is not deletion authority.
+                        $due = $this->operationalEvidenceQuery($modelClass)->whereKey($records->modelKeys())
+                            ->lockForUpdate()->get();
+                        $deleted = 0;
+                        foreach ($due as $record) {
+                            if ($this->held($modelClass, (string) $record->id)
+                                || ($record instanceof AiSupportIncident && $record->support_ticket_id
+                                    && $this->held(SupportTicket::class, (string) $record->support_ticket_id))) {
+                                continue;
+                            }
+                            $record->delete();
+                            $deleted++;
+                        }
+                        $this->evidence($dataClass, $deleted, $runReference);
+                    }, 3);
+                });
+        }
     }
 
     private function pruneTranscripts(string $runReference): void

@@ -1,0 +1,465 @@
+{
+  "at": "2026-09-09T13:06:24.659Z",
+  "buildHash": "0557227ff4a924634adc7d995161957dc1763aad50f45ac4d3583ad128122b7f",
+  "checks": [
+    {
+      "name": "OT-legacy-invite-search/desktop HTTP",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop no app error",
+      "pass": true
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop no horizontal overflow",
+      "pass": true,
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop local brand fonts",
+      "pass": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop request identity",
+      "pass": true,
+      "requestId": 29
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop primary normal contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(35, 72, 63)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 9.537499138235606
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop primary hover contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop primary focus contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop focus visible",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/desktop legacy Escape focuses current phase",
+      "pass": true
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile HTTP",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile no app error",
+      "pass": true
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile no horizontal overflow",
+      "pass": true,
+      "width": 390,
+      "documentWidth": 390
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile local brand fonts",
+      "pass": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile request identity",
+      "pass": true,
+      "requestId": 29
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile primary normal contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(35, 72, 63)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 9.537499138235606
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile primary hover contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile primary focus contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile focus visible",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/mobile legacy Escape focuses current phase",
+      "pass": true
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow HTTP",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow no app error",
+      "pass": true
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow no horizontal overflow",
+      "pass": true,
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow local brand fonts",
+      "pass": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow request identity",
+      "pass": true,
+      "requestId": 29
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow primary normal contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(35, 72, 63)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 9.537499138235606
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow primary hover contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow primary focus contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow focus visible",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "OT-legacy-invite-search/narrow legacy Escape focuses current phase",
+      "pass": true
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop HTTP",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop no app error",
+      "pass": true
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop no horizontal overflow",
+      "pass": true,
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop local brand fonts",
+      "pass": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop request identity",
+      "pass": true,
+      "requestId": 35
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop primary normal contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(35, 72, 63)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 9.537499138235606
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop primary hover contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop primary focus contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop focus visible",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/desktop legacy Escape focuses current phase",
+      "pass": true
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile HTTP",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile no app error",
+      "pass": true
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile no horizontal overflow",
+      "pass": true,
+      "width": 390,
+      "documentWidth": 390
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile local brand fonts",
+      "pass": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile request identity",
+      "pass": true,
+      "requestId": 35
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile primary normal contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(35, 72, 63)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 9.537499138235606
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile primary hover contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile primary focus contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile focus visible",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/mobile legacy Escape focuses current phase",
+      "pass": true
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow HTTP",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow no app error",
+      "pass": true
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow no horizontal overflow",
+      "pass": true,
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow local brand fonts",
+      "pass": true,
+      "fonts": [
+        "Inter",
+        "Source Serif 4"
+      ]
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow request identity",
+      "pass": true,
+      "requestId": 35
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow primary normal contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(35, 72, 63)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 9.537499138235606
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow primary hover contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "none",
+      "outlineWidth": "3px",
+      "boxShadow": "none",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow primary focus contrast",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow focus visible",
+      "pass": true,
+      "text": "Invite Sofia",
+      "color": "rgb(255, 247, 234)",
+      "background": "rgb(25, 57, 47)",
+      "outline": "solid",
+      "outlineWidth": "3px",
+      "boxShadow": "rgb(255, 253, 250) 0px 0px 0px 2px",
+      "contrast": 11.839781768974715
+    },
+    {
+      "name": "RC-legacy-invite-search/narrow legacy Escape focuses current phase",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "blockedMutations": [],
+  "passed": true
+}

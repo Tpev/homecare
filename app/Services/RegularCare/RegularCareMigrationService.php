@@ -89,6 +89,9 @@ class RegularCareMigrationService
         }
 
         return DB::transaction(function () use ($request, $report, $actorUserId, $confirmedSchedule): CarePlan {
+            // Migration materializes existing commitments, including suspended accounts.
+            \App\Models\CaregiverProfile::where('user_id', $report['plan']?->caregiver_user_id ?: $report['caregiver']->id)
+                ->lockForUpdate()->first();
             $lockedRequest = CareRequest::query()->lockForUpdate()->findOrFail($request->id);
             $plan = CarePlan::query()->where('source_care_request_id', $lockedRequest->id)->lockForUpdate()->first();
             $scheduleHash = hash('sha256', json_encode($confirmedSchedule, JSON_THROW_ON_ERROR));

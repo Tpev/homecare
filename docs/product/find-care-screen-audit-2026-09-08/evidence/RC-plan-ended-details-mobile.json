@@ -1,0 +1,223 @@
+{
+  "text": "← Back to your care\n\nRecurring care · Care #4\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nRecurring care ended\nCaregiver & conversations\nGet help\nOverview\nCaregivers\nVisits\nCare details\nCare details for this recurring care\n\nThese are the details saved for this care. Each booked visit keeps the care profile and agreement assigned to that visit.\n\nCare location\n142 Maple Grove Lane\nApartment 2B\nRaleigh, NC 27601\nCare notes\nPlease follow Ellie’s familiar morning routine: companionship, lunch, and a tidy kitchen.\nTasks and instructions\n\nCompanionship\n\nConversation, a crossword puzzle, and a short walk if Ellie feels up to it.\n\nMeal preparation\n\nPrepare soup and a sandwich for lunch; leave the kitchen tidy.\n\nLight housekeeping\n\nWash dishes and keep the living room and hallway clear.\n\nAbout Ellie\nMother\n75-84\nShe/her\nAt a glance\n\nA retired teacher who enjoys gardening, family stories, and a friendly conversation.\n\nInterests and comforts\n\nCrossword puzzles, jazz, and sitting in the garden when the weather is mild.\n\nA good visit\n\nA relaxed pace, a warm lunch, and a short walk make a good visit.\n\nCommunication\nUse short, clear sentences\nGive extra time to answer\n\nPlease introduce yourself and give Ellie time to answer.\n\nSupport and mobility\nCompanionship and conversation\nMeal preparation or eating support\nLight household help\nWalking or mobility support\n\nMobility\n\nUses an aid\n\nUses a walking cane outdoors; stay nearby on steps.\n\nRoutine and comfort\n\nUsual routine\n\nLunch around noon, followed by a short walk and a cup of tea.\n\nFood and drink\n\nPrefers soup and a sandwich. Encourage a glass of water at lunch.\n\nComfort and reassurance\n\nBenefits from reminders or reassurance\nImportant for safety\nFall risk\n\nKeep the hallway clear and remind Ellie to use the handrail.\n\nWhat the family is looking for\n\nHelpful caregiver qualities\n\nPatient\nCalm\nConversational\n\nPlease do\n\nExplain what you are doing and offer choices.\n\nContacts and care coordination\n\nFull name: Eleanor Bennett\n\nDaniel Bennett · Son\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nContact Maria first; Daniel is the backup family contact.\n\nShared by Ellie's family · last reviewed September 7, 2026.\nInstructions from your original request\nScope of care\nCompanionship, preparing lunch, and light housekeeping.\nTime expectations\nPlease arrive on time and leave a short update after the visit.\nHome access\nUse the main entrance and ring apartment 2B. Maria will meet you for the first visit.\nAdditional information\nWe are looking for a friendly caregiver to help Ellie feel comfortable and supported at home.\nAdditional care contact\n\nDaniel Bennett\n\nSon\n\n+1 919 555 0153\n\ndaniel.find-care-audit@example.com\n\nCare record\nCare reference\nCare #4\nSchedule version\n1\nOffered\nAug 28, 2026 · 8:51 AM\nAccepted\nAug 29, 2026 · 8:51 AM\nEnded\nSep 6, 2026 · 8:51 AM\nCare story\nAll past visits & payments\n\n© 2026 LoLo\n\nLegal links",
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Recurring care for Eleanor Bennett"
+    },
+    {
+      "level": "H2",
+      "text": "Care details for this recurring care"
+    },
+    {
+      "level": "H3",
+      "text": "Tasks and instructions"
+    },
+    {
+      "level": "H2",
+      "text": "About Ellie"
+    },
+    {
+      "level": "H3",
+      "text": "At a glance"
+    },
+    {
+      "level": "H3",
+      "text": "Communication"
+    },
+    {
+      "level": "H3",
+      "text": "Support and mobility"
+    },
+    {
+      "level": "H3",
+      "text": "Routine and comfort"
+    },
+    {
+      "level": "H3",
+      "text": "Important for safety"
+    },
+    {
+      "level": "H3",
+      "text": "What the family is looking for"
+    },
+    {
+      "level": "H3",
+      "text": "Contacts and care coordination"
+    },
+    {
+      "level": "H2",
+      "text": "Instructions from your original request"
+    },
+    {
+      "level": "H2",
+      "text": "Additional care contact"
+    },
+    {
+      "level": "H2",
+      "text": "Care record"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Toggle navigation menu",
+      "text": "",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Get help",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": "false",
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Overview",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Caregivers",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Visits",
+      "value": "",
+      "disabled": false,
+      "current": null,
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "",
+      "text": "Care details",
+      "value": "",
+      "disabled": false,
+      "current": "page",
+      "expanded": null,
+      "pressed": null,
+      "placeholder": null
+    }
+  ],
+  "links": [
+    {
+      "text": "Family workspace",
+      "href": "http://127.0.0.1:8028/family/requests"
+    },
+    {
+      "text": "Notifications",
+      "href": "http://127.0.0.1:8028/family/notifications"
+    },
+    {
+      "text": "← Back to your care",
+      "href": "http://127.0.0.1:8028/family/care"
+    },
+    {
+      "text": "Caregiver & conversations",
+      "href": "http://127.0.0.1:8028/family/requests/26?tab=applicants"
+    },
+    {
+      "text": "+1 919 555 0153",
+      "href": "tel:+1 919 555 0153"
+    },
+    {
+      "text": "daniel.find-care-audit@example.com",
+      "href": "mailto:daniel.find-care-audit@example.com"
+    },
+    {
+      "text": "+1 919 555 0153",
+      "href": "tel:+1 919 555 0153"
+    },
+    {
+      "text": "daniel.find-care-audit@example.com",
+      "href": "mailto:daniel.find-care-audit@example.com"
+    },
+    {
+      "text": "Care story",
+      "href": "http://127.0.0.1:8028/family/care/journey/regular/4"
+    },
+    {
+      "text": "All past visits & payments",
+      "href": "http://127.0.0.1:8028/family/care/history?plan=4"
+    }
+  ],
+  "details": [
+    {
+      "summary": "Legal links",
+      "open": false
+    }
+  ],
+  "images": [
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-app-icon.svg",
+      "loaded": true
+    },
+    {
+      "alt": "LoLo",
+      "src": "http://127.0.0.1:8028/images/marketing/lolo/lolo-wordmark-evergreen.svg",
+      "loaded": true
+    }
+  ],
+  "width": 390,
+  "height": 844,
+  "documentWidth": 390,
+  "documentHeight": 4783,
+  "fontFaces": [
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "weight": "100 900",
+      "style": "normal"
+    },
+    {
+      "family": "Source Serif 4",
+      "status": "loaded",
+      "weight": "200 900",
+      "style": "normal"
+    }
+  ],
+  "bodyFont": "Inter, sans-serif",
+  "workspace": {
+    "heading": "Recurring care for Eleanor Bennett",
+    "status": "",
+    "headerText": "← Back to your care\n\nRecurring care · Care #4\n\nRecurring care for Eleanor Bennett\n\nSofia Martinez · Mon, Wed, Fri · 10:00 AM–12:00 PM\n\nRecurring care ended\nCaregiver & conversations\nGet help",
+    "primaryTitle": "",
+    "selectedTabs": [
+      "Care details"
+    ]
+  }
+}
