@@ -82,13 +82,13 @@
                 <x-input-error :messages="$errors->get('accept_independent_contractor')" class="mt-1" />
             </div>
 
+            <x-sms-opt-in />
+
             <div class="grid grid-cols-1 gap-4 pt-1 sm:flex sm:items-center sm:justify-between">
                 <a href="{{ route('login') }}" wire:navigate class="text-sm text-slate-600 underline">
                     Already registered?
                 </a>
                 <x-button type="submit" color="blue" class="auth-primary w-full justify-center sm:w-auto">Create caregiver account</x-button>
             </div>
-
-            <x-sms-opt-in />
     </form>
 </div>

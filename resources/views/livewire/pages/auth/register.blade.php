@@ -165,13 +165,13 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-error :messages="$errors->get('accept_terms')" class="mt-2" />
         </div>
 
+        <x-sms-opt-in />
+
         <div class="grid grid-cols-1 gap-4 pt-1 sm:flex sm:items-center sm:justify-between">
             <a class="text-sm text-slate-600 underline" href="{{ route('login') }}" wire:navigate>
                 {{ __('Already registered?') }}
             </a>
             <x-button type="submit" color="blue" class="auth-primary w-full justify-center sm:w-auto">{{ __('Create family account') }}</x-button>
         </div>
-
-        <x-sms-opt-in />
     </form>
 </div>

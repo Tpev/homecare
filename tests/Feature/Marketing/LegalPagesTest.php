@@ -86,7 +86,7 @@ class LegalPagesTest extends TestCase
     }
 
     #[DataProvider('registrationPages')]
-    public function test_registration_sms_consent_is_optional_unchecked_and_below_the_submit_button(string $path): void
+    public function test_registration_sms_consent_is_optional_unchecked_and_between_terms_and_submit_button(string $path): void
     {
         $response = $this->get($path)->assertOk();
         $document = new \DOMDocument;
@@ -99,7 +99,8 @@ class LegalPagesTest extends TestCase
         $this->assertSame('sms_opt_in', $checkbox->getAttribute('wire:model'));
         $this->assertFalse($checkbox->hasAttribute('checked'));
         $this->assertFalse($checkbox->hasAttribute('required'));
-        $this->assertCount(1, $xpath->query('//form//button[@type="submit"]/following::input[@id="sms_opt_in"]'));
+        $this->assertCount(1, $xpath->query('//form//input[@*[name()="wire:model"]="accept_terms"]/following::input[@id="sms_opt_in"]'));
+        $this->assertCount(1, $xpath->query('//form//button[@type="submit"]/preceding::input[@id="sms_opt_in"]'));
 
         $phones = $xpath->query('//form//input[@type="tel" and @*[name()="wire:model"]="phone"]');
         $this->assertCount(1, $phones);
