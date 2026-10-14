@@ -1,6 +1,6 @@
 LoLo Care, Inc.
 Caregiver / Service Provider Terms
-Effective Date: August 1, 2026 | Last Updated: August 1, 2026
+Effective Date: August 1, 2026 | Last Updated: October 14, 2026
 These Caregiver / Service Provider Terms (“Caregiver Terms”) govern the participation of caregivers, service providers, contractors, and similar individuals (collectively, “Providers”) who use the LoLo Care, Inc. (“LoLo”) platform (the “Platform”).
 These Terms supplement the LOLO Platform Terms of Service. By registering as a service provider on the Platform, you agree to comply with these Terms as well as the Platform Terms of Service.
 ## 1. Independent Contractor Status
@@ -41,13 +41,23 @@ You may not:
 - falsify credentials or background information.
 Providing false information may result in removal from the Platform.
 ## 5. Background Checks and Verification
-LOLO may offer or require background checks or identity verification through third-party providers.
+### Mandatory Background Checks
+LOLO conducts background checks and identity verification directly and/or through third-party providers. Participation in LOLO's screening process, completion of required checks, and continued satisfaction of LOLO's eligibility requirements are mandatory conditions of using the Platform as a Provider.
+You must provide accurate and complete information reasonably requested for screening and cooperate with initial and any repeat checks required by LOLO during your participation. Any separate disclosures and authorizations required by applicable law must be provided and obtained before the applicable check; acceptance of these Terms does not replace them.
 Providers acknowledge that:
 - checks may be limited in scope;
 - checks may not capture all criminal history;
 - checks may be periodic rather than continuous;
 - checks are not warranted by LOLO, and LOLO cannot guarantee information supplied by third-party identity-verification or background-check vendors.
 Providers remain responsible for their conduct and compliance with the law.
+### Continuing Duty to Report Changes
+You have a continuing duty to promptly notify LOLO in writing after becoming aware of any change to your criminal history, background-check information, or legal or professional status. This duty applies to matters in any jurisdiction, whether or not they arise from services performed through the Platform, and includes, to the extent disclosure is permitted by applicable law:
+- any new arrest, criminal charge, indictment, or pending criminal proceeding;
+- any guilty or no-contest plea, conviction, sentence, or change in probation or parole status;
+- any dismissal, acquittal, appeal outcome, or other change in the status or disposition of a previously reported matter; and
+- any protective or restraining order, registry status change, or disciplinary action, restriction, suspension, or revocation affecting a license, certification, or eligibility to provide services.
+Submit reports through Platform support or using the contact information in Section 16. Provide accurate information about the nature and current status of the matter and promptly report subsequent changes. Do not wait for your next background check or assume that LOLO will learn of a change through public records or another source.
+You are not required to disclose sealed, expunged, or other information that applicable law prohibits LOLO from requesting or permits you to withhold. A reported arrest or charge is not, by itself, proof of wrongdoing and does not automatically result in removal. LOLO will assess reported information and any effect on Platform eligibility in accordance with applicable law, including any required notices and opportunity to review or dispute screening information.
 ## 6. Safety Expectations
 Providers must follow reasonable safety practices when interacting with clients or entering homes or facilities.
 Providers should:
@@ -94,6 +104,7 @@ LOLO may suspend or remove Providers from the Platform if:
 - these Terms are violated;
 - unsafe conduct is reported;
 - false information is discovered;
+- required screening is refused or not completed, or reportable changes under Section 5 are not disclosed, subject to applicable law;
 - fraud or illegal activity is suspected.
 LOLO is not obligated to continue allowing access to the Platform.
 ## 14. Limitation of LOLO Responsibility
