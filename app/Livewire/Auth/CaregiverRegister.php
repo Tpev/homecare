@@ -33,6 +33,8 @@ class CaregiverRegister extends Component
 
     public bool $accept_terms = false;
 
+    public bool $sms_opt_in = false;
+
     public bool $accept_independent_contractor = false;
 
     public array $usStates = [
@@ -54,14 +56,19 @@ class CaregiverRegister extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'phone' => ['required', 'string', 'max:30'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'city' => ['required', 'string', 'max:120'],
             'state' => ['required', Rule::in(array_keys($this->usStates))],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             'accept_terms' => ['accepted'],
             'accept_independent_contractor' => ['accepted'],
+            'sms_opt_in' => ['boolean'],
         ]);
 
+        $validated['phone'] = filled($validated['phone'] ?? null) ? trim($validated['phone']) : null;
+        $validated['sms_opt_in'] = $validated['sms_opt_in'] && filled($validated['phone']);
+        $validated['sms_opted_in_at'] = $validated['sms_opt_in'] ? now() : null;
+        $validated['sms_opt_in_phone'] = $validated['sms_opt_in'] ? $validated['phone'] : null;
         $validated['role'] = 'caregiver';
         $validated['state'] = strtoupper($validated['state']);
         $validated['password'] = Hash::make($validated['password']);

@@ -25,7 +25,7 @@
                 </div>
 
                 <div>
-                    <x-input type="tel" label="Phone" wire:model="phone" autocomplete="tel" required />
+                    <x-input type="tel" label="Phone number (optional)" wire:model="phone" autocomplete="tel" />
                     <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                 </div>
 
@@ -88,5 +88,7 @@
                 </a>
                 <x-button type="submit" color="blue" class="auth-primary w-full justify-center sm:w-auto">Create caregiver account</x-button>
             </div>
+
+            <x-sms-opt-in />
     </form>
 </div>

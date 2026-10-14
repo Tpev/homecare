@@ -3,6 +3,7 @@
 namespace Tests\Feature\Marketing;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class LegalPagesTest extends TestCase
@@ -31,9 +32,11 @@ class LegalPagesTest extends TestCase
                 ->assertOk()
                 ->assertSeeText('Effective Date: August 1, 2026');
             $response
-                ->assertSeeText($slug === 'payment-terms-and-cancellation-policy'
-                    ? 'Last Updated: August 26, 2026'
-                    : 'Last Updated: August 1, 2026')
+                ->assertSeeText(match ($slug) {
+                    'privacy-policy', 'platform-terms-of-service' => 'Last Updated: October 14, 2026',
+                    'payment-terms-and-cancellation-policy' => 'Last Updated: August 26, 2026',
+                    default => 'Last Updated: August 1, 2026',
+                })
                 ->assertDontSeeText('TO BE REMOVED')
                 ->assertDontSeeText('State-Specific and Operational Placeholders for Counsel Review')
                 ->assertDontSeeText('intended as a business draft for review and customization')
@@ -54,8 +57,63 @@ class LegalPagesTest extends TestCase
             ->assertSeeText('SMS consent')
             ->assertSeeText('third parties or affiliates')
             ->assertSeeText('marketing or promotional purposes')
+            ->assertSeeText('SMS Consent & Mobile Data Non-Sharing')
+            ->assertSeeText('No mobile information will be shared with third parties or affiliates for marketing or promotional purposes.')
             ->assertDontSeeText('HUB Healthcare')
             ->assertDontSeeText('HomeCare');
+    }
+
+    public function test_platform_terms_explain_explicit_sms_consent_and_messaging_controls(): void
+    {
+        $this->get(route('legal.show', ['slug' => 'platform-terms-of-service']))
+            ->assertOk()
+            ->assertSeeText('SMS / Text Messaging Terms and Conditions')
+            ->assertSeeText('provide your mobile phone number, and check the optional SMS consent box')
+            ->assertSeeText('Consent is not required to create an account or submit the registration form.')
+            ->assertSeeText('Reply STOP')
+            ->assertSeeText('Reply HELP')
+            ->assertSeeText('hello@carelolo.com')
+            ->assertSeeText('Message and data rates may apply.')
+            ->assertSeeText('Wireless carriers are not liable for delayed or undelivered messages.');
+    }
+
+    public static function registrationPages(): array
+    {
+        return [
+            'family' => ['/register'],
+            'caregiver' => ['/caregiver/register'],
+        ];
+    }
+
+    #[DataProvider('registrationPages')]
+    public function test_registration_sms_consent_is_optional_unchecked_and_below_the_submit_button(string $path): void
+    {
+        $response = $this->get($path)->assertOk();
+        $document = new \DOMDocument;
+        @$document->loadHTML($response->getContent());
+        $xpath = new \DOMXPath($document);
+        $checkboxes = $xpath->query('//form//input[@id="sms_opt_in" and @type="checkbox"]');
+
+        $this->assertCount(1, $checkboxes);
+        $checkbox = $checkboxes->item(0);
+        $this->assertSame('sms_opt_in', $checkbox->getAttribute('wire:model'));
+        $this->assertFalse($checkbox->hasAttribute('checked'));
+        $this->assertFalse($checkbox->hasAttribute('required'));
+        $this->assertCount(1, $xpath->query('//form//button[@type="submit"]/following::input[@id="sms_opt_in"]'));
+
+        $phones = $xpath->query('//form//input[@type="tel" and @*[name()="wire:model"]="phone"]');
+        $this->assertCount(1, $phones);
+        $this->assertFalse($phones->item(0)->hasAttribute('required'));
+
+        $labels = $xpath->query('//label[@for="sms_opt_in"]');
+        $this->assertCount(1, $labels);
+        $this->assertSame(
+            'By providing your phone number and checking this box, you consent to receive SMS messages from Lolo Care,Inc. regarding appointment reminders, service updates, and customer support. Message frequency may vary. Standard message and data rates may apply. Text STOP to unsubscribe or HELP for assistance. See our Privacy Policy and Terms of Service. Consent is not required to submit this form.',
+            preg_replace('/\s+/', ' ', trim($labels->item(0)->textContent)),
+        );
+        foreach (['privacy-policy', 'platform-terms-of-service'] as $slug) {
+            $this->assertCount(1, $xpath->query('//label[@for="sms_opt_in"]//a[@href="'.route('legal.show', ['slug' => $slug]).'"]'));
+        }
     }
 
     public function test_legal_documents_render_counsel_lists_semantically(): void

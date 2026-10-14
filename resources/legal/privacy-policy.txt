@@ -1,6 +1,6 @@
 LoLo Care, Inc.
 Privacy Policy
-Effective Date: August 1, 2026 | Last Updated: August 1, 2026
+Effective Date: August 1, 2026 | Last Updated: October 14, 2026
 This Privacy Policy explains how LoLo Care, Inc. (“LOLO,” “we,” “us,” or “our”) collects, uses, discloses, stores, and protects personal information when you access or use our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
 This Privacy Policy should be read together with our Platform Terms of Service and any supplemental agreements, notices, or consents that may apply to specific products, workflows, users, or services.
 ## 1. Scope
@@ -111,9 +111,11 @@ Depending on the jurisdiction and the way the Platform is configured, LOLO may a
 You may be able to manage cookies through your browser settings, device controls, or available consent preferences. Blocking certain cookies or tracking technologies may affect Platform functionality.
 ## 7. Communications Preferences
 We may send you service-related and transactional communications, including account notices, verification messages, security alerts, reminders, scheduling updates, workflow notifications, and payment-related notices.
-We may also send marketing or promotional communications where permitted by law. You may opt out of marketing emails by using the unsubscribe link in those emails. You may not be able to opt out of service-related or legally required communications.
-If we use text messaging, automated calls, prerecorded calls, or similar communications, those communications will be subject to applicable law, your permissions, and any separate notices or consent language presented to you. By providing a mobile number and opting in where required, you authorize LoLo to send text messages related to your account, care requests, caregiver activity, scheduling, support, and other Platform communications. Message and data rates may apply. Message frequency may vary. You may opt out of non-essential SMS messages by replying STOP, and you may request help by replying HELP where supported.
+We may also send marketing or promotional communications where permitted by law. You may opt out of marketing emails by using the unsubscribe link in those emails. You may not be able to opt out of service-related or legally required communications sent through other channels.
+If we use text messaging, automated calls, prerecorded calls, or similar communications, those communications will be subject to applicable law, your permissions, and any separate notices or consent language presented to you. By providing a mobile number and checking the optional SMS consent box, you authorize LoLo to send text messages related to your account, care requests, caregiver activity, scheduling, support, and other Platform communications. Message and data rates may apply. Message frequency may vary. You may opt out of SMS messages by replying STOP. Upon sending STOP you will receive a confirmation message and no further text messages will be sent unless you re-subscribe. You may request help by replying HELP or contacting hello@carelolo.com.
 LoLo does not share mobile information, text messaging opt-in data, or SMS consent with third parties or affiliates for marketing or promotional purposes.
+### SMS Consent & Mobile Data Non-Sharing
+No mobile information will be shared with third parties or affiliates for marketing or promotional purposes.
 ## 8. Data Retention
 We retain personal information for as long as reasonably necessary for the purposes described in this Privacy Policy, including to:
 - provide the Platform and the connections offered therein;

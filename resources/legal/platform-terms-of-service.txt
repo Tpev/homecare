@@ -1,6 +1,6 @@
 LoLo Care, Inc.
 Platform Terms of Service
-Effective Date: August 1, 2026 | Last Updated: August 1, 2026
+Effective Date: August 1, 2026 | Last Updated: October 14, 2026
 These Platform Terms of Service (the “Terms”) are a binding legal agreement between you and LoLo Care, Inc. (“LOLO,” “we,” “us,” or “our”) governing your access to and use of our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
 By accessing, browsing, registering for, or using the Platform, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Platform.
 ## 1. Scope and Acceptance
@@ -90,7 +90,7 @@ You represent and warrant that:
 - the User Content is not defamatory, obscene, abusive, discriminatory, fraudulent, or otherwise improper.
 LOLO may, but is not obligated to, monitor, review, screen, edit, refuse, remove, or disable any User Content at any time and for any reason.
 ## 10. Communications Consent
-By using the Platform or providing contact information to LOLO, you consent, to the extent permitted by law, to receive communications from LOLO and, where applicable, from other users through the Platform, including by email, text message, push notification, phone call, voicemail, or in-app messaging.
+By using the Platform or providing contact information to LOLO, you consent, to the extent permitted by law, to receive communications from LOLO and, where applicable, from other users through the Platform, including by email, push notification, phone call, voicemail, or in-app messaging. SMS messages are subject to your explicit opt-in through the optional SMS consent box and the SMS / Text Messaging Terms and Conditions below.
 These communications may include:
 - account and security notifications;
 - scheduling or service-related messages;
@@ -100,6 +100,14 @@ These communications may include:
 - reminders, alerts, and workflow notifications; and
 - marketing communications, subject to applicable opt-out rights.
 You are responsible for any charges imposed by your communications provider. Consent to receive communications is not a condition of purchase where prohibited by law.
+### SMS / Text Messaging Terms and Conditions
+1. Program Description: LoLo Care Inc operates an SMS notification service to deliver account verification codes, caregiver visit coordination, booking confirmations, schedule reminders, and platform support updates to registered families and caregivers.
+2. How to Opt In: You opt in to receive text messages when you register for an account on carelolo.com, provide your mobile phone number, and check the optional SMS consent box. Consent is not required to create an account or submit the registration form.
+3. How to Opt Out: Reply STOP to any text message received from LoLo Care. Upon sending STOP you will receive a confirmation message and no further text messages will be sent unless you re-subscribe.
+4. How to Get Help: Reply HELP to any message or contact hello@carelolo.com for assistance.
+5. Cost and Frequency: Message and data rates may apply. Message frequency varies depending on your platform activity, visit schedules, and coordination needs.
+6. Carrier Disclaimer: Wireless carriers are not liable for delayed or undelivered messages.
+7. Privacy: For details on how we protect your personal information please view our Privacy Policy at carelolo.com/legal/privacy-policy.
 ## 11. Background Checks and Verification
 LOLO may, directly or through third parties, offer or require identity checks, reference checks, license checks, certification reviews, sanctions screening, criminal history checks, motor vehicle checks, document reviews, or other verification measures for some users.
 You acknowledge and agree that:

@@ -23,6 +23,8 @@ new #[Layout('layouts.guest')] class extends Component
 
     public bool $accept_terms = false;
 
+    public bool $sms_opt_in = false;
+
     public function mount(): void
     {
         app(\App\Services\FamilyAcquisition\FamilySignupAttribution::class)->capture(request());
@@ -39,11 +41,16 @@ new #[Layout('layouts.guest')] class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'phone' => ['required', 'string', 'min:7', 'max:30'],
+            'phone' => ['nullable', 'string', 'min:7', 'max:30'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             'accept_terms' => ['accepted'],
+            'sms_opt_in' => ['boolean'],
         ]);
 
+        $validated['phone'] = filled($validated['phone'] ?? null) ? trim($validated['phone']) : null;
+        $validated['sms_opt_in'] = $validated['sms_opt_in'] && filled($validated['phone']);
+        $validated['sms_opted_in_at'] = $validated['sms_opt_in'] ? now() : null;
+        $validated['sms_opt_in_phone'] = $validated['sms_opt_in'] ? $validated['phone'] : null;
         $validated['password'] = Hash::make($validated['password']);
         $validated['role'] = 'family';
         unset($validated['accept_terms']);
@@ -127,7 +134,7 @@ new #[Layout('layouts.guest')] class extends Component
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
             </div>
             <div class="md:col-span-2">
-                <x-input type="tel" label="Phone number" wire:model="phone" autocomplete="tel" required />
+                <x-input type="tel" label="Phone number (optional)" wire:model="phone" autocomplete="tel" />
                 <x-input-error :messages="$errors->get('phone')" class="mt-2" />
             </div>
             <div class="md:col-span-2 mt-1 border-t border-[#E8DED1] pt-5">
@@ -164,5 +171,7 @@ new #[Layout('layouts.guest')] class extends Component
             </a>
             <x-button type="submit" color="blue" class="auth-primary w-full justify-center sm:w-auto">{{ __('Create family account') }}</x-button>
         </div>
+
+        <x-sms-opt-in />
     </form>
 </div>

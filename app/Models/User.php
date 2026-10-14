@@ -23,6 +23,9 @@ class User extends Authenticatable
         'role',
         'content_role',
         'phone',
+        'sms_opt_in',
+        'sms_opted_in_at',
+        'sms_opt_in_phone',
         'city',
         'state',
         'date_of_birth',
@@ -42,6 +45,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'sms_opt_in' => 'boolean',
+            'sms_opted_in_at' => 'datetime',
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'onboarding_completed_at' => 'datetime',
