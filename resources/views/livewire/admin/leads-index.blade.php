@@ -69,26 +69,27 @@
                     </div>
                 </div>
 
+                @include('livewire.admin.partials.crm-lead-form-errors')
                 <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Contact name</span>
-                        <input type="text" wire:model.blur="leadForm.name" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="text" wire:model="leadForm.name" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                         @error('leadForm.name') <span class="mt-1 block text-xs text-rose-600">{{ $message }}</span> @enderror
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">{{ $pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'Role' : 'Relationship / role' }}</span>
-                        <input type="text" wire:model.blur="leadForm.contact_role" placeholder="{{ $pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'PCP, case manager, discharge planner' : 'Daughter, spouse, self' }}" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="text" wire:model="leadForm.contact_role" placeholder="{{ $pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'PCP, case manager, discharge planner' : 'Daughter, spouse, self' }}" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">{{ $pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'Organization' : 'Company / organization' }}</span>
-                        <input type="text" wire:model.blur="leadForm.company" placeholder="{{ $pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'Practice, hospital, agency' : 'Optional' }}" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="text" wire:model="leadForm.company" placeholder="{{ $pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'Practice, hospital, agency' : 'Optional' }}" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Owner</span>
-                        <select wire:model.live="leadForm.assigned_admin_id" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <select wire:model="leadForm.assigned_admin_id" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                             <option value="">Unassigned</option>
                             @foreach ($admins as $adminId => $adminName)
                                 <option value="{{ $adminId }}">{{ $adminName }}</option>
@@ -98,27 +99,27 @@
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Email</span>
-                        <input type="email" wire:model.blur="leadForm.email" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="email" wire:model="leadForm.email" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Phone</span>
-                        <input type="tel" wire:model.blur="leadForm.phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="tel" wire:model="leadForm.phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">City / area</span>
-                        <input type="text" wire:model.blur="leadForm.location" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="text" wire:model="leadForm.location" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">ZIP</span>
-                        <input type="text" wire:model.blur="leadForm.zip" inputmode="numeric" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="text" wire:model="leadForm.zip" inputmode="numeric" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Stage</span>
-                        <select wire:model.live="leadForm.status" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <select wire:model="leadForm.status" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                             @foreach ($stageOptions as $stageValue => $stageLabel)
                                 <option value="{{ $stageValue }}">{{ $stageLabel }}</option>
                             @endforeach
@@ -127,7 +128,7 @@
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Priority</span>
-                        <select wire:model.live="leadForm.priority" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <select wire:model="leadForm.priority" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                             @foreach ($priorityOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -136,7 +137,7 @@
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Source</span>
-                        <select wire:model.live="leadForm.source" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <select wire:model="leadForm.source" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                             <option value="">Unknown</option>
                             @foreach ($sourceOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
@@ -146,18 +147,18 @@
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Source detail</span>
-                        <input type="text" wire:model.blur="leadForm.source_detail" placeholder="Specific person, campaign, event, or page" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="text" wire:model="leadForm.source_detail" placeholder="Specific person, campaign, event, or page" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Follow-up</span>
-                        <input type="datetime-local" wire:model.change="leadForm.next_follow_up_at" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <input type="datetime-local" wire:model="leadForm.next_follow_up_at" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                     </label>
                 </div>
 
                 <label class="mt-4 block">
                     <span class="text-sm font-medium text-slate-700">First note</span>
-                    <textarea wire:model.blur="leadForm.notes" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100" placeholder="How they found us, care need, referral context, next step..."></textarea>
+                    <textarea wire:model="leadForm.notes" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100" placeholder="How they found us, care need, referral context, next step..."></textarea>
                 </label>
 
                 <div class="mt-4 flex justify-end gap-2">
@@ -426,41 +427,42 @@
                     <form wire:submit.prevent="saveLead" class="rounded-2xl border border-slate-200 bg-white p-4">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-bold text-slate-950">Lead profile</h3>
-                            <button type="submit" class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Save</button>
+                            <button type="submit" wire:loading.attr="disabled" wire:target="saveLead" class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">Save</button>
                         </div>
 
+                        @include('livewire.admin.partials.crm-lead-form-errors')
                         <div class="mt-4 grid gap-4 sm:grid-cols-2">
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Contact name</span>
-                                <input type="text" wire:model.blur="leadForm.name" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="text" wire:model="leadForm.name" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Email</span>
-                                <input type="email" wire:model.blur="leadForm.email" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="email" wire:model="leadForm.email" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Phone</span>
-                                <input type="tel" wire:model.blur="leadForm.phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="tel" wire:model="leadForm.phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Role / relationship</span>
-                                <input type="text" wire:model.blur="leadForm.contact_role" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="text" wire:model="leadForm.contact_role" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Organization</span>
-                                <input type="text" wire:model.blur="leadForm.company" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="text" wire:model="leadForm.company" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">City / area</span>
-                                <input type="text" wire:model.blur="leadForm.location" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="text" wire:model="leadForm.location" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">ZIP</span>
-                                <input type="text" wire:model.blur="leadForm.zip" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="text" wire:model="leadForm.zip" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Owner</span>
-                                <select wire:model.live="leadForm.assigned_admin_id" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <select wire:model="leadForm.assigned_admin_id" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                                     <option value="">Unassigned</option>
                                     @foreach ($admins as $adminId => $adminName)
                                         <option value="{{ $adminId }}">{{ $adminName }}</option>
@@ -469,7 +471,7 @@
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Stage</span>
-                                <select wire:model.live="leadForm.status" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <select wire:model="leadForm.status" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                                     @foreach ($selectedLead->stageOptions() as $stageValue => $stageLabel)
                                         <option value="{{ $stageValue }}">{{ $stageLabel }}</option>
                                     @endforeach
@@ -477,7 +479,7 @@
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Priority</span>
-                                <select wire:model.live="leadForm.priority" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <select wire:model="leadForm.priority" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                                     @foreach ($priorityOptions as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
@@ -485,24 +487,24 @@
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Source</span>
-                                <select wire:model.live="leadForm.source" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <select wire:model="leadForm.source" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                                     <option value="">Unknown</option>
-                                    @foreach ($sourceOptions as $value => $label)
+                                    @foreach ($selectedSourceOptions as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Source detail</span>
-                                <input type="text" wire:model.blur="leadForm.source_detail" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="text" wire:model="leadForm.source_detail" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Last contacted</span>
-                                <input type="datetime-local" wire:model.change="leadForm.last_contacted_at" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="datetime-local" wire:model="leadForm.last_contacted_at" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Next follow-up</span>
-                                <input type="datetime-local" wire:model.change="leadForm.next_follow_up_at" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                <input type="datetime-local" wire:model="leadForm.next_follow_up_at" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             </label>
                         </div>
                     </form>

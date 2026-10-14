@@ -49,12 +49,13 @@
                 <p class="text-sm font-bold text-slate-700">{{ number_format($livePipeline['total']) }} total family leads</p>
             </div>
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
                 @foreach([
                     ['New', $livePipeline['new'], 'bg-sky-50 text-sky-900'],
                     ['Calling / follow-up', $livePipeline['calling'], 'bg-amber-50 text-amber-900'],
                     ['Qualified', $livePipeline['qualified'], 'bg-emerald-50 text-emerald-900'],
                     ['Assessment scheduled', $livePipeline['assessment'], 'bg-violet-50 text-violet-900'],
+                    ['Onboarding visit completed', $livePipeline['onboarding_visit_completed'], 'bg-teal-50 text-teal-900'],
                     ['Care started', $livePipeline['care_started'], 'bg-[#FFF4EF] text-[#8C493B]'],
                 ] as [$label, $value, $style])
                     <article class="rounded-2xl px-4 py-4 {{ $style }}">

@@ -28,6 +28,7 @@ class Lead extends Model
         'qualified' => 'Qualified',
         'assessment_scheduled' => 'Assessment scheduled',
         'intake_scheduled' => 'Intake scheduled',
+        'onboarding_visit_completed' => 'Onboarding visit completed',
         'converted' => 'Converted',
         'nurture' => 'Nurture',
         'unreachable' => 'Unreachable after 7',

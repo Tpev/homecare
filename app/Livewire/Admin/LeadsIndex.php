@@ -259,6 +259,7 @@ class LeadsIndex extends Component
     public function toggleCreateForm(): void
     {
         $this->showCreateForm = ! $this->showCreateForm;
+        $this->resetValidation();
 
         if ($this->showCreateForm) {
             $this->resetLeadForm();
@@ -305,6 +306,7 @@ class LeadsIndex extends Component
     public function openLead(int $id): void
     {
         $lead = Lead::query()->findOrFail($id);
+        $this->resetValidation();
         $this->selectedLeadId = $lead->id;
         $this->loadLeadForm($lead);
         $this->resetActivityForm();
@@ -554,6 +556,7 @@ class LeadsIndex extends Component
             'pipelineOptions' => $this->pipelineOptions(),
             'priorityOptions' => $this->priorityOptions(),
             'selectedLead' => $this->selectedLead,
+            'selectedSourceOptions' => $this->sourceOptions($this->selectedLead),
             'sourceOptions' => $this->sourceOptions(),
             'stageOptions' => $stageOptions,
             'stats' => $this->stats(),
@@ -663,13 +666,21 @@ class LeadsIndex extends Component
             'leadForm.zip' => ['nullable', 'string', 'max:20'],
             'leadForm.status' => ['required', Rule::in($stageKeys)],
             'leadForm.priority' => ['required', Rule::in(array_keys($this->priorityOptions()))],
-            'leadForm.source' => ['nullable', Rule::in(array_keys($this->sourceOptions()))],
+            'leadForm.source' => ['nullable', 'string', 'max:80', Rule::in(array_keys($this->sourceOptions($forExistingLead)))],
             'leadForm.source_detail' => ['nullable', 'string', 'max:255'],
             'leadForm.assigned_admin_id' => ['nullable', Rule::in($adminIds)],
             'leadForm.last_contacted_at' => ['nullable', 'date'],
             'leadForm.next_follow_up_at' => ['nullable', 'date'],
             'leadForm.closed_reason' => ['nullable', 'string', 'max:255'],
             'leadForm.notes' => ['nullable', 'string', 'max:3000'],
+        ], [], [
+            'leadForm.name' => 'contact name', 'leadForm.email' => 'email', 'leadForm.phone' => 'phone',
+            'leadForm.company' => 'organization', 'leadForm.contact_role' => 'role / relationship',
+            'leadForm.location' => 'city / area', 'leadForm.zip' => 'ZIP', 'leadForm.status' => 'stage',
+            'leadForm.priority' => 'priority', 'leadForm.source' => 'source', 'leadForm.source_detail' => 'source detail',
+            'leadForm.assigned_admin_id' => 'owner', 'leadForm.last_contacted_at' => 'last contacted date',
+            'leadForm.next_follow_up_at' => 'next follow-up date', 'leadForm.closed_reason' => 'closed reason',
+            'leadForm.notes' => 'notes',
         ]);
 
         $data = $validated['leadForm'];
@@ -797,10 +808,15 @@ class LeadsIndex extends Component
     }
 
     /** @return array<string, string> */
-    private function sourceOptions(): array
+    private function sourceOptions(?Lead $existingLead = null): array
     {
-        return [
+        $options = [
             'manual_admin' => 'Manual entry',
+            'manual_crm' => 'Manual family lead',
+            'facebook_lead_ad' => 'Facebook lead ad',
+            'facebook_lead_ads' => 'Facebook lead ads',
+            'meta_lead_ads' => 'Meta lead ads',
+            'google_sheet' => 'Google Sheets',
             'callback_page' => 'Callback page',
             'voice_agent' => 'Voice agent',
             'website' => 'Website form',
@@ -815,6 +831,14 @@ class LeadsIndex extends Component
             'referral' => 'Referral',
             'other' => 'Other',
         ];
+
+        // Imports can carry custom source names. Preserve the saved value without
+        // accepting arbitrary new source values from the submitted form.
+        if ($existingLead && filled($existingLead->source)) {
+            $options[$existingLead->source] ??= $existingLead->sourceLabel();
+        }
+
+        return $options;
     }
 
     /** @return array<string, string> */

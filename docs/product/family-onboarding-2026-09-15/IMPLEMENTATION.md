@@ -24,6 +24,8 @@ Submitting onboarding adds one readable timeline note containing the submitted a
 
 The family CRM shows onboarding progress and supports Website signup, Account created, and Onboarding completed filters. Onboarding answers remain readable in both CRM timelines. Invited family members and caregiver registrations do not create separate family leads.
 
+Staff can manually move a family lead to **Onboarding visit completed**, immediately before **Converted**. This stage records a completed visit without setting the conversion date. It remains eligible for an explicitly queued follow-up call, and onboarding reconciliation preserves the staff-selected stage.
+
 After deploying the additive `family_account_id` migration and new code, run the CRM backfill against existing onboarding records:
 
 ```bash

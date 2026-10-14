@@ -413,7 +413,7 @@ class FamilyLeadsIndex extends Component
             'new' => (clone $query)->where('status', 'new')->count(),
             'due' => FamilyLeadOutreach::dueQuery(clone $query)->count(),
             'callbacks' => (clone $query)->where('status', 'callback_scheduled')->count(),
-            'qualified' => (clone $query)->whereIn('status', ['qualified', 'assessment_scheduled'])->count(),
+            'qualified' => (clone $query)->whereIn('status', ['qualified', 'assessment_scheduled', 'onboarding_visit_completed'])->count(),
             'converted' => (clone $query)->whereNotNull('converted_at')->count(),
         ];
     }

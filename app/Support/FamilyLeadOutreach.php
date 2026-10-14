@@ -30,6 +30,7 @@ class FamilyLeadOutreach
         'qualified',
         'assessment_scheduled',
         'intake_scheduled',
+        'onboarding_visit_completed',
     ];
 
     /** @return array<string, string> */

@@ -112,7 +112,7 @@ class FamilyCrmSyncTest extends TestCase
 
     public function test_completion_preserves_terminal_and_staff_managed_stages_and_do_not_contact(): void
     {
-        foreach (['converted', 'closed', 'lost', 'not_fit', 'unreachable', 'nurture', 'intake_scheduled', 'assessment_scheduled', 'callback_scheduled'] as $stage) {
+        foreach (['converted', 'closed', 'lost', 'not_fit', 'unreachable', 'nurture', 'onboarding_visit_completed', 'intake_scheduled', 'assessment_scheduled', 'callback_scheduled'] as $stage) {
             [$user] = $this->enroll();
             $lead = Lead::where('email', $user->email)->firstOrFail();
             $lead->update(['status' => $stage]);

@@ -153,7 +153,7 @@ class FamilyAcquisitionOverview extends Component
         $leadCount = $leads->count();
         $customerCount = $leads->whereNotNull('converted_at')->count();
         $contactedCount = $leads->whereNotNull('first_connected_at')->count();
-        $qualifiedCount = $leads->filter(fn (Lead $lead): bool => in_array($lead->status, ['qualified', 'assessment_scheduled', 'intake_scheduled', 'converted'], true))->count();
+        $qualifiedCount = $leads->filter(fn (Lead $lead): bool => in_array($lead->status, ['qualified', 'assessment_scheduled', 'intake_scheduled', 'onboarding_visit_completed', 'converted'], true))->count();
         $spendCents = (int) $spend->sum('spend_cents');
         $slaCutoff = now()->subMinutes($this->firstCallSlaMinutes);
         $slaBreaches = $leads->filter(fn (Lead $lead): bool => ! $lead->first_call_at
@@ -169,7 +169,7 @@ class FamilyAcquisitionOverview extends Component
                 ['label' => 'First call attempted', 'value' => $leads->whereNotNull('first_call_at')->count()],
                 ['label' => 'Contact established', 'value' => $contactedCount],
                 ['label' => 'Qualified', 'value' => $qualifiedCount],
-                ['label' => 'Assessment booked', 'value' => $leads->filter(fn (Lead $lead): bool => in_array($lead->status, ['assessment_scheduled', 'intake_scheduled', 'converted'], true))->count()],
+                ['label' => 'Assessment booked', 'value' => $leads->filter(fn (Lead $lead): bool => in_array($lead->status, ['assessment_scheduled', 'intake_scheduled', 'onboarding_visit_completed', 'converted'], true))->count()],
                 ['label' => 'Care started', 'value' => $customerCount],
             ],
             'metrics' => [
@@ -187,6 +187,7 @@ class FamilyAcquisitionOverview extends Component
                 'calling' => $liveLeads->whereIn('status', ['attempting_contact', 'callback_scheduled', 'contacted', 'nurture'])->count(),
                 'qualified' => $liveLeads->where('status', 'qualified')->count(),
                 'assessment' => $liveLeads->whereIn('status', ['assessment_scheduled', 'intake_scheduled'])->count(),
+                'onboarding_visit_completed' => $liveLeads->where('status', 'onboarding_visit_completed')->count(),
                 'care_started' => $liveLeads->whereNotNull('converted_at')->count(),
             ],
             'outcomes' => $this->outcomeDistribution($leads),
