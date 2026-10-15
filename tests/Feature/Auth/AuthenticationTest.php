@@ -125,6 +125,24 @@ class AuthenticationTest extends TestCase
         $this->get('/dashboard')->assertRedirect(route('family.onboarding'));
     }
 
+    public function test_caregiver_job_email_destination_is_preserved_through_login(): void
+    {
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $destination = route('care-requests.apply', ['careRequest' => 123]);
+
+        $this->get($destination)->assertRedirect(route('login'));
+        $this->assertSame($destination, session('url.intended'));
+
+        Volt::test('pages.auth.login')
+            ->set('form.email', $caregiver->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertHasNoErrors()
+            ->assertRedirect($destination);
+
+        $this->assertAuthenticatedAs($caregiver);
+    }
+
     public function test_other_roles_keep_their_existing_login_fallback(): void
     {
         foreach (['admin', 'caregiver', 'sales', 'sdr'] as $role) {

@@ -39,15 +39,20 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
         $resolvedUrl = $this->url ?: $homeUrl;
         $trackedUrl = $this->resolveTrackedClickUrl($resolvedUrl);
         $openTrackingUrl = $this->resolveOpenTrackingUrl();
-        $view = $this->isCaregiverOnboardingEmail()
-            ? [
+        $view = match (true) {
+            $this->eventKey === MarketplaceEvent::CAREGIVER_RECRUITMENT => [
+                'html' => 'emails.notifications.caregiver-recruitment-html',
+                'text' => 'emails.notifications.caregiver-recruitment-text',
+            ],
+            $this->isCaregiverOnboardingEmail() => [
                 'html' => 'emails.notifications.caregiver-onboarding-html',
                 'text' => 'emails.notifications.caregiver-onboarding-text',
-            ]
-            : [
+            ],
+            default => [
                 'html' => 'emails.notifications.marketplace-event-html',
                 'text' => 'emails.notifications.marketplace-event-text',
-            ];
+            ],
+        };
 
         return (new MailMessage)
             ->from((string) config('mail.from.address'), $appName)
@@ -69,6 +74,7 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
                 'preheader' => (string) ($this->payload['preheader'] ?? $this->title),
                 'checklist' => array_values(array_filter((array) ($this->payload['checklist'] ?? []), fn ($item) => is_string($item) && trim($item) !== '')),
                 'firstName' => (string) ($this->payload['first_name'] ?? ''),
+                'opportunityMessage' => (string) ($this->payload['opportunity_message'] ?? ''),
                 'nextSteps' => array_values(array_filter((array) ($this->payload['email_next_steps'] ?? []), fn ($item) => is_string($item) && trim($item) !== '')),
                 'emailDetails' => collect((array) ($this->payload['email_details'] ?? []))
                     ->filter(fn ($detail) => is_array($detail) && trim((string) ($detail['label'] ?? '')) !== '' && trim((string) ($detail['value'] ?? '')) !== '')

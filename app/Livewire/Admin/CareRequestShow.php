@@ -4,27 +4,41 @@ namespace App\Livewire\Admin;
 
 use App\Models\CareBooking;
 use App\Models\CareRequest;
+use App\Models\CareRequestRecruitment;
 use App\Services\Booking\BookingTrustService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
+use App\Services\Marketplace\CareRequestRecruitmentService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class CareRequestShow extends Component
 {
+    use WithPagination;
+
     public CareRequest $careRequest;
 
     public string $checkInOverrideReason = '';
 
+    public bool $showRecruitmentPanel = false;
+
+    public string $recruitmentSearch = '';
+
+    public array $selectedRecruitmentCaregivers = [];
+
     public function mount(CareRequest $careRequest): void
     {
+        $this->authorizeAdmin();
         $this->careRequest = $this->loadRequest($careRequest->id);
     }
 
     public function forceRequestStatus(string $status): void
     {
+        $this->authorizeAdmin();
         if (! in_array($status, [
             CareRequest::STATUS_DRAFT,
             CareRequest::STATUS_OPEN,
@@ -42,6 +56,7 @@ class CareRequestShow extends Component
 
     public function forceBookingStatus(string $status): void
     {
+        $this->authorizeAdmin();
         if (! in_array($status, [
             CareBooking::STATUS_SCHEDULED,
             CareBooking::STATUS_IN_PROGRESS,
@@ -78,6 +93,7 @@ class CareRequestShow extends Component
 
     public function deleteRequest(): void
     {
+        $this->authorizeAdmin();
         $id = $this->careRequest->id;
 
         try {
@@ -94,6 +110,7 @@ class CareRequestShow extends Component
 
     public function allowRegularCareCheckIn(BookingTrustService $trust): void
     {
+        $this->authorizeAdmin();
         $this->validate(['checkInOverrideReason' => ['required', 'string', 'min:8', 'max:1000']]);
         $booking = $this->careRequest->booking;
         if (! $booking?->care_plan_id) {
@@ -115,11 +132,131 @@ class CareRequestShow extends Component
         session()->flash('status', 'Check-in override recorded for this visit.');
     }
 
-    public function render(CareRecipientProfilePresenter $profiles): View
+    public function openRecruitmentPanel(): void
     {
+        $this->authorizeAdmin();
+        $this->refreshRequest();
+        $this->showRecruitmentPanel = true;
+    }
+
+    public function closeRecruitmentPanel(): void
+    {
+        $this->authorizeAdmin();
+        $this->showRecruitmentPanel = false;
+    }
+
+    public function updatedRecruitmentSearch(): void
+    {
+        $this->authorizeAdmin();
+        $this->resetPage('recruitmentPage');
+    }
+
+    public function selectRecruitmentPage(CareRequestRecruitmentService $recruitment): void
+    {
+        $this->authorizeAdmin();
+        $this->validateRecruitmentSelection();
+        $this->refreshRequest();
+
+        $ids = $this->recruitmentCandidates($recruitment)
+            ->paginate(25, ['users.*'], 'recruitmentPage')
+            ->getCollection()->pluck('id');
+
+        $this->selectedRecruitmentCaregivers = collect($this->selectedRecruitmentCaregivers)
+            ->merge($ids)->map(fn ($id) => (string) $id)->unique()->take(CareRequestRecruitmentService::BATCH_LIMIT)->values()->all();
+    }
+
+    public function selectMatchingRecruitmentCaregivers(CareRequestRecruitmentService $recruitment): void
+    {
+        $this->authorizeAdmin();
+        $this->refreshRequest();
+        $this->resetValidation('selectedRecruitmentCaregivers');
+        $this->selectedRecruitmentCaregivers = $this->recruitmentCandidates($recruitment)
+            ->limit(CareRequestRecruitmentService::BATCH_LIMIT)->pluck('users.id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    public function clearRecruitmentSelection(): void
+    {
+        $this->authorizeAdmin();
+        $this->selectedRecruitmentCaregivers = [];
+        $this->resetValidation('selectedRecruitmentCaregivers');
+    }
+
+    public function sendRecruitmentInvitations(CareRequestRecruitmentService $recruitment): void
+    {
+        $this->authorizeAdmin();
+        $this->validateRecruitmentSelection(required: true);
+        $this->refreshRequest();
+
+        if ($reason = $recruitment->unavailableReason($this->careRequest)) {
+            $this->addError('recruitment', $reason);
+
+            return;
+        }
+
+        $result = $recruitment->enqueue(auth()->user(), $this->careRequest, $this->selectedRecruitmentCaregivers);
+        $this->selectedRecruitmentCaregivers = [];
+        $this->resetPage('recruitmentPage');
+        $this->resetValidation();
+
+        $message = $result['queued'].' invitation'.($result['queued'] === 1 ? '' : 's').' queued for email from Lolo.';
+        if ($result['skipped'] > 0) {
+            $message .= ' '.$result['skipped'].' were not queued. They may already be contacted or ineligible; check recent outreach for any send failures.';
+        }
+
+        session()->flash('recruitmentStatus', $message);
+    }
+
+    public function refreshRecruitment(): void
+    {
+        $this->authorizeAdmin();
+        $this->refreshRequest();
+    }
+
+    public function render(CareRecipientProfilePresenter $profiles, CareRequestRecruitmentService $recruitment): View
+    {
+        $this->authorizeAdmin();
+        $recruitmentCounts = $this->recruitmentHistory()->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')->pluck('aggregate', 'status');
+
         return view('livewire.admin.care-request-show', [
             'careProfileSnapshot' => $profiles->forCareRequest(auth()->user(), $this->careRequest),
+            'recruitmentUnavailableReason' => $recruitment->unavailableReason($this->careRequest),
+            'recruitmentCandidates' => $this->showRecruitmentPanel
+                ? $this->recruitmentCandidates($recruitment)->paginate(25, ['users.*'], 'recruitmentPage')
+                : null,
+            'recruitmentHistory' => $this->recruitmentHistory()->with(['caregiver:id,name,email', 'inviter:id,name'])
+                ->latest('id')->limit(10)->get(),
+            'recruitmentCounts' => $recruitmentCounts,
+            'recruitmentBatchLimit' => CareRequestRecruitmentService::BATCH_LIMIT,
+            'hasPendingRecruitment' => (int) $recruitmentCounts->get('queued', 0) + (int) $recruitmentCounts->get('sending', 0) > 0,
         ]);
+    }
+
+    private function authorizeAdmin(): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+    }
+
+    private function validateRecruitmentSelection(bool $required = false): void
+    {
+        $this->validate([
+            'selectedRecruitmentCaregivers' => [$required ? 'required' : 'present', 'array', 'max:'.CareRequestRecruitmentService::BATCH_LIMIT],
+            'selectedRecruitmentCaregivers.*' => ['required', 'integer', 'min:1', 'distinct'],
+            'recruitmentSearch' => ['nullable', 'string', 'max:200'],
+        ], [
+            'selectedRecruitmentCaregivers.required' => 'Select at least one caregiver to invite.',
+            'selectedRecruitmentCaregivers.max' => 'Select up to '.CareRequestRecruitmentService::BATCH_LIMIT.' caregivers per send.',
+        ]);
+    }
+
+    private function recruitmentCandidates(CareRequestRecruitmentService $recruitment): Builder
+    {
+        return $recruitment->candidates($this->careRequest, mb_substr(trim($this->recruitmentSearch), 0, 200));
+    }
+
+    private function recruitmentHistory(): Builder
+    {
+        return CareRequestRecruitment::query()->where('care_request_id', $this->careRequest->id);
     }
 
     private function refreshRequest(): void

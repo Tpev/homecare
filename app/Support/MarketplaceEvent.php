@@ -8,6 +8,8 @@ class MarketplaceEvent
 
     public const INVITATION_RECEIVED = 'invitation_received';
 
+    public const CAREGIVER_RECRUITMENT = 'caregiver_recruitment';
+
     public const NEW_APPLICANT = 'new_applicant';
 
     public const APPLICATION_SUBMITTED = 'application_submitted';
@@ -192,6 +194,7 @@ class MarketplaceEvent
         return [
             self::INVITATION_SENT,
             self::INVITATION_RECEIVED,
+            self::CAREGIVER_RECRUITMENT,
             self::NEW_APPLICANT,
             self::APPLICATION_SUBMITTED,
             self::CARE_REQUEST_WITHDRAWN,

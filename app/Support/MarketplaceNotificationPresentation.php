@@ -79,6 +79,7 @@ final class MarketplaceNotificationPresentation
                 MarketplaceEvent::CAREGIVER_WELCOME,
                 MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
                 MarketplaceEvent::INVITATION_RECEIVED,
+                MarketplaceEvent::CAREGIVER_RECRUITMENT,
                 MarketplaceEvent::MATCHING_REQUEST_REMINDER,
                 MarketplaceEvent::APPLICATION_SUBMITTED,
                 MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
@@ -150,6 +151,7 @@ final class MarketplaceNotificationPresentation
         return match ($eventKey) {
             MarketplaceEvent::INVITATION_SENT => 'Invitation sent',
             MarketplaceEvent::INVITATION_RECEIVED => 'Care invitation',
+            MarketplaceEvent::CAREGIVER_RECRUITMENT => 'Care opportunities from LoLo',
             MarketplaceEvent::NEW_APPLICANT => 'New caregiver application',
             MarketplaceEvent::APPLICATION_SUBMITTED => 'Application submitted',
             MarketplaceEvent::CARE_REQUEST_WITHDRAWN => 'Request withdrawn',
@@ -251,6 +253,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::NEW_APPLICANT => 'Open care request',
             MarketplaceEvent::INVITATION_RECEIVED,
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'Review care details',
+            MarketplaceEvent::CAREGIVER_RECRUITMENT => 'View job & apply',
             MarketplaceEvent::APPLICATION_SUBMITTED,
             MarketplaceEvent::CAREGIVER_HIRED,
             MarketplaceEvent::HIRE_CONFIRMED => 'View care details',
@@ -361,6 +364,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED,
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_APPROVED => 'success',
             MarketplaceEvent::INVITATION_RECEIVED,
+            MarketplaceEvent::CAREGIVER_RECRUITMENT,
             MarketplaceEvent::NEW_APPLICANT,
             MarketplaceEvent::MATCHING_REQUEST_REMINDER,
             MarketplaceEvent::SHIFT_REMINDER_24H,
@@ -412,6 +416,9 @@ final class MarketplaceNotificationPresentation
             ],
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => [
                 'Review the request and apply only if the care needs and schedule are a good fit.',
+            ],
+            MarketplaceEvent::CAREGIVER_RECRUITMENT => [
+                'If this feels like a good fit, view the job and apply. The family will review your application.',
             ],
             MarketplaceEvent::NEW_APPLICANT => [
                 'Review the caregiver’s profile, proposed rate, and message before deciding what to do next.',

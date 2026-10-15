@@ -29,6 +29,7 @@ class NotificationsCenter extends Component
         MarketplaceEvent::CAREGIVER_WELCOME,
         MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
         MarketplaceEvent::INVITATION_RECEIVED,
+        MarketplaceEvent::CAREGIVER_RECRUITMENT,
         MarketplaceEvent::MATCHING_REQUEST_REMINDER,
         MarketplaceEvent::APPLICATION_SUBMITTED,
         MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
@@ -239,6 +240,7 @@ class NotificationsCenter extends Component
         return match ($eventKey) {
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'Invitation / match',
             MarketplaceEvent::INVITATION_RECEIVED => 'Care invitation',
+            MarketplaceEvent::CAREGIVER_RECRUITMENT => 'Care opportunities from LoLo',
             MarketplaceEvent::CAREGIVER_WELCOME => 'Welcome to LoLo Care',
             MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Finish caregiver setup',
             MarketplaceEvent::APPLICATION_SUBMITTED => 'Application submitted',

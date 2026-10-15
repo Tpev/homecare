@@ -26,6 +26,8 @@
         </div>
     </div>
 
+    @include('livewire.admin.partials.care-request-recruitment')
+
     <x-card>
         <x-slot:header>
             <div class="flex flex-wrap items-center justify-between gap-3">

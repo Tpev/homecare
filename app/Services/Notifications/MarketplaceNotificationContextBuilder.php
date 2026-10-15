@@ -36,7 +36,10 @@ class MarketplaceNotificationContextBuilder
         array $payload,
         ?Model $subject,
     ): array {
-        $derivedDetails = $this->details($recipient, $eventKey, $subject, $payload);
+        // Recruitment content deliberately includes only public job details and caregiver pay.
+        $derivedDetails = $eventKey === MarketplaceEvent::CAREGIVER_RECRUITMENT
+            ? collect()
+            : $this->details($recipient, $eventKey, $subject, $payload);
         $explicitDetails = collect((array) ($payload['email_details'] ?? []))
             ->filter(fn ($detail): bool => is_array($detail))
             ->values();
