@@ -18,6 +18,15 @@
     <meta property="og:url" content="@yield('canonical', request()->url())">
     <meta property="og:image" content="@yield('og_image', asset('images/marketing/flyer.png'))">
     <meta property="og:image:alt" content="@yield('og_image_alt', 'LoLo helps families find trusted support for an older parent at home.')">
+    @hasSection('og_image_width')
+    <meta property="og:image:width" content="@yield('og_image_width')">
+    @endif
+    @hasSection('og_image_height')
+    <meta property="og:image:height" content="@yield('og_image_height')">
+    @endif
+    @hasSection('og_image_type')
+    <meta property="og:image:type" content="@yield('og_image_type')">
+    @endif
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', 'LoLo')">
     <meta name="twitter:description" content="@yield('meta_description', 'LoLo helps families arrange trusted, non-medical home care and companionship for an older adult at home.')">
@@ -26,6 +35,7 @@
 
     @stack('head')
 
+    @if (! trim($__env->yieldContent('disable_marketing_tracking')))
     <x-analytics.google-tag />
 
     <script>
@@ -40,14 +50,17 @@
         fbq('init', '1842558893085096');
         fbq('track', 'PageView');
     </script>
+    @endif
 </head>
 
 <body style="background:#FFF7EA;">
+    @if (! trim($__env->yieldContent('disable_marketing_tracking')))
     <noscript>
         <img height="1" width="1" style="display:none"
              src="https://www.facebook.com/tr?id=1842558893085096&ev=PageView&noscript=1"
              alt="">
     </noscript>
+    @endif
 
     @yield('structured_data')
     @yield('content')

@@ -36,6 +36,7 @@ class LlmsController extends Controller
             '',
             '- [LoLo Care home]('.route('landing').'): Service overview.',
             '- [Find care]('.route('landing.get-care').'): Arrange support for your family.',
+            '- [Care assistance]('.route('care-assistance.index').'): Apply for non-medical home care at $23 per hour for approved applicants facing financial hardship. Reviews usually take about five business days.',
             '- [For caregivers]('.route('landing.caregiver').'): Information for independent caregivers.',
             '- [Reviewed resource center]('.route('blog.index').'): Sourced and maintained care guidance.',
             '- [Atom feed]('.route('blog.feed').'): Recently published and updated guides.',

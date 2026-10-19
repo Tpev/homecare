@@ -16,7 +16,9 @@
         <link rel="preload" href="{{ asset('fonts/Inter-Variable.woff') }}" as="font" type="font/woff" crossorigin>
         <link rel="preload" href="{{ asset('fonts/SourceSerif4-Variable.woff') }}" as="font" type="font/woff" crossorigin>
 
-        <x-analytics.google-tag />
+        @unless (request()->routeIs('admin.care-assistance.*'))
+            <x-analytics.google-tag />
+        @endunless
 
         <tallstackui:script />
 

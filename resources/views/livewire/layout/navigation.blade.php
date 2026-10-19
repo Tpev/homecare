@@ -199,6 +199,7 @@ new class extends Component
                 'label' => 'Care operations',
                 'active' => request()->routeIs('admin.requests.*')
                     || request()->routeIs('admin.care-plans.*')
+                    || request()->routeIs('admin.care-assistance.*')
                     || request()->routeIs('admin.caregivers.reviews')
                     || request()->routeIs('admin.support.tickets*')
                     || request()->routeIs('admin.notifications.*'),
@@ -217,6 +218,12 @@ new class extends Component
                         'label' => 'Caregiver Screening',
                         'href' => route('admin.caregivers.reviews'),
                         'active' => request()->routeIs('admin.caregivers.reviews'),
+                    ],
+                    [
+                        'label' => 'Care Assistance',
+                        'href' => route('admin.care-assistance.index'),
+                        'active' => request()->routeIs('admin.care-assistance.*'),
+                        'full_navigation' => true,
                     ],
                     [
                         'label' => $supportUnread > 0 ? "Admin Support ($supportUnread)" : 'Admin Support',
@@ -693,7 +700,7 @@ new class extends Component
                                                     @foreach ($group['items'] as $item)
                                                         <a
                                                             href="{{ $item['href'] }}"
-                                                            wire:navigate
+                                                            @unless($item['full_navigation'] ?? false) wire:navigate @endunless
                                                             data-admin-tool="{{ Illuminate\Support\Str::lower($group['label'].' '.$item['label']) }}"
                                                             x-show="query === '' || $el.dataset.adminTool.includes(query.toLowerCase())"
                                                             @click="open = false; query = ''"
@@ -1028,9 +1035,11 @@ new class extends Component
                     @foreach ($adminNavGroups as $group)
                         <div class="px-2 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6E746F]">{{ $group['label'] }}</div>
                         @foreach ($group['items'] as $item)
-                            <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>
-                                {{ __($item['label']) }}
-                            </x-responsive-nav-link>
+                            @if ($item['full_navigation'] ?? false)
+                                <x-responsive-nav-link :href="$item['href']" :active="$item['active']">{{ __($item['label']) }}</x-responsive-nav-link>
+                            @else
+                                <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>{{ __($item['label']) }}</x-responsive-nav-link>
+                            @endif
                         @endforeach
                     @endforeach
                 @endif

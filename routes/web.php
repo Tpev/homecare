@@ -8,6 +8,7 @@ use App\Http\Controllers\BlogFeedController;
 use App\Http\Controllers\CaregiverCertificationDocumentController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
+use App\Http\Controllers\CareAssistanceController;
 use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\DiditWebhookController;
 use App\Http\Controllers\FamilyAccessEndedController;
@@ -34,6 +35,8 @@ use App\Livewire\Admin\AiSupport\Overview as AiSupportOverview;
 use App\Livewire\Admin\AiSupport\PilotsIndex as AiSupportPilotsIndex;
 use App\Livewire\Admin\AiSupport\Settings as AiSupportSettings;
 use App\Livewire\Admin\CareCoverageCalendar;
+use App\Livewire\Admin\CareAssistanceApplicationsIndex;
+use App\Livewire\Admin\CareAssistanceApplicationShow;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CarePlanShow;
@@ -166,6 +169,11 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
+        Route::get('/care-assistance', CareAssistanceApplicationsIndex::class)
+            ->middleware(\App\Http\Middleware\CareAssistancePrivacyHeaders::class)->name('care-assistance.index');
+        Route::get('/care-assistance/{application}', CareAssistanceApplicationShow::class)
+            ->middleware(\App\Http\Middleware\CareAssistancePrivacyHeaders::class)
+            ->whereNumber('application')->name('care-assistance.show');
         Route::get('/support/tickets/{ticket}', SupportTicketShow::class)
             ->whereNumber('ticket')
             ->name('support.tickets.show');
@@ -202,6 +210,10 @@ Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVaria
     ->name('landing.family.variant');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/about', [MarketingPagesController::class, 'about'])->name('about');
+Route::get('/care-assistance', [CareAssistanceController::class, 'index'])
+    ->middleware(\App\Http\Middleware\CareAssistancePrivacyHeaders::class)->name('care-assistance.index');
+Route::post('/care-assistance', [CareAssistanceController::class, 'store'])
+    ->middleware('throttle:5,1')->name('care-assistance.store');
 Route::get('/faq', [MarketingPagesController::class, 'faq'])->name('faq');
 Route::view('/flyer/family', 'marketing.flyer-family')->name('marketing.flyer.family');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
