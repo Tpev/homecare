@@ -1277,6 +1277,10 @@ class StripeClient
             'status' => (string) $intent->status,
             'amount' => (int) $intent->amount,
             'amount_received' => (int) ($intent->amount_received ?? 0),
+            'customer_id' => is_array($payload['customer'] ?? null)
+                ? (string) ($payload['customer']['id'] ?? '') : (string) ($payload['customer'] ?? ''),
+            'currency' => (string) ($payload['currency'] ?? ''),
+            'livemode' => $payload['livemode'] ?? null,
             'authorization_expires_at' => $this->captureBeforeFromPaymentIntent($payload),
             'last_payment_error' => $payload['last_payment_error'] ?? null,
         ], $this->financialDetailsFromPaymentIntent($intent));

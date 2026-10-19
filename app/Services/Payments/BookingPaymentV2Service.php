@@ -42,6 +42,10 @@ class BookingPaymentV2Service
             throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
         }
         $booking->loadMissing(['caregiver.caregiverProfile']);
+        $recoveredAuthorization = $this->isOct3RecoveryIntent($payment);
+        if ($recoveredAuthorization) {
+            $this->assertOct3RecoveryVisitUnchanged($booking, $payment);
+        }
         $workedMinutes = (int) ($booking->worked_minutes ?: $this->estimatedMinutes($booking));
         $quote = $this->pricing->quoteForCurrentBooking($booking, $workedMinutes);
         $targetCents = (int) $quote['total_charge_cents'];
@@ -54,12 +58,21 @@ class BookingPaymentV2Service
         $primaryCents = min($targetCents, $authorizedCents);
         $primaryCharge = $this->chargeOperation($payment, 'primary');
 
+        if ($recoveredAuthorization && ($targetCents !== 37252 || $primaryCents !== 37252
+            || (int) $quote['caregiver_gross_amount_cents'] !== 32445
+            || ($primaryCharge && ((int) $primaryCharge->amount_cents !== 37252
+                || $primaryCharge->stripe_parent_object_id !== $payment->stripe_payment_intent_id)))) {
+            throw new PaymentException('The recovered authorization no longer matches the reviewed payment. Contact LoLo support.');
+        }
+
         if (! $primaryCharge) {
-            $capture = $this->stripe->capturePaymentIntent(
-                (string) $payment->stripe_payment_intent_id,
-                $primaryCents,
-                $this->key($payment, 'capture-primary', $primaryCents),
-            );
+            $capture = $recoveredAuthorization
+                ? $this->captureRecoveredAuthorization($payment, $primaryCents)
+                : $this->stripe->capturePaymentIntent(
+                    (string) $payment->stripe_payment_intent_id,
+                    $primaryCents,
+                    $this->key($payment, 'capture-primary', $primaryCents),
+                );
             $primaryCharge = $this->recordChargeResult($payment, $capture, 'primary', $primaryCents);
             CareBookingPaymentAttempt::query()
                 ->where('stripe_payment_intent_id', $payment->stripe_payment_intent_id)
@@ -169,6 +182,9 @@ class BookingPaymentV2Service
         if (! $booking || ! $this->usesV2($payment)) {
             return $payment;
         }
+        if ($this->isOct3RecoveryIntent($payment)) {
+            $this->assertOct3RecoveryVisitUnchanged($booking, $payment);
+        }
 
         if (! $this->classifyStoredRefundOperations($payment)) {
             $payment->forceFill([
@@ -185,6 +201,11 @@ class BookingPaymentV2Service
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
             ->orderBy('id')
             ->get();
+        if ($this->isOct3RecoveryIntent($payment) && $charges->isNotEmpty()
+            && ($charges->count() !== 1 || (int) $charges->first()->amount_cents !== 37252
+                || $charges->first()->stripe_parent_object_id !== $payment->stripe_payment_intent_id)) {
+            throw new PaymentException('The recovered payment ledger does not match the reviewed charge. Contact LoLo support.');
+        }
         $capturedCents = (int) $charges->sum('amount_cents');
         $feeCents = $this->processingFeeCents($payment);
         $feesFinalized = $charges->isNotEmpty()
@@ -562,6 +583,9 @@ class BookingPaymentV2Service
                 (string) $object['id'],
                 max(0, $fallback),
             );
+        }
+        if ($this->isOct3RecoveryIntent($payment)) {
+            $this->assertRecoveredChargeResult($payment, $financials);
         }
         $this->recordChargeResult($payment, $financials, $kind, max(0, $fallback));
         if ($kind === 'overage') {
@@ -1660,6 +1684,102 @@ class BookingPaymentV2Service
     private function key(CareBookingPayment $payment, string $action, int $amountCents = 0): string
     {
         return 'payment-v2:'.$payment->id.':'.$action.':'.$amountCents;
+    }
+
+    private function isOct3RecoveryIntent(CareBookingPayment $payment): bool
+    {
+        $intentId = (string) $payment->stripe_payment_intent_id;
+
+        return $intentId !== ''
+            && data_get($payment->metadata, 'oct3_payment_recovery.new_payment_intent_id') === $intentId
+            && (int) data_get($payment->metadata, 'oct3_payment_recovery.target_charge_cents') === 37252
+            && data_get($payment->metadata, 'oct3_payment_recovery.state') !== 'complete';
+    }
+
+    private function assertOct3RecoveryVisitUnchanged(CareBooking $booking, CareBookingPayment $payment): void
+    {
+        if (! in_array(data_get($payment->metadata, 'oct3_payment_recovery.state'), ['authorized', 'capture_unknown'], true)) {
+            throw new PaymentException('The recovered authorization still needs provider verification. Contact LoLo support before recovering payment.');
+        }
+        if ((int) $booking->id !== 239 || (int) $payment->id !== 120
+            || (int) $booking->care_request_id !== 227 || (int) $payment->care_booking_id !== 239
+            || (int) $booking->family_account_id !== 3 || (int) $payment->family_account_id !== 3
+            || (int) $booking->family_user_id !== 335 || (int) $payment->family_user_id !== 335
+            || (int) $booking->caregiver_user_id !== 349 || (int) $payment->caregiver_user_id !== 349
+            || (int) $payment->worked_minutes !== 721 || (int) $payment->amount_authorized_cents !== 37252
+            || $payment->currency !== 'usd' || $booking->pricing_version !== '2026-08-v2'
+            || $payment->pricing_version !== $booking->pricing_version || $booking->pricing_agreement_id
+            || (int) $booking->family_care_rate_cents !== 3000 || (int) $booking->family_processing_fee_rate_cents !== 100
+            || (int) $booking->caregiver_gross_rate_cents !== 2700
+            || $booking->caregiver_fee_policy !== 'successful_charge_balance_transaction'
+            || $booking->status !== CareBooking::STATUS_COMPLETED || $booking->care_plan_id
+            || (int) $booking->worked_minutes !== 721 || (int) $booking->total_paused_seconds !== 0
+            || $booking->paused_at || $booking->cancelled_at || $booking->dispute_opened_at
+            || $booking->dispute_status !== 'none' || $booking->no_show_flag || $booking->late_cancel_flag
+            || $booking->timeCorrections()->exists() || $booking->corrections()->exists()
+            || $booking->changeRequests()->exists() || (int) $payment->amount_refunded_cents !== 0
+            || $payment->stripe_last_refund_id || $payment->stripe_last_transfer_reversal_id
+            || $payment->stripe_overage_payment_intent_id
+            || $payment->operations()->whereIn('type', [CareBookingPaymentOperation::TYPE_REFUND,
+                CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL, CareBookingPaymentOperation::TYPE_DISPUTE])->exists()) {
+            throw new PaymentException('The reviewed October 3 visit changed. Contact LoLo support before recovering payment.');
+        }
+        foreach (['started_at' => '2026-10-03 19:09:52', 'completed_at' => '2026-10-04 07:11:42',
+            'timesheet_submitted_at' => '2026-10-04 07:11:42', 'scheduled_start_at' => '2026-10-03 19:00:00',
+            'scheduled_end_at' => '2026-10-04 07:00:00'] as $field => $expected) {
+            if ($booking->$field?->copy()->setTimezone('America/New_York')->format('Y-m-d H:i:s') !== $expected) {
+                throw new PaymentException('The reviewed October 3 timestamps changed. Contact LoLo support before recovering payment.');
+            }
+        }
+    }
+
+    /** Resume only the exact authorization identified by the reviewed recovery receipt. */
+    private function captureRecoveredAuthorization(CareBookingPayment $payment, int $amountCents): array
+    {
+        $intentId = (string) $payment->stripe_payment_intent_id;
+        // A previous capture may have succeeded before its response or ledger write arrived.
+        $result = $this->stripe->retrievePaymentIntentFinancials($intentId, $amountCents);
+        if (($result['id'] ?? null) !== $intentId) {
+            throw new PaymentException('The recovered Stripe payment reference does not match. Contact LoLo support.');
+        }
+        if (($result['status'] ?? null) === 'requires_capture' && (int) ($result['amount_received'] ?? -1) === 0) {
+            $result = $this->stripe->capturePaymentIntent(
+                $intentId,
+                $amountCents,
+                $this->key($payment, 'capture-primary-recovery-'.$intentId, $amountCents),
+            );
+        }
+        $this->assertRecoveredChargeResult($payment, $result);
+
+        return $result;
+    }
+
+    private function assertRecoveredChargeResult(CareBookingPayment $payment, array $result): void
+    {
+        $intentId = (string) $payment->stripe_payment_intent_id;
+        if (($result['id'] ?? null) !== $intentId || ($result['status'] ?? null) !== 'succeeded'
+            || (int) ($result['amount_received'] ?? 0) !== 37252 || empty($result['latest_charge_id'])) {
+            throw new PaymentException('The recovered Stripe payment is not confirmed for the reviewed amount. Contact LoLo support.');
+        }
+
+        $existingCharge = CareBookingPaymentOperation::query()
+            ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+            ->where('stripe_object_id', $result['latest_charge_id'])->first();
+        if ($existingCharge && ((int) $existingCharge->care_booking_payment_id !== $payment->id
+            || (int) $existingCharge->amount_cents !== 37252
+            || $existingCharge->stripe_parent_object_id !== $intentId
+            || data_get($existingCharge->metadata, 'kind') !== 'primary')) {
+            throw new PaymentException('The recovered Stripe charge conflicts with an existing ledger entry. Contact LoLo support.');
+        }
+        if (! empty($result['balance_transaction_id'])) {
+            $existingFee = CareBookingPaymentOperation::query()
+                ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
+                ->where('stripe_object_id', $result['balance_transaction_id'])->first();
+            if ($existingFee && ((int) $existingFee->care_booking_payment_id !== $payment->id
+                || $existingFee->stripe_parent_object_id !== $result['latest_charge_id'])) {
+                throw new PaymentException('The recovered processing fee conflicts with an existing charge. Contact LoLo support.');
+            }
+        }
     }
 
     /** Serialize reset and money movement, always locking booking before payment. */
