@@ -1276,6 +1276,7 @@ class StripeClient
             'client_secret' => (string) ($intent->client_secret ?? ''),
             'status' => (string) $intent->status,
             'amount' => (int) $intent->amount,
+            'amount_capturable' => (int) ($intent->amount_capturable ?? 0),
             'amount_received' => (int) ($intent->amount_received ?? 0),
             'customer_id' => is_array($payload['customer'] ?? null)
                 ? (string) ($payload['customer']['id'] ?? '') : (string) ($payload['customer'] ?? ''),

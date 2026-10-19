@@ -12,6 +12,7 @@ use App\Models\CareBookingPaymentOperation;
 use App\Models\CaregiverPayout;
 use App\Models\CaregiverPayoutItem;
 use App\Support\MarketplacePricing;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -26,6 +27,7 @@ class BookingPaymentV2Service
     public function capture(CareBooking $booking, CareBookingPayment $payment): CareBookingPayment
     {
         return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment): CareBookingPayment {
+            Oct17RecoveryPaymentGuard::assertV2PaymentAllowed($booking, $payment);
             if ($payment->hasPrepaidVisitHold()) {
                 PrepaidVisitPaymentGuard::assertActualVisitCompleted($booking, $payment);
 
@@ -42,6 +44,7 @@ class BookingPaymentV2Service
             throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
         }
         $booking->loadMissing(['caregiver.caregiverProfile']);
+        $oct17Recovery = Oct17RecoveryPaymentGuard::isActiveTarget($payment);
         $recoveredAuthorization = $this->isOct3RecoveryIntent($payment);
         if ($recoveredAuthorization) {
             $this->assertOct3RecoveryVisitUnchanged($booking, $payment);
@@ -58,6 +61,12 @@ class BookingPaymentV2Service
         $primaryCents = min($targetCents, $authorizedCents);
         $primaryCharge = $this->chargeOperation($payment, 'primary');
 
+        if ($oct17Recovery && ($targetCents !== Oct17RecoveryPaymentGuard::TARGET_CHARGE_CENTS
+            || $primaryCents !== Oct17RecoveryPaymentGuard::TARGET_CHARGE_CENTS
+            || (int) $quote['caregiver_gross_amount_cents'] !== 31365)) {
+            throw new PaymentException('The October 17 quote no longer matches the reviewed payment. Stop and reconcile the recovery.');
+        }
+
         if ($recoveredAuthorization && ($targetCents !== 37252 || $primaryCents !== 37252
             || (int) $quote['caregiver_gross_amount_cents'] !== 32445
             || ($primaryCharge && ((int) $primaryCharge->amount_cents !== 37252
@@ -66,13 +75,15 @@ class BookingPaymentV2Service
         }
 
         if (! $primaryCharge) {
-            $capture = $recoveredAuthorization
-                ? $this->captureRecoveredAuthorization($payment, $primaryCents)
-                : $this->stripe->capturePaymentIntent(
-                    (string) $payment->stripe_payment_intent_id,
-                    $primaryCents,
-                    $this->key($payment, 'capture-primary', $primaryCents),
-                );
+            $capture = $oct17Recovery
+                ? $this->captureOct17Authorization($payment)
+                : ($recoveredAuthorization
+                    ? $this->captureRecoveredAuthorization($payment, $primaryCents)
+                    : $this->stripe->capturePaymentIntent(
+                        (string) $payment->stripe_payment_intent_id,
+                        $primaryCents,
+                        $this->key($payment, 'capture-primary', $primaryCents),
+                    ));
             $primaryCharge = $this->recordChargeResult($payment, $capture, 'primary', $primaryCents);
             CareBookingPaymentAttempt::query()
                 ->where('stripe_payment_intent_id', $payment->stripe_payment_intent_id)
@@ -167,6 +178,7 @@ class BookingPaymentV2Service
     public function finalizeFeesAndTransfers(CareBookingPayment $payment): CareBookingPayment
     {
         return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment): CareBookingPayment {
+            Oct17RecoveryPaymentGuard::assertV2PaymentAllowed($booking, $payment);
             if ($payment->hasPrepaidVisitHold()) {
                 return $payment;
             }
@@ -281,6 +293,7 @@ class BookingPaymentV2Service
         ?string $operationReference = null,
     ): CareBookingPayment {
         return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($amountCents, $reason, $caregiverReversalCents, $operationReference): CareBookingPayment {
+            Oct17RecoveryPaymentGuard::assertNormalPaymentFlowAllowed($payment);
             PrepaidVisitPaymentGuard::assertNotHeld($payment);
 
             return $this->refundUnlocked($booking, $payment, $amountCents, $reason, $caregiverReversalCents, $operationReference);
@@ -412,6 +425,7 @@ class BookingPaymentV2Service
         string $adjustmentReference,
     ): CareBookingPayment {
         return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($amountCents, $adjustmentReference): CareBookingPayment {
+            Oct17RecoveryPaymentGuard::assertNormalPaymentFlowAllowed($payment);
             PrepaidVisitPaymentGuard::assertNotHeld($payment);
 
             return $this->chargeAdjustmentUnlocked($booking, $payment, $amountCents, $adjustmentReference);
@@ -555,6 +569,7 @@ class BookingPaymentV2Service
     public function recordSucceededPaymentIntent(CareBookingPayment $payment, array $object): CareBookingPayment
     {
         return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($object): CareBookingPayment {
+            Oct17RecoveryPaymentGuard::assertV2PaymentAllowed($booking, $payment);
             // The operator reconciles this reserved charge explicitly. A webhook arriving before
             // its local charge receipt must not mistake the adjustment for the original payment.
             if ($payment->hasPrepaidVisitHold() && data_get($payment->metadata, 'prepaid_visit_recovery.adjustment_correction_id')) {
@@ -586,6 +601,9 @@ class BookingPaymentV2Service
         }
         if ($this->isOct3RecoveryIntent($payment)) {
             $this->assertRecoveredChargeResult($payment, $financials);
+        }
+        if (Oct17RecoveryPaymentGuard::isActiveTarget($payment)) {
+            Oct17RecoveryPaymentGuard::assertTargetChargeResult($payment, $financials);
         }
         $this->recordChargeResult($payment, $financials, $kind, max(0, $fallback));
         if ($kind === 'overage') {
@@ -1733,6 +1751,37 @@ class BookingPaymentV2Service
         }
     }
 
+    /** Capture the existing, verified authorization; never replace it or charge overage. */
+    private function captureOct17Authorization(CareBookingPayment $payment): array
+    {
+        $intentId = (string) $payment->stripe_payment_intent_id;
+        $result = $this->stripe->retrievePaymentIntent($intentId);
+        if (($result['id'] ?? null) !== Oct17RecoveryPaymentGuard::PAYMENT_INTENT_ID
+            || (string) $payment->stripe_customer_id === ''
+            || ($result['customer_id'] ?? null) !== $payment->stripe_customer_id
+            || ($result['currency'] ?? null) !== 'usd' || ($result['livemode'] ?? null) !== true) {
+            throw new PaymentException('The October 17 Stripe authorization identity changed. Stop and reconcile the recovery.');
+        }
+        if (($result['status'] ?? null) === 'requires_capture') {
+            if ((int) ($result['amount'] ?? 0) !== 42780
+                || (int) ($result['amount_received'] ?? -1) !== 0
+                || (int) ($result['amount_capturable'] ?? 0) < Oct17RecoveryPaymentGuard::TARGET_CHARGE_CENTS
+                || (! empty($result['authorization_expires_at']) && ! Carbon::parse($result['authorization_expires_at'])->isFuture())) {
+                throw new PaymentException('The October 17 authorization no longer covers the reviewed USD 360.12.');
+            }
+            $result = $this->stripe->capturePaymentIntent(
+                $intentId,
+                Oct17RecoveryPaymentGuard::TARGET_CHARGE_CENTS,
+                $this->key($payment, 'capture-oct17-'.$intentId.'-'.data_get($payment->metadata, 'oct17_payment_recovery.request_id'), Oct17RecoveryPaymentGuard::TARGET_CHARGE_CENTS),
+            );
+        }
+        // A capture response can be lost after Stripe succeeds. Reconcile that same
+        // charge on replay instead of issuing another capture or authorization.
+        Oct17RecoveryPaymentGuard::assertTargetChargeResult($payment, $result);
+
+        return $result;
+    }
+
     /** Resume only the exact authorization identified by the reviewed recovery receipt. */
     private function captureRecoveredAuthorization(CareBookingPayment $payment, int $amountCents): array
     {
@@ -1792,6 +1841,8 @@ class BookingPaymentV2Service
             $currentPayment->setRelation('booking', $booking);
 
             try {
+                Oct17RecoveryPaymentGuard::assertSourceNotReassigned($currentPayment);
+
                 return $action($booking, $currentPayment);
             } catch (PaymentException $exception) {
                 // A provider action may have succeeded before a later action failed.

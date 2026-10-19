@@ -68,6 +68,7 @@ class BookingPaymentService
 
     public function authorizeForBooking(CareBooking $booking, bool $forceReauthorize = false, bool $notify = true): CareBookingPayment
     {
+        Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
         $booking->loadMissing([
             'application',
             'family',
@@ -266,6 +267,7 @@ class BookingPaymentService
 
     public function retryAuthorizationForBooking(CareBooking $booking): CareBookingPayment
     {
+        Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
         $booking->loadMissing('payment');
         if (! $this->canRetryAuthorization($booking)) {
             throw new PaymentException('This visit does not currently need a payment authorization retry.');
@@ -276,6 +278,7 @@ class BookingPaymentService
 
     public function prepareOnSessionAuthorization(CareBooking $booking, bool $forceNewIntent = false): CareBookingPayment
     {
+        Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
         $booking->loadMissing([
             'application',
             'family',
@@ -316,6 +319,7 @@ class BookingPaymentService
         string $revisionKey,
         ?CareBookingTimeCorrection $correction = null,
     ): CareBookingPayment {
+        Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
         if ($amountCents < 100) {
             throw new PaymentException('The approved payment amount is invalid. Please contact LoLo Care support.');
         }
@@ -545,6 +549,7 @@ class BookingPaymentService
 
     public function syncPreparedAuthorization(CareBooking $booking, string $paymentIntentId): CareBookingPayment
     {
+        Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
         $booking->loadMissing(['payment', 'family', 'caregiver']);
 
         $payment = $booking->payment;
@@ -620,6 +625,7 @@ class BookingPaymentService
 
     public function captureForBooking(CareBooking $booking, bool $notify = true): CareBookingPayment
     {
+        Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
         // Family confirmation records approval only while an audited prepaid reset is held.
         // Fetch current rows: callers and scheduled jobs may have loaded them before the reset.
         $heldPayment = DB::transaction(function () use ($booking): ?CareBookingPayment {
@@ -1645,6 +1651,9 @@ class BookingPaymentService
                     ->where('care_booking_id', $booking->id)
                     ->lockForUpdate()
                     ->first();
+                if ($payment) {
+                    Oct17RecoveryPaymentGuard::assertNormalPaymentFlowAllowed($payment);
+                }
                 $metadata = (array) ($payment?->metadata ?? []);
                 $inProgressAt = data_get($metadata, 'authorization_in_progress_at');
                 if ($inProgressAt && Carbon::parse((string) $inProgressAt)->gt(now()->subMinutes(5))) {
