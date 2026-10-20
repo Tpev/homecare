@@ -8,6 +8,7 @@ use App\Models\CareRequestApplication;
 use App\Models\User;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -110,6 +111,7 @@ $profile = static function (string $name, array $attributes = []): User {
 $profile('Morgan New');
 $applied = $profile('Robin Applied');
 $hired = $profile('Avery Hired');
+$legacyHire = $profile('Legacy Hire');
 $profile('Pending Hidden', ['screening_initial_approved_at' => null]);
 $profile('Suspended Hidden', ['screening_suspended_at' => now()]);
 foreach (['desktop', 'mobile'] as $variant) {
@@ -117,27 +119,43 @@ foreach (['desktop', 'mobile'] as $variant) {
 }
 
 $family = User::withoutEvents(fn () => User::factory()->create(['role' => 'family', 'name' => 'Synthetic Family']));
-$request = CareRequest::withoutEvents(fn () => CareRequest::create([
-    'family_user_id' => $family->id, 'title' => 'Synthetic companionship request',
-    'status' => CareRequest::STATUS_OPEN, 'request_type' => 'one_time',
-    'address_line1' => '123 Synthetic Lane', 'city' => 'Raleigh', 'state' => 'NC', 'zip' => '27601',
-    'is_system_generated' => false,
-]));
-CareRequestApplication::withoutEvents(fn () => CareRequestApplication::create([
-    'care_request_id' => $request->id, 'caregiver_user_id' => $applied->id,
-    'status' => CareRequestApplication::STATUS_WITHDRAWN, 'proposed_rate' => 30,
-]));
-$application = CareRequestApplication::withoutEvents(fn () => CareRequestApplication::create([
-    'care_request_id' => $request->id, 'caregiver_user_id' => $hired->id,
+// Distinct engagements make the latest dates visibly different from the first.
+foreach ([
+    ['2026-08-12 09:15:00', '2026-08-10 10:30:00', '2026-08-11 14:45:00'],
+    ['2026-09-14 09:15:00', '2026-09-12 10:30:00', '2026-09-15 14:45:00'],
+] as [$appliedAt, $hiredAppliedAt, $hiredAt]) {
+    $request = CareRequest::withoutEvents(fn () => CareRequest::create([
+        'family_user_id' => $family->id, 'title' => 'Synthetic companionship request',
+        'status' => CareRequest::STATUS_OPEN, 'request_type' => 'one_time',
+        'address_line1' => '123 Synthetic Lane', 'city' => 'Raleigh', 'state' => 'NC', 'zip' => '27601',
+        'is_system_generated' => false,
+    ]));
+    $appliedApplication = CareRequestApplication::withoutEvents(fn () => CareRequestApplication::create([
+        'care_request_id' => $request->id, 'caregiver_user_id' => $applied->id,
+        'status' => CareRequestApplication::STATUS_WITHDRAWN, 'proposed_rate' => 30,
+    ]));
+    $appliedApplication->forceFill(['created_at' => $appliedAt, 'updated_at' => $appliedAt])->saveQuietly();
+    $application = CareRequestApplication::withoutEvents(fn () => CareRequestApplication::create([
+        'care_request_id' => $request->id, 'caregiver_user_id' => $hired->id,
+        'status' => CareRequestApplication::STATUS_HIRED, 'proposed_rate' => 30,
+    ]));
+    $application->forceFill(['created_at' => $hiredAppliedAt, 'updated_at' => $hiredAppliedAt])->saveQuietly();
+    $booking = CareBooking::withoutEvents(fn () => CareBooking::create([
+        'family_user_id' => $family->id, 'caregiver_user_id' => $hired->id,
+        'care_request_id' => $request->id, 'care_request_application_id' => $application->id,
+        'status' => CareBooking::STATUS_COMPLETED,
+        'scheduled_start_at' => Carbon::parse($hiredAt)->addDay(),
+        'scheduled_end_at' => Carbon::parse($hiredAt)->addDay()->addHour(),
+        'completed_at' => Carbon::parse($hiredAt)->addDay()->addHour(),
+        'expected_minutes' => 60, 'worked_minutes' => 60,
+    ]));
+    $booking->forceFill(['created_at' => $hiredAt, 'updated_at' => $hiredAt])->saveQuietly();
+}
+$legacyApplication = CareRequestApplication::withoutEvents(fn () => CareRequestApplication::create([
+    'care_request_id' => $request->id, 'caregiver_user_id' => $legacyHire->id,
     'status' => CareRequestApplication::STATUS_HIRED, 'proposed_rate' => 30,
 ]));
-CareBooking::withoutEvents(fn () => CareBooking::create([
-    'family_user_id' => $family->id, 'caregiver_user_id' => $hired->id,
-    'care_request_id' => $request->id, 'care_request_application_id' => $application->id,
-    'status' => CareBooking::STATUS_COMPLETED,
-    'scheduled_start_at' => now()->subDays(2), 'scheduled_end_at' => now()->subDays(2)->addHour(),
-    'completed_at' => now()->subDays(2)->addHour(), 'expected_minutes' => 60, 'worked_minutes' => 60,
-]));
+$legacyApplication->forceFill(['created_at' => '2026-08-02 11:00:00', 'updated_at' => '2026-08-02 11:00:00'])->saveQuietly();
 CaregiverCrmRecord::create([
     'caregiver_user_id' => $applied->id, 'priority' => 'high',
     'next_action' => 'Review nearby care requests',

@@ -9,12 +9,16 @@ use App\Models\CaregiverProfile;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Models\CareRequestInvitation;
 use App\Models\ContinuousCoverageEvent;
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageReplacementCase;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
+use App\Models\ContinuousCoverageShiftTemplate;
+use App\Models\FunnelEvent;
 use App\Models\User;
 use App\Services\CaregiverCrm\CaregiverCrmDirectory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -72,6 +76,8 @@ class CaregiverCrmDirectoryTest extends TestCase
         $this->assertSame(0, $row['version']);
         $this->assertSame('normal', $row['priority']);
         $this->assertNull($row['phone_spoken_at']);
+        $this->assertNull($row['last_applied_at']);
+        $this->assertNull($row['last_hired_at']);
         $this->assertDatabaseCount('caregiver_crm_records', 0);
         $this->assertDatabaseCount('caregiver_crm_activities', 0);
         $approved->caregiverProfile->update(['screening_suspended_at' => now()]);
@@ -126,6 +132,245 @@ class CaregiverCrmDirectoryTest extends TestCase
         $this->assertSame('hired', $row['stage']);
         $this->assertSame(1, $row['hires_count']);
         $this->assertNull($row['first_hired_at']);
+        $this->assertNull($row['last_hired_at']);
+    }
+
+    public function test_latest_dates_use_genuine_application_and_hire_evidence_without_rewriting_first_dates(): void
+    {
+        $caregiver = $this->caregiver('Historical dates');
+        $firstRequest = $this->request(['status' => 'cancelled', 'first_hire_at' => '2025-01-01 08:00:00']);
+        $firstApplication = $this->application($caregiver, $firstRequest, 'not_selected');
+        $firstApplication->forceFill(['created_at' => '2026-08-10 10:00:00'])->save();
+        $this->booking($caregiver, $firstRequest, $firstApplication)
+            ->forceFill(['created_at' => '2026-08-11 11:00:00', 'status' => 'cancelled'])->save();
+        $lastRequest = $this->request(['status' => 'cancelled']);
+        $lastApplication = $this->application($caregiver, $lastRequest, 'withdrawn');
+        $lastApplication->forceFill(['created_at' => '2026-09-12 12:00:00'])->save();
+        $this->booking($caregiver, $lastRequest, $lastApplication)
+            ->forceFill(['created_at' => '2026-09-15 13:00:00', 'status' => 'cancelled'])->save();
+        foreach ([['is_system_generated' => true], ['status' => 'draft']] as $attributes) {
+            $request = $this->request($attributes);
+            $application = $this->application($caregiver, $request, 'hired');
+            $this->booking($caregiver, $request, $application);
+            $this->submission($caregiver, $application, now());
+        }
+        $firstApplication->update(['cover_note' => 'An unrelated edit today']);
+        $directory = app(CaregiverCrmDirectory::class);
+        $row = $directory->find($caregiver->id);
+
+        $this->assertSame('2026-08-10 10:00:00', $row['first_applied_at']);
+        $this->assertSame('2026-09-12 12:00:00', $row['last_applied_at']);
+        $this->assertSame('2026-08-11 11:00:00', $row['first_hired_at']);
+        $this->assertSame('2026-09-15 13:00:00', $row['last_hired_at']);
+        $this->assertSame(2, $row['applications_count']);
+        $this->assertSame(2, $row['hires_count']);
+        $this->assertSame($row['last_applied_at'], $directory->board()['columns']['hired']->sole()['last_applied_at']);
+        $this->assertSame($row['last_hired_at'], $directory->board()['columns']['hired']->sole()['last_hired_at']);
+    }
+
+    public function test_latest_application_retains_resubmissions_and_accepted_invitations_for_the_same_engagement(): void
+    {
+        $caregiver = $this->caregiver('Applied again');
+        $other = $this->caregiver('Other caregiver');
+        $request = $this->request();
+        $application = $this->application($caregiver, $request, 'withdrawn');
+        $application->forceFill(['created_at' => '2026-08-01 09:00:00'])->save();
+        $this->submission($caregiver, $application, '2026-08-15 09:00:00');
+        $this->submission($caregiver, $application, '2026-09-01 09:00:00');
+        $this->submission($other, $application, now());
+        $directory = app(CaregiverCrmDirectory::class);
+        $row = $directory->find($caregiver->id);
+
+        $this->assertSame('2026-08-01 09:00:00', $row['first_applied_at']);
+        $this->assertSame('2026-09-01 09:00:00', $row['last_applied_at']);
+        $this->assertSame(1, $row['applications_count']);
+        $this->assertNull($directory->find($other->id)['last_applied_at']);
+
+        $invitation = CareRequestInvitation::create([
+            'care_request_id' => $request->id, 'family_user_id' => $this->family->id,
+            'caregiver_user_id' => $caregiver->id, 'care_request_application_id' => $application->id,
+            'status' => 'accepted',
+        ]);
+        FunnelEvent::create([
+            'event' => 'care_request_invitation_accepted', 'user_id' => $caregiver->id,
+            'entity_type' => CareRequestInvitation::class, 'entity_id' => $invitation->id,
+            'occurred_at' => '2026-09-10 10:00:00',
+        ]);
+        $row = $directory->find($caregiver->id);
+        $this->assertSame('2026-09-10 10:00:00', $row['last_applied_at']);
+        $this->assertSame('2026-08-01 09:00:00', $row['first_applied_at']);
+        $this->assertSame(1, $row['applications_count']);
+    }
+
+    public function test_latest_hire_preserves_later_activation_within_a_deduplicated_request_engagement(): void
+    {
+        $caregiver = $this->caregiver('Regular engagement');
+        $request = $this->request();
+        $application = $this->application($caregiver, $request, 'hired');
+        $this->booking($caregiver, $request, $application)
+            ->forceFill(['created_at' => '2026-08-11 10:00:00'])->save();
+        $this->plan($caregiver, [
+            'source_care_request_id' => $request->id, 'activated_at' => '2026-09-15 10:00:00', 'status' => 'ended',
+        ]);
+        $row = app(CaregiverCrmDirectory::class)->find($caregiver->id);
+
+        $this->assertSame('2026-08-11 10:00:00', $row['first_hired_at']);
+        $this->assertSame('2026-09-15 10:00:00', $row['last_hired_at']);
+        $this->assertSame(1, $row['hires_count']);
+    }
+
+    public function test_imported_regular_care_activation_does_not_replace_the_actual_hire_date(): void
+    {
+        $caregiver = $this->caregiver('Migrated existing client');
+        $unknown = $this->caregiver('Migrated without dated hire');
+        $request = $this->request();
+        $application = $this->application($caregiver, $request, 'hired');
+        $this->booking($caregiver, $request, $application)
+            ->forceFill(['created_at' => '2026-08-11 10:00:00'])->save();
+        $this->plan($caregiver, [
+            'source_care_request_id' => $request->id, 'activated_at' => now(),
+            'metadata' => ['origin' => 'existing_customer_migration'],
+        ]);
+        $this->plan($unknown, ['activated_at' => now(), 'metadata' => ['origin' => 'existing_customer_migration']]);
+        $directory = app(CaregiverCrmDirectory::class);
+        $row = $directory->find($caregiver->id);
+
+        $this->assertSame('hired', $row['stage']);
+        $this->assertSame(1, $row['hires_count']);
+        $this->assertSame('2026-08-11 10:00:00', $row['last_hired_at']);
+        $this->assertSame('hired', $directory->find($unknown->id)['stage']);
+        $this->assertNull($directory->find($unknown->id)['last_hired_at']);
+    }
+
+    public function test_latest_coverage_dates_keep_repeated_actual_events_and_ignore_automatic_schedule_generation(): void
+    {
+        $caregiver = $this->caregiver('Coverage dates');
+        $plan = $this->coveragePlan();
+        foreach (['2026-08-01 08:00:00', '2026-09-01 08:00:00'] as $at) {
+            ContinuousCoverageEvent::create([
+                'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $caregiver->id,
+                'event_type' => 'coverage_application_received', 'happened_at' => $at,
+            ]);
+        }
+        $firstShift = $this->shift($plan, $caregiver, ['confirmed_at' => '2026-08-05 10:00:00']);
+        $lastShift = $this->shift($plan, $caregiver, ['confirmed_at' => '2026-09-05 10:00:00']);
+        foreach ([$firstShift, $lastShift] as $shift) {
+            ContinuousCoverageEvent::create([
+                'continuous_coverage_plan_id' => $plan->id, 'continuous_coverage_shift_id' => $shift->id,
+                'actor_user_id' => $caregiver->id, 'event_type' => 'shift_confirmed',
+                'payload' => ['source' => 'active_recurring_lane_generation'], 'happened_at' => now(),
+            ]);
+        }
+        ContinuousCoverageEvent::create([
+            'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $caregiver->id,
+            'event_type' => 'recurring_lane_accepted', 'happened_at' => '2026-09-05 10:00:00',
+        ]);
+        $directory = app(CaregiverCrmDirectory::class);
+        $row = $directory->find($caregiver->id);
+
+        $this->assertSame('2026-08-01 08:00:00', $row['first_applied_at']);
+        $this->assertSame('2026-09-01 08:00:00', $row['last_applied_at']);
+        $this->assertSame('2026-08-05 10:00:00', $row['first_hired_at']);
+        $this->assertSame('2026-09-05 10:00:00', $row['last_hired_at']);
+        $this->assertSame(1, $row['applications_count']);
+        $this->assertSame(1, $row['hires_count']);
+
+        // Reassignment clears the current confirmation. The caregiver's actual
+        // acceptance event remains, without borrowing the replacement's date.
+        foreach ([$firstShift, $lastShift] as $shift) {
+            $shift->update([
+                'assigned_caregiver_user_id' => null, 'caregiver_accepted_at' => null,
+                'family_confirmed_at' => null, 'confirmed_at' => null,
+            ]);
+        }
+        $this->assertSame('2026-09-05 10:00:00', $directory->find($caregiver->id)['last_hired_at']);
+    }
+
+    public function test_lane_requests_advance_latest_application_and_have_an_attributable_snapshot_fallback(): void
+    {
+        $plan = $this->coveragePlan();
+        $caregiver = $this->caregiver('Requested a later lane');
+        $fallback = $this->caregiver('Lane request without event');
+        $invited = $this->caregiver('Invitation only');
+        $this->roster($plan, $invited, 'family_approved');
+        ContinuousCoverageEvent::create([
+            'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $caregiver->id,
+            'event_type' => 'coverage_application_received', 'happened_at' => '2026-08-01 08:00:00',
+        ]);
+        $lane = $this->laneRequest($plan, $caregiver, ['status' => 'withdrawn', 'requested_at' => '2026-09-10 10:00:00']);
+        ContinuousCoverageEvent::create([
+            'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $caregiver->id,
+            'event_type' => 'recurring_lane_requested', 'payload' => ['lane_request_id' => $lane->id],
+            'happened_at' => '2026-09-10 10:00:00',
+        ]);
+        $this->laneRequest($plan, $fallback, ['requested_at' => '2026-09-12 10:00:00']);
+        $directory = app(CaregiverCrmDirectory::class);
+        $row = $directory->find($caregiver->id);
+
+        $this->assertSame('applied', $row['stage']);
+        $this->assertSame(1, $row['applications_count']);
+        $this->assertSame('2026-08-01 08:00:00', $row['first_applied_at']);
+        $this->assertSame('2026-09-10 10:00:00', $row['last_applied_at']);
+        $this->assertSame('applied', $directory->find($fallback->id)['stage']);
+        $this->assertSame('2026-09-12 10:00:00', $directory->find($fallback->id)['last_applied_at']);
+        $this->assertSame('new', $directory->find($invited->id)['stage']);
+        $this->assertNull($directory->find($invited->id)['last_applied_at']);
+        $this->assertNull($directory->find($caregiver->id)['last_hired_at']);
+    }
+
+    public function test_a_real_lane_acceptance_has_a_hire_date_even_before_shifts_are_generated(): void
+    {
+        $plan = $this->coveragePlan();
+        $caregiver = $this->caregiver('Accepted before shift generation');
+        $invited = $this->caregiver('Offered a lane');
+        foreach (['2026-08-05 10:00:00', '2026-09-05 10:00:00'] as $at) {
+            ContinuousCoverageEvent::create([
+                'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $caregiver->id,
+                'event_type' => 'recurring_lane_accepted', 'happened_at' => $at,
+            ]);
+        }
+        ContinuousCoverageEvent::create([
+            'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $this->family->id,
+            'event_type' => 'recurring_lane_offered', 'payload' => ['caregiver_user_id' => $invited->id],
+            'happened_at' => now(),
+        ]);
+        $directory = app(CaregiverCrmDirectory::class);
+        $row = $directory->find($caregiver->id);
+
+        $this->assertSame('hired', $row['stage']);
+        $this->assertSame(1, $row['hires_count']);
+        $this->assertSame('2026-08-05 10:00:00', $row['first_hired_at']);
+        $this->assertSame('2026-09-05 10:00:00', $row['last_hired_at']);
+        $this->assertSame('new', $directory->find($invited->id)['stage']);
+        $this->assertNull($directory->find($invited->id)['last_hired_at']);
+    }
+
+    public function test_family_approved_lane_keeps_actual_hire_date_after_a_later_request_without_using_response_edits(): void
+    {
+        $plan = $this->coveragePlan();
+        $caregiver = $this->caregiver('Family approved lane');
+        $fallback = $this->caregiver('Approval without event');
+        $lane = $this->laneRequest($plan, $caregiver, [
+            'status' => 'approved', 'requested_at' => '2026-09-01 08:00:00', 'responded_at' => '2026-09-05 10:00:00',
+        ]);
+        $this->laneRequest($plan, $fallback, [
+            'status' => 'approved', 'requested_at' => '2026-09-02 08:00:00', 'responded_at' => '2026-09-06 10:00:00',
+        ]);
+        ContinuousCoverageEvent::create([
+            'continuous_coverage_plan_id' => $plan->id, 'actor_user_id' => $this->family->id,
+            'event_type' => 'recurring_lane_request_approved', 'happened_at' => '2026-09-05 10:00:00',
+            'payload' => ['lane_request_id' => $lane->id, 'caregiver_user_id' => $caregiver->id],
+        ]);
+        $directory = app(CaregiverCrmDirectory::class);
+        $this->assertSame('2026-09-05 10:00:00', $directory->find($caregiver->id)['last_hired_at']);
+        $this->assertSame('2026-09-06 10:00:00', $directory->find($fallback->id)['last_hired_at']);
+
+        $lane->update(['status' => 'declined', 'requested_at' => '2026-09-15 08:00:00', 'responded_at' => now()]);
+        $row = $directory->find($caregiver->id);
+        $this->assertSame('hired', $row['stage']);
+        $this->assertSame(1, $row['hires_count']);
+        $this->assertSame('2026-09-05 10:00:00', $row['first_hired_at']);
+        $this->assertSame('2026-09-05 10:00:00', $row['last_hired_at']);
     }
 
     public function test_generated_and_draft_rows_do_not_create_application_or_hire_milestones(): void
@@ -432,6 +677,31 @@ class CaregiverCrmDirectoryTest extends TestCase
         return CaregiverCrmActivity::create([
             'caregiver_user_id' => $caregiver->id, 'actor_user_id' => $this->admin->id,
             'type' => $type, 'call_outcome' => $outcome, 'body' => 'Contact history', 'occurred_at' => $at,
+        ]);
+    }
+
+    private function submission(User $caregiver, CareRequestApplication $application, mixed $at): FunnelEvent
+    {
+        return FunnelEvent::create([
+            'event' => 'care_request_application_submitted', 'user_id' => $caregiver->id,
+            'entity_type' => CareRequestApplication::class, 'entity_id' => $application->id,
+            'occurred_at' => $at,
+        ]);
+    }
+
+    private function laneRequest(ContinuousCoveragePlan $plan, User $caregiver, array $attributes): ContinuousCoverageLaneRequest
+    {
+        $member = $this->roster($plan, $caregiver, 'active');
+        $template = ContinuousCoverageShiftTemplate::create([
+            'continuous_coverage_plan_id' => $plan->id, 'day_of_week' => 1,
+            'starts_at' => '09:00', 'ends_at' => '13:00', 'duration_minutes' => 240,
+            'effective_from' => '2026-09-01', 'status' => 'uncovered',
+        ]);
+
+        return ContinuousCoverageLaneRequest::create([
+            'continuous_coverage_plan_id' => $plan->id, 'shift_template_id' => $template->id,
+            'roster_member_id' => $member->id, 'caregiver_user_id' => $caregiver->id,
+            'batch_uuid' => fake()->uuid(), 'status' => 'pending', ...$attributes,
         ]);
     }
 }

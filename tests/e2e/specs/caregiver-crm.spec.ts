@@ -46,6 +46,27 @@ test('approved caregiver board reflects activity, filters, and fits the screen',
     await expect(page.getByRole('button', { name: 'Open Avery Hired', exact: true })).toBeVisible();
     await expect(page.getByText('Pending Hidden', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Suspended Hidden', { exact: true })).toHaveCount(0);
+    const newCard = page.getByRole('button', { name: 'Open Morgan New', exact: true });
+    const appliedCard = page.getByRole('button', { name: 'Open Robin Applied', exact: true });
+    const hiredCard = page.getByRole('button', { name: 'Open Avery Hired', exact: true });
+    const legacyCard = page.getByRole('button', { name: 'Open Legacy Hire', exact: true });
+    for (const milestone of ['applied', 'hired']) {
+        await expect(newCard.locator(`[data-milestone="${milestone}"]`)).toContainText('Not yet');
+        await expect(newCard.locator(`[data-milestone="${milestone}"] time`)).toHaveCount(0);
+    }
+    await expect(appliedCard.locator('.cg-card-counts')).toContainText('2 applications');
+    await expect(appliedCard.locator('[data-milestone="applied"] time')).toHaveText('Sep 14, 2026');
+    await expect(appliedCard.locator('[data-milestone="applied"] time')).toHaveAttribute('datetime', /^2026-09-14T09:15:00[+-]\d{2}:\d{2}$/);
+    await expect(appliedCard.locator('[data-milestone="applied"] time')).toHaveAttribute('title', /^Sep 14, 2026 · 9:15 AM \S+$/);
+    await expect(appliedCard.locator('[data-milestone="hired"]')).toContainText('Not yet');
+    await expect(hiredCard.locator('.cg-card-counts')).toContainText('2 hires');
+    await expect(hiredCard.locator('[data-milestone="applied"] time')).toHaveText('Sep 12, 2026');
+    await expect(hiredCard.locator('[data-milestone="hired"] time')).toHaveText('Sep 15, 2026');
+    await expect(hiredCard.locator('[data-milestone="hired"] time')).toHaveAttribute('datetime', /^2026-09-15T14:45:00[+-]\d{2}:\d{2}$/);
+    await expect(hiredCard.locator('[data-milestone="hired"] time')).toHaveAttribute('title', /^Sep 15, 2026 · 2:45 PM \S+$/);
+    await expect(legacyCard.locator('[data-milestone="applied"] time')).toHaveText('Aug 2, 2026');
+    await expect(legacyCard.locator('[data-milestone="hired"]')).toContainText('Date unavailable');
+    await expect(legacyCard.locator('[data-milestone="hired"] time')).toHaveCount(0);
     await noOverflow(page);
     await page.screenshot({ path: testInfo.outputPath('caregiver-crm-board.png'), fullPage: true });
 

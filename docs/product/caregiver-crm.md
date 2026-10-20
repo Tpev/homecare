@@ -18,7 +18,7 @@ Counts represent distinct engagements: a care request, an accepted direct regula
 
 ## Relationship workspace
 
-Cards show application/hire counts, owner, priority, next action, follow-up date, and a **Spoke on phone** tag. Search covers name, email, phone, and ZIP. Filters cover phone conversations, due/upcoming follow-ups, and ownership.
+Cards show application/hire counts, the latest application and hire dates, owner, priority, next action, follow-up date, and a **Spoke on phone** tag. Repeat applications update the last application date; automatic recurring-schedule generation does not advance the last hire date. Dates show **Not yet** when there is no history and **Date unavailable** for historical hires with no recorded timestamp. Hovering a date reveals its exact time and timezone. Search covers name, email, phone, and ZIP. Filters cover phone conversations, due/upcoming follow-ups, and ownership.
 
 The panel provides:
 

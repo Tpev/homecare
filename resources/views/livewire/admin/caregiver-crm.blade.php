@@ -94,6 +94,18 @@
                                 <span>{{ $card['applications_count'] }} {{ $card['applications_count'] === 1 ? 'application' : 'applications' }}</span>
                                 <span>{{ $card['hires_count'] }} {{ $card['hires_count'] === 1 ? 'hire' : 'hires' }}</span>
                             </span>
+                            <span class="cg-card-milestones">
+                                @foreach (['applied' => 'Last applied', 'hired' => 'Last hired'] as $milestone => $milestoneLabel)
+                                    <span class="cg-card-milestone" data-milestone="{{ $milestone }}">
+                                        <span>{{ $milestoneLabel }}</span>
+                                        @if ($card['last_'.$milestone.'_at'])
+                                            <time datetime="{{ \Illuminate\Support\Carbon::parse($card['last_'.$milestone.'_at'])->toIso8601String() }}" title="{{ $formatDate($card['last_'.$milestone.'_at']) }}">{{ \Illuminate\Support\Carbon::parse($card['last_'.$milestone.'_at'])->format('M j, Y') }}</time>
+                                        @else
+                                            <span class="cg-card-milestone-value">{{ $card[$milestone === 'applied' ? 'applications_count' : 'hires_count'] > 0 ? 'Date unavailable' : 'Not yet' }}</span>
+                                        @endif
+                                    </span>
+                                @endforeach
+                            </span>
                             @if ($card['next_action'])
                                 <span class="cg-card-action">
                                     <strong>{{ \Illuminate\Support\Str::limit($card['next_action'], 100) }}</strong>

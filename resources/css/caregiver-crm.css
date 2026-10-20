@@ -42,6 +42,9 @@
 .cg-tag-neutral { color: #587068; background: #f0f4f1; }
 .cg-tag-high, .cg-tag-urgent, .cg-tag-due { color: #974629; background: #fff0e9; }
 .cg-card-counts { display: flex; flex-wrap: wrap; gap: .8rem; padding-top: .8rem; color: var(--crm-muted); font-size: .7rem; }
+.cg-card-milestones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-top: .65rem; color: var(--crm-muted); font-size: .7rem; }
+.cg-card-milestone { display: grid; gap: .15rem; min-width: 0; }
+.cg-card-milestone time, .cg-card-milestone-value { color: var(--crm-ink); font-weight: 600; }
 .cg-card-action { display: block; margin-top: .8rem; padding-top: .7rem; border-top: 1px solid #edf1ee; }
 .cg-card-action strong { display: block; font-size: .75rem; font-weight: 650; overflow-wrap: anywhere; }
 .cg-card-action time { display: block; margin-top: .25rem; color: var(--crm-muted); font-size: .7rem; }
