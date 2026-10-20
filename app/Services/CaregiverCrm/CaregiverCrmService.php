@@ -19,7 +19,7 @@ class CaregiverCrmService
 
     public function saveRecord(User $actor, int $caregiverId, array $data, int $expectedVersion): CaregiverCrmRecord
     {
-        $this->assertAdministrator($actor);
+        $this->assertCrmAccess($actor);
         $this->validateVersion($expectedVersion);
 
         return DB::transaction(function () use ($actor, $caregiverId, $data, $expectedVersion): CaregiverCrmRecord {
@@ -38,8 +38,8 @@ class CaregiverCrmService
             ]))), $record);
             if ($values['assigned_admin_id'] !== null) {
                 $assigned = User::query()->whereKey($values['assigned_admin_id'])->lockForUpdate()->first();
-                if (! $assigned?->isAdministrator()) {
-                    throw ValidationException::withMessages(['assigned_admin_id' => 'Choose a current administrator.']);
+                if (! $assigned?->canAccessCaregiverCrm()) {
+                    throw ValidationException::withMessages(['assigned_admin_id' => 'Choose a current administrator or SDR.']);
                 }
             }
             $changes = [];
@@ -66,7 +66,7 @@ class CaregiverCrmService
 
     public function completeNextAction(User $actor, int $caregiverId, int $expectedVersion): CaregiverCrmRecord
     {
-        $this->assertAdministrator($actor);
+        $this->assertCrmAccess($actor);
         $this->validateVersion($expectedVersion);
 
         return DB::transaction(function () use ($actor, $caregiverId, $expectedVersion): CaregiverCrmRecord {
@@ -93,7 +93,7 @@ class CaregiverCrmService
 
     public function logActivity(User $actor, int $caregiverId, array $data): CaregiverCrmActivity
     {
-        $this->assertAdministrator($actor);
+        $this->assertCrmAccess($actor);
         $normalized = $this->trimStrings($data, ['type', 'call_outcome', 'body', 'occurred_at']);
         $normalized['occurred_at'] ??= now()->toDateTimeString();
         $validated = Validator::make($normalized, [
@@ -119,9 +119,9 @@ class CaregiverCrmService
         });
     }
 
-    private function assertAdministrator(User $actor): void
+    private function assertCrmAccess(User $actor): void
     {
-        abort_unless($actor->isAdministrator() && $actor->fresh()?->isAdministrator(), 403);
+        abort_unless($actor->canAccessCaregiverCrm() && $actor->fresh()?->canAccessCaregiverCrm(), 403);
     }
 
     private function lockEligibleCaregiver(int $caregiverId): void
@@ -150,7 +150,7 @@ class CaregiverCrmService
     {
         $values = $this->trimStrings($values, ['priority', 'notes', 'next_action', 'next_follow_up_at', 'assigned_admin_id']);
         $validated = Validator::make($values, [
-            'assigned_admin_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'admin')],
+            'assigned_admin_id' => ['nullable', 'integer', Rule::exists('users', 'id')->whereIn('role', ['admin', 'sdr'])],
             'priority' => ['required', Rule::in(CaregiverCrmRecord::PRIORITIES)],
             'notes' => ['nullable', 'string', 'max:5000'],
             'next_action' => ['nullable', 'string', 'max:255', 'required_with:next_follow_up_at'],

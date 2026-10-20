@@ -12,7 +12,7 @@ class EnsureCrmAccess
     {
         $user = $request->user();
 
-        $canAccessCrm = $user && in_array($user->role, ['admin', 'sales'], true);
+        $canAccessCrm = $user?->canAccessCrm() === true;
 
         if (! $canAccessCrm) {
             abort(403);

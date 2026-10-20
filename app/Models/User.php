@@ -83,6 +83,16 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function canAccessCrm(): bool
+    {
+        return in_array($this->role, ['admin', 'sales', 'sdr'], true);
+    }
+
+    public function canAccessCaregiverCrm(): bool
+    {
+        return in_array($this->role, ['admin', 'sdr'], true);
+    }
+
     public function canViewAiSupportPilot(): bool
     {
         return $this->isAdministrator();

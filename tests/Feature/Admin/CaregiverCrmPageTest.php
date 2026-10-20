@@ -32,15 +32,22 @@ class CaregiverCrmPageTest extends TestCase
         $this->admin = User::factory()->create(['role' => 'admin', 'name' => 'Caregiver CRM Admin']);
     }
 
-    public function test_admin_opens_caregiver_tab_inside_main_crm_and_can_return_to_existing_pipelines(): void
+    public static function authorizedRoles(): array
     {
+        return [['admin'], ['sdr']];
+    }
+
+    #[DataProvider('authorizedRoles')]
+    public function test_authorized_staff_open_caregiver_tab_and_return_to_existing_pipelines(string $role): void
+    {
+        $actor = $role === 'admin' ? $this->admin : User::factory()->create(['role' => $role]);
         $this->caregiver('Approved Caregiver');
-        $this->actingAs($this->admin)
+        $this->actingAs($actor)
             ->get(route('admin.crm.index', ['pipeline' => 'caregivers']))
             ->assertOk()->assertSeeLivewire(CaregiverCrm::class)
             ->assertSee('Approved Caregiver');
 
-        Livewire::actingAs($this->admin)->test(LeadsIndex::class)
+        Livewire::actingAs($actor)->test(LeadsIndex::class)
             ->call('setPipeline', 'caregivers')->assertSet('pipeline', 'caregivers')
             ->assertSeeLivewire(CaregiverCrm::class)
             ->call('setPipeline', Lead::TYPE_REFERRAL)->assertSet('pipeline', Lead::TYPE_REFERRAL)
@@ -71,11 +78,11 @@ class CaregiverCrmPageTest extends TestCase
 
     public static function restrictedRoles(): array
     {
-        return [['sales'], ['sdr'], ['family'], ['caregiver']];
+        return [['sales'], ['family'], ['caregiver']];
     }
 
     #[DataProvider('restrictedRoles')]
-    public function test_caregiver_component_rejects_non_admin_mount_and_a_stale_admin_session(string $role): void
+    public function test_caregiver_component_rejects_unauthorized_mount_and_session_changes(string $role): void
     {
         $caregiver = $this->caregiver('Protected Caregiver');
         $other = User::factory()->create(['role' => $role]);
@@ -87,6 +94,45 @@ class CaregiverCrmPageTest extends TestCase
         $this->actingAs($other);
         $component->call('saveRecord')->assertForbidden();
         $this->assertDatabaseCount('caregiver_crm_records', 0);
+    }
+
+    public function test_sdr_owner_options_include_admins_and_sdrs_but_hide_global_account_management(): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr', 'name' => 'SDR caregiver owner']);
+        $sales = User::factory()->create(['role' => 'sales', 'name' => 'Sales owner excluded']);
+        $caregiver = $this->caregiver('Caregiver detail access');
+        Livewire::actingAs($sdr)->test(CaregiverCrm::class)
+            ->call('openCaregiver', $caregiver->id)
+            ->assertViewHas('owners', fn ($owners): bool => $owners->pluck('id')->contains($sdr->id)
+                && $owners->pluck('id')->contains($this->admin->id)
+                && ! $owners->pluck('id')->contains($sales->id))
+            ->assertSee('Notes & next action', false)
+            ->assertDontSee('Open caregiver account')
+            ->assertDontSee(route('admin.users.show', $caregiver->id), false);
+        Livewire::actingAs($this->admin)->test(CaregiverCrm::class)
+            ->call('openCaregiver', $caregiver->id)->assertSee('Open caregiver account');
+        $this->actingAs($sdr)->get(route('admin.users.show', $caregiver->id))->assertForbidden();
+    }
+
+    public static function protectedActions(): array
+    {
+        return [['saveRecord'], ['logActivity'], ['completeNextAction'], ['$refresh']];
+    }
+
+    #[DataProvider('protectedActions')]
+    public function test_revoked_sdr_access_blocks_updates_from_an_already_open_panel(string $action): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr']);
+        $caregiver = $this->caregiver('Protected SDR panel');
+        $component = Livewire::actingAs($sdr)->test(CaregiverCrm::class)
+            ->call('openCaregiver', $caregiver->id)
+            ->set('recordForm.notes', 'Must not save')
+            ->set('activityForm.body', 'Must not log');
+        User::query()->whereKey($sdr->id)->update(['role' => 'sales']);
+        $this->assertSame('sdr', $sdr->role);
+        $component->call($action)->assertForbidden();
+        $this->assertDatabaseCount('caregiver_crm_records', 0);
+        $this->assertDatabaseCount('caregiver_crm_activities', 0);
     }
 
     public function test_guest_cannot_mount_either_crm_component(): void
@@ -120,14 +166,16 @@ class CaregiverCrmPageTest extends TestCase
         $component->set('recordVersion', 900);
     }
 
-    public function test_approved_caregivers_are_searchable_and_ineligible_profiles_are_hidden(): void
+    #[DataProvider('authorizedRoles')]
+    public function test_approved_caregivers_are_searchable_and_ineligible_profiles_are_hidden(string $role): void
     {
+        $actor = $role === 'admin' ? $this->admin : User::factory()->create(['role' => $role]);
         $approved = $this->caregiver('Avery Approved');
         $this->caregiver('Morgan Legacy', ['screening_initial_approved_at' => null, 'screening_legacy_access' => true]);
         $this->caregiver('Pending Person', ['screening_initial_approved_at' => null]);
         $this->caregiver('Suspended Person', ['screening_suspended_at' => now()]);
 
-        Livewire::actingAs($this->admin)->test(CaregiverCrm::class)
+        Livewire::actingAs($actor)->test(CaregiverCrm::class)
             ->assertSee('Avery Approved')->assertSee('Morgan Legacy')
             ->assertDontSee('Pending Person')->assertDontSee('Suspended Person')
             ->set('search', 'Avery')->assertSee('Avery Approved')->assertDontSee('Morgan Legacy')
@@ -226,22 +274,29 @@ class CaregiverCrmPageTest extends TestCase
         ]);
     }
 
-    public function test_notes_connected_call_and_follow_up_completion_persist_without_creating_a_lead(): void
+    #[DataProvider('authorizedRoles')]
+    public function test_notes_connected_call_and_follow_up_completion_persist_without_creating_a_lead(string $role): void
     {
+        $actor = $role === 'admin' ? $this->admin : User::factory()->create(['role' => $role]);
         $caregiver = $this->caregiver('Jamie Caregiver');
+        $this->caregiver('Unassigned caregiver');
         $followUp = now()->addDays(2)->setTime(10, 30)->format('Y-m-d\TH:i');
-        $component = Livewire::actingAs($this->admin)->test(CaregiverCrm::class)
+        $component = Livewire::actingAs($actor)->test(CaregiverCrm::class)
             ->call('openCaregiver', $caregiver->id)
-            ->set('recordForm.assigned_admin_id', (string) $this->admin->id)
+            ->set('recordForm.assigned_admin_id', (string) $actor->id)
             ->set('recordForm.priority', 'high')
             ->set('recordForm.notes', 'Prefers weekday mornings.')
             ->set('recordForm.next_action', 'Discuss the first care request')
             ->set('recordForm.next_follow_up_at', $followUp)
             ->call('saveRecord')->assertHasNoErrors()
-            ->assertSet('recordVersion', 1);
+            ->assertSet('recordVersion', 1)
+            ->call('closeCaregiver')
+            ->set('assigned', 'me')->set('followUp', 'upcoming')
+            ->assertSee('Jamie Caregiver')->assertDontSee('Unassigned caregiver')
+            ->call('openCaregiver', $caregiver->id);
 
         $this->assertDatabaseHas('caregiver_crm_records', [
-            'caregiver_user_id' => $caregiver->id, 'assigned_admin_id' => $this->admin->id,
+            'caregiver_user_id' => $caregiver->id, 'assigned_admin_id' => $actor->id,
             'notes' => 'Prefers weekday mornings.', 'next_action' => 'Discuss the first care request',
             'priority' => 'high', 'version' => 1,
         ]);
@@ -249,9 +304,11 @@ class CaregiverCrmPageTest extends TestCase
             ->set('activityForm.call_outcome', 'connected')
             ->set('activityForm.body', 'Spoke with Jamie about applying to nearby care requests.')
             ->call('logActivity')->assertHasNoErrors()->assertSee('Spoke on phone')
-            ->assertSet('recordVersion', 1);
+            ->assertSet('recordVersion', 1)
+            ->set('contact', 'called')
+            ->assertViewHas('board', fn ($board): bool => $board['stats']['total'] === 1 && $board['stats']['called'] === 1);
         $this->assertDatabaseHas('caregiver_crm_activities', [
-            'caregiver_user_id' => $caregiver->id, 'actor_user_id' => $this->admin->id,
+            'caregiver_user_id' => $caregiver->id, 'actor_user_id' => $actor->id,
             'type' => 'call', 'call_outcome' => 'connected',
             'body' => 'Spoke with Jamie about applying to nearby care requests.',
         ]);

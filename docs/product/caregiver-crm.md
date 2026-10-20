@@ -1,6 +1,6 @@
 # Approved caregiver CRM
 
-Open **CRM → Caregivers**, or `/admin/crm?pipeline=caregivers`. This tab is available to administrators. Sales retains its existing family and referral CRM access.
+Open **CRM → Caregivers**, or `/admin/crm?pipeline=caregivers`. Administrators and SDRs have full access to all three CRM tabs and their actions. Sales retains its existing family and referral CRM access. SDR desktop and mobile navigation include the main CRM alongside the existing calling tools. Global administrator pages remain restricted.
 
 ## Who appears
 
@@ -22,7 +22,7 @@ Cards show application/hire counts, the latest application and hire dates, owner
 
 The panel provides:
 
-- Editable pinned notes, administrator owner, priority, next action, and follow-up.
+- Editable pinned notes, administrator or SDR owner, priority, next action, and follow-up.
 - A dated activity log for notes, phone calls, emails, texts, and meetings.
 - Explicit phone outcomes: spoke on phone, no answer, or left voicemail. Only a connected conversation creates the phone tag; previously unrecorded conversations can be logged with their actual date.
 - An activity timeline with actor attribution and older/newer pagination.

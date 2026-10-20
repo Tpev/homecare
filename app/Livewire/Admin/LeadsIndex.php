@@ -71,7 +71,7 @@ class LeadsIndex extends Component
     public function mount(): void
     {
         if ($this->pipeline === 'caregivers') {
-            abort_unless(auth()->user()?->isAdministrator(), 403);
+            abort_unless(auth()->user()?->canAccessCaregiverCrm(), 403);
         } elseif (! in_array($this->pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true)) {
             $this->pipeline = Lead::TYPE_FAMILY;
         }
@@ -82,7 +82,8 @@ class LeadsIndex extends Component
 
     public function boot(): void
     {
-        abort_unless(in_array(auth()->user()?->role, ['admin', 'sales'], true), 403);
+        $user = auth()->user();
+        abort_unless($user?->canAccessCrm() && $user->fresh()?->canAccessCrm(), 403);
     }
 
     public function updatingQ(): void
@@ -122,7 +123,7 @@ class LeadsIndex extends Component
     public function setPipeline(string $pipeline): void
     {
         if ($pipeline === 'caregivers') {
-            abort_unless(auth()->user()?->isAdministrator(), 403);
+            abort_unless(auth()->user()?->canAccessCaregiverCrm(), 403);
         } elseif (! in_array($pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true)) {
             return;
         }
@@ -448,7 +449,7 @@ class LeadsIndex extends Component
     public function queueFollowUpCall(): void
     {
         $this->assertLeadPipeline();
-        abort_unless(in_array(auth()->user()?->role, ['admin', 'sales'], true), 403);
+        abort_unless(auth()->user()?->canAccessCrm(), 403);
 
         if (! $lead = $this->selectedLead) {
             return;
@@ -538,7 +539,7 @@ class LeadsIndex extends Component
     public function render(): View
     {
         if ($this->pipeline === 'caregivers') {
-            abort_unless(auth()->user()?->isAdministrator(), 403);
+            abort_unless(auth()->user()?->canAccessCaregiverCrm(), 403);
 
             return view('livewire.admin.leads-index', [
                 'pipelineOptions' => $this->pipelineOptions(),
@@ -834,7 +835,7 @@ class LeadsIndex extends Component
             Lead::TYPE_FAMILY => 'Family / care receiver leads',
             Lead::TYPE_REFERRAL => 'Referral source recruiting',
         ];
-        if (auth()->user()?->isAdministrator()) {
+        if (auth()->user()?->canAccessCaregiverCrm()) {
             $options['caregivers'] = 'Caregivers';
         }
 

@@ -85,9 +85,9 @@ if (! is_file($database)) {
 Artisan::call('migrate:fresh', ['--force' => true]);
 fwrite(STDOUT, Artisan::output());
 
-foreach (['admin', 'sales'] as $role) {
+foreach (['admin', 'sales', 'sdr'] as $role) {
     User::withoutEvents(fn () => User::factory()->create([
-        'name' => 'Caregiver CRM '.ucfirst($role),
+        'name' => 'Caregiver CRM '.($role === 'sdr' ? 'SDR' : ucfirst($role)),
         'email' => 'caregiver.crm.'.$role.'@example.test',
         'password' => 'CaregiverCrmQA!2026',
         'role' => $role, 'email_verified_at' => now(),
@@ -116,6 +116,7 @@ $profile('Pending Hidden', ['screening_initial_approved_at' => null]);
 $profile('Suspended Hidden', ['screening_suspended_at' => now()]);
 foreach (['desktop', 'mobile'] as $variant) {
     $profile('Taylor Followup '.$variant);
+    $profile('Sam SDR '.$variant);
 }
 
 $family = User::withoutEvents(fn () => User::factory()->create(['role' => 'family', 'name' => 'Synthetic Family']));

@@ -48,7 +48,8 @@ class CaregiverCrm extends Component
 
     public function boot(): void
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $actor = auth()->user();
+        abort_unless($actor?->canAccessCaregiverCrm() && $actor->fresh()?->canAccessCaregiverCrm(), 403);
     }
 
     public function mount(): void
@@ -184,7 +185,7 @@ class CaregiverCrm extends Component
             'selected' => $selected,
             'activities' => $activities->take(20),
             'hasMoreActivity' => $activities->count() > 20,
-            'owners' => User::query()->where('role', 'admin')->orderBy('name')->get(['id', 'name']),
+            'owners' => User::query()->whereIn('role', ['admin', 'sdr'])->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

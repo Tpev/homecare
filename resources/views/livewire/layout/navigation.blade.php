@@ -24,7 +24,7 @@ new class extends Component
         $isContentTeam = $user?->isContentTeamMember() === true;
         $isSales = $user?->role === 'sales';
         $isSdr = $user?->role === 'sdr';
-        $canAccessCrm = $isAdmin || $isSales;
+        $usesAdminOrSalesNavigation = $isAdmin || $isSales;
         $canAccessSdr = $isAdmin || $isSales || $isSdr;
         $continuousCoverageVisible = app(\App\Services\ContinuousCoverage\ContinuousCoverageAccess::class)->visibleInNavigation($user);
         $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
@@ -143,6 +143,7 @@ new class extends Component
         ];
 
         $sdrNavLinks = [
+            $adminCrmLink,
             [
                 'label' => 'Family calling console',
                 'href' => route('sdr.family-calling'),
@@ -423,7 +424,7 @@ new class extends Component
 
         $primaryLinks = [];
 
-        if ($canAccessCrm) {
+        if ($usesAdminOrSalesNavigation) {
             $primaryLinks = [$adminCrmLink];
         } elseif ($isSdr) {
             $primaryLinks = $sdrNavLinks;
@@ -528,7 +529,7 @@ new class extends Component
                     </span>
                     <span class="block">
                         <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $canAccessCrm ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')))) }}</span>
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $usesAdminOrSalesNavigation ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')))) }}</span>
                     </span>
                 </a>
             </div>
@@ -544,7 +545,7 @@ new class extends Component
                         </div>
                     </div>
                 @endif
-                @if ($canAccessCrm)
+                @if ($usesAdminOrSalesNavigation)
                     @if ($isAdmin)
                         <div data-admin-compact-navigation class="flex min-w-0 items-center gap-1">
                             <a
@@ -938,7 +939,7 @@ new class extends Component
                     class="absolute right-0 top-full z-50 mt-2 max-h-[calc(100dvh-5.5rem)] w-72 space-y-1 overflow-y-auto overscroll-contain rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl"
                     style="display: none;"
                 >
-                    @if ($canAccessCrm)
+                    @if ($usesAdminOrSalesNavigation)
                         <div class="rounded-2xl border border-[#E3D6C5] bg-[#F8F0E2] px-3 py-3 text-sm text-[#23483F]">
                             <p class="font-semibold text-[#23483F]">{{ $user->name }}</p>
                             <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
@@ -950,6 +951,7 @@ new class extends Component
                             <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
                             <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">SDR account</p>
                         </div>
+                        <a href="{{ route('admin.crm.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">CRM</a>
                         <a href="{{ route('sdr.family-calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Family calling console</a>
                         <a href="{{ route('admin.family-acquisition.leads') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Family leads CRM</a>
                         <a href="{{ route('sdr.calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Referral outreach</a>
@@ -1032,7 +1034,7 @@ new class extends Component
                     <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>{{ __($item['label']) }}</x-responsive-nav-link>
                 @endforeach
             @endif
-            @if ($canAccessCrm)
+            @if ($usesAdminOrSalesNavigation)
                 <x-responsive-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
                     {{ __($isAdmin ? 'Dashboard' : $adminCrmLink['label']) }}
                 </x-responsive-nav-link>
@@ -1084,12 +1086,13 @@ new class extends Component
 
                 <div class="mt-3 space-y-1 px-2">
                     @if ($isSdr)
+                        <x-responsive-nav-link :href="route('admin.crm.index')" wire:navigate>{{ __('CRM') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.family-calling')" wire:navigate>{{ __('Family calling console') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.family-acquisition.leads')" wire:navigate>{{ __('Family leads CRM') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.calling')" wire:navigate>{{ __('Referral outreach') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
-                    @elseif (! $canAccessCrm)
+                    @elseif (! $usesAdminOrSalesNavigation)
                         @if ($isCaregiver && $caregiverOnboardingMode)
                             <x-responsive-nav-link :href="route('caregiver.setup.index')" wire:navigate>{{ __('Setup Hub') }}</x-responsive-nav-link>
                         @endif

@@ -570,7 +570,7 @@ class CaregiverCrmDirectoryTest extends TestCase
         $next = $directory->board([], [], ['new' => 8]);
         $last = $directory->board([], [], ['new' => PHP_INT_MAX]);
 
-        $this->assertCount(4, $queries);
+        $this->assertCount(5, $queries);
         $this->assertSame(['new' => 105, 'applied' => 1, 'hired' => 0], $first['counts']);
         $this->assertCount(8, $first['columns']['new']);
         $this->assertCount(1, $first['columns']['applied']);
@@ -584,7 +584,7 @@ class CaregiverCrmDirectoryTest extends TestCase
     }
 
     #[DataProvider('unauthorizedRoles')]
-    public function test_directory_is_admin_only(?string $role): void
+    public function test_directory_rejects_users_without_caregiver_crm_access(?string $role): void
     {
         if ($role === null) {
             auth()->logout();
@@ -598,7 +598,49 @@ class CaregiverCrmDirectoryTest extends TestCase
 
     public static function unauthorizedRoles(): array
     {
-        return [[null], ['family'], ['caregiver'], ['sales'], ['sdr']];
+        return [[null], ['family'], ['caregiver'], ['sales']];
+    }
+
+    public function test_sdr_can_search_read_and_filter_their_owned_followups(): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr', 'name' => 'SDR owner']);
+        $owned = $this->caregiver('SDR assigned caregiver');
+        $other = $this->caregiver('Other caregiver');
+        CaregiverCrmRecord::create([
+            'caregiver_user_id' => $owned->id, 'assigned_admin_id' => $sdr->id,
+            'next_action' => 'Discuss availability', 'next_follow_up_at' => now()->subMinute(),
+            'notes' => 'Contact context', 'version' => 1,
+        ]);
+        CaregiverCrmRecord::create(['caregiver_user_id' => $other->id, 'assigned_admin_id' => $this->admin->id]);
+        $this->actingAs($sdr);
+        $directory = app(CaregiverCrmDirectory::class);
+        $board = $directory->board(['assigned' => 'me', 'follow_up' => 'due', 'search' => 'assigned']);
+
+        $this->assertSame($owned->id, $board['columns']['new']->sole()['user_id']);
+        $this->assertSame(['total' => 1, 'called' => 0, 'due' => 1, 'unassigned' => 0], $board['stats']);
+        $this->assertSame('SDR owner', $directory->find($owned->id)['assigned_name']);
+        $this->assertSame('Contact context', $directory->find($owned->id)['notes']);
+        $this->assertNotNull($directory->find($other->id));
+    }
+
+    public static function directoryReads(): array
+    {
+        return [['board'], ['find']];
+    }
+
+    #[DataProvider('directoryReads')]
+    public function test_stale_sdr_role_cannot_read_the_directory(string $operation): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr']);
+        $caregiver = $this->caregiver('Private caregiver');
+        $this->actingAs($sdr);
+        User::query()->whereKey($sdr->id)->update(['role' => 'sales']);
+        $this->assertSame('sdr', $sdr->role);
+
+        $this->expectException(HttpException::class);
+        $operation === 'board'
+            ? app(CaregiverCrmDirectory::class)->board()
+            : app(CaregiverCrmDirectory::class)->find($caregiver->id);
     }
 
     private function caregiver(string $name, array $profile = [], array $user = []): User

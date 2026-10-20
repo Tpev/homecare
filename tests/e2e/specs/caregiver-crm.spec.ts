@@ -153,3 +153,79 @@ test('sales keeps family and referral CRM without access to caregiver records', 
     expect(forbidden?.status()).toBe(403);
     await expect(page.getByText('Morgan New', { exact: true })).toHaveCount(0);
 });
+
+test('SDR uses all CRM tabs and caregiver follow-ups without global admin access', async ({ page }, testInfo) => {
+    await login(page, 'sdr');
+    await page.goto('/sdr/family-calling');
+    const menuToggle = page.getByRole('button', { name: 'Toggle navigation menu', exact: true });
+    if (testInfo.project.name === 'mobile') {
+        await menuToggle.click();
+        await expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
+    }
+    for (const [label, path] of [
+        ['CRM', '/admin/crm'],
+        ['Family calling console', '/sdr/family-calling'],
+        ['Family leads CRM', '/admin/family-leads'],
+        ['Referral outreach', '/sdr/calling'],
+    ]) {
+        const link = page.getByRole('link', { name: label, exact: true }).first();
+        await expect(link).toBeVisible();
+        await expect(link).toHaveAttribute('href', `http://127.0.0.1:8020${path}`);
+    }
+    await expect(page.locator('nav a[href$="/admin/users"]')).toHaveCount(0);
+    await expect(page.locator('nav a[href$="/admin/requests"]')).toHaveCount(0);
+    await noOverflow(page);
+    await page.screenshot({ path: testInfo.outputPath('caregiver-crm-sdr-navigation.png') });
+    await page.getByRole('link', { name: 'CRM', exact: true }).first().click();
+    await expect(page).toHaveURL(/\/admin\/crm$/);
+    if (testInfo.project.name === 'mobile' && await menuToggle.getAttribute('aria-expanded') === 'true') {
+        await menuToggle.click();
+    }
+    await expect(page.getByRole('tab')).toHaveCount(3);
+    await expect(page.getByRole('button', { name: 'Add family lead', exact: true })).toBeVisible();
+    await page.getByRole('tab', { name: /^Referral source recruiting/ }).click();
+    await expect(page.getByRole('button', { name: 'Add referral source', exact: true })).toBeVisible();
+    await caregivers(page);
+    await noOverflow(page);
+    await page.screenshot({ path: testInfo.outputPath('caregiver-crm-sdr-board.png'), fullPage: true });
+
+    const name = `Sam SDR ${testInfo.project.name}`;
+    const notes = 'SDR follow-up: prefers nearby weekday morning care.';
+    const conversation = 'Spoke about the first application and agreed to review nearby care.';
+    await page.getByRole('button', { name: `Open ${name}`, exact: true }).click();
+    await expect(page.getByRole('link', { name: /Open caregiver account/ })).toHaveCount(0);
+    await page.getByRole('combobox', { name: 'Owner', exact: true }).selectOption({ label: 'Caregiver CRM SDR' });
+    await page.getByLabel('Pinned notes', { exact: true }).fill(notes);
+    await page.getByLabel('Next action', { exact: true }).fill('Discuss the next nearby request');
+    const followUp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    await page.getByLabel('Follow-up date', { exact: true }).fill(followUp);
+    await page.getByRole('button', { name: 'Save details', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Mark action complete', exact: true })).toBeEnabled();
+    await page.getByRole('combobox', { name: 'Activity type', exact: true }).selectOption('call');
+    await page.getByRole('combobox', { name: 'Call outcome', exact: true }).selectOption('connected');
+    await page.getByLabel('What happened?', { exact: true }).fill(conversation);
+    await page.getByRole('button', { name: 'Add to timeline', exact: true }).click();
+    await expect(page.getByText(conversation, { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').locator('.cg-tags').getByText('✓ Spoke on phone', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Mark action complete', exact: true }).click();
+    await expect(page.getByLabel('Next action', { exact: true })).toHaveValue('');
+    await expect(page.getByLabel('Follow-up date', { exact: true })).toHaveValue('');
+    await page.reload();
+    await expect(page.getByLabel('Pinned notes', { exact: true })).toHaveValue(notes);
+    await expect(page.getByRole('combobox', { name: 'Owner', exact: true }).locator('option:checked')).toHaveText('Caregiver CRM SDR');
+    await expect(page.getByLabel('Next action', { exact: true })).toHaveValue('');
+    await expect(page.getByText(conversation, { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Open caregiver account/ })).toHaveCount(0);
+    await noOverflow(page);
+    await page.getByRole('dialog').evaluate(element => element.scrollTo({ top: 0 }));
+    await page.screenshot({ path: testInfo.outputPath('caregiver-crm-sdr-panel.png') });
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Assigned to', exact: true }).selectOption('me');
+    await expect(page.getByRole('button', { name: `Open ${name}`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open Morgan New', exact: true })).toHaveCount(0);
+
+    for (const path of ['/admin/users', '/admin/requests']) {
+        const forbidden = await page.goto(path);
+        expect(forbidden?.status()).toBe(403);
+    }
+});

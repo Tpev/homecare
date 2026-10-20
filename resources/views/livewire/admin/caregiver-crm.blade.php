@@ -184,7 +184,9 @@
                             @if ($selected['phone_spoken_at'])
                                 <p class="cg-muted">Phone conversation recorded {{ $formatDate($selected['phone_spoken_at']) }}</p>
                             @endif
-                            <a class="cg-text-button inline-block mt-2" href="{{ route('admin.users.show', $selected['user_id']) }}" target="_blank" rel="noopener">Open caregiver account ↗</a>
+                            @if (auth()->user()?->isAdministrator())
+                                <a class="cg-text-button inline-block mt-2" href="{{ route('admin.users.show', $selected['user_id']) }}" target="_blank" rel="noopener">Open caregiver account ↗</a>
+                            @endif
                         </section>
 
                         <form class="cg-section" wire:submit="saveRecord">

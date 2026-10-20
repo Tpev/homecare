@@ -103,7 +103,8 @@ class CaregiverCrmDirectory
 
     private function query(): Builder
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $actor = auth()->user();
+        abort_unless($actor?->canAccessCaregiverCrm() && $actor->fresh()?->canAccessCaregiverCrm(), 403);
 
         $activities = DB::table('caregiver_crm_activities')
             ->where('occurred_at', '<=', now())

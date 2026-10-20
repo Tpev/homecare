@@ -37,12 +37,73 @@ class CaregiverCrmServiceTest extends TestCase
     }
 
     #[DataProvider('mutations')]
-    public function test_every_mutation_requires_a_current_administrator(string $mutation): void
+    public function test_every_mutation_rechecks_a_former_administrators_access(string $mutation): void
     {
         [$admin, $caregiver, , $service] = $this->actors();
-        $admin->update(['role' => 'family']);
+        User::query()->whereKey($admin->id)->update(['role' => 'family']);
         $this->expectException(HttpException::class);
         $this->mutate($service, $mutation, $admin, $caregiver);
+    }
+
+    #[DataProvider('mutations')]
+    public function test_every_mutation_rejects_a_stale_sdr_after_caregiver_crm_access_is_revoked(string $mutation): void
+    {
+        [, $caregiver, , $service] = $this->actors();
+        $sdr = User::factory()->create(['role' => 'sdr']);
+        User::query()->whereKey($sdr->id)->update(['role' => 'sales']);
+        $this->assertSame('sdr', $sdr->role);
+        $this->expectException(HttpException::class);
+        $this->mutate($service, $mutation, $sdr, $caregiver);
+    }
+
+    public static function restrictedMutations(): array
+    {
+        $cases = [];
+        foreach (['sales', 'family', 'caregiver'] as $role) {
+            foreach (['save', 'complete', 'log'] as $mutation) {
+                $cases[$role.' '.$mutation] = [$role, $mutation];
+            }
+        }
+
+        return $cases;
+    }
+
+    #[DataProvider('restrictedMutations')]
+    public function test_every_mutation_rejects_users_outside_caregiver_crm(string $role, string $mutation): void
+    {
+        [, $caregiver, , $service] = $this->actors();
+        $actor = User::factory()->create(['role' => $role]);
+        $this->expectException(HttpException::class);
+        $this->mutate($service, $mutation, $actor, $caregiver);
+    }
+
+    public static function authorizedOwners(): array
+    {
+        return [['admin', 'sdr'], ['sdr', 'admin'], ['sdr', 'sdr']];
+    }
+
+    #[DataProvider('authorizedOwners')]
+    public function test_admins_and_sdrs_can_own_and_manage_caregiver_followups(string $actorRole, string $ownerRole): void
+    {
+        [, $caregiver, , $service] = $this->actors();
+        $actor = User::factory()->create(['role' => $actorRole]);
+        $owner = User::factory()->create(['role' => $ownerRole]);
+        $record = $service->saveRecord($actor, $caregiver->id, [
+            'assigned_admin_id' => $owner->id, 'notes' => 'Follow-up context',
+            'next_action' => 'Discuss nearby work', 'next_follow_up_at' => now()->addDay()->toDateTimeString(),
+        ], 0);
+        $call = $service->logActivity($actor, $caregiver->id, [
+            'type' => 'call', 'call_outcome' => 'connected', 'body' => 'Discussed available mornings.',
+        ]);
+        $record = $service->completeNextAction($actor, $caregiver->id, $record->version);
+
+        $this->assertSame($owner->id, $record->assigned_admin_id);
+        $this->assertSame('Follow-up context', $record->notes);
+        $this->assertNull($record->next_action);
+        $this->assertNull($record->next_follow_up_at);
+        $this->assertSame($actor->id, $call->actor_user_id);
+        $this->assertTrue($call->isConnectedCall());
+        $this->assertSame(2, $record->version);
     }
 
     public static function ineligibleCaregivers(): array
@@ -172,11 +233,18 @@ class CaregiverCrmServiceTest extends TestCase
         }
     }
 
-    public function test_assignment_rejects_a_non_admin(): void
+    public static function unauthorizedOwners(): array
+    {
+        return [['sales'], ['family'], ['caregiver']];
+    }
+
+    #[DataProvider('unauthorizedOwners')]
+    public function test_assignment_rejects_users_without_caregiver_crm_access(string $role): void
     {
         [$admin, $caregiver, , $service] = $this->actors();
+        $owner = User::factory()->create(['role' => $role]);
         $this->expectException(ValidationException::class);
-        $service->saveRecord($admin, $caregiver->id, ['assigned_admin_id' => $caregiver->id], 0);
+        $service->saveRecord($admin, $caregiver->id, ['assigned_admin_id' => $owner->id], 0);
     }
 
     public function test_overdue_unchanged_followup_can_be_kept_while_editing_notes(): void
