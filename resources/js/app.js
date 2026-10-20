@@ -1,6 +1,7 @@
 import './bootstrap';
 import './google-appointment-booking';
 import './support-chat';
+import './customer-onboarding';
 
 document.addEventListener('alpine:init', () => {
     window.Alpine.data('contentEditor', (params) => ({

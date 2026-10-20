@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Models\FamilyAccount;
 use App\Models\User;
+use App\Services\CustomerOnboarding\FamilyPaymentSetupService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 
 class FamilyBillingService
@@ -31,9 +32,16 @@ class FamilyBillingService
             $account->forceFill(['stripe_customer_id' => $customerId])->save();
         }
 
+        $snapshotVersion = (int) $account->payment_method_snapshot_version;
         $card = null;
         if ($customerId) {
             $card = $this->stripe->defaultPaymentMethodForCustomer($customerId);
+        }
+        if (! $this->stripe->isBypass()) {
+            if (! app(FamilyPaymentSetupService::class)->recordSummary($account, $card, $snapshotVersion)) {
+                $card = $account->payment_method_summary;
+                $customerId = $account->stripe_customer_id;
+            }
         }
 
         return [
@@ -51,6 +59,9 @@ class FamilyBillingService
     public function syncSetupCheckoutSession(User $family, string $sessionId): void
     {
         $this->stripe->syncFamilySetupCheckoutSession($family, $sessionId);
+        if (! $this->stripe->isBypass()) {
+            $this->summaryFor($family);
+        }
     }
 
     /**
@@ -59,6 +70,10 @@ class FamilyBillingService
     public function handleCheckoutSessionCompletedWebhook(array $payload): void
     {
         if ((string) ($payload['mode'] ?? '') !== 'setup') {
+            return;
+        }
+
+        if (app(FamilyPaymentSetupService::class)->handleCheckoutCompleted($payload)) {
             return;
         }
 

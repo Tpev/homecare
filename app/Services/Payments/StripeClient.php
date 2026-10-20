@@ -34,8 +34,16 @@ class StripeClient
 
     public function ensureFamilyCustomer(User $family): string
     {
-        $account = $this->familyAccount($family);
+        return $this->ensureFamilyAccountCustomer($this->familyAccount($family), $family);
+    }
+
+    public function ensureFamilyAccountCustomer(FamilyAccount $account, ?User $family = null): string
+    {
         $owner = $account->owner;
+        $family ??= $owner;
+        if (! $family || ! $owner || $owner->role !== 'family') {
+            throw new PaymentException('A family account is required for billing.');
+        }
 
         if (! $account->stripe_customer_id && $owner?->stripe_customer_id) {
             $account->forceFill(['stripe_customer_id' => $owner->stripe_customer_id])->save();
@@ -228,6 +236,12 @@ class StripeClient
             throw new PaymentException('Invalid billing setup session.');
         }
 
+        // Guest links have their own expiry/revocation checks and must never use
+        // the ordinary logged-in return path to bypass those checks.
+        if (! empty($session->metadata['onboarding_payment_link_id'])) {
+            throw new PaymentException('Please use the original payment setup link to check this session.');
+        }
+
         if ((string) ($session->status ?? '') !== 'complete') {
             throw new PaymentException('Card setup is not completed yet.');
         }
@@ -300,6 +314,104 @@ class StripeClient
                 'Unable to transfer billing ownership right now. No account changes were made.',
                 $exception->getMessage(),
             );
+        }
+    }
+
+    /** @return array{id:string,url:string,expires_at:int} */
+    public function createGuestFamilySetupCheckoutSession(
+        FamilyAccount $account,
+        int $linkId,
+        int $attempt,
+        string $successUrl,
+        string $cancelUrl,
+        int $expiresAt,
+    ): array {
+        $owner = $account->owner;
+        if (! $owner || $owner->role !== 'family') {
+            throw new PaymentException('This family account is unavailable.');
+        }
+        $customerId = $this->ensureFamilyAccountCustomer($account, $owner);
+        $metadata = [
+            'family_account_id' => (string) $account->id,
+            'family_user_id' => (string) $account->owner_user_id,
+            'onboarding_payment_link_id' => (string) $linkId,
+        ];
+
+        if ($this->isBypass()) {
+            return [
+                'id' => 'cs_bypass_onboarding_'.$linkId.'_'.$attempt,
+                'url' => $successUrl,
+                'expires_at' => $expiresAt,
+            ];
+        }
+
+        try {
+            $session = $this->client()->checkout->sessions->create([
+                'mode' => 'setup',
+                'currency' => $this->currency(),
+                'customer' => $customerId,
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+                'expires_at' => $expiresAt,
+                'metadata' => $metadata,
+                'setup_intent_data' => [
+                    'usage' => 'off_session',
+                    'metadata' => $metadata,
+                ],
+            ], $this->requestOptions('onboarding-setup:'.$linkId.':'.$attempt));
+        } catch (Throwable $exception) {
+            throw new PaymentException('Unable to open secure payment setup right now. Please try again.', $exception->getMessage());
+        }
+
+        if (! $session->id || ! $session->url) {
+            throw new PaymentException('Unable to open secure payment setup right now. Please try again.');
+        }
+
+        return ['id' => (string) $session->id, 'url' => (string) $session->url, 'expires_at' => (int) $session->expires_at];
+    }
+
+    /** @return array<string,mixed> */
+    public function retrieveGuestFamilySetupCheckoutSession(string $sessionId): array
+    {
+        if ($this->isBypass()) {
+            // A development bypass is never evidence that a real card was saved.
+            throw new PaymentException('Payment setup cannot be verified while Stripe bypass is enabled.');
+        }
+        try {
+            return $this->client()->checkout->sessions->retrieve($sessionId, [
+                'expand' => ['setup_intent.payment_method'],
+            ])->toArray();
+        } catch (Throwable $exception) {
+            throw new PaymentException('Unable to verify payment setup right now.', $exception->getMessage());
+        }
+    }
+
+    public function setGuestFamilyDefaultPaymentMethod(string $customerId, string $paymentMethodId, string $sessionId): void
+    {
+        if ($this->isBypass()) {
+            return;
+        }
+        try {
+            $this->client()->customers->update($customerId, [
+                'invoice_settings' => ['default_payment_method' => $paymentMethodId],
+            ], $this->requestOptions('onboarding-default:'.$sessionId));
+        } catch (Throwable $exception) {
+            throw new PaymentException('Unable to finish saving the payment method right now.', $exception->getMessage());
+        }
+    }
+
+    public function expireGuestFamilySetupCheckoutSession(string $sessionId): void
+    {
+        if ($this->isBypass() || $sessionId === '') {
+            return;
+        }
+        try {
+            $session = $this->client()->checkout->sessions->retrieve($sessionId);
+            if ($session->status === 'open') {
+                $this->client()->checkout->sessions->expire($sessionId, [], $this->requestOptions('onboarding-expire:'.$sessionId));
+            }
+        } catch (Throwable $exception) {
+            throw new PaymentException('The link is revoked, but Stripe could not close the checkout page. It cannot update the family’s billing method.', $exception->getMessage());
         }
     }
 

@@ -5,6 +5,7 @@
 @import "./care-recruitment.css";
 @import "./care-schedule.css";
 @import "./shared-care.css";
+@import "./customer-onboarding.css";
 
 @plugin "@tailwindcss/forms";
 

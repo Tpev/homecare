@@ -18,6 +18,7 @@ Schedule::command('screening:export-audit')->everyMinute()->withoutOverlapping()
 Schedule::command('homecare:refresh-caregiver-count')->everyMinute()->withoutOverlapping();
 Schedule::command('homecare:dispatch-unread-message-emails')->everyMinute()->withoutOverlapping();
 Schedule::command('family-onboarding:dispatch-emails')->everyMinute()->withoutOverlapping();
+Schedule::command('customer-onboarding:refresh-payments --limit=100')->hourly()->withoutOverlapping();
 Schedule::command('homecare:auto-approve-timesheets')->hourly();
 Schedule::command('homecare:process-time-corrections')->hourly()->withoutOverlapping();
 Schedule::command('homecare:process-completed-extra-visits')->everyFifteenMinutes()->withoutOverlapping();

@@ -189,6 +189,9 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
         Route::get('/analytics/care-coverage-calendar', CareCoverageCalendar::class)->name('analytics.care-coverage-calendar');
         Route::get('/users', UsersIndex::class)->name('users.index');
+        Route::get('/customer-onboarding', \App\Livewire\Admin\CustomerOnboarding::class)
+            ->middleware(\App\Http\Middleware\CustomerOnboardingPrivacyHeaders::class)
+            ->name('customer-onboarding.index');
         Route::get('/family-onboarding', \App\Livewire\Admin\FamilyOnboardingIndex::class)->name('family-onboarding.index');
         Route::get('/family-onboarding/{onboarding}', \App\Livewire\Admin\FamilyOnboardingShow::class)
             ->whereNumber('onboarding')->name('family-onboarding.show');
@@ -203,6 +206,14 @@ Route::middleware(['web', 'auth', 'admin.email'])
     });
 
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');
+Route::prefix('payment-setup')->name('public.family-payment-setup.')->group(function () {
+    Route::get('/{token}', [\App\Http\Controllers\PublicFamilyPaymentSetupController::class, 'show'])
+        ->middleware('throttle:30,1')->name('show');
+    Route::post('/{token}', [\App\Http\Controllers\PublicFamilyPaymentSetupController::class, 'start'])
+        ->middleware('throttle:10,1')->name('start');
+    Route::get('/{token}/return', [\App\Http\Controllers\PublicFamilyPaymentSetupController::class, 'complete'])
+        ->middleware('throttle:30,1')->name('return');
+});
 Route::get('/families', [MarketingPagesController::class, 'family'])->name('landing.family');
 Route::get('/get-care', [MarketingPagesController::class, 'getCare'])->name('landing.get-care');
 Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVariant'])

@@ -23,6 +23,16 @@ class FamilyAccount extends Model
         'default_care_recipient_profile_id',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'payment_method_summary' => 'array',
+            'payment_method_checked_at' => 'datetime',
+            'payment_method_refresh_attempted_at' => 'datetime',
+            'payment_method_snapshot_version' => 'integer',
+        ];
+    }
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');
