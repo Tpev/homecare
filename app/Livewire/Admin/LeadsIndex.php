@@ -70,12 +70,19 @@ class LeadsIndex extends Component
 
     public function mount(): void
     {
-        if (! in_array($this->pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true)) {
+        if ($this->pipeline === 'caregivers') {
+            abort_unless(auth()->user()?->isAdministrator(), 403);
+        } elseif (! in_array($this->pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true)) {
             $this->pipeline = Lead::TYPE_FAMILY;
         }
 
         $this->resetLeadForm();
         $this->resetActivityForm();
+    }
+
+    public function boot(): void
+    {
+        abort_unless(in_array(auth()->user()?->role, ['admin', 'sales'], true), 403);
     }
 
     public function updatingQ(): void
@@ -114,13 +121,17 @@ class LeadsIndex extends Component
 
     public function setPipeline(string $pipeline): void
     {
-        if (! in_array($pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true)) {
+        if ($pipeline === 'caregivers') {
+            abort_unless(auth()->user()?->isAdministrator(), 403);
+        } elseif (! in_array($pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true)) {
             return;
         }
 
         $this->pipeline = $pipeline;
         $this->status = 'all';
         $this->selectedLeadId = null;
+        $this->showCreateForm = false;
+        $this->resetValidation();
         $this->resetBoardStageLimits();
         $this->resetLeadForm();
         $this->resetPage();
@@ -142,6 +153,7 @@ class LeadsIndex extends Component
 
     public function exportStage(string $stage): StreamedResponse
     {
+        $this->assertLeadPipeline();
         $stageOptions = $this->currentStageOptions();
 
         abort_unless(array_key_exists($stage, $stageOptions), 404);
@@ -258,6 +270,7 @@ class LeadsIndex extends Component
 
     public function toggleCreateForm(): void
     {
+        $this->assertLeadPipeline();
         $this->showCreateForm = ! $this->showCreateForm;
         $this->resetValidation();
 
@@ -268,6 +281,7 @@ class LeadsIndex extends Component
 
     public function createLead(): void
     {
+        $this->assertLeadPipeline();
         $data = $this->validateLeadForm();
         $notes = trim((string) ($data['notes'] ?? ''));
         unset($data['notes']);
@@ -305,6 +319,7 @@ class LeadsIndex extends Component
 
     public function openLead(int $id): void
     {
+        $this->assertLeadPipeline();
         $lead = Lead::query()->findOrFail($id);
         $this->resetValidation();
         $this->selectedLeadId = $lead->id;
@@ -320,6 +335,7 @@ class LeadsIndex extends Component
 
     public function saveLead(): void
     {
+        $this->assertLeadPipeline();
         $lead = $this->selectedLead;
         if (! $lead) {
             return;
@@ -361,6 +377,7 @@ class LeadsIndex extends Component
 
     public function updateStatus(int $leadId, string $status): void
     {
+        $this->assertLeadPipeline();
         $lead = Lead::query()->findOrFail($leadId);
         if (! array_key_exists($status, $lead->stageOptions())) {
             return;
@@ -387,6 +404,7 @@ class LeadsIndex extends Component
 
     public function moveLeadToStage(int|string|null $leadId, string $status): void
     {
+        $this->assertLeadPipeline();
         if (! $leadId) {
             return;
         }
@@ -410,6 +428,7 @@ class LeadsIndex extends Component
 
     public function assignToMe(int $leadId): void
     {
+        $this->assertLeadPipeline();
         $lead = Lead::query()->findOrFail($leadId);
         $lead->forceFill(['assigned_admin_id' => auth()->id()])->save();
 
@@ -428,6 +447,7 @@ class LeadsIndex extends Component
 
     public function queueFollowUpCall(): void
     {
+        $this->assertLeadPipeline();
         abort_unless(in_array(auth()->user()?->role, ['admin', 'sales'], true), 403);
 
         if (! $lead = $this->selectedLead) {
@@ -447,6 +467,7 @@ class LeadsIndex extends Component
 
     public function logActivity(): void
     {
+        $this->assertLeadPipeline();
         $lead = $this->selectedLead;
         if (! $lead) {
             return;
@@ -487,6 +508,7 @@ class LeadsIndex extends Component
 
     public function deleteLead(int $leadId): void
     {
+        $this->assertLeadPipeline();
         Lead::query()->whereKey($leadId)->delete();
 
         if ($this->selectedLeadId === $leadId) {
@@ -502,6 +524,10 @@ class LeadsIndex extends Component
 
     public function getSelectedLeadProperty(): ?Lead
     {
+        if ($this->pipeline === 'caregivers') {
+            return null;
+        }
+
         return $this->selectedLeadId
             ? Lead::query()
                 ->with(['assignedAdmin:id,name,email', 'activities.actor:id,name,email', 'familyAccount.onboarding.welcomeVisit'])
@@ -511,6 +537,15 @@ class LeadsIndex extends Component
 
     public function render(): View
     {
+        if ($this->pipeline === 'caregivers') {
+            abort_unless(auth()->user()?->isAdministrator(), 403);
+
+            return view('livewire.admin.leads-index', [
+                'pipelineOptions' => $this->pipelineOptions(),
+                'selectedLead' => null,
+            ]);
+        }
+
         $stageOptions = $this->currentStageOptions();
         $boardQuery = $this->baseQuery(applyStatus: false);
         $boardStageCounts = (clone $boardQuery)
@@ -566,6 +601,11 @@ class LeadsIndex extends Component
     private function resetBoardStageLimits(): void
     {
         $this->boardStageLimits = [];
+    }
+
+    private function assertLeadPipeline(): void
+    {
+        abort_unless(in_array($this->pipeline, [Lead::TYPE_FAMILY, Lead::TYPE_REFERRAL], true), 403);
     }
 
     private function exportActivityHistory(Lead $lead): string
@@ -790,10 +830,15 @@ class LeadsIndex extends Component
     /** @return array<string, string> */
     private function pipelineOptions(): array
     {
-        return [
+        $options = [
             Lead::TYPE_FAMILY => 'Family / care receiver leads',
             Lead::TYPE_REFERRAL => 'Referral source recruiting',
         ];
+        if (auth()->user()?->isAdministrator()) {
+            $options['caregivers'] = 'Caregivers';
+        }
+
+        return $options;
     }
 
     /** @return array<string, string> */

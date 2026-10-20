@@ -5,10 +5,11 @@
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Admin CRM</p>
                 <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-950">Lead command center</h1>
                 <p class="mt-2 max-w-3xl text-sm text-slate-600">
-                    Track family care leads and referral source recruiting from first touch to conversion.
+                    Track family leads, referral partners, and caregiver relationships in one place.
                 </p>
             </div>
 
+            @if ($pipeline !== 'caregivers')
             <div class="flex flex-col gap-2 sm:flex-row">
                 <button
                     type="button"
@@ -18,25 +19,31 @@
                     {{ $showCreateForm ? 'Close new lead' : ($pipeline === \App\Models\Lead::TYPE_REFERRAL ? 'Add referral source' : 'Add family lead') }}
                 </button>
             </div>
+            @endif
         </header>
 
         <section class="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-            <div class="grid gap-2 md:grid-cols-2">
+            <div class="grid gap-2 {{ count($pipelineOptions) === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2' }}" role="tablist" aria-label="CRM pipelines">
                 @foreach ($pipelineOptions as $value => $label)
                     <button
                         type="button"
                         wire:click="setPipeline('{{ $value }}')"
+                        role="tab"
+                        aria-selected="{{ $pipeline === $value ? 'true' : 'false' }}"
                         class="rounded-xl px-4 py-3 text-left text-sm transition {{ $pipeline === $value ? 'bg-slate-950 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-50' }}"
                     >
                         <span class="block font-semibold">{{ $label }}</span>
                         <span class="mt-1 block text-xs {{ $pipeline === $value ? 'text-slate-200' : 'text-slate-500' }}">
-                            {{ $value === \App\Models\Lead::TYPE_REFERRAL ? 'PCPs, case managers, hospitals, community partners.' : 'People or families considering care.' }}
+                            {{ $value === 'caregivers' ? 'Approved caregivers, from first application to hire.' : ($value === \App\Models\Lead::TYPE_REFERRAL ? 'PCPs, case managers, hospitals, community partners.' : 'People or families considering care.') }}
                         </span>
                     </button>
                 @endforeach
             </div>
         </section>
 
+        @if ($pipeline === 'caregivers')
+            <livewire:admin.caregiver-crm :key="'approved-caregiver-crm'" />
+        @else
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Total</p>
@@ -379,6 +386,7 @@
                 {{ $leads->links() }}
             </div>
         </section>
+        @endif
     </div>
 
     @if ($selectedLead)
