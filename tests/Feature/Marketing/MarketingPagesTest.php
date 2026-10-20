@@ -58,7 +58,7 @@ class MarketingPagesTest extends TestCase
         $response->assertSee('https://i.ytimg.com/vi/_nve3ZnFsGM/hqdefault.jpg', false);
         $response->assertDontSee('<iframe', false);
         $response->assertSee('See how LoLo works for families.');
-        $response->assertSee(asset('images/marketing/lolo-hero.jpg'), false);
+        $response->assertSee(asset('images/marketing/homepage/pexels-kampus-7551643.jpg'), false);
         $response->assertSee(asset('images/marketing/lolo/lolo-wordmark-evergreen.svg'), false);
         $response->assertSee(route('about'), false);
         $response->assertDontSee('profile-float', false);

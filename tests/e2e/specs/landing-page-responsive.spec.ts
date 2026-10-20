@@ -9,7 +9,7 @@ test.describe('Public LoLo landing page', () => {
         await page.goto('/');
 
         await expect(page.getByRole('heading', { name: /Trusted help at home/ })).toBeVisible();
-        await expect(page.getByRole('img', { name: /warm and reassuring guide/ })).toHaveJSProperty('complete', true);
+        await expect(page.getByRole('img', { name: /A caregiver and an older adult sitting together at home/ })).toHaveJSProperty('complete', true);
         await expect(page.locator('.nav-actions').getByRole('link', { name: 'Find care' })).toHaveAttribute('href', /\/register$/);
 
         const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);

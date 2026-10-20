@@ -3,11 +3,11 @@
 @section('title', 'Non-Medical Home Care in Raleigh, Durham & Chapel Hill | LoLo Care')
 @section('meta_description', 'Find trusted, non-medical caregivers in Raleigh, Durham, and Chapel Hill. Book by the hour and coordinate care with family, wherever you are.')
 @section('canonical', route('landing'))
-@section('og_image', asset('images/marketing/lolo-hero.jpg'))
-@section('og_image_alt', 'LoLo Care guide welcoming families looking for trusted help at home.')
+@section('og_image', asset('images/marketing/homepage/pexels-kampus-7551643.jpg'))
+@section('og_image_alt', 'A caregiver and an older adult sitting together at home.')
 @section('hide_default_footer', 'true')
 @push('head')
-    <link rel="preload" as="image" href="{{ asset('images/marketing/lolo-hero.jpg') }}" fetchpriority="high">
+    <link rel="preload" as="image" href="{{ asset('images/marketing/homepage/pexels-kampus-7551643.jpg') }}" fetchpriority="high">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=optional">
@@ -205,7 +205,6 @@
             border-radius: 50%;
             object-fit: cover;
             object-position: center;
-            mix-blend-mode: multiply;
         }
         .lolo-home .avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-weight: 700; }
         .lolo-home .sage { background: #b9c8b6; }
@@ -562,7 +561,7 @@
             </div>
 
             <div class="hero-visual">
-                <img src="{{ asset('images/marketing/lolo-hero.jpg') }}" alt="LoLo, the warm and reassuring guide to care at home" width="820" height="820" fetchpriority="high" decoding="async">
+                <img src="{{ asset('images/marketing/homepage/pexels-kampus-7551643.jpg') }}" alt="A caregiver and an older adult sitting together at home" width="5241" height="3494" fetchpriority="high" decoding="async">
             </div>
         </section>
 
