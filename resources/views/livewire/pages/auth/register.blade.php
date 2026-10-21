@@ -43,7 +43,7 @@ new #[Layout('layouts.guest')] class extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['nullable', 'string', 'min:7', 'max:30'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-            'accept_terms' => ['accepted'],
+            'accept_terms' => ['boolean'],
             'sms_opt_in' => ['boolean'],
         ]);
 

@@ -35,13 +35,13 @@ class RegistrationTest extends TestCase
         Mail::fake();
 
         $component = Volt::test('pages.auth.register')
+            ->assertSet('accept_terms', false)
             ->assertSet('sms_opt_in', false)
             ->set('name', 'Test User')
             ->set('email', 'test@example.com')
             ->set('phone', '(984) 400-4008')
             ->set('password', 'password')
-            ->set('password_confirmation', 'password')
-            ->set('accept_terms', true);
+            ->set('password_confirmation', 'password');
 
         $component->call('register');
 
