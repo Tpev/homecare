@@ -1,6 +1,6 @@
 # CRM SMS
 
-Open a lead in either `/admin/crm` or `/admin/family-leads` and choose **Send SMS**. The composer uses the lead's saved phone number and the existing `TWILIO_SMS_FROM` / `TWILIO_PHONE_NUMBER` configuration. Admin, sales, and SDR CRM users can send messages and manage shared templates. Selecting a template copies its text into an editable draft; later template edits and deletion do not change sent messages.
+Open a lead in either `/admin/crm` or `/admin/family-leads` and choose **Send SMS**. **Free text** is selected by default: type directly into **Message** and choose **Send text**. To start from a saved message, select **Use a template**. Switching back to free text keeps your current draft editable. The composer uses the lead's saved phone number and the existing `TWILIO_SMS_FROM` / `TWILIO_PHONE_NUMBER` configuration. Admin, sales, and SDR CRM users can send messages and manage shared templates. Selecting a template copies its text into an editable draft; later template edits and deletion do not change sent messages.
 
 Outgoing text, sender, recipient, sending user, delivery status, errors, and incoming replies appear in the lead activity timeline. The visible timeline refreshes every 15 seconds. The admin SMS console remains available with its existing controls and also displays CRM messages.
 

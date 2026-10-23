@@ -28,6 +28,8 @@ class LeadSmsComposer extends Component
 
     public string $smsBody = '';
 
+    public string $messageMode = 'free_text';
+
     public string $selectedTemplateId = '';
 
     public string $templateName = '';
@@ -50,9 +52,17 @@ class LeadSmsComposer extends Component
     public function startMessage(): void
     {
         $this->resetValidation();
-        $this->reset('smsBody', 'selectedTemplateId', 'notice');
+        $this->reset('smsBody', 'messageMode', 'selectedTemplateId', 'notice');
         $this->requestKey = (string) Str::uuid();
         $this->showComposer = true;
+    }
+
+    public function updatedMessageMode(): void
+    {
+        if ($this->messageMode === 'free_text') {
+            $this->reset('selectedTemplateId');
+            $this->resetValidation('selectedTemplateId');
+        }
     }
 
     public function updatedSelectedTemplateId(): void

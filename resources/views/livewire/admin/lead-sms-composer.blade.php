@@ -12,19 +12,36 @@
     @if($showComposer)
         <form wire:submit="sendMessage" class="mt-4 space-y-3">
             <p class="text-xs text-slate-600">From {{ $senderPhone ?: 'Sending number not configured' }} · To {{ $lead->phone }}</p>
-            <label class="block">
-                <span class="text-sm font-semibold text-slate-700">Message template</span>
-                <select wire:model.live="selectedTemplateId" class="mt-1 min-h-11 w-full rounded-xl border-slate-200 text-sm">
-                    <option value="">Free text</option>
-                    @foreach($templates as $template)<option value="{{ $template->id }}">{{ $template->name }}</option>@endforeach
-                </select>
-            </label>
-            @error('selectedTemplateId')<p class="text-sm text-rose-700">{{ $message }}</p>@enderror
+            <fieldset>
+                <legend class="text-sm font-semibold text-slate-700">Write your message</legend>
+                <div class="mt-2 flex flex-wrap gap-3">
+                    <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                        <input type="radio" wire:model.live="messageMode" name="sms-mode-{{ $this->getId() }}" value="free_text" class="border-slate-300 text-emerald-700 focus:ring-emerald-600">
+                        Free text
+                    </label>
+                    <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                        <input type="radio" wire:model.live="messageMode" name="sms-mode-{{ $this->getId() }}" value="template" class="border-slate-300 text-emerald-700 focus:ring-emerald-600">
+                        Use a template
+                    </label>
+                </div>
+            </fieldset>
+            @if($messageMode === 'template')
+                <label class="block">
+                    <span class="text-sm font-semibold text-slate-700">Message template</span>
+                    <select wire:model.live="selectedTemplateId" class="mt-1 min-h-11 w-full rounded-xl border-slate-200 text-sm">
+                        <option value="">Choose a template</option>
+                        @foreach($templates as $template)<option value="{{ $template->id }}">{{ $template->name }}</option>@endforeach
+                    </select>
+                </label>
+                @error('selectedTemplateId')<p class="text-sm text-rose-700">{{ $message }}</p>@enderror
+            @else
+                <p class="text-xs text-slate-600">Type your message below. No template needed.</p>
+            @endif
             <label class="block">
                 <span class="text-sm font-semibold text-slate-700">Message</span>
-                <textarea wire:model="smsBody" rows="4" maxlength="1600" required aria-describedby="sms-help-{{ $this->getId() }}" class="mt-1 w-full rounded-xl border-slate-200 text-sm" placeholder="Write a text or select a template, then personalize it…"></textarea>
+                <textarea wire:model="smsBody" rows="4" maxlength="1600" required aria-describedby="sms-help-{{ $this->getId() }}" class="mt-1 w-full rounded-xl border-slate-200 text-sm" placeholder="Type your message here…"></textarea>
             </label>
-            <p id="sms-help-{{ $this->getId() }}" class="text-xs text-slate-500">Up to 1,600 characters. You can edit a template before sending.</p>
+            <p id="sms-help-{{ $this->getId() }}" class="text-xs text-slate-500">Up to 1,600 characters.@if($messageMode === 'template') You can edit the template text before sending.@endif</p>
             @foreach(['smsBody', 'phone', 'send'] as $field)
                 @error($field)<p role="alert" class="text-sm text-rose-700">{{ $message }}</p>@enderror
             @endforeach

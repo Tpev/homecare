@@ -32,6 +32,8 @@ test('SDR manages templates, sends from both CRM views, and sees replies', async
     await page.getByRole('button', { name: 'Close templates', exact: true }).click();
     await expect(page.getByLabel('Template text', { exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: 'Send SMS', exact: true }).click();
+    await expect(page.getByRole('radio', { name: 'Free text', exact: true })).toBeChecked();
+    await page.getByRole('radio', { name: 'Use a template', exact: true }).check();
     await page.getByRole('combobox', { name: 'Message template', exact: true }).selectOption({ label: templateName });
     await expect(page.getByLabel('Message', { exact: true })).toHaveValue('What time works for a call?');
     await page.getByLabel('Message', { exact: true }).fill(body);
@@ -46,6 +48,14 @@ test('SDR manages templates, sends from both CRM views, and sees replies', async
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 'Family CRM fits the viewport').toBeLessThanOrEqual(1);
     await expect(page.getByText(body, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send SMS', exact: true }).click();
+    await expect(page.getByRole('radio', { name: 'Free text', exact: true })).toBeChecked();
+    await expect(page.getByRole('combobox', { name: 'Message template', exact: true })).toHaveCount(0);
+    await page.getByRole('radio', { name: 'Use a template', exact: true }).check();
+    await page.getByRole('combobox', { name: 'Message template', exact: true }).selectOption({ label: templateName });
+    await expect(page.getByLabel('Message', { exact: true })).toHaveValue('What time works for a call?');
+    await page.getByRole('radio', { name: 'Free text', exact: true }).check();
+    await expect(page.getByRole('combobox', { name: 'Message template', exact: true })).toHaveCount(0);
+    await expect(page.getByLabel('Message', { exact: true })).toHaveValue('What time works for a call?');
     await page.getByLabel('Message', { exact: true }).fill('A free text from the family CRM.');
     await page.getByRole('button', { name: 'Send text', exact: true }).click();
     await expect(page.getByRole('status')).toContainText('Text submitted');
