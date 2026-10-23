@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -66,6 +67,7 @@ class LeadsIndex extends Component
         'sort' => ['except' => 'next_follow_up_at'],
         'dir' => ['except' => 'asc'],
         'perPage' => ['except' => 25],
+        'selectedLeadId' => ['as' => 'lead', 'except' => null],
     ];
 
     public function mount(): void
@@ -78,6 +80,15 @@ class LeadsIndex extends Component
 
         $this->resetLeadForm();
         $this->resetActivityForm();
+        if ($this->selectedLeadId && $this->selectedLead) {
+            $this->loadLeadForm($this->selectedLead);
+        }
+    }
+
+    #[On('lead-sms-updated')]
+    public function refreshSmsTimeline(): void
+    {
+        unset($this->selectedLead);
     }
 
     public function boot(): void
@@ -531,7 +542,7 @@ class LeadsIndex extends Component
 
         return $this->selectedLeadId
             ? Lead::query()
-                ->with(['assignedAdmin:id,name,email', 'activities.actor:id,name,email', 'familyAccount.onboarding.welcomeVisit'])
+                ->with(['assignedAdmin:id,name,email', 'activities.actor:id,name,email', 'activities.smsMessage', 'familyAccount.onboarding.welcomeVisit'])
                 ->find($this->selectedLeadId)
             : null;
     }

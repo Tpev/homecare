@@ -519,6 +519,8 @@
 
                     <x-lead-follow-up-call :lead="$selectedLead" />
 
+                    <livewire:admin.lead-sms-composer :lead-id="$selectedLead->id" :key="'crm-sms-'.$selectedLead->id" />
+
                     <form wire:submit.prevent="logActivity" class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
                         <h3 class="text-lg font-bold text-slate-950">Log outreach or note</h3>
                         <div class="mt-3 grid gap-3 sm:grid-cols-3">
@@ -537,7 +539,7 @@
                         </div>
                     </form>
 
-                    <section class="rounded-2xl border border-slate-200 bg-white p-4">
+                    <section wire:poll.visible.15s="refreshSmsTimeline" class="rounded-2xl border border-slate-200 bg-white p-4">
                         <h3 class="text-lg font-bold text-slate-950">Timeline</h3>
                         <div class="mt-4 space-y-3">
                             @forelse ($selectedLead->activities as $activity)
@@ -547,9 +549,10 @@
                                         <div class="text-xs text-slate-500">{{ $activity->occurred_at?->format('M j, Y g:i A') ?: $activity->created_at->format('M j, Y g:i A') }}</div>
                                     </div>
                                     @if ($activity->body)
-                                        <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $activity->body }}</p>
+                                        <p class="mt-2 whitespace-pre-line break-words text-sm text-slate-700">{{ $activity->body }}</p>
                                     @endif
                                     <p class="mt-2 text-xs text-slate-500">{{ $activity->actor?->name ?: 'System' }}</p>
+                                    <x-lead-sms-status :activity="$activity" />
                                 </article>
                             @empty
                                 <div class="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">No activity yet.</div>

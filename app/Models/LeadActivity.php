@@ -8,15 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LeadActivity extends Model
 {
     public const TYPE_NOTE = 'note';
+
     public const TYPE_CALL = 'call';
+
     public const TYPE_EMAIL = 'email';
+
     public const TYPE_SMS = 'sms';
+
     public const TYPE_MEETING = 'meeting';
+
     public const TYPE_STAGE_CHANGE = 'stage_change';
+
     public const TYPE_ASSIGNMENT = 'assignment';
+
     public const TYPE_CONVERSION = 'conversion';
 
     protected $fillable = [
+        'sms_message_id',
         'lead_id',
         'actor_user_id',
         'type',
@@ -39,5 +47,10 @@ class LeadActivity extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_user_id');
+    }
+
+    public function smsMessage(): BelongsTo
+    {
+        return $this->belongsTo(SmsMessage::class);
     }
 }

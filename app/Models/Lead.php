@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
+    public function setPhoneAttribute(?string $phone): void
+    {
+        $this->attributes['phone'] = $phone;
+        $normalized = \App\Services\Messaging\TwilioSmsClient::normalizePhone($phone);
+        $this->attributes['sms_phone'] = preg_match('/^\+[1-9][0-9]{7,14}$/', $normalized) ? $normalized : null;
+    }
+
     public const TYPE_FAMILY = 'family';
 
     public const TYPE_REFERRAL = 'referral';

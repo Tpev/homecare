@@ -112,7 +112,7 @@
                 @if($cohort !== 'all' || $campaign !== 'all')<span class="text-xs text-slate-500">{{ $cohort === 'all' ? 'All time' : 'Last '.$cohort.' days' }}{{ $campaign !== 'all' ? ' · Selected campaign' : '' }}</span><a href="{{ route('admin.family-acquisition.leads') }}" class="text-xs font-semibold underline">Clear cohort filters</a>@endif
             </div>
             <div class="min-w-0 overflow-hidden rounded-[1.6rem] border border-[#D9CEC0] bg-white shadow-sm">
-                <div class="overflow-x-auto">
+                <div class="relative overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-left">
                         <thead class="bg-[#FFFBF4]">
                             <tr class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
@@ -246,6 +246,8 @@
 
                         <x-lead-follow-up-call :lead="$selectedLead" />
 
+                        <livewire:admin.lead-sms-composer :lead-id="$selectedLead->id" :key="'family-crm-sms-'.$selectedLead->id" />
+
                         <section class="rounded-2xl border border-[#E8C8BE] bg-[#FFF4EF] p-4">
                             <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-[#A55343]">Family context</p>
                             <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -273,14 +275,15 @@
                             <button type="button" wire:click="addNote" class="mt-2 min-h-10 w-full rounded-xl border border-[#23483F] px-4 py-2 text-sm font-bold text-[#23483F] hover:bg-emerald-50">Add note</button>
                         </section>
 
-                        <section>
+                        <section wire:poll.visible.15s="refreshSmsTimeline">
                             <div class="flex items-center justify-between"><p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Timeline</p><span class="text-xs text-slate-400">Newest first</span></div>
                             <div class="mt-3 space-y-3">
                                 @foreach($selectedLead->activities as $activity)
                                     <article class="rounded-xl border border-slate-200 p-3">
                                         <div class="flex items-start justify-between gap-3"><p class="text-sm font-bold text-slate-900">{{ $activity->summary }}</p><p class="shrink-0 text-[10px] text-slate-400">{{ $activity->occurred_at?->format('M j, g:i A') }}</p></div>
-                                        @if($activity->body)<p class="mt-1 whitespace-pre-line text-xs leading-5 text-slate-600">{{ $activity->body }}</p>@endif
+                                        @if($activity->body)<p class="mt-1 whitespace-pre-line break-words text-xs leading-5 text-slate-600">{{ $activity->body }}</p>@endif
                                         <p class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ $activity->actor?->name ?: 'System' }}</p>
+                                        <x-lead-sms-status :activity="$activity" />
                                     </article>
                                 @endforeach
                             </div>

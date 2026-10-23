@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SmsMessage;
+use App\Services\Messaging\LeadSmsService;
 use App\Services\Messaging\TwilioSmsClient;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -31,11 +32,27 @@ class TwilioSmsStatusWebhookController extends Controller
             ->where('twilio_sid', $messageSid)
             ->first();
 
+        // A signed callback can beat the API response that supplies the SID.
+        if (! $message && $request->integer('crm_message') > 0) {
+            $message = SmsMessage::query()->whereKey($request->integer('crm_message'))
+                ->whereNotNull('request_key')->whereNull('twilio_sid')
+                ->where('direction', SmsMessage::DIRECTION_OUTGOING)
+                ->where('from_phone', TwilioSmsClient::normalizePhone($request->input('From')))
+                ->where('to_phone', TwilioSmsClient::normalizePhone($request->input('To')))
+                ->first();
+        }
+
         if (! $message) {
             Log::info('Twilio SMS status callback for unknown message', [
                 'message_sid' => $messageSid,
                 'status' => $payload['MessageStatus'] ?? $payload['SmsStatus'] ?? null,
             ]);
+
+            return response('<Response></Response>', 200)->header('Content-Type', 'text/xml');
+        }
+
+        if ($message->request_key) {
+            app(LeadSmsService::class)->updateDelivery($message, $payload);
 
             return response('<Response></Response>', 200)->header('Content-Type', 'text/xml');
         }

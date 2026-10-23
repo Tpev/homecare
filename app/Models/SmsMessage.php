@@ -26,6 +26,9 @@ class SmsMessage extends Model
     public const STATUS_FAILED = 'failed';
 
     protected $fillable = [
+        'lead_id',
+        'request_key',
+        'inbound_notified_at',
         'direction',
         'status',
         'from_phone',
@@ -47,6 +50,7 @@ class SmsMessage extends Model
     protected function casts(): array
     {
         return [
+            'inbound_notified_at' => 'datetime',
             'media' => 'array',
             'raw_payload' => 'array',
             'num_media' => 'integer',
@@ -58,5 +62,10 @@ class SmsMessage extends Model
     public function sentBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_by_user_id');
+    }
+
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
     }
 }

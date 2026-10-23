@@ -15,7 +15,7 @@ class TwilioSmsClient
     /**
      * @return array<string, mixed>
      */
-    public function sendMessage(string $to, string $body, ?string $from = null): array
+    public function sendMessage(string $to, string $body, ?string $from = null, ?string $statusCallbackUrl = null): array
     {
         $to = self::normalizePhone($to);
         $from = self::normalizePhone($from ?: (string) config('services.twilio.sms_from'));
@@ -54,7 +54,7 @@ class TwilioSmsClient
             $payload = [
                 'To' => $to,
                 'Body' => $body,
-                'StatusCallback' => $this->statusCallbackUrl(),
+                'StatusCallback' => $statusCallbackUrl ?: $this->statusCallbackUrl(),
             ];
 
             $messagingServiceSid = trim((string) config('services.twilio.messaging_service_sid'));

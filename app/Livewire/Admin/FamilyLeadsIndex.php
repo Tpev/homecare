@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -78,6 +79,12 @@ class FamilyLeadsIndex extends Component
     public function updatedQ(): void
     {
         $this->resetPage();
+    }
+
+    #[On('lead-sms-updated')]
+    public function refreshSmsTimeline(): void
+    {
+        unset($this->selectedLead);
     }
 
     public function updatedWelcome(): void
@@ -317,7 +324,7 @@ class FamilyLeadsIndex extends Component
                     'assignedAdmin:id,name,email',
                     'welcomeEmail',
                     'familyAccount.onboarding.welcomeVisit',
-                    'activities' => fn ($query) => $query->with('actor:id,name,email')->latest('occurred_at')->limit(40),
+                    'activities' => fn ($query) => $query->with(['actor:id,name,email', 'smsMessage'])->latest('occurred_at')->limit(40),
                 ])
                 ->find($this->selectedLeadId)
             : null;

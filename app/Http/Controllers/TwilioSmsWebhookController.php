@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SmsMessage;
+use App\Services\Messaging\LeadSmsService;
 use App\Services\Messaging\TwilioSmsClient;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -49,9 +50,13 @@ class TwilioSmsWebhookController extends Controller
         ];
 
         if ($messageSid !== '') {
-            SmsMessage::query()->updateOrCreate(['twilio_sid' => $messageSid], $attributes);
+            $message = SmsMessage::query()->firstOrCreate(['twilio_sid' => $messageSid], $attributes);
         } else {
-            SmsMessage::query()->create($attributes);
+            $message = SmsMessage::query()->create($attributes);
+        }
+
+        if ($message->direction === SmsMessage::DIRECTION_INCOMING) {
+            app(LeadSmsService::class)->receive($message);
         }
 
         return response('<Response></Response>', 200)->header('Content-Type', 'text/xml');
