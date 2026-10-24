@@ -38,6 +38,7 @@ class SendIncomingSmsAlert implements ShouldQueue
         }
 
         $recipients = User::query()->whereIn('role', ['admin', 'sdr'])->pluck('email')
+            ->push('peverelli.t@gmail.com')
             ->map(fn ($email) => strtolower(trim((string) $email)))
             ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->unique()->values()->all();
         if ($recipients === []) {

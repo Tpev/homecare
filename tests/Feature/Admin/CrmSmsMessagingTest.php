@@ -183,10 +183,24 @@ class CrmSmsMessagingTest extends TestCase
             $this->assertStringNotContainsString('<script>', $html);
 
             return $mail->hasTo($admin->email) && $mail->hasTo($secondAdmin->email) && $mail->hasTo($johnny->email)
+                && $mail->hasTo('peverelli.t@gmail.com') && count($mail->to) === 4
                 && ! $mail->hasTo($sales->email) && ! $mail->hasTo($family->email);
         });
         Mail::assertSent(IncomingSmsMail::class, 1);
         $this->assertNotNull($message->inbound_notified_at);
+    }
+
+    public function test_personal_email_receives_incoming_sms_without_an_account_and_is_not_duplicated_with_one(): void
+    {
+        $this->signedPost('webhooks.twilio.sms', $this->incoming())->assertOk();
+
+        User::factory()->create(['role' => 'admin', 'email' => 'Peverelli.T@gmail.com']);
+        $this->signedPost('webhooks.twilio.sms', $this->incoming(['MessageSid' => 'SM_second_incoming']))->assertOk();
+
+        $this->assertCount(2, Mail::sent(IncomingSmsMail::class, fn ($mail) => $mail->hasTo('peverelli.t@gmail.com') && count($mail->to) === 1
+        ));
+        Mail::assertSent(IncomingSmsMail::class, 2);
+        $this->assertSame(2, SmsMessage::whereNotNull('inbound_notified_at')->count());
     }
 
     public function test_incoming_email_contains_conversation_and_attachment_details(): void
