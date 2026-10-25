@@ -651,6 +651,9 @@
                                     <p class="text-sm text-[#485E53]">
                                         @if ($payment?->amount_authorized_cents)
                                             Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                                            @if($booking->pricing_agreement_id && ! $payment->amount_captured_cents)
+                                                <span class="mt-1 block">Temporary card hold. Final billing is ${{ number_format(($booking->family_care_rate_cents + $booking->family_processing_fee_rate_cents) / 100, 2) }}/hour total for approved care.</span>
+                                            @endif
                                         @else
                                             Card authorization pending
                                         @endif
@@ -817,6 +820,9 @@
                             Payment status: <span class="font-semibold text-[#23483F]">{{ ucfirst(str_replace('_', ' ', $payment->status)) }}</span>
                             @if ($payment->amount_authorized_cents)
                                 - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                                @if($booking->pricing_agreement_id && ! $payment->amount_captured_cents)
+                                    <span class="mt-1 block">Temporary card hold. Final billing is ${{ number_format(($booking->family_care_rate_cents + $booking->family_processing_fee_rate_cents) / 100, 2) }}/hour total for approved care.</span>
+                                @endif
                             @endif
                             @if ($payment->amount_captured_cents)
                                 - Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}

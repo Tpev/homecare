@@ -1,4 +1,10 @@
 <div class="lolo-wizard-card" aria-live="polite">
+@php
+    $entryAccount = auth()->user()?->role === 'family'
+        ? app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->membershipFor(auth()->user(), false)?->familyAccount : null;
+    $entryAgreement = $entryAccount ? app(\App\Support\MarketplacePricing::class)->estimateAgreementForFamily($entryAccount->id) : null;
+    $entryAgreement = $entryAgreement?->all_caregivers ? $entryAgreement : null;
+@endphp
     @if ($submitted)
         <div class="lolo-wizard-success">
             <p class="lolo-wizard-eyebrow">Request received</p>
@@ -102,7 +108,7 @@
                     </button>
                 </div>
 
-                <p class="lolo-wizard-note">Care starts at $30/hr*; a $1/hr processing fee applies to completed care. LoLo provides non-medical support and is not for emergencies.</p>
+                <p class="lolo-wizard-note">@if($entryAgreement)Your agreed total is ${{ number_format(($entryAgreement->family_care_rate_cents + $entryAgreement->family_processing_fee_rate_cents) / 100, 2) }}/hr with any caregiver, with no additional processing fee.@else Care starts at $30/hr*; a $1/hr processing fee applies to completed care.@endif LoLo provides non-medical support and is not for emergencies.</p>
             </form>
         @endif
 

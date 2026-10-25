@@ -21,8 +21,10 @@
 
     <div class="hc-create-checkout-bar">
         <div class="hc-create-estimate">
-            <p>{{ ($request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated recurring care each week' : 'Estimated one-time cost').($this->estimateAgreement ? ' with '.$this->estimateAgreement->caregiver->name : '') }}</p>
-            @if ($this->estimateAgreement)
+            <p>{{ ($request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated recurring care each week' : 'Estimated one-time cost').($this->estimateAgreement && ! $this->estimateAgreement->all_caregivers ? ' with '.$this->estimateAgreement->caregiver->name : '') }}</p>
+            @if ($this->estimateAgreement?->all_caregivers)
+                <p class="hc-create-estimate-note">Your agreed total rate: ${{ number_format($this->estimateHourlyRate + $this->processingFeeHourlyRate, 2) }}/hour with any caregiver.</p>
+            @elseif ($this->estimateAgreement)
                 <p class="hc-create-estimate-note">Your agreed rate with {{ $this->estimateAgreement->caregiver->name }}: ${{ number_format($this->estimateHourlyRate + $this->processingFeeHourlyRate, 2) }}/hour. This estimate applies when you hire {{ $this->estimateAgreement->caregiver->name }}.</p>
                 <p class="hc-create-estimate-note">Standard rate for other caregivers: ${{ number_format($this->standardHourlyTotal, 2) }}/hour, including the processing fee.</p>
             @endif

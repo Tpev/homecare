@@ -65,10 +65,17 @@ class CareRequestInvitationResponseService
             $applicationRate = $platformRate > 0 && $invitation->careRequest
                 ? $this->pricing->hourlyRateForRequest($invitation->careRequest, $platformRate)
                 : null;
+            $agreement = $invitation->careRequest ? $this->pricing->agreementForPair(
+                (int) $invitation->careRequest->family_account_id, (int) $caregiver->id,
+            ) : null;
+            if ($agreement) {
+                $applicationRate = $agreement->caregiver_gross_rate_cents / 100;
+            }
 
             $application->fill([
                 'status' => $nextStatus,
-                'proposed_rate' => $application->proposed_rate ?: $applicationRate,
+                'proposed_rate' => $agreement && $existingStatus !== CareRequestApplication::STATUS_HIRED
+                    ? $applicationRate : ($application->proposed_rate ?: $applicationRate),
                 'cover_note' => $application->cover_note ?: ($invitation->message ?: 'Accepted invitation from family.'),
             ])->save();
 

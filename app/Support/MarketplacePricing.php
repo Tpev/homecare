@@ -40,9 +40,31 @@ class MarketplacePricing
     {
         return CarePricingAgreement::query()
             ->where('family_account_id', $familyAccountId)
-            ->where('caregiver_user_id', $caregiverUserId)
+            ->where(fn ($query) => $query->where('all_caregivers', true)->orWhere('caregiver_user_id', $caregiverUserId))
             ->where('active', true)
+            ->orderByRaw('CASE WHEN all_caregivers = 1 THEN 0 ELSE 1 END')
             ->first();
+    }
+
+    public function estimateAgreementForFamily(int $familyAccountId): ?CarePricingAgreement
+    {
+        $agreements = CarePricingAgreement::query()->where('family_account_id', $familyAccountId)
+            ->where('active', true)->with('caregiver:id,name')
+            ->orderByRaw('CASE WHEN all_caregivers = 1 THEN 0 ELSE 1 END')->limit(2)->get();
+
+        return $agreements->first()?->all_caregivers || $agreements->count() === 1 ? $agreements->first() : null;
+    }
+
+    /** The caregiver's earnings are independent of the family's rate or request budget. */
+    public function caregiverQuoteForRequest(CareRequest $request, int $caregiverUserId): array
+    {
+        return $this->quoteForPair((int) $request->family_account_id, $caregiverUserId, 60);
+    }
+
+    public function caregiverRateForBooking(CareBooking $booking): float
+    {
+        return ($booking->caregiver_gross_rate_cents
+            ?? $this->quoteForPair((int) $booking->family_account_id, (int) $booking->caregiver_user_id, 60)['caregiver_gross_rate_cents']) / 100;
     }
 
     public function caregiverProcessingFeeCents(CareBooking $booking, int $stripeProcessingFeeCents): int
@@ -54,12 +76,19 @@ class MarketplacePricing
 
     public function hasUnappliedAgreement(CareBooking $booking): bool
     {
-        if ($booking->pricing_agreement_id || ! $booking->family_account_id || ! $booking->caregiver_user_id) {
+        if (! $booking->family_account_id || ! $booking->caregiver_user_id) {
             return false;
         }
 
-        return $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id)
-            ?->appliesToBooking($booking) ?? false;
+        $agreement = $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id);
+        if (! $agreement?->appliesToBooking($booking)) {
+            return false;
+        }
+        if ($agreement->all_caregivers) {
+            return $booking->only(array_keys($agreement->snapshotAttributes())) != $agreement->snapshotAttributes();
+        }
+
+        return ! $booking->pricing_agreement_id;
     }
 
     /** @return array<string, mixed> */

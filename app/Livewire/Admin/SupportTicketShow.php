@@ -114,6 +114,25 @@ class SupportTicketShow extends Component
         $this->dispatch('support-message-sent');
     }
 
+    public function applyDonFamilyPricing(): void
+    {
+        $ticket = $this->ticket;
+        $this->authorize('manage', $ticket);
+        $booking = $ticket->careBooking;
+        abort_unless($booking && strtolower(trim((string) $booking->family?->email))
+            === \App\Services\Payments\DonLegacyPricingService::FAMILY_EMAIL, 403);
+
+        $result = app(\App\Services\Payments\DonFamilyPricingService::class)
+            ->apply($booking, auth()->user(), (int) $booking->family_account_id);
+        unset($this->ticket, $this->correctionPreview, $this->bookingCorrections);
+        if ($result['skipped']) {
+            $this->addError('pricing', 'Agreement saved; separate review required: '.collect($result['skipped'])
+                ->map(fn ($reason, $id) => '#'.$id.' '.$reason)->implode('; '));
+        }
+        session()->flash('status', 'Don’s account-wide pricing is saved: $15.75/hour total and $15/hour caregiver earnings. Repaired bookings: '
+            .(implode(', ', $result['repaired']) ?: 'already correct or requiring review').'. Existing card holds are unchanged. No money moved.');
+    }
+
     public function updateStatus(): void
     {
         $validated = $this->validate([

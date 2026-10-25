@@ -428,7 +428,13 @@
             <div class="grid gap-4 sm:grid-cols-3">
                 <div class="rounded-3xl bg-[#0F3D3E] p-5 text-white"><p class="text-sm text-white/75">Net billed</p><p class="mt-2 font-display text-4xl font-semibold">${{ number_format($netBilledCents / 100, 2) }}</p><p class="mt-2 text-sm text-white/75">Finalized care charges after applicable adjustments.</p></div>
                 <div class="rounded-3xl border border-[#DED6CA] bg-white p-5"><p class="text-sm text-[#607080]">Next 7 days</p><p class="mt-2 font-display text-3xl font-semibold">${{ number_format($upcomingEstimate, 2) }}</p><p class="mt-2 text-sm text-[#607080]">Estimate for confirmed scheduled hours using the normal booking price. This is not a charge.</p></div>
-                <div class="rounded-3xl border border-[#DED6CA] bg-white p-5"><p class="text-sm text-[#607080]">Hourly price</p><p class="mt-2 font-display text-3xl font-semibold">${{ number_format((float) $plan->hourly_rate, 2) }}/hr*</p><p class="mt-2 text-sm text-[#607080]">Care ${{ number_format((float) $plan->hourly_rate, 2) }} + ${{ number_format(config('marketplace.pricing_v2.family_processing_fee_hourly_cents', 100) / 100, 2) }}/hour processing fee. Each shift keeps its own pricing version.</p></div>
+                @php
+                    $coverageAgreement = $plan->status !== \App\Models\ContinuousCoveragePlan::STATUS_ENDED
+                        ? app(\App\Support\MarketplacePricing::class)->estimateAgreementForFamily((int) $plan->family_account_id) : null;
+                    $coverageAgreement = $coverageAgreement?->all_caregivers ? $coverageAgreement : null;
+                    $coverageRate = $coverageAgreement ? ($coverageAgreement->family_care_rate_cents + $coverageAgreement->family_processing_fee_rate_cents) / 100 : $plan->hourly_rate;
+                @endphp
+                <div class="rounded-3xl border border-[#DED6CA] bg-white p-5"><p class="text-sm text-[#607080]">Hourly price</p><p class="mt-2 font-display text-3xl font-semibold">${{ number_format((float) $coverageRate, 2) }}/hr{{ $coverageAgreement ? ' total' : '*' }}</p><p class="mt-2 text-sm text-[#607080]">@if($coverageAgreement)Your agreed total with any caregiver. No additional processing fee.@else Care ${{ number_format((float) $plan->hourly_rate, 2) }} + ${{ number_format(config('marketplace.pricing_v2.family_processing_fee_hourly_cents', 100) / 100, 2) }}/hour processing fee. Each shift keeps its own pricing version.@endif</p></div>
             </div>
             <div class="rounded-3xl border border-[#DED6CA] bg-white p-5">
                 <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

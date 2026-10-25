@@ -103,11 +103,12 @@ class ContinuousCoverageBookingAdapter
                 ->all();
             $request->tasks()->sync($taskPayload);
 
+            $agreement = app(\App\Support\MarketplacePricing::class)->agreementForPair((int) $plan->family_account_id, (int) $caregiver->id);
             $application = CareRequestApplication::query()->create([
                 'care_request_id' => $request->id,
                 'caregiver_user_id' => $caregiver->id,
                 'status' => CareRequestApplication::STATUS_HIRED,
-                'proposed_rate' => $plan->hourly_rate,
+                'proposed_rate' => $agreement ? $agreement->caregiver_gross_rate_cents / 100 : $plan->hourly_rate,
                 'cover_note' => 'Accepted through the family-approved Continuous Coverage care team.',
             ]);
 

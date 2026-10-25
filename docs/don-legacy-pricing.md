@@ -1,63 +1,61 @@
-# Don Johnson's caregiver agreement
+# Don Johnson's account-wide pricing
 
-Don pays **$15.75 per worked hour total**, his agreed caregiver receives **$15.00 per worked hour**, and LoLo bears Stripe processing costs. There is no additional family processing fee. For booking #159's 133 minutes this means **$34.91 charged to Don**, **$33.25 paid to the caregiver**, and **$1.66 retained before Stripe processing costs**.
+Updated October 25, 2026 for support ticket #88 and booking #322.
 
-## Local change and production activation
+Don pays **$15.75 per worked hour total with every caregiver**. Each caregiver receives **$15.00 per worked hour**. LoLo pays Stripe processing costs; neither hourly amount has an extra processing deduction or surcharge. Amounts are prorated to approved minutes and rounded to cents per visit.
 
-The code change alone does not activate the agreement on production. An authorized operator must deploy the reviewed change, run its additive migration, then register the exact family/caregiver pair using the command below. This task has no permission to connect to production.
+## Verified history and current incident
 
-The agreement is stored by family account ID and caregiver user ID, not by a mutable email address. Its source booking ID is also its inclusive lower boundary: `--booking=159` repairs #159 and eligible future scheduled bookings with IDs at least 159. Lower booking IDs are excluded even when scheduled in the future. New one-time, recurring, extra, and continuous-coverage bookings copy the agreed family rate, caregiver rate, and processing-fee policy into their own pricing snapshot. Existing snapshots retain their rates if the agreement or standard rates later change. Another caregiver does not inherit this agreement.
+- Don Johnson is user #275, family account #7. Original agreement #1 was scoped to Madison Fragnito (#34), with source booking #159.
+- Ticket #52 and booking #159 confirm the split: 133 minutes cost Don $34.91 and pay the caregiver $33.25.
+- Booking #322 / request #323 is Caroline Petrini-Poli (#40), October 27, 12:20–14:20 Eastern. It was still scheduled and unstarted when investigated on October 25.
+- The request application showed $15.75 from an email override, but the booking fell outside the Madison-only agreement and saved standard rates: $30 care + $1 processing, caregiver $27. The application amount was not an authoritative billing snapshot.
+- Stripe PaymentIntent `pi_3UTPP26ewFB76RHF1raHaCt0` was `requires_capture`, with $74.40 authorized and $0 received. This is a hold, not a captured charge. The old admin screen incorrectly read legacy amount fields and showed $0 authorized.
+- Correct two-hour amounts for #322 are **$31.50 family total** and **$30 caregiver earnings**. With the existing 20% buffer, a newly created two-hour authorization is $37.80.
 
-The existing email-only legacy override is insufficient: it has no caregiver pay or processing-cost policy. It remains for old billing compatibility; registered pair agreements govern new booking snapshots.
+## Implementation and activation
 
-Customers without a registered pair agreement retain their existing behavior, including recurring-plan rates and family-level legacy rate overrides. Regression tests exercise another family's custom rate, another plan's saved rate, the same caregiver serving a different family, and Don booking a different caregiver.
+The additive migration `2026_10_25_000001_add_family_wide_care_pricing_agreements` adds an account-wide scope. Existing pair agreements remain unchanged until explicitly extended. The original caregiver and source booking remain as historical provenance. Account-wide agreements take priority over pair agreements and apply to every caregiver, including new one-time, recurring, extra, and Continuous Coverage visits.
 
-After registration, an unpaid booking for this pair at or above the source booking ID that still lacks its agreement snapshot is blocked from authorization or capture until repaired. This also protects a visit missed by the repair or created concurrently with activation. Bookings below the cutoff retain their existing pricing and payment behavior. Existing agreement snapshots continue to use their saved rates if the standard pricing version or rollout flag changes.
+The code and migration alone do not extend Don's live agreement. After the reviewed release is deployed and migrations run, an administrator can use **Apply account pricing and repair uncharged visits** on [ticket #88](https://carelolo.com/admin/support/tickets/88). This uses the same audited, idempotent repair as the command below. It does not send a support reply or resolve the ticket.
 
-## Operator steps
-
-1. Deploy through the normal reviewed release procedure and apply the additive migration `2026_09_09_000001_create_care_pricing_agreements`. Restart application workers through that procedure.
-2. Run this read-only preview on the application host:
-
-   ```bash
-   php artisan homecare:repair-don-pricing --booking=159
-   ```
-
-   Verify that the named family is Don and that the caregiver is the person who agreed to receive $15/hour. The command verifies Don's existing account email and prints the caregiver's user ID, source visit, future scheduled visits at or above the cutoff, corrected totals, and any in-scope records requiring separate review. With `--booking=159`, confirm that no booking below #159 appears. It makes no Stripe calls.
-3. Register the agreement and repair eligible booking/payment snapshots, substituting the verified IDs:
-
-   ```bash
-   php artisan homecare:repair-don-pricing --booking=159 --apply --admin=ADMIN_USER_ID --caregiver=VERIFIED_CAREGIVER_USER_ID
-   ```
-
-   This requires an existing administrator and the exact caregiver from the preview. It is idempotent and records the original pricing, replacement pricing, cutoff, reason, and administrator in booking audit events. Repeat runs must use the same source booking ID to preserve the agreement's cutoff. It preserves visit times, original authorization IDs and amounts, financial operations, and ticket state. It does not capture, refund, transfer, notify anyone, or mark family approval. Captured, refunded, legacy, uncertain, or otherwise ineligible records are reported and skipped; a nonzero exit indicates that separate review remains. The agreement still protects future new bookings when an old visit is skipped.
-4. Reopen support ticket #52 and verify **133 minutes, $15.75/hour, $34.91 family charge, $33.25 caregiver payout**. Keep the verified visit times. Confirm actual payment status before applying the existing correction flow. If nothing has been captured, the target is a $34.91 capture, not a $33.81 refund. If money has since settled, reconcile it through the existing audited correction process with the right rates before notifying or resolving the ticket.
-5. Audit any in-scope historical booking IDs printed by the command for incorrect charges. Bookings below #159 are outside this repair. The repair deliberately does not rewrite settled history. Verify a newly generated future visit has family rate 1575 cents, processing fee rate 0, caregiver rate 1500 cents, and policy `platform_pays_processing`.
-
-## Request estimates and duplicate-visit reports
-
-The new-request form shows the sole active caregiver agreement for the signed-in family, explicitly naming that caregiver and stating that the estimate applies when they are hired. For Don, a one-hour request shows $15.75 with Madison and no additional processing fee. Other caregivers' standard hourly total remains visible. Families with no active agreement, or multiple caregiver agreements requiring a choice, retain the standard estimate. This display does not select a caregiver, create a booking, or change billing. Weekly agreement estimates sum the rounded amounts for each visit separately.
-
-“Book again” quotes the current agreement for the exact family/caregiver pair and uses that care rate in the new invitation's request budget. Existing visit details and the approval screen display the booking's saved care and processing rates, including when the active agreement has since changed. Open recurring plans display the current pair agreement; closed plans retain their historical rate label. These presentation fixes require only a normal deployment, with no additional repair command or migration.
-
-For Don and Madison, two hours is $31.50 total and $30.00 caregiver payout. With the configured 20% authorization buffer, the temporary card hold is $37.80. That buffer is not tax or an added hourly fee; final capture follows approved minutes. Old authorizations created before the repair keep their original amounts until captured, cancelled, or expired.
-
-If Don reports two visits or payments at the same time, inspect the actual bookings before repairing either one:
+Alternatively, an authorized operator can preview and apply:
 
 ```bash
-php artisan homecare:audit-don-visits --booking=159
+php artisan homecare:repair-don-family-pricing --booking=322
+php artisan homecare:repair-don-family-pricing --booking=322 --apply --family=7 --admin=VERIFIED_ADMIN_USER_ID
 ```
 
-This read-only report covers seven days ago through fourteen days ahead. To inspect a particular date, supply both `--from=2026-09-15 --to=2026-09-15`. It includes IDs below #159, all caregivers for the family, linked requests and recurring plans, possible overlaps for the same caregiver, saved rates, and payment authorization/capture/refund amounts. It makes no Stripe calls, database changes, or notifications. Recorded payment values must be reconciled with the processor if uncertain.
+Verify Don, account #7, booking #322 and its caregiver in the preview. The apply command requires an administrator and the reviewed family account. It extends the existing agreement and repairs eligible unpaid booking/payment snapshots across the family, including earlier booking IDs. It corrects each linked application's caregiver rate to $15 and records previous values, administrator, agreement and existing authorization in audit events. A repeated run does not duplicate repairs or audit events.
 
-The #159 cutoff did not cancel duplicate visits or reprice lower-ID future visits, and the pricing repair did not change existing authorization amounts. A displayed estimate, an authorization, and a captured charge are distinct evidence. Use the booking IDs, plan IDs, and payment states to identify any duplicate visit and its source before cancelling or refunding. Do not broaden the pricing cutoff or reprice both visits as a duplicate-booking remedy.
+Captured, transferred, refunded, cancelled, uncertain, legacy-payment or pending-correction records are not rewritten. Skipped candidates are reported for separate review; the command returns nonzero if any remain. Settled historical payments are preserved. A missed or stale booking is blocked from authorization and capture until its agreed pricing is repaired.
 
-## Verification
+Existing authorization IDs and actual held amounts remain unchanged. The $74.40 hold on #322 must stay accurately represented until capture, cancellation or expiration. The normal capture flow bills only approved minutes at $15.75/hour and pays $15/hour to the caregiver. Do not use “complete and bill” to repair this future visit, and do not edit Stripe independently of the application ledger.
 
-Run the focused agreement tests and payment/recurring regression suites against the isolated test database and Stripe bypass configured in `phpunit.xml`:
+The repair changes no visit times, completion status, approvals, ticket state, notifications, refunds or transfers. Prepaid care hours continue to exclude special pricing agreements through their existing eligibility rule.
+
+## Display checks after activation
+
+Verify all four saved pricing values on #322: family 1575 cents/hour, family processing 0, caregiver 1500 cents/hour, policy `platform_pays_processing`. Its booking and payment must reference the account-wide agreement. Confirm the visit remains scheduled and the captured amount remains zero.
+
+The family request form, caregiver profile, booking details, approval, book-again and active plan estimates use the agreement or saved booking snapshot. Caregiver invitations, applications, job listings, work inbox, visit tracker, recap and earnings use caregiver compensation separately. Processing text must state that LoLo covers it. Admin request details show both rates and real authorization/capture amounts. Historical settled visits retain their saved terms.
+
+## Release boundary and validation
+
+Committing and pushing this change does not deploy it or apply the live #322 repair. Use the normal authorized release process and the explicit agreement activation above. No assistant SSH or production-server access was used.
+
+The workspace also contains earlier, unrelated changes. Do not deploy the whole working tree without its normal review. The prepaid source manifest must match the reviewed shared-file changes, and deployment must retain existing screening/prepaid compatibility guards.
+
+Focused verification:
 
 ```bash
-php vendor/bin/phpunit tests/Feature/Payments/DonLegacyPricingTest.php tests/Feature/Payments/StripeMarketplacePaymentTest.php tests/Feature/RegularCare/RegularCarePlanFlowTest.php tests/Feature/RegularCare/CompletedExtraVisitTest.php
+php vendor/bin/phpunit tests/Feature/Payments/DonFamilyPricingTest.php tests/Feature/Payments/DonLegacyPricingTest.php tests/Feature/Payments/StripeMarketplacePaymentTest.php tests/Feature/RegularCare/RegularCarePlanFlowTest.php tests/Feature/RegularCare/CompletedExtraVisitTest.php tests/Feature/Caregiver/CaregiverWorkInboxTest.php tests/Feature/Caregiver/CareRequestInvitationTest.php
 ```
 
-Tests cover exact charges and transfers with nonzero processing fees, previews without writes, existing future visits, booking-ID cutoff isolation (including earlier IDs scheduled in the future), repeated repair, settled-payment exclusions, caregiver identity checks, pair isolation, stable snapshots, recurring generation, and completed extra visits.
+Validation of the working checkout on October 25: 142 regression tests / 1,446 assertions passed across pricing, caregiver, admin, recruitment, coverage and care-hours suites; the final pricing/admin rerun passed 12 tests / 131 assertions. PHP syntax checks passed for 14 pricing-related files. The pricing-only commit was then tested on a clean copy of master, with 31 tests / 272 assertions passing across DonFamilyPricingTest, CaregiverWorkInboxTest and CareRequestInvitationTest.
+
+Tests use the isolated SQLite test database and Stripe bypass, covering rates, minute rounding, processor costs, preserved holds and settled history, idempotency, wrong-account/admin checks, stale-pricing guards, account isolation, invitations, recurring generation, coverage estimates and family/caregiver/admin views.
+
+## Historical pair-only tooling
+
+`homecare:repair-don-pricing --booking=159` remains the historical pair-only repair. It uses #159 as an inclusive booking-ID cutoff and cannot extend the policy to other caregivers. Use the new account-wide command for ticket #88. `homecare:audit-don-visits --booking=159` remains a read-only all-caregiver visit/payment report; it does not change rates, cancel duplicates or reconcile processor state.

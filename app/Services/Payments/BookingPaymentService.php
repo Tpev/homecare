@@ -341,6 +341,9 @@ class BookingPaymentService
         ?int $correctionId,
         bool $forceNewIntent = false,
     ): CareBookingPayment {
+        if ($this->pricing->hasUnappliedAgreement($booking)) {
+            throw new PaymentException('This visit needs its agreed pricing restored before payment can be authorized. Please contact LoLo Care support.');
+        }
         $booking->loadMissing([
             'application',
             'family',

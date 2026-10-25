@@ -11,8 +11,11 @@
         $canLeaveReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && ! $caregiverReview;
-        $baseRatePerHour = (float) ($existingApplication?->proposed_rate ?? auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
-        $ratePerHour = $pricing->caregiverGrossHourlyCents() / 100;
+        $caregiverQuote = $booking && $booking->caregiver_gross_rate_cents !== null
+            ? $pricing->quoteForCurrentBooking($booking, 60)
+            : $pricing->caregiverQuoteForRequest($requestItem, (int) auth()->id());
+        $ratePerHour = $caregiverQuote['caregiver_gross_rate_cents'] / 100;
+        $processingCovered = $caregiverQuote['caregiver_fee_policy'] === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING;
         $canEditApplication = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $checkInDecision = app(\App\Services\RegularCare\CareBookingCheckInPolicy::class)->evaluate($booking);
         $canCheckIn = $checkInDecision['allowed'];
@@ -252,8 +255,8 @@
                         <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-200">Estimated earnings</p>
                         @if ($estimatedRequestTotal !== null)
                             <p class="mt-1 font-display text-4xl font-semibold text-emerald-300">${{ number_format($estimatedRequestTotal, 2) }}</p>
-                            <p class="mt-3 text-sm text-[#E7ECF1]">{{ $estimatedRequestHoursLabel }}h @ ${{ number_format($ratePerHour, 2) }}/hr*</p>
-                            <p class="mt-2 text-xs text-[#D7DEE6]">*Gross earnings before Stripe processing fees. Refund costs, dispute fees, and optional instant-payout fees are not deducted from this rate.</p>
+                            <p class="mt-3 text-sm text-[#E7ECF1]">{{ $estimatedRequestHoursLabel }}h @ ${{ number_format($ratePerHour, 2) }}/hr{{ $processingCovered ? '' : '*' }}</p>
+                            <p class="mt-2 text-xs text-[#D7DEE6]">{{ $processingCovered ? 'Agreed earnings. LoLo covers payment processing costs.' : '*Gross earnings before Stripe processing fees. Refund costs, dispute fees, and optional instant-payout fees are not deducted from this rate.' }}</p>
                         @else
                             <p class="mt-2 text-sm leading-6 text-[#E7ECF1]">Earnings estimate appears once the visit duration is set.</p>
                         @endif
@@ -550,7 +553,7 @@
                     <div class="rounded-[1rem] border border-[#D8D1F1] bg-[#F5F1FB] px-3 py-2 text-sm text-[#0F3D3E]">
                         Caregiver rate applied automatically:
                         <span class="font-semibold">
-                            ${{ number_format($pricing->caregiverGrossHourlyCents() / 100, 2) }}/hr*
+                            ${{ number_format($ratePerHour, 2) }}/hr{{ $processingCovered ? '' : '*' }}
                         </span>
                     </div>
 
@@ -579,8 +582,8 @@
             @elseif ($existingApplication)
                 <div class="space-y-3 text-sm">
                     <p><span class="font-medium">Status:</span> {{ strtoupper($existingApplication->status) }}</p>
-                    <p><span class="font-medium">Gross caregiver rate:</span> ${{ number_format($ratePerHour, 2) }}/hr*</p>
-                    <p class="text-xs text-[#607080]">*Before Stripe processing fees.</p>
+                    <p><span class="font-medium">{{ $processingCovered ? 'Agreed caregiver rate:' : 'Gross caregiver rate:' }}</span> ${{ number_format($ratePerHour, 2) }}/hr{{ $processingCovered ? '' : '*' }}</p>
+                    <p class="text-xs text-[#607080]">{{ $processingCovered ? 'LoLo covers payment processing costs.' : '*Before Stripe processing fees.' }}</p>
                     <p class="whitespace-pre-line text-[#4B5B6B]">{{ $existingApplication->cover_note ?: '-' }}</p>
                 </div>
             @else
@@ -714,6 +717,8 @@
                     x-init="init()"
                 >
                     <div x-show="panel === 'live'" x-transition class="space-y-2">
+                        <p class="mt-2 text-sm font-semibold text-white">Your earnings rate: ${{ number_format($ratePerHour, 2) }}/hr{{ $processingCovered ? '' : '*' }}</p>
+                        <p class="mt-1 text-xs text-[#D7DEE6]">{{ $processingCovered ? 'LoLo covers payment processing costs.' : '*Before Stripe processing fees.' }}</p>
                         @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at && ! $isExpiredRegularVisit)
                             <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
                                 Accept the agreement first, then check in when you arrive.
@@ -868,7 +873,7 @@
                                     </div>
                                     <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
                                         <p class="text-xs text-[#D7DEE6]">Rate</p>
-                                        <p class="font-semibold text-white">${{ number_format($ratePerHour, 2) }}/hr*</p>
+                                        <p class="font-semibold text-white">${{ number_format($ratePerHour, 2) }}/hr{{ $processingCovered ? '' : '*' }}</p>
                                     </div>
                                     <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
                                         <p class="text-xs text-[#D7DEE6]">Estimated earnings</p>

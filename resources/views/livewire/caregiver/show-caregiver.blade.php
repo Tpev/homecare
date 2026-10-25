@@ -39,7 +39,14 @@
 
                         <h1 class="mt-4 text-2xl font-display font-semibold text-[#17313F]">{{ $caregiver->user->name }}</h1>
                         <p class="text-sm text-[#607080]">{{ $caregiver->user->city }}, {{ $caregiver->user->state }}</p>
-                        <p class="mt-2 text-lg font-semibold text-[#17313F]">${{ number_format((float) $caregiver->resolvePlatformHourlyRate(), 2) }}/hr</p>
+                        @php
+                            $viewerAccount = auth()->user()?->role === 'family'
+                                ? app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->membershipFor(auth()->user(), false)?->familyAccount
+                                : null;
+                            $viewerAgreement = $viewerAccount ? app(\App\Support\MarketplacePricing::class)->agreementForPair($viewerAccount->id, $caregiver->user_id) : null;
+                            $viewerRate = $viewerAgreement ? ($viewerAgreement->family_care_rate_cents + $viewerAgreement->family_processing_fee_rate_cents) / 100 : $caregiver->resolvePlatformHourlyRate();
+                        @endphp
+                        <p class="mt-2 text-lg font-semibold text-[#17313F]">${{ number_format((float) $viewerRate, 2) }}/hr{{ $viewerAgreement ? ' total · your agreed rate' : '' }}</p>
                         <p class="text-sm text-[#607080] mt-1">â­ {{ number_format((float) $caregiver->average_rating, 1) }} ({{ $caregiver->reviews_count }} reviews)</p>
                         <p class="text-xs text-[#7B8794] mt-1">Reliability score: {{ number_format((float) $caregiver->reliability_score, 0) }}%</p>
 

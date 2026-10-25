@@ -65,9 +65,12 @@ class CareRequestRecruitmentEmail
         }
 
         // Match the gross caregiver rate shown on the application page, never the family budget.
+        $quote = $this->pricing->caregiverQuoteForRequest($request, (int) $caregiver->id);
         $details[] = [
             'label' => 'Gross caregiver rate',
-            'value' => '$'.number_format($this->pricing->caregiverGrossHourlyCents() / 100, 2).'/hour before Stripe processing fees',
+            'value' => '$'.number_format($quote['caregiver_gross_rate_cents'] / 100, 2).'/hour'
+                .($quote['caregiver_fee_policy'] === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING
+                    ? '; LoLo covers payment processing costs' : ' before Stripe processing fees'),
         ];
 
         return [

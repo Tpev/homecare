@@ -475,7 +475,7 @@ class CarePlanOccurrenceService
                     'care_request_id' => $request->id,
                     'caregiver_user_id' => $plan->caregiver_user_id,
                     'status' => CareRequestApplication::STATUS_HIRED,
-                    'proposed_rate' => $hourlyRate,
+                    'proposed_rate' => $agreement ? $agreement->caregiver_gross_rate_cents / 100 : $hourlyRate,
                     'cover_note' => 'Confirmed through recurring care.',
                 ]);
 

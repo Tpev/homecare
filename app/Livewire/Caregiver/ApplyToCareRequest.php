@@ -321,7 +321,7 @@ class ApplyToCareRequest extends Component
             return;
         }
 
-        $applicationRate = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
+        $applicationRate = app(MarketplacePricing::class)->caregiverQuoteForRequest($this->requestItem, (int) auth()->id())['caregiver_gross_rate_cents'] / 100;
 
         $this->existingApplication = \Illuminate\Support\Facades\DB::transaction(function () use ($applicationRate) {
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) auth()->id());
@@ -572,10 +572,7 @@ class ApplyToCareRequest extends Component
         $workedMinutes = $this->computeWorkedMinutes($booking, $totalPausedSeconds);
 
         $capturedByGps = ! is_null($this->checkOutLat) && ! is_null($this->checkOutLng);
-        $baseRatePerHour = (float) ($this->existingApplication?->proposed_rate
-            ?: auth()->user()->caregiverProfile?->resolvePlatformHourlyRate()
-            ?: 0);
-        $ratePerHour = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
+        $ratePerHour = app(MarketplacePricing::class)->caregiverRateForBooking($booking);
         $estimatedEarnings = $this->calculateShiftEarnings((int) ($workedMinutes ?? 0), $ratePerHour);
 
         $booking->update([
@@ -1103,7 +1100,7 @@ class ApplyToCareRequest extends Component
             ->where('caregiver_user_id', auth()->id())
             ->with([
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
-                'booking:id,care_request_id,care_plan_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,check_in_override_at,check_in_override_by_user_id,check_in_override_reason,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,paused_at,total_paused_seconds,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
+                'booking:id,care_request_id,care_plan_id,care_request_application_id,family_account_id,family_user_id,caregiver_user_id,pricing_version,pricing_agreement_id,family_care_rate_cents,family_processing_fee_rate_cents,caregiver_gross_rate_cents,caregiver_fee_policy,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,check_in_override_at,check_in_override_by_user_id,check_in_override_reason,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,paused_at,total_paused_seconds,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
                 'booking.changeRequests',
                 'booking.payment',
                 'booking.carePlan:id,timezone',

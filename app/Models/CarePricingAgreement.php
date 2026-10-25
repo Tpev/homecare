@@ -20,6 +20,7 @@ class CarePricingAgreement extends Model
     {
         return [
             'active' => 'boolean',
+            'all_caregivers' => 'boolean',
             'family_care_rate_cents' => 'integer',
             'family_processing_fee_rate_cents' => 'integer',
             'caregiver_gross_rate_cents' => 'integer',
@@ -28,8 +29,8 @@ class CarePricingAgreement extends Model
 
     public function appliesToBooking(CareBooking $booking): bool
     {
-        // The source visit is also the inclusive booking-ID boundary; unsaved visits are new care.
-        return ! $booking->getKey() || (int) $booking->getKey() >= (int) $this->source_booking_id;
+        // Pair agreements retain their original cutoff; account-wide agreements cover every new or unpaid visit.
+        return $this->all_caregivers || ! $booking->getKey() || (int) $booking->getKey() >= (int) $this->source_booking_id;
     }
 
     /** @return array<string, int|string> */

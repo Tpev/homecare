@@ -155,7 +155,14 @@
                         <x-badge :text="strtoupper((string) $application->status)" color="blue" />
                     </div>
                     <p class="mt-1 text-slate-600">{{ $application->caregiver?->email ?: '—' }}</p>
-                    <p class="mt-1 text-slate-700">Proposed rate: ${{ number_format((float) ($application->proposed_rate ?? 0), 2) }}/hr</p>
+                    @php
+                        $appPricing = app(\App\Support\MarketplacePricing::class);
+                        $appBooking = $careRequest->booking;
+                        $caregiverRate = $appBooking && (int) $appBooking->caregiver_user_id === (int) $application->caregiver_user_id
+                            ? $appPricing->caregiverRateForBooking($appBooking)
+                            : $appPricing->caregiverQuoteForRequest($careRequest, (int) $application->caregiver_user_id)['caregiver_gross_rate_cents'] / 100;
+                    @endphp
+                    <p class="mt-1 text-slate-700">Caregiver earnings: ${{ number_format($caregiverRate, 2) }}/hr</p>
                     @if($application->cover_note)
                         <p class="mt-1 text-slate-700">{{ $application->cover_note }}</p>
                     @endif
@@ -207,9 +214,15 @@
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Payment status</p>
                     <p class="mt-1 text-slate-900">{{ strtoupper((string) ($careRequest->booking->payment?->status ?? 'none')) }}</p>
                     <p class="mt-1 text-slate-700">
-                        Authorized: ${{ number_format((float) ($careRequest->booking->payment?->authorized_amount ?? 0), 2) }}
-                        · Captured: ${{ number_format((float) ($careRequest->booking->payment?->captured_amount ?? 0), 2) }}
+                        Authorized: ${{ number_format(($careRequest->booking->payment?->amount_authorized_cents ?? 0) / 100, 2) }}
+                        · Captured: ${{ number_format(($careRequest->booking->payment?->amount_captured_cents ?? 0) / 100, 2) }}
                     </p>
+                    @if($careRequest->booking->pricing_agreement_id)
+                        <p class="mt-1 text-slate-700">Family total: ${{ number_format(($careRequest->booking->family_care_rate_cents + $careRequest->booking->family_processing_fee_rate_cents) / 100, 2) }}/hr · Caregiver: ${{ number_format($careRequest->booking->caregiver_gross_rate_cents / 100, 2) }}/hr</p>
+                        @if($careRequest->booking->caregiver_fee_policy === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING)
+                            <p class="mt-1 text-slate-700">LoLo covers payment processing costs.</p>
+                        @endif
+                    @endif
                 </div>
             </div>
             @if($careRequest->booking->care_plan_id)

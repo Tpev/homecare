@@ -161,14 +161,16 @@ class BrowseCareRequests extends Component
             return null;
         }
 
-        $rate = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
+        $quote = app(MarketplacePricing::class)->caregiverQuoteForRequest($request, (int) auth()->id());
+        $rate = $quote['caregiver_gross_rate_cents'] / 100;
         $hours = $minutes / 60;
         $hoursLabel = abs($hours - round($hours)) < 0.01
             ? (string) (int) round($hours)
             : number_format($hours, 1);
         $total = round($hours * $rate, 2);
 
-        return sprintf('%sh at $%s/hr* - about $%s gross', $hoursLabel, number_format($rate, 2), number_format($total, 2));
+        $covered = $quote['caregiver_fee_policy'] === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING;
+        return sprintf('%sh at $%s/hr%s - about $%s %s', $hoursLabel, number_format($rate, 2), $covered ? '' : '*', number_format($total, 2), $covered ? 'earnings' : 'gross');
     }
 
     public function postedLabel(CareRequest $request): string

@@ -1,10 +1,16 @@
 <section id="quick-request" class="hub-home-request">
+@php
+    $entryAccount = auth()->user()?->role === 'family'
+        ? app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->membershipFor(auth()->user(), false)?->familyAccount : null;
+    $entryAgreement = $entryAccount ? app(\App\Support\MarketplacePricing::class)->estimateAgreementForFamily($entryAccount->id) : null;
+    $entryAgreement = $entryAgreement?->all_caregivers ? $entryAgreement : null;
+@endphp
     <div class="hub-request-shell">
         <div class="flex items-start justify-between gap-4">
             <div>
                 <p class="hub-request-kicker">Book care</p>
                 <h2 class="hub-request-title">Tell us what you need</h2>
-                <p class="hub-request-price">Companionship starts at <strong>$30/hr*</strong> <span class="text-xs">+ $1/hr processing fee</span></p>
+                <p class="hub-request-price">@if($entryAgreement)Your agreed total: <strong>${{ number_format(($entryAgreement->family_care_rate_cents + $entryAgreement->family_processing_fee_rate_cents) / 100, 2) }}/hr</strong> <span class="text-xs">with any caregiver; no additional processing fee</span>@else Companionship starts at <strong>$30/hr*</strong> <span class="text-xs">+ $1/hr processing fee</span>@endif</p>
             </div>
 
             <span class="hub-request-heart" aria-hidden="true">

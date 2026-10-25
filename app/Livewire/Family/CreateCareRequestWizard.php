@@ -354,14 +354,7 @@ class CreateCareRequestWizard extends Component
     public function getEstimateAgreementProperty(): ?CarePricingAgreement
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
-        $agreements = CarePricingAgreement::query()
-            ->where('family_account_id', $account->id)
-            ->where('active', true)
-            ->with('caregiver:id,name')
-            ->limit(2)->get();
-
-        // No caregiver has been selected yet, so name a rate only when it is unambiguous.
-        return $agreements->count() === 1 ? $agreements->first() : null;
+        return app(MarketplacePricing::class)->estimateAgreementForFamily($account->id);
     }
 
     public function getStandardHourlyTotalProperty(): float

@@ -145,8 +145,12 @@
                         </div>
                         <div class="rounded-2xl border border-[#E4DDD3] bg-white px-3 py-3">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated pay</p>
-                            <p class="mt-1 text-sm font-medium text-[#17313F]">{{ $payLine ?: '$27.00/hr* after schedule is confirmed' }}</p>
-                            <p class="mt-1 text-xs text-[#607080]">*Gross earnings before Stripe processing fees.</p>
+                            @php
+                                $payQuote = app(\App\Support\MarketplacePricing::class)->caregiverQuoteForRequest($request, (int) auth()->id());
+                                $processingCovered = $payQuote['caregiver_fee_policy'] === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING;
+                            @endphp
+                            <p class="mt-1 text-sm font-medium text-[#17313F]">{{ $payLine ?: '$'.number_format($payQuote['caregiver_gross_rate_cents'] / 100, 2).'/hr'.($processingCovered ? '' : '*').' after schedule is confirmed' }}</p>
+                            <p class="mt-1 text-xs text-[#607080]">{{ $processingCovered ? 'LoLo covers payment processing costs.' : '*Gross earnings before Stripe processing fees.' }}</p>
                         </div>
                     </div>
 

@@ -36,6 +36,20 @@
             <x-alert color="red">{{ $message }}</x-alert>
         @enderror
 
+        @error('pricing')
+            <x-alert color="red">{{ $message }}</x-alert>
+        @enderror
+        @if ($booking && strtolower(trim((string) $booking->family?->email)) === \App\Services\Payments\DonLegacyPricingService::FAMILY_EMAIL)
+            <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5" aria-labelledby="don-family-pricing-heading">
+                <h2 id="don-family-pricing-heading" class="font-bold text-emerald-950">Don’s pricing with every caregiver</h2>
+                <p class="mt-2 text-sm text-emerald-950">Don pays $15.75/hour total. Every caregiver receives $15/hour. LoLo covers processing costs.</p>
+                <p class="mt-2 text-sm text-emerald-950">Apply this agreement to the account and repair uncharged visits, including #{{ $booking->id }}. Visit times and settled payments stay unchanged. Existing card holds stay unchanged; final billing uses approved minutes.</p>
+                <button type="button" wire:click="applyDonFamilyPricing" wire:loading.attr="disabled" wire:target="applyDonFamilyPricing"
+                    wire:confirm="Apply Don’s $15.75/hour total and $15/hour caregiver earnings to all caregivers, and repair uncharged visits? This records an audit event and moves no money."
+                    class="mt-3 rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Apply account pricing and repair uncharged visits</button>
+            </section>
+        @endif
+
         <header class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <a href="{{ route('admin.support.tickets') }}" wire:navigate class="text-sm font-semibold text-emerald-700 hover:underline">&larr; Back to support queue</a>
