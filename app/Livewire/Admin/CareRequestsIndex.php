@@ -4,6 +4,8 @@ namespace App\Livewire\Admin;
 
 use App\Models\CareBooking;
 use App\Models\CareRequest;
+use App\Support\AdminCareRequestSchedule;
+use App\Support\AdminCareRequestUpcomingPaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
@@ -126,7 +128,7 @@ class CareRequestsIndex extends Component
         session()->flash('status', 'Request #'.$requestId.' deleted.');
     }
 
-    public function render(): View
+    public function render(AdminCareRequestSchedule $schedules, AdminCareRequestUpcomingPaginator $upcoming): View
     {
         $baseQuery = CareRequest::query()->where('is_system_generated', false);
 
@@ -135,9 +137,10 @@ class CareRequestsIndex extends Component
             ->with([
                 'family:id,name,email',
                 'recipient:id,care_request_id,full_name,relationship_to_family',
-                'booking:id,care_request_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,completed_at',
+                'booking',
                 'booking.caregiver:id,name',
             ])
+            ->with(AdminCareRequestSchedule::relations())
             ->withCount(['applications', 'invitations', 'conversations', 'tasks']);
 
         if ($this->status !== 'all') {
@@ -164,17 +167,23 @@ class CareRequestsIndex extends Component
             });
         }
 
-        match ($this->sort) {
-            'oldest' => $query->oldest('created_at'),
-            'updated' => $query->latest('updated_at'),
-            'start_soon' => $query->orderByRaw('COALESCE(requested_start_at, created_at) asc'),
-            default => $query->latest('created_at'),
-        };
-
-        $requests = $query->paginate($this->perPage);
+        $perPage = in_array($this->perPage, [25, 50, 100], true) ? $this->perPage : 25;
+        if ($this->sort === 'start_soon') {
+            $requests = $upcoming->paginate($query, $perPage, max(1, (int) $this->getPage()));
+        } else {
+            match ($this->sort) {
+                'oldest' => $query->oldest('created_at')->oldest('id'),
+                'updated' => $query->latest('updated_at')->latest('id'),
+                default => $query->latest('created_at')->latest('id'),
+            };
+            $requests = $query->paginate($perPage);
+        }
 
         return view('livewire.admin.care-requests-index', [
             'requests' => $requests,
+            'schedules' => $requests->getCollection()->mapWithKeys(fn (CareRequest $request): array => [
+                $request->id => $schedules->present($request),
+            ]),
             'summary' => [
                 'all' => (clone $baseQuery)->count(),
                 'open' => (clone $baseQuery)->where('status', CareRequest::STATUS_OPEN)->count(),

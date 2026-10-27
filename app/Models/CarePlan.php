@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
 use App\Support\WeeklySchedule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CarePlan extends Model
 {
@@ -167,6 +169,20 @@ class CarePlan extends Model
     public function generatedBookings(): HasMany
     {
         return $this->hasMany(CareBooking::class, 'care_plan_id');
+    }
+
+    public function nextUpcomingBooking(): HasOne
+    {
+        return $this->hasOne(CareBooking::class, 'care_plan_id')->ofMany(
+            ['scheduled_start_at' => 'min', 'id' => 'min'],
+            fn (Builder $query) => $query
+                ->where('status', CareBooking::STATUS_SCHEDULED)
+                ->whereNull('replacement_released_at')
+                ->where('scheduled_start_at', '>', now())
+                ->where(fn (Builder $window) => $window
+                    ->whereNull('scheduled_end_at')
+                    ->orWhereColumn('scheduled_end_at', '>', 'scheduled_start_at')),
+        );
     }
 
     public function scheduleChanges(): HasMany

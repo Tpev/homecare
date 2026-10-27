@@ -64,6 +64,10 @@ class CareRequestProgress
      */
     public static function bestNextAction(CareRequest $request): array
     {
+        if ($request->status === CareRequest::STATUS_EXPIRED) {
+            return ['title' => 'Request expired', 'action' => 'Saved in history. No action needed.', 'tone' => 'slate'];
+        }
+
         $applicationsCount = isset($request->applications_count)
             ? (int) $request->applications_count
             : (int) $request->applications()->count();
@@ -252,6 +256,22 @@ class CareRequestProgress
                     ['label' => 'Status', 'value' => 'Needs resolution', 'help' => 'Original date passed'],
                     ['label' => 'Caregivers', 'value' => (string) $applicationsCount, 'help' => 'Past responses'],
                     ['label' => 'Next step', 'value' => 'Close or rebook', 'help' => 'Choose a new date'],
+                ],
+            );
+        }
+
+        if (! $booking && $request->status === CareRequest::STATUS_EXPIRED) {
+            return $make(
+                'request_expired',
+                'Expired',
+                'This request is saved in history.',
+                'The service date passed without a booking. Your details, caregiver replies and messages are kept. No action is needed.',
+                'overview',
+                ['overview', 'past_caregivers'],
+                [
+                    ['label' => 'Status', 'value' => 'Expired', 'help' => 'Saved in history'],
+                    ['label' => 'Caregivers', 'value' => (string) $applicationsCount, 'help' => 'Past responses'],
+                    ['label' => 'Next step', 'value' => 'None', 'help' => 'No action needed'],
                 ],
             );
         }

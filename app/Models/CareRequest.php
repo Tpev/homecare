@@ -104,6 +104,11 @@ class CareRequest extends Model
         return $this->belongsTo(CarePlan::class);
     }
 
+    public function sourceCarePlans(): HasMany
+    {
+        return $this->hasMany(CarePlan::class, 'source_care_request_id');
+    }
+
     public function careArrangement(): BelongsTo
     {
         return $this->belongsTo(CareArrangement::class);

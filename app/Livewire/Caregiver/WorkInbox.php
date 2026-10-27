@@ -17,6 +17,8 @@ class WorkInbox extends Component
 
     public string $sort = 'priority';
 
+    public int $historyLimit = 50;
+
     public array $scopeOptions = [
         ['label' => 'All', 'value' => 'all'],
         ['label' => 'Needs response', 'value' => 'needs_response'],
@@ -24,6 +26,7 @@ class WorkInbox extends Component
         ['label' => 'Applied', 'value' => 'applied'],
         ['label' => 'Hired', 'value' => 'hired'],
         ['label' => 'Completed', 'value' => 'completed'],
+        ['label' => 'History', 'value' => 'history'],
     ];
 
     public array $sortOptions = [
@@ -130,7 +133,12 @@ class WorkInbox extends Component
         return view('livewire.caregiver.work-inbox', [
             'prelaunchMode' => CaregiverPrelaunch::enabled(),
             'counts' => $builder->countsForUser($user),
-            'items' => $builder->buildForUser($user, $this->scope, $this->sort, 50),
+            'items' => $builder->buildForUser($user, $this->scope, $this->sort, $this->scope === 'history' ? $this->historyLimit : 50),
         ]);
+    }
+
+    public function loadMoreHistory(): void
+    {
+        $this->historyLimit += 50;
     }
 }

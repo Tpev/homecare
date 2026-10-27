@@ -13,13 +13,22 @@
         ['key' => 'start', 'label' => 'Get started', 'description' => 'Review & confirm care', 'action' => $reviewingApplicationId ? null : "setActiveTab('start')"],
     ];
     $recruitCanHire = $requestItem->status === 'open' && ! $requestDatePassed;
+    $isExpiredRequest = $requestItem->status === \App\Models\CareRequest::STATUS_EXPIRED;
+    if ($isExpiredRequest) {
+        $recruitSteps = [
+            ['key' => 'request', 'label' => 'Care request', 'description' => 'Saved care details', 'action' => "setActiveTab('home')"],
+            ['key' => 'review', 'label' => 'Caregiver history', 'description' => 'Previous replies & messages', 'action' => "setActiveTab('applicants')"],
+        ];
+    }
     $recruitUnavailableTitle = match ((string) $requestItem->status) {
         'draft' => 'This request is a draft',
+        'expired' => 'Expired — service date passed',
         'filled' => 'Caregiver selected. Visit setup is pending.',
         default => 'This request is closed',
     };
     $recruitPendingBody = match ((string) $requestItem->status) {
         'draft' => 'This request has not been published. Your saved care details remain available.',
+        'expired' => 'This request is saved in History. Your care details, caregiver replies and messages remain available. No action is needed.',
         'filled' => 'A caregiver has been selected, but the visit record is not ready yet. Your care details and caregiver history remain available.',
         default => null,
     };
@@ -79,7 +88,7 @@
         @if ($requestDatePassed)<a href="{{ route('family.requests.create', ['type' => 'one_time']) }}" wire:navigate class="hc-primary-button">Choose another date</a>
         @elseif ($requestItem->status === 'open')<button type="button" wire:click="setActiveTab('{{ $openCaregiverResponses ? 'applicants' : 'invite' }}')" class="hc-primary-button">{{ $openCaregiverResponses ? 'Review applicants' : 'Find caregivers' }} <span aria-hidden="true">→</span></button>@endif
         <div class="hc-recruit-next-footer">
-            <div class="hc-recruit-totals"><button type="button" wire:click="setActiveTab('applicants')"><strong>{{ $openCaregiverResponses }}</strong><span>Active applicants</span></button><button type="button" wire:click="setCaregiverView('invited')"><strong>{{ $requestItem->invitations->count() }}</strong><span>Invitations sent</span></button></div>
+            <div class="hc-recruit-totals"><button type="button" wire:click="setActiveTab('applicants')"><strong>{{ $isExpiredRequest ? $requestItem->applications->count() : $openCaregiverResponses }}</strong><span>{{ $isExpiredRequest ? 'Previous replies' : 'Active applicants' }}</span></button><button type="button" wire:click="setCaregiverView('invited')"><strong>{{ $requestItem->invitations->count() }}</strong><span>Invitations sent</span></button></div>
             <p class="hc-recruit-caption">{{ $recruitCanHire ? 'Hiring opens your '.($plainRequestType === 'Recurring care' ? 'recurring care home and its confirmed visits' : 'booked visit').'.' : 'Your care details and activity stay available below.' }}</p>
         </div>
     </section>

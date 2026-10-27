@@ -26,6 +26,8 @@
         <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
     </div>
 
+    @include('livewire.family.partials.history-sections')
+
     <section data-ai-target="family.care_history" tabindex="-1" aria-labelledby="history-summary-heading" class="space-y-3">
         <div class="flex items-end justify-between gap-3">
             <div>

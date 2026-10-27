@@ -8,6 +8,7 @@ use App\Models\CareRequestRecruitment;
 use App\Services\Booking\BookingTrustService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\Marketplace\CareRequestRecruitmentService;
+use App\Support\AdminCareRequestSchedule;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
@@ -212,13 +213,15 @@ class CareRequestShow extends Component
         $this->refreshRequest();
     }
 
-    public function render(CareRecipientProfilePresenter $profiles, CareRequestRecruitmentService $recruitment): View
+    public function render(CareRecipientProfilePresenter $profiles, CareRequestRecruitmentService $recruitment, AdminCareRequestSchedule $schedules): View
     {
         $this->authorizeAdmin();
+        $this->careRequest->loadMissing(AdminCareRequestSchedule::relations());
         $recruitmentCounts = $this->recruitmentHistory()->selectRaw('status, count(*) as aggregate')
             ->groupBy('status')->pluck('aggregate', 'status');
 
         return view('livewire.admin.care-request-show', [
+            'schedule' => $schedules->present($this->careRequest),
             'careProfileSnapshot' => $profiles->forCareRequest(auth()->user(), $this->careRequest),
             'recruitmentUnavailableReason' => $recruitment->unavailableReason($this->careRequest),
             'recruitmentCandidates' => $this->showRecruitmentPanel

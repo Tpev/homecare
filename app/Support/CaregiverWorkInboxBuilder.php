@@ -9,6 +9,7 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -28,6 +29,9 @@ class CaregiverWorkInboxBuilder
 
         $caregiverId = (int) $user->id;
         $this->caregiverId = $caregiverId;
+        if ($scope === 'history') {
+            return $this->expiredHistory($user, $limit);
+        }
         $now = now();
         $profile = $user->caregiverProfile()->with('skills:id')->first();
         $skillIds = $profile?->skills?->pluck('id')->map(fn ($id) => (int) $id)->all() ?? [];
@@ -43,6 +47,7 @@ class CaregiverWorkInboxBuilder
             ])
             ->where('caregiver_user_id', $caregiverId)
             ->where('status', CareRequestInvitation::STATUS_PENDING)
+            ->whereHas('careRequest', fn ($query) => $query->where('status', CareRequest::STATUS_OPEN))
             ->where(function ($query) use ($now) {
                 $query->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
             })
@@ -146,6 +151,8 @@ class CaregiverWorkInboxBuilder
             ])
             ->where('caregiver_user_id', $caregiverId)
             ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
+            ->where(fn ($query) => $query->whereHas('booking')
+                ->orWhereHas('careRequest', fn ($request) => $request->where('status', '!=', CareRequest::STATUS_EXPIRED)))
             ->whereIn('status', [
                 CareRequestApplication::STATUS_APPLIED,
                 CareRequestApplication::STATUS_SHORTLISTED,
@@ -337,7 +344,52 @@ class CaregiverWorkInboxBuilder
             'applied' => $items->where('scope', 'applied')->count(),
             'hired' => $items->where('scope', 'hired')->count(),
             'completed' => $items->where('scope', 'completed')->count(),
+            'history' => $user->role === 'caregiver' ? $this->expiredHistoryQuery($user)->count() : 0,
         ];
+    }
+
+    private function expiredHistoryQuery(User $user): Builder
+    {
+        return CareRequest::query()
+            ->where('status', CareRequest::STATUS_EXPIRED)
+            ->where('is_system_generated', false)
+            ->whereDoesntHave('booking')
+            ->whereDoesntHave('releasedBookings')
+            ->where(fn (Builder $query) => $query
+                ->whereHas('applications', fn (Builder $applications) => $applications->where('caregiver_user_id', $user->id))
+                ->orWhereHas('invitations', fn (Builder $invitations) => $invitations->where('caregiver_user_id', $user->id)));
+    }
+
+    private function expiredHistory(User $user, int $limit): Collection
+    {
+        return $this->expiredHistoryQuery($user)
+            ->with(['recipient', 'conversations' => fn ($query) => $query->where('caregiver_user_id', $user->id)])
+            ->orderByDesc('requested_end_at')->orderByDesc('id')
+            ->limit(max(1, $limit))->get()
+            ->map(function (CareRequest $request): array {
+                $conversation = $request->conversations->first();
+
+                return [
+                    'id' => 'expired-request-'.$request->id,
+                    'scope' => 'history',
+                    'state' => 'expired',
+                    'priority' => 0,
+                    'created_at' => $request->created_at,
+                    'start_at' => $request->requested_start_at,
+                    'title' => $request->title,
+                    'location' => $request->city.', '.$request->state,
+                    'schedule' => $this->scheduleLabel($request),
+                    'status_label' => 'Expired',
+                    'status_tone' => 'neutral',
+                    'fit_reason' => 'The service date passed without a booking. No action is needed.',
+                    'recipient_context' => $this->recipientContext($request->recipient),
+                    'note' => null,
+                    'primary_action' => ['kind' => 'link', 'label' => 'View request history', 'href' => route('care-requests.apply', $request->id)],
+                    'secondary_action' => $conversation ? ['kind' => 'link', 'label' => 'View messages', 'href' => route('messages.show', $conversation->id)] : null,
+                    'open_href' => route('care-requests.apply', $request->id),
+                    'meta' => 'Request #'.$request->id.' · Saved for your records',
+                ];
+            });
     }
 
     /**

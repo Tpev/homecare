@@ -34,7 +34,9 @@ class CareRequestPolicy
 
             return $careRequest->applications()
                 ->where('caregiver_user_id', $user->id)
-                ->exists();
+                ->exists()
+                || ($careRequest->status === CareRequest::STATUS_EXPIRED
+                    && $careRequest->invitations()->where('caregiver_user_id', $user->id)->exists());
         }
 
         return $user->isAdministrator();

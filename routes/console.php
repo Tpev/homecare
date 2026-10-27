@@ -16,6 +16,7 @@ Schedule::command('screening:sync')->dailyAt('05:00')->withoutOverlapping();
 Schedule::command('screening:export-audit')->everyMinute()->withoutOverlapping();
 // Catch bulk imports and requests completed by the previous release during deployment.
 Schedule::command('homecare:refresh-caregiver-count')->everyMinute()->withoutOverlapping();
+Schedule::command('homecare:expire-care-requests')->everyMinute()->withoutOverlapping();
 Schedule::command('homecare:dispatch-unread-message-emails')->everyMinute()->withoutOverlapping();
 Schedule::command('family-onboarding:dispatch-emails')->everyMinute()->withoutOverlapping();
 Schedule::command('customer-onboarding:refresh-payments --limit=100')->hourly()->withoutOverlapping();

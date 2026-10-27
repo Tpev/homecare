@@ -26,7 +26,11 @@
         $workInboxBody = 'You can browse new requests or check your upcoming visits when you are ready.';
         $workInboxMeta = 'New requests and visits will appear below.';
 
-        if ($needsResponseCount > 0) {
+        if ($scope === 'history') {
+            $workInboxTitle = 'Expired request history';
+            $workInboxBody = 'These requests closed without a booking. Your previous replies and messages are saved here.';
+            $workInboxMeta = 'No action is needed.';
+        } elseif ($needsResponseCount > 0) {
             $workInboxTitle = $needsResponseCount === 1
                 ? 'You have 1 request to answer.'
                 : 'You have '.$needsResponseCount.' requests to answer.';
@@ -81,7 +85,7 @@
     <div class="sticky top-16 z-20 -mx-1 px-1">
         <div class="grid grid-cols-1 gap-2 rounded-2xl border border-[#E4DDD3] bg-white/95 p-2 shadow-sm backdrop-blur lg:grid-cols-4">
             <div class="overflow-x-auto lg:col-span-3">
-                <div class="flex min-w-max gap-1 lg:min-w-0 lg:grid lg:grid-cols-6 lg:gap-1">
+                <div class="flex min-w-max gap-1 lg:min-w-0 lg:grid lg:grid-cols-7 lg:gap-1">
                 @foreach ($scopeOptions as $option)
                     @php
                         $scopeCount = (int) ($counts[$option['value']] ?? 0);
@@ -101,6 +105,7 @@
                 @endforeach
                 </div>
             </div>
+            @if ($scope !== 'history')
             <div class="hidden rounded-[1rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] p-2 sm:block">
                 <label for="work-inbox-sort" class="sr-only">Sort inbox</label>
                 <select
@@ -113,13 +118,14 @@
                     @endforeach
                 </select>
             </div>
+            @endif
         </div>
     </div>
 
     <section class="space-y-3 pt-1">
         @forelse ($items as $item)
             <article class="group overflow-hidden rounded-[1.8rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:p-5">
-                <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
+                <div @class(['grid grid-cols-1 gap-4', 'lg:grid-cols-[minmax(0,1fr)_17rem]' => $scope !== 'history'])>
                     <div class="min-w-0">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
@@ -247,6 +253,7 @@
                         </div>
                     </div>
 
+                    @if ($scope !== 'history')
                     <div class="lg:pl-1">
                         @if (!empty($item['compensation']))
                             <div class="rounded-[1.4rem] border border-[#D7CCE9] bg-gradient-to-br from-[#0F3D3E] via-[#174A52] to-[#4F6FAF] p-4 text-white shadow-sm">
@@ -271,6 +278,7 @@
                             </div>
                         @endif
                     </div>
+                    @endif
                 </div>
             </article>
         @empty
@@ -278,6 +286,9 @@
                 No items for this filter yet.
             </div>
         @endforelse
+        @if ($scope === 'history' && $items->count() < ($counts['history'] ?? 0))
+            <button type="button" wire:click="loadMoreHistory" class="hc-secondary-button min-h-11">Show more history</button>
+        @endif
     </section>
 </div>
 

@@ -1,8 +1,8 @@
 <section class="hc-recruit-browser" aria-labelledby="recruit-applicants-title" data-ai-target="family.request.applicants" tabindex="-1">
     <div class="hc-recruit-section-heading">
         <div>
-            <h2 id="recruit-applicants-title">{{ $booking ? 'Selected caregiver' : 'Review applicants' }}</h2>
-            <p class="hc-recruit-caption">{{ $booking ? 'Your selected caregiver and the full application history for this request.' : 'Compare experience, review application notes, and choose who feels right.' }}</p>
+            <h2 id="recruit-applicants-title">{{ $requestItem->status === 'expired' ? 'Caregiver history' : ($booking ? 'Selected caregiver' : 'Review applicants') }}</h2>
+            <p class="hc-recruit-caption">{{ $requestItem->status === 'expired' ? 'Previous replies and messages are saved for reference. No caregiver needs to be selected.' : ($booking ? 'Your selected caregiver and the full application history for this request.' : 'Compare experience, review application notes, and choose who feels right.') }}</p>
         </div>
         <button type="button" wire:click="setCaregiverView('{{ $requestItem->status === \App\Models\CareRequest::STATUS_OPEN ? 'search' : 'invited' }}')" class="hc-care-text-link">{{ $requestItem->status === \App\Models\CareRequest::STATUS_OPEN ? 'Find more caregivers' : 'Invitation history' }}</button>
     </div>

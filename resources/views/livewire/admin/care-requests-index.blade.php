@@ -16,7 +16,7 @@
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-xl font-semibold">Request Operations</h1>
-                    <p class="mt-1 text-sm text-slate-600">Full admin visibility and controls across all job requests.</p>
+                    <p class="mt-1 text-sm text-slate-600">Service dates, times and duration at a glance. Each schedule shows its time zone.</p>
                 </div>
                 <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">Showing {{ $requests->total() }} request(s)</div>
             </div>
@@ -45,18 +45,20 @@
             </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-5">
-            <div class="lg:col-span-2">
-                <x-input
-                    label="Search"
-                    placeholder="Title, family, email, city, ZIP"
-                    wire:model.blur="q"
-                />
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_7rem]">
+            <div class="min-w-0 sm:col-span-2 lg:col-span-1">
+                <x-input label="Search" placeholder="Title, family, email, city, ZIP" wire:model.blur="q" />
             </div>
-            <x-select.styled label="Status" wire:model.live="status" :options="$statusOptions" />
-            <x-select.styled label="Type" wire:model.live="requestType" :options="$typeOptions" />
-            <div class="grid grid-cols-2 gap-3">
+            <div class="min-w-0">
+                <x-select.styled label="Status" wire:model.live="status" :options="$statusOptions" />
+            </div>
+            <div class="min-w-0">
+                <x-select.styled label="Type" wire:model.live="requestType" :options="$typeOptions" />
+            </div>
+            <div class="min-w-0">
                 <x-select.styled label="Sort" wire:model.live="sort" :options="$sortOptions" />
+            </div>
+            <div class="min-w-0">
                 <x-select.styled
                     label="Rows"
                     wire:model.live="perPage"
@@ -69,189 +71,86 @@
             </div>
         </div>
 
-        <div class="mt-5 space-y-3 md:hidden">
-            @forelse($requests as $request)
-                @php
-                    $requestTone = match ($request->status) {
-                        \App\Models\CareRequest::STATUS_OPEN => 'blue',
-                        \App\Models\CareRequest::STATUS_FILLED => 'indigo',
-                        \App\Models\CareRequest::STATUS_CANCELLED => 'red',
-                        \App\Models\CareRequest::STATUS_EXPIRED => 'amber',
-                        default => 'slate',
-                    };
-                    $bookingTone = match ($request->booking?->status) {
-                        \App\Models\CareBooking::STATUS_IN_PROGRESS,
-                        \App\Models\CareBooking::STATUS_PAUSED => 'green',
-                        \App\Models\CareBooking::STATUS_COMPLETED,
-                        \App\Models\CareBooking::STATUS_REVIEWED => 'blue',
-                        \App\Models\CareBooking::STATUS_CANCELLED => 'red',
-                        \App\Models\CareBooking::STATUS_DISPUTED => 'amber',
-                        default => 'slate',
-                    };
-                @endphp
-                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="text-base font-semibold text-slate-900">{{ $request->title ?: 'Untitled request' }}</p>
-                            <p class="mt-1 text-sm text-slate-500">{{ $request->family?->name ?: 'Unknown' }} · {{ $request->city }}, {{ $request->state }}</p>
-                            <p class="text-xs text-slate-500">{{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }} · #{{ $request->id }}</p>
-                        </div>
-                        <x-badge :text="strtoupper((string) $request->status)" :color="$requestTone" />
-                        @if ($request->is_private)
-                            <x-badge text="PRIVATE" color="indigo" />
-                        @endif
+        @if ($sort === 'start_soon')
+            <p class="mt-3 text-xs text-slate-500">Next care date first, including recurring visits. Past, inactive and unscheduled requests appear last.</p>
+        @endif
+
+        <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:hidden">
+            @forelse ($requests as $request)
+                @php($schedule = $schedules[$request->id])
+                <article wire:key="request-card-{{ $request->id }}" class="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div>
+                        <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="break-words text-base font-semibold text-slate-900 hover:text-cyan-800">{{ $request->title ?: 'Untitled request' }}</a>
+                        <p class="mt-1 text-xs text-slate-500">#{{ $request->id }} · {{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
+                        <p class="mt-1 text-sm text-slate-600">{{ collect([$request->city, $request->state, $request->zip])->filter()->implode(', ') ?: 'Location not set' }}</p>
                     </div>
 
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        @if($request->booking)
-                            <x-badge :text="'BOOKING #'.$request->booking->id.' '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
-                        @endif
-                        <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                            {{ $request->applications_count }} app · {{ $request->invitations_count }} inv · {{ $request->conversations_count }} chat
-                        </span>
+                    <div class="my-3">
+                        @include('livewire.admin.partials.care-request-list-schedule')
                     </div>
 
-                    @if($request->booking)
-                        <p class="mt-2 text-sm text-slate-600">
-                            Caregiver: <span class="font-semibold text-slate-900">{{ $request->booking->caregiver?->name ?: 'Unknown' }}</span>
-                        </p>
-                    @endif
-
-                    <div class="mt-4 grid grid-cols-2 gap-2">
-                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'open')" class="rounded-xl border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-50">Open</button>
-                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'filled')" class="rounded-xl border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">Filled</button>
-                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'cancelled')" class="rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">Cancel</button>
-                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'expired')" class="rounded-xl border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50">Expire</button>
+                    <div class="mb-3 text-xs text-slate-600">
+                        <p>Family: <span class="font-medium text-slate-900">{{ $request->family?->name ?: 'Unknown' }}</span></p>
+                        <p class="break-all text-slate-500">{{ $request->family?->email ?: 'No email' }}</p>
+                        <p class="mt-1">Recipient: {{ $request->recipient?->full_name ?: 'Not specified' }}</p>
                     </div>
 
-                    <div class="mt-4 grid grid-cols-1 gap-2">
-                        <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="block">
-                            <x-button color="cyan" light class="w-full justify-center">Open request</x-button>
-                        </a>
-                        <x-button color="red" light class="w-full justify-center" wire:click="deleteRequest({{ $request->id }})" onclick="if (!confirm('Delete request #{{ $request->id }}? This cannot be undone.')) return false;">Delete</x-button>
+                    @include('livewire.admin.partials.care-request-list-staffing')
+
+                    <div class="mt-auto pt-4">
+                        <p class="mb-2 text-xs text-slate-500">Request submitted: {{ $request->created_at?->format('M j, Y · g:i A T') ?: 'Date unavailable' }}</p>
+                        <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="block rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-center text-sm font-semibold text-cyan-800 hover:bg-cyan-100">Open request</a>
+                        @include('livewire.admin.partials.care-request-list-actions')
                     </div>
                 </article>
             @empty
-                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                    No requests found for the current filters.
-                </div>
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 md:col-span-2">No requests found for the current filters.</div>
             @endforelse
         </div>
 
-        <div class="mt-4 hidden overflow-x-auto rounded-xl border border-slate-200 md:block">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <div class="mt-4 hidden overflow-x-auto rounded-xl border border-slate-200 xl:block">
+            <table class="w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
                     <tr class="text-left text-xs uppercase tracking-wide text-slate-500">
-                        <th class="px-4 py-3">Request</th>
-                        <th class="px-4 py-3">Family</th>
-                        <th class="px-4 py-3">Pipeline</th>
-                        <th class="px-4 py-3">Status control</th>
-                        <th class="px-4 py-3 text-right">Actions</th>
+                        <th class="w-1/4 px-4 py-3">Request & family</th>
+                        <th class="w-2/5 px-4 py-3 text-sky-900">Service date & time</th>
+                        <th class="px-4 py-3">Staffing & status</th>
+                        <th class="px-4 py-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white">
-                    @forelse($requests as $request)
-                        @php
-                            $requestTone = match ($request->status) {
-                                \App\Models\CareRequest::STATUS_OPEN => 'blue',
-                                \App\Models\CareRequest::STATUS_FILLED => 'indigo',
-                                \App\Models\CareRequest::STATUS_CANCELLED => 'red',
-                                \App\Models\CareRequest::STATUS_EXPIRED => 'amber',
-                                default => 'slate',
-                            };
-                            $bookingTone = match ($request->booking?->status) {
-                                \App\Models\CareBooking::STATUS_IN_PROGRESS,
-                                \App\Models\CareBooking::STATUS_PAUSED => 'green',
-                                \App\Models\CareBooking::STATUS_COMPLETED,
-                                \App\Models\CareBooking::STATUS_REVIEWED => 'blue',
-                                \App\Models\CareBooking::STATUS_CANCELLED => 'red',
-                                \App\Models\CareBooking::STATUS_DISPUTED => 'amber',
-                                default => 'slate',
-                            };
-                        @endphp
-                        <tr>
-                            <td class="px-4 py-3 align-top">
-                                <p class="font-semibold text-slate-900">{{ $request->title ?: 'Untitled request' }}</p>
-                                <p class="mt-1 text-xs text-slate-500">
-                                    #{{ $request->id }} · {{ $request->city }}, {{ $request->state }} {{ $request->zip }}
-                                </p>
-                                <p class="text-xs text-slate-500">
-                                    {{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}
-                                    · {{ optional($request->created_at)->format('M d, Y H:i') }}
-                                </p>
+                    @forelse ($requests as $request)
+                        @php($schedule = $schedules[$request->id])
+                        <tr wire:key="request-row-{{ $request->id }}">
+                            <td class="px-4 py-4 align-top">
+                                <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="break-words font-semibold text-slate-900 hover:text-cyan-800">{{ $request->title ?: 'Untitled request' }}</a>
+                                <p class="mt-1 text-xs text-slate-500">#{{ $request->id }} · {{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
+                                <p class="text-xs text-slate-600">{{ collect([$request->city, $request->state, $request->zip])->filter()->implode(', ') ?: 'Location not set' }}</p>
+                                <p class="mt-3 text-xs font-medium text-slate-900">{{ $request->family?->name ?: 'Unknown family' }}</p>
+                                <p class="break-all text-xs text-slate-500">{{ $request->family?->email ?: 'No email' }}</p>
+                                <p class="mt-1 text-xs text-slate-600">Recipient: {{ $request->recipient?->full_name ?: 'Not specified' }}</p>
+                                <p class="mt-2 text-xs text-slate-500">Request submitted: {{ $request->created_at?->format('M j, Y · g:i A T') ?: 'Date unavailable' }}</p>
                             </td>
-                            <td class="px-4 py-3 align-top">
-                                <p class="font-semibold text-slate-900">{{ $request->family?->name ?: 'Unknown' }}</p>
-                                <p class="text-xs text-slate-500">{{ $request->family?->email ?: '—' }}</p>
-                                <p class="mt-1 text-xs text-slate-600">Recipient: {{ $request->recipient?->full_name ?: '—' }}</p>
+                            <td class="px-4 py-4 align-top">
+                                @include('livewire.admin.partials.care-request-list-schedule')
                             </td>
-                            <td class="px-4 py-3 align-top">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <x-badge :text="strtoupper((string) $request->status)" :color="$requestTone" />
-                                    @if ($request->is_private)
-                                        <x-badge text="PRIVATE" color="indigo" />
-                                    @endif
-                                    @if($request->booking)
-                                        <x-badge :text="'BOOKING #'.$request->booking->id.' '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
-                                    @endif
-                                </div>
-                                @if($request->booking)
-                                    <p class="mt-2 text-xs text-slate-600">
-                                        Caregiver: <span class="font-semibold text-slate-900">{{ $request->booking->caregiver?->name ?: 'Unknown' }}</span>
-                                    </p>
-                                @endif
-                                <p class="mt-2 text-xs text-slate-600">
-                                    {{ $request->applications_count }} app ·
-                                    {{ $request->invitations_count }} inv ·
-                                    {{ $request->conversations_count }} chat ·
-                                    {{ $request->tasks_count }} task
-                                </p>
+                            <td class="px-4 py-4 align-top">
+                                @include('livewire.admin.partials.care-request-list-staffing')
                             </td>
-                            <td class="px-4 py-3 align-top">
-                                <div class="flex flex-wrap gap-1">
-                                    <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'open')" class="rounded-lg border border-sky-200 px-2 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-50">Open</button>
-                                    <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'filled')" class="rounded-lg border border-indigo-200 px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">Filled</button>
-                                    <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'cancelled')" class="rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50">Cancel</button>
-                                    <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'expired')" class="rounded-lg border border-amber-200 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50">Expire</button>
-                                </div>
-                                @if($request->booking)
-                                    <div class="mt-2 flex flex-wrap gap-1">
-                                        <button type="button" wire:click="forceBookingStatus({{ $request->id }}, 'scheduled')" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">Shift: scheduled</button>
-                                        <button type="button" wire:click="forceBookingStatus({{ $request->id }}, 'completed')" class="rounded-lg border border-emerald-200 px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-50">Shift: completed</button>
-                                        <button type="button" wire:click="forceBookingStatus({{ $request->id }}, 'cancelled')" class="rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50">Shift: cancelled</button>
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-right align-top">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('admin.requests.show', $request) }}" wire:navigate>
-                                        <x-button color="cyan" light sm>Open</x-button>
-                                    </a>
-                                    <x-button
-                                        color="red"
-                                        light
-                                        sm
-                                        wire:click="deleteRequest({{ $request->id }})"
-                                        onclick="if (!confirm('Delete request #{{ $request->id }}? This cannot be undone.')) return false;"
-                                    >
-                                        Delete
-                                    </x-button>
-                                </div>
+                            <td class="w-36 px-4 py-4 align-top">
+                                <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="inline-flex whitespace-nowrap rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-800 hover:bg-cyan-100">Open request</a>
+                                @include('livewire.admin.partials.care-request-list-actions')
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="5" class="px-4 py-6 text-center text-slate-500">No requests found for the current filters.</td>
-                        </tr>
+                        <tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">No requests found for the current filters.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
         <x-slot:footer>
-            <div class="pt-2">
-                {{ $requests->links() }}
-            </div>
+            <div class="pt-2">{{ $requests->links() }}</div>
         </x-slot:footer>
     </x-card>
 </div>

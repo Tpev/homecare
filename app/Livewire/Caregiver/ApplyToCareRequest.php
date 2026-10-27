@@ -128,7 +128,7 @@ class ApplyToCareRequest extends Component
 
         if ($this->requestItem->status === CareRequest::STATUS_OPEN && ! $this->existingApplication) {
             abort_unless(auth()->user()->can('apply', $this->requestItem), 403);
-        } elseif (! $this->existingApplication) {
+        } elseif (! $this->existingApplication && $this->requestItem->status !== CareRequest::STATUS_EXPIRED) {
             abort_unless($this->existingApplication !== null, 403);
         }
 

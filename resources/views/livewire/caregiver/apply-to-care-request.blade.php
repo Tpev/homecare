@@ -1,4 +1,11 @@
 <div class="hc-page py-8 space-y-6" wire:key="caregiver-apply-{{ $requestItem->id }}">
+    @if ($requestItem->status === \App\Models\CareRequest::STATUS_EXPIRED && ! $existingApplication?->booking)
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            <p class="font-semibold">Expired — service date passed</p>
+            <p class="mt-1">This request is saved in history. Your previous replies and messages are kept. No action is needed.</p>
+            <a href="{{ route('caregiver.work-inbox.index', ['scope' => 'history']) }}" wire:navigate class="mt-2 inline-block font-semibold underline">Back to history</a>
+        </div>
+    @endif
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -57,6 +64,7 @@
         $isNewApplicationDecision = ! $existingApplication && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $isWaitingForFamilyDecision = $existingApplication
             && ! $booking
+            && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN
             && in_array($applicationStatus, [
                 \App\Models\CareRequestApplication::STATUS_APPLIED,
                 \App\Models\CareRequestApplication::STATUS_SHORTLISTED,

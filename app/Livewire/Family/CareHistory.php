@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Family;
 
+use App\Models\CareRequest;
 use App\Services\Family\FamilyCareHistoryService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -13,6 +15,9 @@ use Livewire\WithPagination;
 class CareHistory extends Component
 {
     use WithPagination;
+
+    #[Url(as: 'section', except: 'visits')]
+    public string $historyView = 'visits';
 
     #[Url(as: 'range')]
     public string $range = 'all';
@@ -99,6 +104,10 @@ class CareHistory extends Component
 
     public function updated(string $property): void
     {
+        if (in_array($property, ['search', 'historyView'], true)) {
+            $this->resetPage('expiredPage');
+        }
+
         if (in_array($property, [
             'range', 'from', 'to', 'recipient', 'caregiver', 'plan', 'careType', 'visitStatus', 'paymentStatus', 'search',
         ], true)) {
@@ -119,6 +128,29 @@ class CareHistory extends Component
     public function render(FamilyCareHistoryService $history)
     {
         $family = auth()->user();
+        if ($this->historyView === 'expired') {
+            $search = mb_substr(trim($this->search), 0, 120);
+            $requests = CareRequest::query()
+                ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
+                ->where('status', CareRequest::STATUS_EXPIRED)
+                ->where('is_system_generated', false)
+                ->whereDoesntHave('booking')
+                ->whereDoesntHave('releasedBookings')
+                ->with('recipient')
+                ->withCount('applications')
+                ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search): void {
+                    $query->where('title', 'like', '%'.$search.'%')
+                        ->orWhereHas('recipient', fn ($recipient) => $recipient->where('full_name', 'like', '%'.$search.'%'));
+                    if (ctype_digit($search)) {
+                        $query->orWhere('id', (int) $search);
+                    }
+                }))
+                ->orderByDesc('requested_end_at')->orderByDesc('id')
+                ->paginate(12, pageName: 'expiredPage');
+
+            return view('livewire.family.expired-request-history', ['requests' => $requests]);
+        }
+
         $filters = $this->filters();
         $query = $history->query($family, $filters);
         /** @var LengthAwarePaginator $items */
