@@ -1,17 +1,17 @@
 <x-app-layout>
     <div class="hc-page max-w-3xl space-y-6 py-8">
-        <div class="flex items-center justify-between gap-3"><a href="{{ route('family.requests.index') }}" wire:navigate class="hc-care-text-link">← Back to Care</a><a href="{{ route('family.care-hours.index', ['choose' => 1]) }}" wire:navigate class="hc-care-text-link">Change person</a></div>
-        <header><h1 class="font-display text-3xl font-semibold text-[#23483F]">Care hours for {{ $account->display_name }}</h1></header>
+        <a href="{{ route('family.care-hours.index') }}" wire:navigate class="hc-care-text-link">← Prepaid care hours</a>
+        <header><h1 class="font-display text-3xl font-semibold text-[#23483F]">Prepaid care hours</h1><p class="mt-2 text-[#485E53]">{{ $account->display_name }}’s care balance</p></header>
         @include('care-hours.partials.messages')
         @include('care-hours.partials.gift-links')
         @if($eligibilityReason)<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{{ $eligibilityReason }} <a href="{{ route('support.index') }}" class="underline">Contact support</a>.</p>@endif
         <section class="hc-surface space-y-4 p-6" aria-label="Care hours balance">
-            <div><p class="text-sm text-[#485E53]">Available</p><p class="mt-1 font-display text-4xl font-semibold text-[#23483F]">{{ \App\Models\CareHourAccount::formatMinutes($balance['available_minutes']) }}</p></div>
+            <div><p class="text-sm text-[#485E53]">Available credit</p><p class="mt-1 font-display text-4xl font-semibold text-[#23483F]">{{ \App\Models\CareHourAccount::formatMinutes($balance['available_minutes']) }}</p></div>
             @if ($balance['reserved_minutes'] > 0)<p class="text-sm text-[#485E53]">{{ \App\Models\CareHourAccount::formatMinutes($balance['reserved_minutes']) }} reserved for upcoming visits or hours awaiting approval.</p>@endif
             @if ($balance['held_minutes'] > 0)<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{{ \App\Models\CareHourAccount::formatMinutes($balance['held_minutes']) }} temporarily on hold. <a href="{{ route('support.index') }}" class="underline">Contact support</a>.</p>@endif
             <div class="flex flex-wrap gap-3">
                 @if(\App\Support\CareHourRequestHandoff::draftFor($account->id, auth()->user()))<a href="{{ \App\Support\CareHourRequestHandoff::url($account, auth()->user()) }}" wire:navigate class="hc-secondary-button">Find care</a>@endif
-                @if(! $eligibilityReason && app(\App\Services\CareHours\CareHourAccess::class)->canBuy(auth()->user()) && $account->active)<a href="{{ route('family.care-hours.packages', $account) }}" wire:navigate class="hc-primary-button">Buy hours</a>@endif
+                @if(! $eligibilityReason && app(\App\Services\CareHours\CareHourAccess::class)->canBuy(auth()->user()) && $account->active)<a href="{{ route('family.care-hours.packages', $account) }}" wire:navigate class="hc-primary-button">Buy prepaid care</a>@endif
             </div>
             <p class="text-sm text-[#485E53]">No expiry. Available hours are selected first when you book eligible care.</p>
         </section>

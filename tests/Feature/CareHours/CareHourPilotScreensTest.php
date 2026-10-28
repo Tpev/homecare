@@ -43,11 +43,11 @@ class CareHourPilotScreensTest extends TestCase
     {
         $owner = $this->pilot();
         $profile = app(CareRecipientProfileService::class)->saveDraft($owner, null, ['full_name' => 'Linda Bennett']);
-        $this->actingAs($owner)->get(route('family.billing.show'))->assertOk()->assertSee('Care hours');
-        $this->get(route('family.care-hours.index'))->assertOk()->assertSee('Who are these hours for?')->assertSee('Linda Bennett');
+        $this->actingAs($owner)->get(route('family.billing.show'))->assertOk()->assertSee('Prepaid care hours');
+        $this->get(route('family.care-hours.index'))->assertOk()->assertSee('Prepaid care hours')->assertSee('Available credit')->assertDontSee('Who are these hours for?');
         $this->post(route('family.care-hours.enroll'), ['recipient' => 'profile:'.$profile->id])->assertRedirect();
         $account = CareHourAccount::sole();
-        $this->get(route('family.care-hours.show', $account))->assertOk()->assertSee('Buy hours');
+        $this->get(route('family.care-hours.show', $account))->assertOk()->assertSee('Buy prepaid care');
         $this->get(route('family.care-hours.packages', $account))->assertOk()->assertSee('$310');
         $this->get(route('care-hours.gifts.index'))->assertOk();
         $this->assertDatabaseCount('care_hour_purchases', 0);
@@ -85,7 +85,7 @@ class CareHourPilotScreensTest extends TestCase
         $other = User::factory()->create(['role' => 'family']);
         $this->actingAs($other)->get(route('family.billing.show'))->assertOk()
             ->assertSee('Billing &amp; Payments', false)->assertSee('Add a card once.')
-            ->assertSee('How charging works')->assertDontSee('Care hours');
+            ->assertSee('How charging works')->assertDontSee('Prepaid care hours');
         Livewire::actingAs($other)->test(CreateCareRequestWizard::class)
             ->assertSet('careHourAccountId', null)->assertDontSee('Use care hours first');
         $this->assertDatabaseCount('care_hour_accounts', 0);
@@ -102,7 +102,7 @@ class CareHourPilotScreensTest extends TestCase
 
         $this->assertFalse(app(CareHourNavigation::class)->visible($other));
         $this->actingAs($other)->get(route('family.billing.show'))->assertOk()
-            ->assertSee('Billing &amp; Payments', false)->assertSee('Add a card once.')->assertDontSee('Care hours');
+            ->assertSee('Billing &amp; Payments', false)->assertSee('Add a card once.')->assertDontSee('Prepaid care hours');
         $this->get(route('family.care-hours.index'))->assertNotFound();
         $this->assertDatabaseCount('care_hour_lots', 0);
     }
@@ -162,7 +162,7 @@ class CareHourPilotScreensTest extends TestCase
         config(['care_hours.pilot_only' => true]);
         $this->assertTrue(app(CareHourNavigation::class)->visible($owner));
         $this->actingAs($owner)->get(route('family.care-hours.show', $account))->assertOk()->assertSee('5 h')
-            ->assertDontSee('Buy hours')->assertDontSee('Let someone contribute')->assertDontSee('Buy a gift of care');
+            ->assertDontSee('Buy prepaid care')->assertDontSee('Let someone contribute')->assertDontSee('Buy a gift of care');
         $this->get(route('family.care-hours.purchase', $purchase->public_id))->assertOk()->assertSee('5 h');
         $this->get(route('family.care-hours.packages', $account))->assertForbidden();
         $this->assertSame(300, $account->balance()['available_minutes']);
@@ -201,7 +201,7 @@ class CareHourPilotScreensTest extends TestCase
         $owner = $this->pilot();
         config(['care_hours.enabled' => false]);
         $this->assertFalse(app(CareHourNavigation::class)->visible($owner));
-        $this->actingAs($owner)->get(route('family.billing.show'))->assertOk()->assertDontSee('Care hours');
+        $this->actingAs($owner)->get(route('family.billing.show'))->assertOk()->assertDontSee('Prepaid care hours');
         $this->get(route('family.care-hours.index'))->assertNotFound();
         $this->post(route('family.care-hours.enroll'), ['recipient' => 'profile:1'])->assertForbidden();
         $this->get(route('care-hours.gifts.index'))->assertNotFound();

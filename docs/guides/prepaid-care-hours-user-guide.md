@@ -12,7 +12,7 @@ The simple sequence is **buy or claim hours, choose the person, request care, re
 
 | What you want to do | Use this option | Where the hours go |
 | --- | --- | --- |
-| Buy care for yourself or an existing person in your family account | **Care hours**, then **Buy hours** | Directly into that person's balance after payment succeeds |
+| Buy care for yourself or an existing person in your family account | **Prepaid care hours**, then **Buy prepaid care** | Directly into that person's balance after payment succeeds |
 | Help someone whose family already manages their care on LoLo | The family's private contribution link | Directly into the person named on the link's balance |
 | Give a present before choosing the recipient, or before they join LoLo | **Buy a gift of care** | A private code; hours reach a recipient's balance when the gift is claimed |
 | Redeem a gift for yourself | **Have a gift code?** | Your balance after you sign in or create an account and confirm the claim |
@@ -45,15 +45,15 @@ Care hours cover standard individual visits, including eligible individual visit
 
 ## 3 Find your balance and buy hours
 
-1. Sign in to your family account and open **Care**. Select the **Care hours** link. The same link is available from **Billing**.
-2. If you have one care balance, LoLo opens it directly. With several balances, choose the person. Use **Change person** to select another.
-3. To start a balance, choose an existing care recipient under **Who are these hours for?**, then select **Continue**. If LoLo asks whether a new request is for the same person as an existing balance, choose that person's existing balance; use **Different person — create a separate balance** only for another person.
-4. On **Care hours for [name]**, select **Buy hours**.
+1. Sign in to your family account and open **Care**. Select **Prepaid care hours** beside **Request new care**. The same link is available from **Billing**.
+2. The dashboard shows **Available credit**, including zero before your first purchase. Reserved and held hours appear separately. With several balances, **Your care balances** shows the credit for each person; hours stay with that person.
+3. Select **Buy prepaid care**. If there is one clear care profile or balance, LoLo takes you straight to packages. With several possible balances, choose one on the purchase screen. Merely opening the dashboard never enrolls someone or starts a payment.
+4. If an older request needs linking, choose that person's existing balance or explicitly confirm a separate person. If there is no care profile yet, use **Add a care profile**, then return to prepaid care. Open **Your activity** to review a balance, contributions, purchases and receipts.
 5. Choose a package. Check the recipient, paid hours, free hours if eligible, total care time and price.
 6. Confirm the non-refundable and no-expiry terms. Select **Continue to payment** and complete payment.
 7. Wait for **Your care hours are ready**. The receipt shows the reference, paid hours, bonus hours, total care time and paid amount.
 
-If you do not yet have an existing care recipient, the ordinary purchase screen explains that one is needed first. Gift recipients can use the self-claim journey in section 5 without creating a care request first.
+Gift recipients can also use the self-claim journey in section 5 without creating a care request first.
 
 **If payment is still processing:** return to the same receipt and use **Check payment status**. Hours are available only after payment is confirmed. Do not buy again just because the confirmation is taking time. An unfinished checkout may offer **Continue payment**.
 
@@ -238,7 +238,7 @@ The gift buyer does not receive the recipient's care activity or a separate auto
 
 | Situation | What to do |
 | --- | --- |
-| You cannot see **Care hours** or **Buy hours** | Check with LoLo whether new purchases are available. Existing balances remain accessible even when new sales are paused. |
+| You cannot see **Prepaid care hours** or **Buy prepaid care** | Check with LoLo whether new purchases are available. Existing balances remain accessible even when new sales are paused. |
 | Your payment says **Payment processing** | Keep the same receipt, use **Check payment status**, and avoid paying twice. |
 | Your gift says **Confirming your gift payment** | Use **Check payment**. A code is issued only after confirmed payment. |
 | A verification code expired or was entered incorrectly | Request a new code using the purchase email. If asked to wait, respect the retry limit. |

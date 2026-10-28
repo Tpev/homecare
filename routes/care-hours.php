@@ -17,6 +17,8 @@ Route::get('/family/care-hours/purchases/{purchase:public_id}', [FamilyCareHours
 Route::middleware(['auth', 'family.role', CareHoursPrivacyHeaders::class])
     ->prefix('family/care-hours')->name('family.care-hours.')->group(function () {
         Route::get('/', [FamilyCareHoursController::class, 'index'])->name('index');
+        Route::get('/buy', [FamilyCareHoursController::class, 'buy'])->name('buy');
+        Route::post('/buy', [FamilyCareHoursController::class, 'startBuy'])->name('buy.start');
         Route::get('/claim', [GiftClaimController::class, 'index'])->name('claim');
         Route::post('/claim/preview', [GiftClaimController::class, 'preview'])->middleware('throttle:8,1,care-hours-claim.preview:')->name('claim.preview');
         Route::post('/claim/confirm', [GiftClaimController::class, 'confirm'])->middleware('throttle:8,1,care-hours-claim.confirm:')->name('claim.confirm');

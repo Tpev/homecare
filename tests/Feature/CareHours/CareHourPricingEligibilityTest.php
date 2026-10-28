@@ -45,7 +45,7 @@ class CareHourPricingEligibilityTest extends TestCase
             ->assertSee('custom pricing')->assertSee('Contact support')
             ->assertDontSee('action="'.route('family.care-hours.checkout', $account).'"', false);
         $this->get(route('family.care-hours.show', $account))->assertOk()->assertSee('custom pricing')
-            ->assertDontSee('Buy hours')->assertDontSee('Create private link');
+            ->assertDontSee('Buy prepaid care')->assertDontSee('Create private link');
         $this->assertDatabaseCount('care_hour_purchases', 0);
     }
 
@@ -270,6 +270,7 @@ class CareHourPricingEligibilityTest extends TestCase
     {
         $service = app(CareHourPurchaseService::class);
         $quote = $service->quote($account, 5);
+
         return $service->refresh($service->start($account, 5, $owner, $quote['quote_key'], (string) Str::uuid(), '/success', '/cancel'));
     }
 
@@ -280,6 +281,7 @@ class CareHourPricingEligibilityTest extends TestCase
         $token = $service->verify($verification->id, $this->sentCode());
         $purchase = $service->start($token, 10, $service->quote(10)['quote_key'], (string) Str::uuid(), '/success', '/cancel');
         $purchase = app(CareHourPurchaseService::class)->refresh($purchase);
+
         return [$purchase, $service->codeForBuyer($purchase, null, $token)];
     }
 
@@ -288,8 +290,10 @@ class CareHourPricingEligibilityTest extends TestCase
         $code = '';
         Notification::assertSentOnDemand(CareHourVerificationNotification::class, function ($notice) use (&$code) {
             $code = $notice->code;
+
             return true;
         });
+
         return $code;
     }
 
@@ -317,6 +321,7 @@ class CareHourPricingEligibilityTest extends TestCase
         $booking = CareBooking::create(['care_request_id' => $request->id, 'care_request_application_id' => $application->id,
             'family_user_id' => $owner->id, 'caregiver_user_id' => $caregiver->id, 'status' => 'scheduled',
             'scheduled_start_at' => $request->requested_start_at, 'scheduled_end_at' => $request->requested_end_at, 'expected_minutes' => 120]);
+
         return [$booking, $account, $owner];
     }
 }

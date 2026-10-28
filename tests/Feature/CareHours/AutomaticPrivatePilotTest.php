@@ -45,9 +45,9 @@ class AutomaticPrivatePilotTest extends TestCase
         $this->assertFalse($access->canDiscover($other));
         $this->assertFalse($access->canBuyGift(null));
 
-        $this->actingAs($pilot)->get(route('family.billing.show'))->assertOk()->assertSee('Care hours');
+        $this->actingAs($pilot)->get(route('family.billing.show'))->assertOk()->assertSee('Prepaid care hours');
         $this->get(route('care-hours.gifts.index'))->assertOk();
-        $this->actingAs($other)->get(route('family.billing.show'))->assertOk()->assertDontSee('Care hours');
+        $this->actingAs($other)->get(route('family.billing.show'))->assertOk()->assertDontSee('Prepaid care hours');
         $this->get(route('care-hours.gifts.index'))->assertNotFound();
         $this->assertDatabaseCount('care_hour_purchases', 0);
     }

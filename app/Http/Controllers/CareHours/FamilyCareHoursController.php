@@ -24,6 +24,7 @@ use App\Services\CareHours\CareHourScheduleChangeFundingService;
 use App\Services\CareHours\PrepaidBookingFundingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -39,22 +40,108 @@ class FamilyCareHoursController extends Controller
         private readonly CareHourContributionService $contributions,
     ) {}
 
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request): View
     {
         abort_unless(app(\App\Services\CareHours\CareHourNavigation::class)->visible($request->user()), 404);
         $accounts = $this->identities->accountsFor($request->user());
-        if ($accounts->count() === 1 && ! $request->boolean('choose')) {
-            return redirect()->route('family.care-hours.show', $accounts->first());
+        $balances = $accounts->mapWithKeys(fn ($account) => [$account->id => $this->ledger->balance($account)]);
+
+        return view('care-hours.family.index', [
+            'buyFlow' => false,
+            'accounts' => $accounts,
+            'balances' => $balances,
+            'availableMinutes' => $accounts->filter(fn ($account) => $account->active && $account->currency === config('care_hours.currency', 'usd'))
+                ->sum(fn ($account) => $balances[$account->id]['available_minutes']),
+            'reservedMinutes' => $balances->sum('reserved_minutes'),
+            'heldMinutes' => $balances->sum('held_minutes'),
+        ]);
+    }
+
+    public function buy(Request $request): View|RedirectResponse
+    {
+        abort_unless(app(CareHourAccess::class)->canBuy($request->user()), 403);
+        $accounts = $this->identities->accountsFor($request->user());
+        $targets = $this->purchaseTargets($request, $accounts);
+        if ($targets->count() === 1 && $targets->first()['type'] === 'account') {
+            return redirect()->route('family.care-hours.packages', $targets->first()['account']);
         }
 
         return view('care-hours.family.index', [
+            'buyFlow' => true,
             'accounts' => $accounts,
-            'balances' => $accounts->mapWithKeys(fn ($account) => [$account->id => $this->ledger->balance($account)]),
-            'recipients' => app(CareHourAccess::class)->canEnroll($request->user()) ? $this->identities->recipientsFor($request->user())
-                ->filter(fn ($recipient) => ! $recipient->care_recipient_profile_id && ! CareHourRecipientLink::where('care_recipient_id', $recipient->id)->exists()) : collect(),
-            'profiles' => app(CareHourAccess::class)->canEnroll($request->user()) ? $this->identities->profilesFor($request->user())
-                ->reject(fn ($profile) => $accounts->contains('care_recipient_profile_id', $profile->id)) : collect(),
+            'purchaseTargets' => $targets,
+            'profileCreateUrl' => route('family.care-profiles.create'),
         ]);
+    }
+
+    public function startBuy(Request $request): RedirectResponse
+    {
+        abort_unless(app(CareHourAccess::class)->canBuy($request->user()), 403);
+        $input = $request->validate([
+            'target' => ['nullable', 'regex:/^(account|profile|recipient):[1-9][0-9]*$/'],
+            'balance_target' => ['nullable', 'regex:/^(new|[1-9][0-9]*)$/'],
+        ]);
+        $accounts = $this->identities->accountsFor($request->user());
+        $targets = $this->purchaseTargets($request, $accounts);
+        if (empty($input['target']) && $targets->count() !== 1) {
+            return redirect()->route('family.care-hours.buy');
+        }
+        $target = empty($input['target']) ? $targets->first() : $targets->firstWhere('key', $input['target']);
+        // Re-resolve the canonical choices on POST; never trust a hidden ID or
+        // silently merge two people because their names happen to match.
+        abort_unless($target, 403);
+        if ($target['type'] === 'account') {
+            return redirect()->route('family.care-hours.packages', $target['account']);
+        }
+        if ($target['requires_balance_choice'] && empty($input['balance_target'])) {
+            return redirect()->route('family.care-hours.buy')->withErrors([
+                'balance_target' => 'Choose an existing balance or confirm a separate care balance.',
+            ])->withInput($input);
+        }
+
+        // Keep identity linking and enrollment on the existing audited POST
+        // path. Merely opening the dashboard or buy page never creates a balance.
+        $request->merge([
+            'recipient' => $target['key'],
+            'balance_target' => $target['type'] === 'profile' ? 'new' : ($input['balance_target'] ?? 'new'),
+            'intent' => 'buy',
+        ]);
+
+        return $this->enroll($request);
+    }
+
+    private function purchaseTargets(Request $request, Collection $accounts): Collection
+    {
+        $accounts->loadMissing('recipientLinks.recipient');
+        $targets = $accounts->filter(fn ($account) => $account->active && $account->currency === config('care_hours.currency', 'usd'))
+            ->map(fn ($account) => [
+                'key' => 'account:'.$account->id, 'name' => $account->display_name, 'detail' => 'Existing balance',
+                'type' => 'account', 'account' => $account, 'requires_balance_choice' => false,
+            ])->values();
+        if (! app(CareHourAccess::class)->canEnroll($request->user())) {
+            return $targets;
+        }
+
+        $profileIds = $accounts->pluck('care_recipient_profile_id')->filter()->merge(
+            $accounts->flatMap(fn ($account) => $account->recipientLinks->pluck('recipient.care_recipient_profile_id')->filter())
+        )->unique();
+        foreach ($this->identities->profilesFor($request->user())->reject(fn ($profile) => $profileIds->contains($profile->id)) as $profile) {
+            $targets->push([
+                'key' => 'profile:'.$profile->id, 'name' => $profile->displayName(), 'detail' => 'Care profile',
+                'type' => 'profile', 'account' => null, 'requires_balance_choice' => false,
+                'review_url' => route('family.care-profiles.edit', $profile),
+            ]);
+        }
+        $recipients = $this->identities->recipientsFor($request->user())->filter(fn ($recipient) => ! $recipient->care_recipient_profile_id);
+        $linkedIds = CareHourRecipientLink::query()->whereIn('care_recipient_id', $recipients->modelKeys())->pluck('care_recipient_id');
+        foreach ($recipients->reject(fn ($recipient) => $linkedIds->contains($recipient->id)) as $recipient) {
+            $targets->push([
+                'key' => 'recipient:'.$recipient->id, 'name' => $recipient->full_name, 'detail' => 'Care request #'.$recipient->care_request_id,
+                'type' => 'recipient', 'account' => null, 'requires_balance_choice' => $accounts->isNotEmpty(),
+            ]);
+        }
+
+        return $targets;
     }
 
     public function enroll(Request $request): RedirectResponse
@@ -64,6 +151,7 @@ class FamilyCareHoursController extends Controller
         $input = $request->validate([
             'recipient' => ['required', 'regex:/^(profile|recipient):[1-9][0-9]*$/'],
             'balance_target' => [$accounts->isNotEmpty() ? 'required' : 'nullable', 'regex:/^(new|[1-9][0-9]*)$/'],
+            'intent' => ['nullable', 'in:buy'],
         ]);
         [$type, $id] = explode(':', $input['recipient']);
         if (filled($input['balance_target'] ?? null) && $input['balance_target'] !== 'new') {
@@ -74,13 +162,14 @@ class FamilyCareHoursController extends Controller
             }
             $this->identities->linkRecipient($account, CareRecipient::query()->findOrFail($id), $request->user());
 
-            return redirect()->route('family.care-hours.show', $account)->with('status', 'This care request is now linked to the existing care balance.');
+            return redirect()->route(($input['intent'] ?? null) === 'buy' ? 'family.care-hours.packages' : 'family.care-hours.show', $account)
+                ->with('status', 'This care request is now linked to the existing care balance.');
         }
         $account = $type === 'profile'
             ? $this->identities->enrollProfile(CareRecipientProfile::query()->findOrFail($id), $request->user())
             : $this->identities->enroll(CareRecipient::query()->findOrFail($id), $request->user());
 
-        return redirect()->route('family.care-hours.show', $account);
+        return redirect()->route(($input['intent'] ?? null) === 'buy' ? 'family.care-hours.packages' : 'family.care-hours.show', $account);
     }
 
     public function show(Request $request, CareHourAccount $account): View

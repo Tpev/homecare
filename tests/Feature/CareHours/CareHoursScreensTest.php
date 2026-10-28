@@ -48,7 +48,7 @@ class CareHoursScreensTest extends TestCase
         $this->assertDatabaseCount('family_accounts', 0);
         $this->actingAs($owner)->get(route('family.billing.show'))->assertOk()
             ->assertSee('Billing &amp; Payments', false)->assertSee('Add a card once.')
-            ->assertDontSee('Care hours')->assertSee('How charging works');
+            ->assertDontSee('Prepaid care hours')->assertSee('How charging works');
     }
 
     public function test_balances_remain_accessible_when_new_sales_and_discovery_are_paused(): void
@@ -58,7 +58,7 @@ class CareHoursScreensTest extends TestCase
         config(['care_hours.enabled' => false, 'care_hours.sales_enabled' => false]);
         $this->assertTrue(app(CareHourNavigation::class)->visible($owner));
         $this->actingAs($owner)->get(route('family.care-hours.show', $account))->assertOk()
-            ->assertSee('11 h')->assertDontSee('Buy hours')->assertDontSee('Purchase processing fee confirmed');
+            ->assertSee('11 h')->assertDontSee('Buy prepaid care')->assertDontSee('Purchase processing fee confirmed');
         $this->get(route('family.care-hours.packages', $account))->assertForbidden();
     }
 
