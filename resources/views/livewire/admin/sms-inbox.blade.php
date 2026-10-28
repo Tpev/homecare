@@ -112,7 +112,7 @@
                     $isIncoming = $sms->direction === \App\Models\SmsMessage::DIRECTION_INCOMING;
                     $tone = in_array($sms->status, [\App\Models\SmsMessage::STATUS_FAILED, \App\Models\SmsMessage::STATUS_UNDELIVERED], true)
                         ? 'red'
-                        : ($isIncoming ? 'blue' : 'green');
+                        : ($sms->awaitingProviderConfirmation() ? 'amber' : ($isIncoming ? 'blue' : 'green'));
                 @endphp
                 <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div class="flex items-start justify-between gap-3">
@@ -126,6 +126,7 @@
                     </div>
 
                         <p class="mt-3 whitespace-pre-wrap text-sm text-slate-700">{{ $sms->body }}</p>
+                        @if($sms->awaitingProviderConfirmation())<p class="mt-2 text-xs font-semibold text-amber-800">{{ $sms->deliveryLabel() }}</p>@endif
 
                         <div class="mt-4 flex flex-col gap-2">
                             @if($isIncoming)
@@ -170,7 +171,7 @@
                             $isIncoming = $sms->direction === \App\Models\SmsMessage::DIRECTION_INCOMING;
                             $tone = in_array($sms->status, [\App\Models\SmsMessage::STATUS_FAILED, \App\Models\SmsMessage::STATUS_UNDELIVERED], true)
                                 ? 'red'
-                                : ($isIncoming ? 'blue' : 'green');
+                                : ($sms->awaitingProviderConfirmation() ? 'amber' : ($isIncoming ? 'blue' : 'green'));
                         @endphp
                         <tr>
                             <td class="px-4 py-3 align-top text-slate-700">
@@ -196,7 +197,7 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 align-top text-slate-700">
-                                {{ strtoupper((string) $sms->status) }}
+                                {{ strtoupper($sms->deliveryLabel()) }}
                                 @if($sms->error_code)
                                     <p class="mt-1 text-xs text-red-600">Error {{ $sms->error_code }}</p>
                                 @endif

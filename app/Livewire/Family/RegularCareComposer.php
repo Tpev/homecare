@@ -39,6 +39,8 @@ class RegularCareComposer extends Component
 
     public array $billingSummary = [];
 
+    public ?int $careHourAccountId = null;
+
     public function mount(int $careRequest): void
     {
         $this->requestItem = CareRequest::query()
@@ -71,6 +73,8 @@ class RegularCareComposer extends Component
         $this->startsOn = (string) $defaults['starts_on'];
         $this->careNotes = (string) ($defaults['care_notes'] ?? '');
         $this->familyMessage = (string) $defaults['family_message'];
+        $this->careHourAccountId = app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->defaultAccountId($this->requestItem, auth()->user(), $this->hiredApplication);
 
         try {
             $this->billingSummary = $service->billingSummaryFor(auth()->user());
@@ -97,6 +101,10 @@ class RegularCareComposer extends Component
         }
         $this->validate($rules);
 
+        if ($this->careHourAccountId !== null && (int) ($this->careHoursAccount()?->id ?? 0) !== $this->careHourAccountId) {
+            throw ValidationException::withMessages(['careHourAccountId' => 'Choose the care balance linked to this recipient.']);
+        }
+
         try {
             $plan = app(CarePlanService::class)->sendOfferFromRequest($this->requestItem, auth()->user(), [
                 'title' => $this->title,
@@ -108,6 +116,7 @@ class RegularCareComposer extends Component
                 'ends_on' => $this->endsOn ?: null,
                 'care_notes' => $this->careNotes,
                 'family_message' => $this->familyMessage,
+                'care_hour_account_id' => $this->careHourAccountId,
             ]);
         } catch (PaymentException $exception) {
             session()->flash('status', $exception->userMessage);
@@ -136,7 +145,23 @@ class RegularCareComposer extends Component
                 ? $quote['hourly_rate']
                 : $plans->hourlyRateForFamily(auth()->user()),
             'processingFeeRate' => $quote['family_processing_fee_rate_cents'] / 100,
+            'careHoursAccount' => $quote['pricing_agreement_id'] ? null : $this->careHoursAccount(),
         ]);
+    }
+
+    private function careHoursAccount(): ?\App\Models\CareHourAccount
+    {
+        return app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->accountForRequest($this->requestItem, auth()->user(), $this->hiredApplication);
+    }
+
+    public function updatedCareHourAccountId(): void
+    {
+        if ($this->careHourAccountId !== null && (int) ($this->careHoursAccount()?->id ?? 0) !== $this->careHourAccountId) {
+            throw ValidationException::withMessages(['careHourAccountId' => 'Choose the care balance linked to this recipient.']);
+        }
+        app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->remember($this->requestItem, auth()->user(), $this->careHourAccountId);
     }
 
     public function updatedScheduleDays(): void

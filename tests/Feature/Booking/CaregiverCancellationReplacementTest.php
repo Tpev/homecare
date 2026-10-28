@@ -266,6 +266,7 @@ class CaregiverCancellationReplacementTest extends TestCase
         $others = collect(['Idah Ongwacho', 'Virna Little'])->map(fn ($name) => User::factory()->create(['role' => 'caregiver', 'name' => $name]));
         foreach ([$keri, ...$others] as $caregiver) {
             CaregiverProfile::create(['user_id' => $caregiver->id, 'status' => 'active', 'platform_hourly_rate' => 30,
+                'screening_initial_approved_at' => now(),
                 'bio' => str_repeat('Experienced caregiver. ', 4), 'years_experience' => 5, 'service_area_zip' => '27601',
                 'service_radius_miles' => 25, 'insurance_status' => CaregiverProfile::INSURANCE_NO,
                 'identity_verified_at' => now(), 'identity_verification_status' => 'approved']);

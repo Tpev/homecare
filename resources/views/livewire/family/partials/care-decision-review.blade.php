@@ -1,7 +1,13 @@
 @if ($reviewingApplicationId || $reviewingCompletion)
 <section id="care-decision-review" x-ref="decisionReview" x-init="$nextTick(() => { $el.focus(); $el.scrollIntoView({ block: 'start' }); })" tabindex="-1" class="hc-surface border-2 border-hc-primary p-5 sm:p-7" aria-labelledby="decision-title">
     @if ($reviewingApplicationId)
-        @php $decisionApplication = $requestItem->applications->firstWhere('id', $reviewingApplicationId); @endphp
+        @php
+            $decisionApplication = $requestItem->applications->firstWhere('id', $reviewingApplicationId);
+            $chosenCareHours = $careHourAccountId ? collect($careHourAccounts)->firstWhere('id', (int) $careHourAccountId) : null;
+            $coveredCareMinutes = $chosenCareHours && $hireDecisionQuote ? min($hireDecisionQuote['minutes'], $chosenCareHours['available_minutes']) : 0;
+            $uncoveredCareMinutes = $chosenCareHours && $hireDecisionQuote ? max(0, $hireDecisionQuote['minutes'] - $coveredCareMinutes) : 0;
+            $uncoveredCareCents = $chosenCareHours ? app(\App\Services\CareHours\PrepaidBookingFundingService::class)->amountForMinutes(new \App\Models\CareBooking, $uncoveredCareMinutes) : 0;
+        @endphp
         <div class="hc-hire-review">
             <div class="hc-hire-heading">
                 <p class="hc-care-eyebrow">Get started · Review before hiring</p>
@@ -24,6 +30,17 @@
                     @endif
                 </div>
                 @if($hireDecisionQuote)
+                    @if($chosenCareHours)
+                    <aside class="hc-hire-price" aria-label="Care hours coverage">
+                        <h3>{{ $requestItem->request_type === 'recurring' ? 'First visit coverage' : 'Visit coverage' }}</h3>
+                        <dl>
+                            <div><dt>Scheduled care</dt><dd>{{ \App\Models\CareHourAccount::formatMinutes($hireDecisionQuote['minutes']) }}</dd></div>
+                            <div><dt>From care hours</dt><dd>{{ \App\Models\CareHourAccount::formatMinutes($coveredCareMinutes) }}</dd></div>
+                            <div class="hc-hire-total"><dt>Remaining payment</dt><dd>${{ number_format($uncoveredCareCents / 100, 2) }}</dd></div>
+                        </dl>
+                        <p>{{ $uncoveredCareMinutes > 0 ? \App\Models\CareHourAccount::formatMinutes($uncoveredCareMinutes).' needs a separate payment before the visit is ready.' : 'Nothing to pay for scheduled care.' }}</p>
+                    </aside>
+                    @else
                     <aside class="hc-hire-price" aria-label="Care price estimate">
                         <h3>{{ $requestItem->request_type === 'recurring' ? 'First visit estimate' : 'Visit estimate' }}</h3>
                         <p>{{ intdiv($hireDecisionQuote['minutes'], 60) }}h {{ $hireDecisionQuote['minutes'] % 60 ? ($hireDecisionQuote['minutes'] % 60).'m' : '' }} scheduled · {{ $hireDecisionQuote['currency'] }}</p>
@@ -36,11 +53,20 @@
                         </dl>
                         <p>Based on scheduled hours and the pricing that applies to this caregiver. Final charges depend on approved hours.</p>
                     </aside>
+                    @endif
                 @endif
             </div>
             <div class="hc-hire-actions">
                 @error('hire') <div role="alert"><x-alert color="red">{{ $message }}</x-alert></div> @enderror
-                <p>Confirming selects this caregiver, saves the care agreement and prepares card authorization. {{ $decisionApplication?->selected_days !== null ? 'Only their selected days will be assigned. Your request stays open for the remaining days; other applications stay available.' : 'Other open applications will be marked not selected.' }} {{ $requestItem->request_type === 'recurring' ? 'Your care schedule will show booked visits, missing care and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
+                @if(!empty($careHourAccounts))
+                    <fieldset class="space-y-2 rounded-xl border border-[#D8E1D7] p-4"><legend class="px-1 text-sm font-semibold">Payment for this visit</legend>
+                        @foreach($careHourAccounts as $hoursAccount)
+                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', {{ $hoursAccount['id'] }})" value="{{ $hoursAccount['id'] }}" @checked((int) $careHourAccountId === (int) $hoursAccount['id'])>Use care hours · {{ \App\Models\CareHourAccount::formatMinutes($hoursAccount['available_minutes']) }} available for {{ $hoursAccount['display_name'] }}</label>
+                        @endforeach
+                        <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Usual card payment</label>
+                    @error('careHourAccountId')<p class="text-sm text-rose-800" role="alert">{{ $message }}</p>@enderror</fieldset>
+                @endif
+                <p>Confirming selects this caregiver, saves the care agreement and {{ $careHourAccountId ? 'reserves care hours' : 'prepares card authorization' }}. {{ $decisionApplication?->selected_days !== null ? 'Only their selected days will be assigned. Your request stays open for the remaining days; other applications stay available.' : 'Other open applications will be marked not selected.' }} {{ $requestItem->request_type === 'recurring' ? 'Your care schedule will show booked visits, missing care and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
                 @if(! $hirePayment['ready'] && $decisionApplication)
                     <x-family-hire-payment-prompt :care-request="$requestItem" :application="$decisionApplication" :unavailable="$hirePayment['unavailable']" id="hire-review-payment" />
                 @endif
@@ -61,18 +87,23 @@
         @else
             <div data-ai-target="family.request.timesheet" class="mt-5 grid gap-4 sm:grid-cols-2">
                 <div class="hc-care-soft p-4"><p class="hc-care-meta">Scheduled</p><p class="mt-1 font-semibold">{{ $booking?->expected_minutes ?? '—' }} minutes</p><p class="mt-3 hc-care-meta">Submitted</p><p class="mt-1 text-2xl font-semibold">{{ $workedLabel }}</p><p class="mt-2 text-sm">Check-in {{ $booking?->started_at?->format('M j, g:i A') ?: 'Not recorded' }}<br>Check-out {{ $booking?->completed_at?->format('M j, g:i A') ?: 'Not recorded' }}</p></div>
+                @if($prepaidBookingSummary)
+                    @php($careApproval = $prepaidBookingSummary['approval_preview'])
+                    <dl class="space-y-3 rounded-2xl border border-hc-border p-4"><div class="flex justify-between gap-3"><dt>Care hours to use</dt><dd class="font-semibold">{{ \App\Models\CareHourAccount::formatMinutes($careApproval['prepaid_minutes']) }}</dd></div>@if($careApproval['restore_minutes'] > 0)<div class="flex justify-between gap-3"><dt>Hours to return</dt><dd>{{ \App\Models\CareHourAccount::formatMinutes($careApproval['restore_minutes']) }}</dd></div>@endif<div class="flex justify-between gap-3 border-t border-hc-border pt-3"><dt>Separate payment for uncovered time</dt><dd class="font-semibold">${{ number_format($careApproval['card_cents'] / 100, 2) }}</dd></div><p class="text-sm">Approving confirms these hours. Any remaining payment action will appear on this visit.</p></dl>
+                @else
                 <dl class="space-y-3 rounded-2xl border border-hc-border p-4">
                     <div class="flex justify-between gap-3"><dt>Care · ${{ number_format($shiftRate, 2) }}/hour</dt><dd>${{ number_format($shiftEarnings, 2) }}</dd></div>
                     <div class="flex justify-between gap-3"><dt>{{ $usesPricingV2 ? 'Processing fee' : 'Platform fee' }}</dt><dd>${{ number_format($estimatedPaymentTotal - $shiftEarnings, 2) }}</dd></div>
                     <div class="flex justify-between gap-3 border-t border-hc-border pt-3 text-lg font-semibold"><dt>Estimated total</dt><dd>${{ number_format($estimatedPaymentTotal, 2) }}</dd></div>
                     <p class="text-sm">Your approval starts payment processing. The visit will show the actual payment result.</p>
                 </dl>
+                @endif
             </div>
             <label class="mt-5 block text-sm font-semibold" for="care-confirmation-note">Approval note (optional)</label>
             <textarea id="care-confirmation-note" wire:model="confirmationNote" rows="3" class="mt-2 w-full rounded-xl border-hc-border"></textarea>
             @error('confirmationNote')<p class="mt-2 text-sm text-red-800">{{ $message }}</p>@enderror
         @endif
-        <div class="mt-5 flex flex-col gap-2 sm:flex-row"><button type="button" wire:click="confirmReviewedCompletion" wire:loading.attr="disabled" class="hc-primary-button">{{ $isLiveVisit ? 'Confirm visit has ended' : 'Approve hours and pay $'.number_format($estimatedPaymentTotal, 2) }}</button><button type="button" wire:click="closeDecisionReview" class="hc-secondary-button">Back to visit</button>@if (! $isLiveVisit)<button type="button" wire:click="setActiveTab('support')" class="hc-care-text-link">Question these hours</button>@endif</div>
+        <div class="mt-5 flex flex-col gap-2 sm:flex-row"><button type="button" wire:click="confirmReviewedCompletion" wire:loading.attr="disabled" class="hc-primary-button">{{ $isLiveVisit ? 'Confirm visit has ended' : ($prepaidBookingSummary ? 'Approve hours' : 'Approve hours and pay $'.number_format($estimatedPaymentTotal, 2)) }}</button><button type="button" wire:click="closeDecisionReview" class="hc-secondary-button">Back to visit</button>@if (! $isLiveVisit)<button type="button" wire:click="setActiveTab('support')" class="hc-care-text-link">Question these hours</button>@endif</div>
     @endif
 </section>
 @endif

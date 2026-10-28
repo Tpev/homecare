@@ -38,7 +38,14 @@ class CarePlanHealthService
         $paymentStatus = CarePlan::PAYMENT_UNCHECKED;
         $lastError = null;
 
-        if ($payment) {
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        $prepaid = $nextBooking ? $careHours->forBooking($nextBooking) : null;
+        if ($prepaid) {
+            $readiness = $careHours->readiness($nextBooking);
+            $paymentStatus = $readiness['ready'] ? CarePlan::PAYMENT_AUTHORIZED
+                : ($prepaid->status === 'selected' ? CarePlan::PAYMENT_UNCHECKED : CarePlan::PAYMENT_ACTION_REQUIRED);
+            $lastError = $paymentStatus === CarePlan::PAYMENT_ACTION_REQUIRED ? $readiness['reason'] : null;
+        } elseif ($payment) {
             if (in_array($payment->status, [
                 CareBookingPayment::STATUS_AUTHORIZED,
                 CareBookingPayment::STATUS_CAPTURED,

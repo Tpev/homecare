@@ -93,7 +93,7 @@ class CompletedExtraVisitTest extends TestCase
             'user_id' => $family->id,
             'event_key' => MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED,
             'channel' => 'email',
-            'status' => 'queued',
+            'status' => 'sent',
         ]);
         Notification::assertSentTo($family, MarketplaceEventNotification::class, function ($notification, array $channels) use ($family): bool {
             if (! in_array('mail', $channels, true)) {
@@ -547,6 +547,7 @@ class CompletedExtraVisitTest extends TestCase
         $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Charles Petrini-Poli', 'email' => $email]);
         CaregiverProfile::query()->create([
             'user_id' => $caregiver->id, 'status' => 'active', 'slug' => 'charles-'.$caregiver->id,
+            'screening_initial_approved_at' => now(),
             'platform_hourly_rate' => 30, 'insurance_status' => CaregiverProfile::INSURANCE_NO,
             'stripe_connect_account_id' => 'acct_bypass_'.$caregiver->id,
             'stripe_connect_onboarding_completed_at' => now(), 'stripe_charges_enabled' => true, 'stripe_payouts_enabled' => true,

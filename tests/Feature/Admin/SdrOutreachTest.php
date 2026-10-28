@@ -89,7 +89,7 @@ class SdrOutreachTest extends TestCase
             ->assertDontSee('Open simply')
             ->assertDontSee('Admin Users');
 
-        $this->actingAs($sdr)->get(route('admin.crm.index'))->assertForbidden();
+        $this->actingAs($sdr)->get(route('admin.crm.index'))->assertOk();
         $this->actingAs($sdr)->get(route('admin.family-acquisition.leads'))->assertOk();
         $this->actingAs($sdr)->get(route('admin.users.index'))->assertForbidden();
         $this->actingAs($sdr)->get(route('admin.sdr-outreach.index'))->assertForbidden();

@@ -10,6 +10,15 @@ class CareBookingChangeRequest extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::updated(function (self $change) {
+            if ($change->wasChanged('status') && in_array($change->status, [self::STATUS_REJECTED, self::STATUS_WITHDRAWN], true)) {
+                app(\App\Services\CareHours\CareHourScheduleChangeFundingService::class)->cancelUnused($change);
+            }
+        });
+    }
+
     public const TYPE_CANCEL = 'cancel';
     public const TYPE_RESCHEDULE = 'reschedule';
 

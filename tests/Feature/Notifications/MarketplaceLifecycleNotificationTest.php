@@ -133,6 +133,7 @@ class MarketplaceLifecycleNotificationTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Experienced non-medical caregiver support. ', 4),
+            'screening_initial_approved_at' => now(),
             'platform_hourly_rate' => 29.00,
             'years_experience' => 5,
             'service_area_zip' => '27601',

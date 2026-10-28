@@ -80,6 +80,12 @@ class CarePlanPaymentWindowService
             }
 
             try {
+                $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+                if ($careHours->isPrepaid($booking)) {
+                    $funding = $careHours->prepare($booking);
+                    ($funding->status === 'ready' ? $ready : $needsAction)->push($booking);
+                    continue;
+                }
                 $forceReauthorize = $booking->payment?->status === CareBookingPayment::STATUS_AUTHORIZED
                     && $booking->payment?->authorization_expires_at?->isPast();
                 $this->payments->authorizeForBooking($booking, $forceReauthorize);

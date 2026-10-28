@@ -65,9 +65,16 @@ class BookingCorrectionService
         }
         $currentChargeCents = $this->effectiveChargeCents($payment);
         $currentCaregiverCents = $this->effectiveCaregiverCents($payment);
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        $prepaidSettlement = $careHours->isPrepaid($booking) ? \App\Models\CareHourSettlement::where('care_booking_id', $booking->id)->first() : null;
+        if ($prepaidSettlement) {
+            $currentChargeCents = (int) $prepaidSettlement->funding->operations()->where('kind', 'shortfall')->sum('captured_cents')
+                - (int) $prepaidSettlement->funding->operations()->where('kind', 'shortfall')->sum('refunded_cents');
+            $currentCaregiverCents = (int) ($prepaidSettlement->caregiver_net_cents ?? $prepaidSettlement->caregiver_gross_cents);
+        }
 
         if ($action === CareBookingCorrection::ACTION_REOPEN) {
-            $financiallySettled = $currentChargeCents > 0
+            $financiallySettled = $prepaidSettlement !== null || $currentChargeCents > 0
                 || ($payment && in_array($payment->status, [
                     CareBookingPayment::STATUS_CAPTURED,
                     CareBookingPayment::STATUS_TRANSFERRED,
@@ -450,6 +457,12 @@ class BookingCorrectionService
 
     private function reconcileFinancials(CareBookingCorrection $correction, CareBooking $booking): void
     {
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            $settlement = app(\App\Services\CareHours\PrepaidBookingSettlementService::class)->settle($booking);
+            if ((int) $settlement->amount_due_cents > 0) { throw new PaymentActionRequiredException('Confirm the additional visit payment to finish this correction.'); }
+            $correction->forceFill(['payout_applied_at' => $settlement->paid_at])->save();
+            return;
+        }
         $payment = $booking->payment;
         $isCaptured = $payment && in_array($payment->status, [
             CareBookingPayment::STATUS_CAPTURED,

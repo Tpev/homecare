@@ -8,15 +8,12 @@ use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Support\TicketsCenter;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
-use App\Models\CareReview;
 use App\Models\CareTask;
-use App\Models\CaregiverProfile;
-use App\Models\FunnelEvent;
 use App\Models\Language;
 use App\Models\Skill;
-use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -207,6 +204,7 @@ class CycleOneOperationsTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Experienced non-medical caregiver. ', 3),
+            'screening_initial_approved_at' => now(),
             'platform_hourly_rate' => 28,
             'years_experience' => 5,
             'service_area_zip' => '27601',

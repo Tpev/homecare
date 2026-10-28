@@ -72,6 +72,7 @@ class CaregiverOnboardingTest extends TestCase
                 && $mail->hasTo('hello@carelolo.com')
                 && $mail->user->email === 'caregiver@example.com';
         });
+        Mail::assertSent(UserRegisteredOpsAlertMail::class, 1);
     }
 
     public static function smsConsentChoices(): array

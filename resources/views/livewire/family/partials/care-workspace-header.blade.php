@@ -52,7 +52,7 @@
     <div class="hc-care-next-copy">
         <p class="hc-care-eyebrow">{{ $lifecycleStage['eyebrow'] }}</p>
         <h2 id="care-next-title">{{ $hasActiveTimeCorrection ? 'Review the updated visit hours' : $lifecycleStage['title'] }}</h2>
-        <p>{{ $hasActiveTimeCorrection ? 'A time correction is in progress. Its review and payment status are shown below.' : ($visitStageSummary ?: $lifecycleStage['body']) }}</p>
+        <p>{{ $hasActiveTimeCorrection ? 'A time correction is in progress. Its review and payment status are shown below.' : ($prepaidBookingSummary && $timesheetNeedsReview ? 'Check the worked time. Approving uses these care hours and moves caregiver payment forward.' : ($visitStageSummary ?: $lifecycleStage['body'])) }}</p>
         @if ($isRecurringVisit)<p class="hc-care-meta mt-2">Changes and approvals here apply to this dated visit. Your recurring schedule has its own controls.</p>@endif
     </div>
     <div class="flex flex-col gap-2 sm:items-start">
@@ -64,7 +64,11 @@
             <button type="button" wire:click="setActiveTab('applicants')" class="hc-primary-button">Review {{ $openCaregiverResponses }} caregiver{{ $openCaregiverResponses === 1 ? '' : 's' }}</button>
             <button type="button" wire:click="openCaregiverInvitePanel" class="hc-care-text-link">Invite someone else</button>
         @elseif ($timesheetNeedsReview)
+            @if($prepaidBookingSummary)
+            <p class="text-xl font-semibold">{{ $workedLabel }} <span class="mt-1 block text-sm font-medium text-[#485E53]">{{ \App\Models\CareHourAccount::formatMinutes($prepaidBookingSummary['approval_preview']['prepaid_minutes']) }} from care hours · ${{ number_format($prepaidBookingSummary['approval_preview']['card_cents'] / 100, 2) }} remaining</span></p>
+            @else
             <p class="hc-care-total">{{ $workedLabel }} <span>· ${{ number_format($estimatedPaymentTotal, 2) }}</span></p>
+            @endif
             <button type="button" wire:click="reviewCompletion" class="hc-primary-button">Review hours & payment</button>
         @elseif ($isLiveVisit)
             <button type="button" wire:click="reviewCompletion" class="hc-primary-button">The visit has ended</button>

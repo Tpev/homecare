@@ -78,6 +78,10 @@ class MarketplaceEvent
 
     public const PAYOUT_TRANSFER_FAILED = 'payout_transfer_failed';
 
+    public const CARE_HOURS_PAYMENT_ATTENTION = 'care_hours_payment_attention';
+
+    public const CARE_HOURS_VISIT_SETTLED = 'care_hours_visit_settled';
+
     public const CAREGIVER_WELCOME = 'caregiver_welcome';
 
     public const FAMILY_WELCOME = 'family_welcome';
@@ -229,6 +233,8 @@ class MarketplaceEvent
             self::PAYMENT_REFUNDED,
             self::PAYOUT_TRANSFERRED,
             self::PAYOUT_TRANSFER_FAILED,
+            self::CARE_HOURS_PAYMENT_ATTENTION,
+            self::CARE_HOURS_VISIT_SETTLED,
             self::CAREGIVER_WELCOME,
             self::FAMILY_WELCOME,
             self::CARE_PROFILE_UPDATED,

@@ -15,6 +15,8 @@ class SmsMessage extends Model
 
     public const STATUS_SENDING = 'sending';
 
+    public const STATUS_CONFIRMATION_PENDING = 'confirmation_pending';
+
     public const STATUS_QUEUED = 'queued';
 
     public const STATUS_SENT = 'sent';
@@ -62,6 +64,17 @@ class SmsMessage extends Model
     public function sentBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_by_user_id');
+    }
+
+    public function awaitingProviderConfirmation(): bool
+    {
+        return $this->direction === self::DIRECTION_OUTGOING && ! $this->twilio_sid
+            && in_array($this->status, [self::STATUS_SENDING, self::STATUS_CONFIRMATION_PENDING], true);
+    }
+
+    public function deliveryLabel(): string
+    {
+        return $this->awaitingProviderConfirmation() ? 'Awaiting confirmation' : ucfirst($this->status);
     }
 
     public function lead(): BelongsTo

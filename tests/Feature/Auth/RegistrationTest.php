@@ -76,6 +76,7 @@ class RegistrationTest extends TestCase
                 && ! $mail->hasTo('cpetrinipoli@hub.healthcare')
                 && $mail->user->email === 'test@example.com';
         });
+        Mail::assertSent(FamilyRegisteredOpsAlertMail::class, 1);
     }
 
     public static function smsConsentChoices(): array

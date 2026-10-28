@@ -9,6 +9,7 @@
                 <p class="mt-1 text-sm text-slate-600">Add a card once. We pre-authorize when you hire, then capture after you approve the visit.</p>
             </div>
             <div class="flex flex-col gap-2 sm:flex-row">
+                <x-care-hours-entry />
                 <a href="{{ route('family.care.history', ['payment' => 'charged']) }}" wire:navigate>
                     <x-button color="green" light class="w-full sm:w-auto">View payment history</x-button>
                 </a>

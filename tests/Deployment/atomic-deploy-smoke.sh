@@ -141,6 +141,11 @@ fi
 exit 0
 EOF
 
+cat > "$MOCK_BIN/sync" <<'EOF'
+#!/usr/bin/env bash
+[[ "${MOCK_FLOOR_SYNC_FAIL:-0}" != 1 ]]
+EOF
+
 cat > "$MOCK_BIN/sleep" <<'EOF'
 #!/usr/bin/env bash
 exit 0
@@ -163,6 +168,12 @@ set -Eeuo pipefail
 if [[ "${1##*/}" == check-screening-queue.php ]]; then
   printf 'queue-config-check %s\n' "$3" >> "$MOCK_EVENTS"
   [[ "$3" == 120 && "${MOCK_QUEUE_CONFIG_FAIL:-0}" != 1 ]]
+  exit
+fi
+if [[ "${1##*/}" == check-prepaid-release-config.php ]]; then
+  printf 'prepaid-config-check %s\n' "${3:-existing}" >> "$MOCK_EVENTS"
+  [[ "${MOCK_PREPAID_CONFIG_FAIL:-0}" != 1 ]]
+  [[ "${3:-}" != --match-sales-state || "${MOCK_PREPAID_ROLLBACK_CONFIG_FAIL:-0}" != 1 ]]
   exit
 fi
 if [[ "${1:-}" != "artisan" ]]; then
@@ -293,6 +304,7 @@ printf 'legacy compiled view\n' > "$APP_DIR/storage/framework/views/legacy-prese
 
 deploy() {
   HOMECARE_APP_DIR="$APP_DIR" \
+  HOMECARE_EXPECTED_COMMIT="${TEST_EXPECTED_COMMIT-$(git --git-dir="$ORIGIN_DIR" rev-parse "refs/heads/${HOMECARE_DEPLOY_BRANCH:-master}")}" \
   HOMECARE_DEPLOY_ROOT="$DEPLOY_ROOT" \
   HOMECARE_DEPLOY_USER="ignored" \
   HOMECARE_WEB_GROUP="ignored" \
@@ -449,7 +461,126 @@ if MOCK_HEALTH_FAIL=1 deploy > "$SANDBOX/screening-health-failure.log" 2>&1; the
 [[ ! -f "$MOCK_STATE/paused" ]]
 grep -q 'Rolling the application symlink back' "$SANDBOX/screening-health-failure.log"
 
+# First prepaid activation pins a permanent floor, even before any sale and with
+# no database polling. Exercise the actual driver with its full required inventory.
+prepaid_legacy_release="$(readlink -f "$APP_DIR")"
+prepaid_legacy_commit="$(git -C "$AUTHOR_DIR" rev-parse HEAD)"
+awk '/^prepaid_compatibility_files\(\)/ { reading=1; next } reading && /^EOF$/ { exit } reading && !/cat <<\x27EOF\x27/ { print }' \
+  "$DEPLOY_SCRIPT" > "$SANDBOX/prepaid-paths"
+while IFS= read -r path; do
+  [[ -n "$path" && "$path" != /* && "$path" != *..* ]] || exit 1
+  if [[ ! -f "$AUTHOR_DIR/$path" ]]; then
+    mkdir -p "$(dirname "$AUTHOR_DIR/$path")"
+    printf 'synthetic prepaid source: %s\n' "$path" > "$AUTHOR_DIR/$path"
+  fi
+done < "$SANDBOX/prepaid-paths"
+mkdir -p "$AUTHOR_DIR/docs/deployment"
+"$DEPLOY_SCRIPT" --prepaid-manifest "$AUTHOR_DIR" > "$AUTHOR_DIR/docs/deployment/prepaid-care-hours-v1.sha256"
+git -C "$AUTHOR_DIR" add .
+git -C "$AUTHOR_DIR" commit -m "First prepaid-compatible release" >/dev/null
+git -C "$AUTHOR_DIR" push origin master >/dev/null
+floor="$DEPLOY_ROOT/compatibility/prepaid-care-hours.floor"
+
+# An unpinned or moved branch must fail before migrations, pauses or activation.
+migrations_before="$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")"
+pauses_before="$(grep -c 'runtime pause' "$MOCK_EVENTS")"
+if TEST_EXPECTED_COMMIT='' deploy > "$SANDBOX/prepaid-unpinned.log" 2>&1; then exit 1; fi
+grep -q 'requires HOMECARE_EXPECTED_COMMIT' "$SANDBOX/prepaid-unpinned.log"
+if TEST_EXPECTED_COMMIT="$prepaid_legacy_commit" deploy > "$SANDBOX/prepaid-moved-branch.log" 2>&1; then exit 1; fi
+grep -q 'not reviewed commit' "$SANDBOX/prepaid-moved-branch.log"
+if TEST_EXPECTED_COMMIT=master deploy > "$SANDBOX/prepaid-invalid-pin.log" 2>&1; then exit 1; fi
+grep -q 'must be a full lowercase Git commit SHA' "$SANDBOX/prepaid-invalid-pin.log"
+[[ "$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")" == "$migrations_before" ]]
+[[ "$(grep -c 'runtime pause' "$MOCK_EVENTS")" == "$pauses_before" ]]
+[[ "$(readlink -f "$APP_DIR")" == "$prepaid_legacy_release" && ! -f "$floor" ]]
+
+# Cached enabled/malformed flags abort the first introduction before any drain,
+# traffic switch or compatibility floor. The PHP helper has separate real tests.
+if MOCK_PREPAID_CONFIG_FAIL=1 deploy > "$SANDBOX/prepaid-enabled-introduction.log" 2>&1; then exit 1; fi
+grep -q 'Prepaid cached configuration is unsafe' "$SANDBOX/prepaid-enabled-introduction.log"
+grep -q 'prepaid-config-check --require-disabled' "$MOCK_EVENTS"
+[[ "$(grep -c 'runtime pause' "$MOCK_EVENTS")" == "$pauses_before" ]]
+[[ "$(readlink -f "$APP_DIR")" == "$prepaid_legacy_release" && ! -f "$floor" ]]
+
+# A failed durable flush cannot switch releases; its conservative floor remains.
+if MOCK_FLOOR_SYNC_FAIL=1 deploy > "$SANDBOX/prepaid-before-switch.log" 2>&1; then exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" == "$prepaid_legacy_release" && -f "$floor" ]]
+grep -q 'cannot confirm durable floor persistence' "$SANDBOX/prepaid-before-switch.log"
+[[ ! -f "$MOCK_STATE/paused" ]]
+
+# A post-switch failure must keep first prepaid code, not select its incompatible
+# previous screening release. Existing screening recovery still resumes safely.
+if MOCK_HEALTH_FAIL=1 deploy > "$SANDBOX/prepaid-first-health-failure.log" 2>&1; then exit 1; fi
+first_prepaid_release="$(readlink -f "$APP_DIR")"
+[[ "$first_prepaid_release" != "$prepaid_legacy_release" ]]
+[[ "$(cat "$floor")" == homecare-prepaid-care-hours-v1 && ! -f "$MOCK_STATE/paused" ]]
+grep -q 'Refusing a pre-prepaid release' "$SANDBOX/prepaid-first-health-failure.log"
+if deploy --rollback > "$SANDBOX/prepaid-unsafe-manual.log" 2>&1; then exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" == "$first_prepaid_release" ]]
+grep -q 'Prepaid rollback compatibility check failed' "$SANDBOX/prepaid-unsafe-manual.log"
+
+# Forward deployment to an old branch is the same prohibited compatibility loss.
+git -C "$AUTHOR_DIR" branch pre-prepaid "$prepaid_legacy_commit"
+git -C "$AUTHOR_DIR" push origin pre-prepaid >/dev/null
+migrations_before="$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")"
+if HOMECARE_DEPLOY_BRANCH=pre-prepaid deploy > "$SANDBOX/prepaid-unsafe-forward.log" 2>&1; then exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" == "$first_prepaid_release" ]]
+[[ "$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")" == "$migrations_before" ]]
+grep -q 'Refusing a pre-prepaid release' "$SANDBOX/prepaid-unsafe-forward.log"
+
+# A missing floor is reconstructed from verified current code before refusing
+# an incompatible rollback. Unknown state is preserved and blocks a switch.
+rm -- "$floor"
+if deploy --rollback > "$SANDBOX/prepaid-recover-floor.log" 2>&1; then exit 1; fi
+[[ "$(cat "$floor")" == homecare-prepaid-care-hours-v1 ]]
+printf 'unknown-version\n' > "$floor"
+if deploy > "$SANDBOX/prepaid-unknown-floor.log" 2>&1; then exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" == "$first_prepaid_release" && "$(cat "$floor")" == unknown-version ]]
+printf 'homecare-prepaid-care-hours-v1\n' > "$floor"
+
+# Verified prepaid-to-prepaid deployment and rollback remain available, even if
+# the active handler has been damaged and needs repair from a retained release.
+if ! deploy > "$SANDBOX/prepaid-compatible.log" 2>&1; then cat "$SANDBOX/prepaid-compatible.log" >&2; exit 1; fi
+grep -q 'prepaid-config-check existing' "$MOCK_EVENTS"
+second_prepaid_release="$(readlink -f "$APP_DIR")"
+pauses_before="$(grep -c 'runtime pause' "$MOCK_EVENTS")"
+if MOCK_PREPAID_ROLLBACK_CONFIG_FAIL=1 deploy --rollback > "$SANDBOX/prepaid-rollback-flags.log" 2>&1; then exit 1; fi
+grep -q 'Prepaid rollback configuration check failed' "$SANDBOX/prepaid-rollback-flags.log"
+[[ "$(readlink -f "$APP_DIR")" == "$second_prepaid_release" ]]
+[[ "$(grep -c 'runtime pause' "$MOCK_EVENTS")" == "$pauses_before" ]]
+printf 'damaged handler\n' > "$second_prepaid_release/app/Services/CareHours/CareHourWebhookService.php"
+if ! deploy --rollback > "$SANDBOX/prepaid-repair-current.log" 2>&1; then cat "$SANDBOX/prepaid-repair-current.log" >&2; exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" == "$first_prepaid_release" ]]
+
+# A retained target with changed source cannot claim compatibility just because
+# its marker remains; this also catches a stale manifest on a partial deployment.
+if deploy --rollback > "$SANDBOX/prepaid-corrupt-target.log" 2>&1; then exit 1; fi
+grep -q 'required source is missing or changed' "$SANDBOX/prepaid-corrupt-target.log"
+[[ "$(readlink -f "$APP_DIR")" == "$first_prepaid_release" ]]
+
+cp "$first_prepaid_release/app/Services/CareHours/CareHourWebhookService.php" "$second_prepaid_release/app/Services/CareHours/CareHourWebhookService.php"
+rm -- "$second_prepaid_release/resources/views/care-hours/partials/messages.blade.php"
+if deploy --rollback > "$SANDBOX/prepaid-missing-claim-view.log" 2>&1; then exit 1; fi
+grep -q 'partials/messages.blade.php' "$SANDBOX/prepaid-missing-claim-view.log"
+cp "$first_prepaid_release/resources/views/care-hours/partials/messages.blade.php" "$second_prepaid_release/resources/views/care-hours/partials/messages.blade.php"
+rm -- "$second_prepaid_release/database/migrations/2026_10_21_000100_create_care_hour_gifts.php"
+if deploy --rollback > "$SANDBOX/prepaid-missing-migration.log" 2>&1; then exit 1; fi
+grep -q 'create_care_hour_gifts.php' "$SANDBOX/prepaid-missing-migration.log"
+
+# The permanent floor also allows a clean forward repair of damaged active code.
+printf 'damaged active recovery\n' > "$first_prepaid_release/app/Console/Commands/ReconcileCareHourBookings.php"
+if ! deploy > "$SANDBOX/prepaid-forward-repair.log" 2>&1; then cat "$SANDBOX/prepaid-forward-repair.log" >&2; exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" != "$first_prepaid_release" ]]
+
+# Automatic health-failure rollback must not resurrect stale sales settings.
+before_failed_deploy="$(readlink -f "$APP_DIR")"
+if MOCK_HEALTH_FAIL=1 MOCK_PREPAID_ROLLBACK_CONFIG_FAIL=1 deploy > "$SANDBOX/prepaid-auto-rollback-flags.log" 2>&1; then exit 1; fi
+[[ "$(readlink -f "$APP_DIR")" != "$before_failed_deploy" ]]
+grep -q 'Prepaid rollback configuration differs or cannot be verified' "$SANDBOX/prepaid-auto-rollback-flags.log"
+[[ ! -f "$MOCK_STATE/paused" ]]
+
 # Deployment must not run network backfill, enrollment or long dataset imports.
 ! grep -Eq 'artisan (screening:(import|refresh-datasets|sync)|.*refresh-identities)' "$MOCK_EVENTS"
+! grep -Eq 'artisan migrate:(rollback|reset|refresh)' "$MOCK_EVENTS"
 
 printf 'Atomic deployment smoke test passed.\n'

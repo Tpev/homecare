@@ -1,6 +1,7 @@
 <div class="hc-care-workspace mx-auto outline-none" data-ai-target="family.care_requests" tabindex="-1">
     @if($activeSharedCare)
         <div class="hc-page pb-10">
+            <x-care-hours-entry class="float-right" />
             @if($attentionCount > 0 || $otherUpcomingVisits->isNotEmpty())
                 <div class="flex flex-wrap gap-4 pt-5 text-sm text-[#647B52]">
                     @if($attentionCount > 0)<a href="#other-care-inbox" class="underline underline-offset-4">{{ $attentionCount }} other {{ Str::plural('update', $attentionCount) }} to review</a>@endif
@@ -49,7 +50,7 @@
         <h1 class="sr-only">Care</h1>
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-family-care-nav active="overview" />
-            <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
+            <div class="flex items-center gap-4 self-end"><x-care-hours-entry /><a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 shrink-0">Request new care</a></div>
         </div>
 
         <section id="care-actions" class="scroll-mt-28 rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">

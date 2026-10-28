@@ -10,6 +10,7 @@ use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
 use App\Models\CaregiverCertification;
 use App\Models\CaregiverCertificationType;
 use App\Models\CaregiverExperienceType;
+use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\Language;
@@ -372,6 +373,7 @@ class CaregiverCareBackgroundTest extends TestCase
         $this->actingAs($admin)
             ->get(route('caregiver.certifications.document', $credential))
             ->assertOk();
+        $this->verifyIdentity($profile);
         $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
@@ -402,6 +404,7 @@ class CaregiverCareBackgroundTest extends TestCase
             'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
         ]);
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->verifyIdentity($profile);
         $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
@@ -466,6 +469,7 @@ class CaregiverCareBackgroundTest extends TestCase
             'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
         ]);
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->verifyIdentity($profile);
         $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
         Livewire::actingAs($admin)
@@ -667,6 +671,22 @@ class CaregiverCareBackgroundTest extends TestCase
         $this->assertDatabaseMissing('caregiver_certifications', [
             'caregiver_profile_id' => $profile->id,
             'caregiver_certification_type_id' => $type->id,
+        ]);
+    }
+
+    private function verifyIdentity(CaregiverProfile $profile): void
+    {
+        CaregiverIdentityVerification::create([
+            'caregiver_profile_id' => $profile->id,
+            'user_id' => $profile->user_id,
+            'didit_session_id' => 'verified-background-review-'.$profile->id,
+            'status' => 'approved',
+            'approved_at' => now(),
+            'provider_confirmed_at' => now(),
+            'provider_decision_payload' => ['status' => 'Approved', 'decision' => [
+                'id_verifications' => [['status' => 'Approved', 'first_name' => 'Alex', 'last_name' => 'Example',
+                    'full_name' => 'Alex Example', 'date_of_birth' => '1980-01-01']],
+            ]],
         ]);
     }
 

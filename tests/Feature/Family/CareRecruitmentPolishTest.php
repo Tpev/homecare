@@ -337,15 +337,28 @@ class CareRecruitmentPolishTest extends TestCase
     }
 
     #[DataProvider('historicalApplications')]
-    public function test_historical_applications_can_still_be_reconsidered_and_hired(string $status, string $type): void
+    public function test_historical_applications_allow_reconsideration_except_after_caregiver_withdrawal(string $status, string $type): void
     {
         [$family, $request] = $this->requestFixture($type);
         $caregiver = $this->readyCaregiver('Jamie Historical');
         $application = $this->application($request, $caregiver, $status);
 
         $component = Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->call('setApplicantView', 'past')
-            ->assertSee('Reconsider')
+            ->call('setApplicantView', 'past');
+
+        if ($status === CareRequestApplication::STATUS_WITHDRAWN) {
+            $component->assertDontSee('Reconsider')
+                ->call('reviewHire', $application->id)
+                ->assertHasErrors(['hire'])
+                ->assertSet('reviewingApplicationId', null);
+            $this->assertSame($status, $application->fresh()->status);
+            $this->assertSame(CareRequest::STATUS_OPEN, $request->fresh()->status);
+            $this->assertDatabaseCount('care_bookings', 0);
+
+            return;
+        }
+
+        $component->assertSee('Reconsider')
             ->call('reviewHire', $application->id)
             ->assertSet('reviewingApplicationId', $application->id);
         $this->assertSame($status, $application->fresh()->status);
@@ -423,7 +436,7 @@ class CareRecruitmentPolishTest extends TestCase
             CareRequest::STATUS_DRAFT => 'This request is a draft',
             CareRequest::STATUS_FILLED => 'Caregiver selected. Visit setup is pending.',
             CareRequest::STATUS_CANCELLED => 'This request is closed',
-            CareRequest::STATUS_EXPIRED => 'This request is closed',
+            CareRequest::STATUS_EXPIRED => 'Expired — service date passed',
         ] as $status => $heading) {
             auth()->logout();
             [$family, $request] = $this->requestFixture();
@@ -528,6 +541,7 @@ class CareRecruitmentPolishTest extends TestCase
             'user_id' => $caregiver->id,
             'slug' => str($name)->slug().'-'.$caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => 'Experienced caregiver offering companionship and everyday non-medical help.',
             'platform_hourly_rate' => 30,
             'years_experience' => 5,

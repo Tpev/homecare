@@ -4,7 +4,7 @@ Status: Current production deployment procedure
 
 Owner: Engineering
 
-Last updated: October 13, 2026
+Last updated: October 22, 2026
 
 ## Outcome
 
@@ -46,10 +46,13 @@ The first rollout follows this order: build and additive migrations while old co
     <release>/bootstrap/cache/views/  compiled Blade views for that release
   shared/.env           production environment file
   shared/storage -> ... durable uploads, logs, sessions, and framework state
+  compatibility/prepaid-care-hours.floor  permanent minimum prepaid contract
   previous -> ...       immediately preceding release
 ```
 
 The deployment keeps at least five recent releases. It never deletes the active release, the previous release, or a directory containing non-symlinked durable storage.
+
+The deployment root uses `0755`, and its operator-owned `compatibility` directory uses `0750`. The permanent prepaid floor is outside web-writable shared application storage. Back it up and restore it together with the deployment metadata and database. Do not remove it when pruning releases or restoring application files.
 
 Compiled Blade views are stored separately for each release. During `config:cache`, the script sets `VIEW_COMPILED_PATH` to that release's `bootstrap/cache/views` directory; Laravel saves the absolute path in its configuration cache. Subsequent web requests and Artisan commands use that cached path without changing the shared `.env`. Directory ownership and permissions follow the existing `bootstrap/cache` rules so PHP-FPM workers can compile views when needed.
 
@@ -95,26 +98,38 @@ The first run:
 
 The final `cd` is needed only because the shell that launched the first deployment still has the original directory as its working directory after the atomic exchange.
 
+### First prepaid deployment
+
+The prepaid feature and its manifest are still local, uncommitted work. The deployment fetches Git; it cannot deploy these working-tree files. First review and commit the complete feature, all six additive migrations (including request funding preferences), the matching manifest and the updated driver, then push that release. Deployment and feature enablement remain separately authorized operations.
+
+Use the updated driver from that exact reviewed revision for the first prepaid deployment. An older already-running `deploy.sh` does not acquire the new checks when it fetches new application code. Use the existing Git-delivery procedure above to obtain only the reviewed driver: restore `deploy.sh` from the full reviewed commit rather than an unpinned branch name, or use the matching Git-extracted driver prepared by the screening procedure. Do not pull the whole feature into the live checkout. The selected deployment branch must still point to the reviewed commit when the driver fetches it.
+
+Set `HOMECARE_EXPECTED_COMMIT` to that full lowercase commit SHA when invoking the reviewed driver. A missing pin on a prepaid candidate, malformed SHA, or changed branch tip aborts before dependencies, migrations or runtime drains. The pin selects no alternate revision: a moved branch must be reviewed again or restored through the normal release process.
+
+The first prepaid candidate must have `care_hours.enabled=false` and `care_hours.gifts_enabled=false` in its newly warmed configuration cache. The driver checks that cache and refuses activation if either flag is enabled or missing/malformed. It does not rewrite the shared `.env` or silently turn features off. This disabled introduction still applies the additive migrations and pins the permanent compatibility floor before switching code. Prepare the compatible recovery procedure described below before deployment.
+
 ## Normal deployment
 
-Once a release containing the new deployment driver is active, every later deployment is one command:
+Once the reviewed driver is installed, prepaid deployments require the full SHA of the reviewed, pushed release:
 
 ```bash
 cd /var/www/homecare
-./deploy.sh
+HOMECARE_EXPECTED_COMMIT='<full lowercase SHA of the reviewed pushed release>' ./deploy.sh
 ```
+
+Legacy releases without prepaid support may omit the pin. Normal subsequent prepaid deployments validate the cached flags as booleans and preserve the values loaded from the shared `.env`; they do not reset an already authorized launch to disabled. Keep the driver current through the reviewed Git-delivery procedure whenever it changes. No command here authorizes production access or activation.
 
 The script performs these operations in order:
 
 1. acquires an exclusive deployment lock;
-2. fetches the latest `master` commit into the local mirror;
-3. creates a new inactive release;
+2. fetches the selected branch (default `master`) into the local mirror and verifies the expected commit;
+3. creates a new inactive release and verifies its prepaid source contract and required commit pin;
 4. links the protected `.env` and durable storage;
 5. installs production Composer and npm dependencies;
 6. builds frontend, hosted Content MCP, and voice-agent artifacts;
 7. retains the previous hashed frontend assets for in-flight browser requests;
 8. runs database migrations and photo generation while the old release remains live;
-9. builds Laravel configuration, route, and view caches inside the inactive release, with a release-specific compiled-view path;
+9. builds Laravel configuration, route, and view caches inside the inactive release, with a release-specific compiled-view path, and checks prepaid flags in the warmed configuration before activation;
 10. validates Laravel routes, migration state, the Vite manifest, the voice binary, and Nginx configuration;
 11. drains configured scheduler/queue workers and atomically changes the active symlink, including the first-screening reconciliation and activation when needed;
 12. starts/reloads PHP-FPM, resumes verified workers and scheduler, restarts the voice agent, and restarts the Content MCP when its additive systemd unit is installed;
@@ -139,9 +154,38 @@ Return to the immediately preceding application release:
 
 Rollback atomically changes the symlink, gracefully reloads PHP-FPM, restarts the runtime workers, and repeats application/voice health checks plus the optional Content MCP check. It intentionally does **not** reverse database migrations.
 
+For prepaid releases, manual and automatic rollback also require the retained target's six cached prepaid switches to match the currently active cached values: `enabled`, `enrollment_enabled`, `sales_enabled`, `contributions_enabled`, `gifts_enabled` and `welcome_enabled`. A rollback must not reopen paused sales or change an authorized promotion. The check refuses missing, malformed or different values before switching; it rewrites neither cache nor the shared `.env`. If the active cache is damaged or the retained release has different settings, use a reviewed forward release built from the intended shared configuration instead of bypassing the check. Normal forward deployment remains available for this repair.
+
 If a failure happens before the switch, the prior release remains selected and paused services are restored where safe. Failure recovery runs on nonzero exit and INT/TERM, inspects the actual symlink target, and retains failed releases for inspection. If a failure happens after switching, the script drains and returns to a compatible prior release.
 
 **After first screening activation, rollback to pre-screening code is prohibited**, including automatic rollback after a failed health check. That code would bypass new access controls and cannot consume screening jobs. The new release stays selected for repair or a screening-compatible replacement. If the activation command fails after possibly committing, recovery rechecks the durable DB state. An unknown/pending boundary keeps PHP-FPM and background writers paused; fix the database/application error and rerun `deploy.sh` to recover. Do not manually start old code, delete the hook's saved state, reverse migrations or discard audit files. SIGKILL, host failure and reboot cannot be recovered by shell traps; inspect release, DB boundary and persistent hook state before restarting services.
+
+### Permanent prepaid compatibility floor
+
+Before activating the first prepaid-compatible release, the driver atomically records and flushes `compatibility/prepaid-care-hours.floor` with contract `homecare-prepaid-care-hours-v1`. This is deliberately more conservative than counting purchases: **pre-prepaid rollback is prohibited even with sales disabled and before the first sale**. Sampling the database cannot prove that no in-flight payment, webhook, gift claim, reserved hours or payout will create an obligation after the check. The floor does not depend on a feature switch, database availability, current balances, or a later refund.
+
+Manual rollback, automatic failure recovery and forward deployment to an older branch all require a verified compatible target once the floor is pinned. A failed health check on the first prepaid release therefore retains that release for repair; it cannot return to the preceding pre-prepaid release. A failure to flush the floor aborts before the switch, leaves the old release selected, and retains any recorded floor. The next attempt must use compatible code. Prepare and review a prepaid-compatible recovery release or a forward repair procedure **before** the first prepaid deployment. A zero-downtime or automatic return to pre-prepaid code is not promised for this boundary.
+
+The checked-in `docs/deployment/prepaid-care-hours-v1.sha256` contains the fixed inventory and fingerprints of required handlers, payment/ledger/claim/dispute services, models, all six prepaid migrations plus the pricing-agreement dependency, recovery commands, scheduler and HTTP routes, gift authentication and rendering dependencies, and the shared family/admin/booking/regular-care integrations. The driver validates paths, version, inventory and normalized text hashes without booting Laravel or querying the database. A marker alone does not establish compatibility. Missing, changed or partial target sources fail before migrations or runtime drains. The screening checks remain cumulative: satisfying the prepaid contract never bypasses a screening activation restriction.
+
+A missing floor can be reconstructed from an independently verified active prepaid release. With an intact v1 floor, a damaged active source file does not prevent switching to an independently verified v1 repair. Unknown floor contents, unsafe state paths, or a newer/unknown declared contract fail closed; the v1 driver does not guess compatibility. There is no bypass or floor-reset flag. The driver never reverses database migrations, deletes ledger history, clears holds, or changes feature switches.
+
+These checks protect the supported deployment path, not arbitrary root or operator actions. Do not invoke an older deployment driver, manually retarget the application symlink, restore only an old code tree while discarding the floor, or edit a manifest merely to make an incompatible target pass. Those actions bypass the safety boundary. A future contract version requires an explicitly reviewed driver and migration/recovery plan. Source hashes establish reviewed package integrity, not a proof of business semantics; changes still need their normal tests and review.
+
+#### Local manifest maintenance
+
+The current validation work is local only. The user has explicitly prohibited assistant SSH or production-server access; this document does not authorize such access or request an operator-run server check. Production deployment, filesystem durability, service permissions and server state were not verified by these tests.
+
+After intentionally changing a listed source, review its prepaid compatibility and tests, then refresh the manifest explicitly in the **local source checkout**. The deployment never generates or repairs a candidate's manifest automatically. This command does not contact any server, boot the application, query a database or change feature switches:
+
+```bash
+bash deploy.sh --prepaid-manifest "$PWD" > docs/deployment/prepaid-care-hours-v1.sha256.next &&
+  mv docs/deployment/prepaid-care-hours-v1.sha256.next docs/deployment/prepaid-care-hours-v1.sha256
+bash deploy.sh --check-prepaid-release "$PWD"
+git diff -- docs/deployment/prepaid-care-hours-v1.sha256
+```
+
+Commit the reviewed manifest with the matching code and driver. Text fingerprints normalize CRLF to LF for Windows/Linux checkouts. If adding a required dependency, extend the explicit inventory in `prepaid_compatibility_files`, refresh the manifest, and run the deployment smoke tests. A deployment-root filesystem must support atomic rename and `sync -f`; failure aborts activation. The offline Windows harness mocks that durability call and does not establish Linux filesystem or permission behavior.
 
 ## Required migration rule
 
@@ -161,13 +205,21 @@ The voice agent and hosted Content MCP are still restarted after the application
 
 ## Configuration
 
-Defaults match the current production host. Operators may override them with scoped environment variables such as `HOMECARE_KEEP_RELEASES`, `HOMECARE_FPM_SERVICE`, or `HOMECARE_GO_BIN`. Do not repurpose system environment variables or put secrets in the script; production secrets remain only in the shared `.env`.
+Defaults reflect the previously documented production host; this local audit has not verified its current state. Operators may override them with scoped environment variables such as `HOMECARE_KEEP_RELEASES`, `HOMECARE_FPM_SERVICE`, or `HOMECARE_GO_BIN`. Do not repurpose system environment variables or put secrets in the script; production secrets remain only in the shared `.env`.
 
 ## Offline deployment regression check
 
 `bash tests/Deployment/screening-git-delivery-smoke.sh` verifies the check/setup modes against a temporary Git repository with mocked elevation. It checks pinned revisions, matching deployment drivers, private Git staging, argument handling, and refusal paths. No server setup or application deployment is performed by the local test.
 
 `bash tests/Deployment/atomic-deploy-smoke.sh` uses temporary repositories and mocked PHP, npm, Composer, Go, service and health commands. It checks atomic conversion, release-local views, durable sessions/evidence, normal rollback, missing runtime configuration, partial drains, interrupted/failed preparation, uncertain activation, recovery retries, blocked old-code rollback and compatible rollback. It asserts that deployment never invokes imports or Didit backfill. On Windows, directory junctions model directory links and the immutable test `.env` is copied; Unix permission assertions run on Linux only. The real Linux `renameat2` call, systemd services and production account permissions are not exercised by this offline harness.
+
+The same harness exercises first prepaid activation with a failed durable flush and failed health check, incompatible manual rollback and forward deployment, missing/unknown floor state, compatible repair of damaged active handlers, and rejection of missing handler, claim-view and migration dependencies. It also checks missing/invalid/moved commit pins, rejection of unsafe first-introduction cached settings before drains, and refusal of manual/automatic rollback when cached switches differ. Its original legacy-only and screening cases remain in the suite. `bash tests/Deployment/prepaid-rollback-state-smoke.sh` isolates floor/contract failures, safe repairs and cumulative screening decisions using small synthetic files. Neither test deploys an application, accesses production, or runs real migrations, payments or service commands.
+
+`php tests/Deployment/prepaid-release-config-smoke.php` tests the actual cached-config helper, including missing/unreadable/malformed caches, strict boolean flags, disabled first adoption, all six rollback switches and sanitized error output. It does not boot Laravel or contact a database/provider.
+
+`php tests/Deployment/prepaid-laravel-warmup-smoke.php` runs real package discovery, fresh SQLite migrations, config/route/view caches, route/command/scheduler discovery and the read-only health command in a disposable `tmp/` environment. It verifies default master/gift flags remain disabled, checks hashes of the main environment/database/bootstrap caches, and disables PHP network functions for the child processes. It uses installed local dependencies; it does not certify a fresh production Composer installation, MySQL behavior, real Linux service control or current production configuration.
+
+`bash tests/Deployment/prepaid-manifest-smoke.sh` copies the current required sources into a disposable local directory, verifies the real checked-in manifest, and proves that a missing shared booking writer, either admin cancellation writer, the shortfall dispute handler, a changed gift-claim handler or an unexpected manifest entry cannot pass the contract. It uses the complete current inventory rather than the small state-machine fixture.
 
 `bash tests/Deployment/screening-runtime-hook-smoke.sh` separately tests the example hook with mock services and a fake cgroup tree. Application tests under `tests/Feature/Screening/ScreeningRolloutTest.php` use an isolated SQLite database to test legacy reconciliation, retries and permanent activation closure.
 

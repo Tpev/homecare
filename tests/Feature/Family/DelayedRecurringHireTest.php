@@ -170,7 +170,8 @@ class DelayedRecurringHireTest extends TestCase
     {
         $family = User::factory()->create(['role' => 'family']);
         $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Invited Caregiver']);
-        CaregiverProfile::create(['user_id' => $caregiver->id, 'status' => 'active', 'platform_hourly_rate' => 30]);
+        CaregiverProfile::create(['user_id' => $caregiver->id, 'status' => 'active', 'platform_hourly_rate' => 30,
+            'screening_initial_approved_at' => now()]);
         $request = CareRequest::create([
             'family_user_id' => $family->id, 'title' => 'Recurring companionship',
             'request_type' => CareRequest::TYPE_RECURRING, 'status' => CareRequest::STATUS_OPEN, 'is_private' => true,

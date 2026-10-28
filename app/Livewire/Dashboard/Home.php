@@ -219,6 +219,19 @@ class Home extends Component
 
             $familyData['regular_care_sources'] = app(FamilyRebookingOptions::class)->forUser($user, 3);
 
+            $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+            $familyData['care_hour_readiness'] = $familyData['active_shifts']->map(fn ($request) => $request->booking)
+                ->merge($familyData['regular_care_plans']->map(fn ($plan) => $plan->nextBooking))
+                ->filter()->unique('id')->mapWithKeys(function (CareBooking $booking) use ($careHours) {
+                    $funding = $careHours->forBooking($booking);
+                    if (! $funding) {
+                        return [];
+                    }
+                    $readiness = $careHours->readiness($booking);
+
+                    return [$booking->id => $readiness + ['needs_action' => $funding->status !== 'selected' && ! $readiness['ready']]];
+                });
+
             $familyData['action_items'] = app(FamilyActionInboxBuilder::class)->buildForAccount($familyAccount);
 
             $familyData['notification_digest'] = $this->notificationDigestForRole($user, 'family');

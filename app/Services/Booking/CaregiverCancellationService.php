@@ -67,6 +67,8 @@ class CaregiverCancellationService
                 && (int) $application->caregiver_user_id === (int) $booking->caregiver_user_id
                 && $application->status === CareRequestApplication::STATUS_HIRED, 'The hired caregiver has changed. Refresh this visit.');
 
+            $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+            if ($careHours->isPrepaid($booking)) { $careHours->release($booking); }
             $payment = $booking->payment()->lockForUpdate()->first();
             if ($payment) {
                 $this->ensure((int) $payment->family_user_id === (int) $booking->family_user_id

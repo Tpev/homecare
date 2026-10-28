@@ -926,6 +926,83 @@ class StripeClient
         ];
     }
 
+    /** A package charge can fund many bookings; inherit its group instead of assigning a booking group. */
+    public function createPrepaidTransferForCharge(
+        string $destinationAccountId,
+        string $sourceChargeId,
+        int $amountCents,
+        string $currency,
+        array $metadata,
+        string $idempotencyKey,
+    ): array {
+        if ($amountCents <= 0 || $sourceChargeId === '' || ($metadata['care_hour_domain'] ?? '') !== 'transfer') {
+            throw new PaymentException('Prepaid transfer source and amount must be valid.');
+        }
+        if ($this->isBypass()) {
+            return ['id' => 'tr_bypass_'.substr(hash('sha256', $idempotencyKey), 0, 18), 'status' => 'paid',
+                'amount' => $amountCents, 'source_transaction' => $sourceChargeId];
+        }
+        try {
+            $transfer = $this->client()->transfers->create([
+                'amount' => $amountCents, 'currency' => $currency, 'destination' => $destinationAccountId,
+                'source_transaction' => $sourceChargeId, 'metadata' => $metadata,
+            ], $this->requestOptions($idempotencyKey));
+        } catch (Throwable $exception) {
+            throw new PaymentException('Unable to transfer prepaid caregiver earnings right now.', $exception->getMessage());
+        }
+
+        return ['id' => (string) $transfer->id, 'status' => (string) ($transfer->status ?? 'pending'),
+            'amount' => (int) $transfer->amount, 'source_transaction' => (string) $transfer->source_transaction];
+    }
+
+    /** Prepaid-only recovery: locate the original transfer without creating a replacement. */
+    public function findPrepaidTransfer(?string $transferId, string $operationId, string $destination, int $createdAfter): ?array
+    {
+        if ($this->isBypass()) {
+            return null;
+        }
+        $transfer = null;
+        if ($transferId) {
+            $transfer = $this->client()->transfers->retrieve($transferId, [])->toArray();
+        } else {
+            foreach ($this->client()->transfers->all(['destination' => $destination, 'created' => ['gte' => max(0, $createdAfter)], 'limit' => 100])->autoPagingIterator() as $candidate) {
+                if (($candidate->metadata['care_hour_domain'] ?? '') === 'transfer'
+                    && ($candidate->metadata['care_hour_operation_id'] ?? '') === $operationId) {
+                    $transfer = $candidate->toArray();
+                    break;
+                }
+            }
+        }
+        if ($transfer && data_get($transfer, 'reversals.has_more', false)) {
+            $reversals = [];
+            foreach ($this->client()->transfers->allReversals($transfer['id'], ['limit' => 100])->autoPagingIterator() as $reversal) {
+                $reversals[] = $reversal->toArray();
+            }
+            $transfer['reversals'] = ['data' => $reversals, 'has_more' => false];
+        }
+
+        return $transfer;
+    }
+
+    /** Prepaid-only recovery of a reversal whose response or webhook may have been lost. */
+    public function findPrepaidTransferReversal(string $transferId, string $operationId, ?string $reversalId = null): ?array
+    {
+        if ($this->isBypass()) {
+            return null;
+        }
+        if ($reversalId) {
+            return $this->client()->transfers->retrieveReversal($transferId, $reversalId, [])->toArray();
+        }
+        foreach ($this->client()->transfers->allReversals($transferId, ['limit' => 100])->autoPagingIterator() as $reversal) {
+            if (($reversal->metadata['care_hour_domain'] ?? '') === 'transfer'
+                && ($reversal->metadata['care_hour_operation_id'] ?? '') === $operationId) {
+                return $reversal->toArray();
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @param  array<string,string>  $metadata
      * @return array{id:string,status:string,amount_received:int,latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized?:bool}
@@ -1144,6 +1221,116 @@ class StripeClient
             'status' => (string) $intent->status,
             'amount_received' => (int) ($intent->amount_received ?? 0),
         ], $this->financialDetailsFromPaymentIntent($intent));
+    }
+
+    /** Complete refund history for prepaid care, without changing legacy card accounting. */
+    public function retrieveCareHourPaymentFinancials(string $paymentIntentId, int $fallbackAmountCents = 0): array
+    {
+        if ($this->isBypass()) {
+            return $this->retrievePaymentIntentFinancials($paymentIntentId, $fallbackAmountCents);
+        }
+
+        try {
+            $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
+                'expand' => ['latest_charge.balance_transaction', 'latest_charge.refunds.data.balance_transaction',
+                    'latest_charge.refunds.data.failure_balance_transaction'],
+            ]);
+            $payload = $intent->toArray();
+            $charge = $payload['latest_charge'] ?? null;
+            $refunds = [];
+            if (is_array($charge)) {
+                $refunds = (array) data_get($charge, 'refunds.data', []);
+                if ((bool) data_get($charge, 'refunds.has_more', false)) {
+                    $refunds = [];
+                    foreach ($this->client()->refunds->all([
+                        'charge' => $charge['id'], 'limit' => 100,
+                        'expand' => ['data.balance_transaction', 'data.failure_balance_transaction'],
+                    ])->autoPagingIterator() as $refund) {
+                        $refunds[] = $refund->toArray();
+                    }
+                }
+                // Terminal attempts without a balance transaction moved no funds or fees.
+                $refunds = array_values(array_filter($refunds, static fn (array $refund): bool => ! (in_array($refund['status'] ?? '', ['failed', 'canceled'], true)
+                        && empty($refund['balance_transaction']) && empty($refund['failure_balance_transaction']))));
+                $payload['latest_charge']['refunds'] = ['has_more' => false, 'data' => $refunds];
+                $intent = PaymentIntent::constructFrom($payload);
+            }
+        } catch (Throwable $e) {
+            throw new PaymentException('Unable to finalize care-hour processing fees right now.', $e->getMessage());
+        }
+
+        $financials = $this->financialDetailsFromPaymentIntent($intent);
+        $chargeFee = data_get($charge, 'balance_transaction.fee');
+        if (is_numeric($chargeFee)) {
+            $retainedFee = (int) $chargeFee;
+            foreach ($refunds as $refund) {
+                $transaction = $refund['balance_transaction'] ?? null;
+                if (! is_array($transaction) || ! is_numeric($transaction['fee'] ?? null)
+                    || ! in_array($transaction['reporting_category'] ?? '', ['partial_capture_reversal', 'refund'], true)) {
+                    $financials['fee_finalized'] = false;
+
+                    continue;
+                }
+                $refundFee = (int) $transaction['fee'];
+                if (in_array($refund['status'] ?? '', ['failed', 'canceled'], true)) {
+                    $failure = $refund['failure_balance_transaction'] ?? null;
+                    if (! is_array($failure) || ! is_numeric($failure['fee'] ?? null)
+                        || empty($failure['id']) || empty($failure['reporting_category'])) {
+                        $financials['fee_finalized'] = false;
+
+                        continue;
+                    }
+                    // A failed refund can reverse a previously returned processing fee.
+                    $refundFee += (int) $failure['fee'];
+                    $financials['processing_fee_components'][] = [
+                        'balance_transaction_id' => (string) $failure['id'],
+                        'reporting_category' => (string) $failure['reporting_category'],
+                        'fee_cents' => (int) $failure['fee'],
+                    ];
+                } elseif (in_array($refund['status'] ?? '', ['pending', 'requires_action'], true)) {
+                    $financials['fee_finalized'] = false;
+                }
+                // Recover payment-processing fees net of actual returns, never extra refund costs.
+                $retainedFee += min(0, $refundFee);
+            }
+            $financials['processing_fee_cents'] = max(0, $retainedFee);
+        } else {
+            // A refund credit alone cannot establish the original payment-processing fee.
+            $financials['fee_finalized'] = false;
+        }
+
+        // A charge's raw amount_refunded includes the automatic release after a partial
+        // capture. Classify complete provider refund history before reporting cash refunds.
+        $cashRefunded = 0;
+        $authorizationReleased = 0;
+        $refundsFinalized = is_array($charge) && isset($charge['amount_refunded']);
+        foreach ($refunds as $refund) {
+            if (in_array($refund['status'] ?? '', ['failed', 'canceled'], true)) {
+                continue;
+            }
+            $category = data_get($refund, 'balance_transaction.reporting_category');
+            if (($refund['status'] ?? '') !== 'succeeded' || ! isset($refund['amount'])
+                || ! in_array($category, ['partial_capture_reversal', 'refund'], true)) {
+                $refundsFinalized = false;
+
+                continue;
+            }
+            if ($category === 'partial_capture_reversal') {
+                $authorizationReleased += (int) $refund['amount'];
+            } else {
+                $cashRefunded += (int) $refund['amount'];
+            }
+        }
+        $refundsFinalized = $refundsFinalized && $cashRefunded + $authorizationReleased === (int) ($charge['amount_refunded'] ?? -1);
+        $financials['cash_refunded_cents'] = $refundsFinalized ? $cashRefunded : null;
+        $financials['authorization_released_cents'] = $refundsFinalized ? $authorizationReleased : null;
+        $financials['refund_financials_finalized'] = $refundsFinalized;
+
+        return array_merge([
+            'id' => (string) $intent->id,
+            'status' => (string) $intent->status,
+            'amount_received' => (int) ($intent->amount_received ?? 0),
+        ], $financials);
     }
 
     /**

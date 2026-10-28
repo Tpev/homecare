@@ -716,13 +716,22 @@ class ApplyToCareRequest extends Component
             'disputeReason' => ['required', 'string', 'min:12', 'max:3000'],
         ]);
 
-        $booking->update([
+        $payload = [
             'status' => CareBooking::STATUS_DISPUTED,
             'dispute_opened_at' => now(),
             'dispute_opened_by_user_id' => auth()->id(),
             'dispute_reason' => trim($this->disputeReason),
             'dispute_status' => 'open',
-        ]);
+        ];
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            if (! app(\App\Services\CareHours\PrepaidBookingSettlementService::class)->updateVisitState(
+                $booking, $payload, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED],
+            )) {
+                return;
+            }
+        } else {
+            $booking->update($payload);
+        }
 
         SupportTicket::query()->create([
             'opener_user_id' => auth()->id(),
@@ -1012,6 +1021,10 @@ class ApplyToCareRequest extends Component
                     'last_reschedule_reason' => $changeRequest->reason,
                 ]);
                 FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
+                $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+                if ($careHours->isPrepaid($booking)) {
+                    $careHours->protectScheduleChange($booking);
+                }
             }
 
         });

@@ -4,6 +4,10 @@ Chat messages and human support replies for families/caregivers appear in-app im
 
 Invitation-sent, application-submitted, and hire-confirmed acknowledgements are in-app only, including for accounts with older enabled email preferences. Notifications to the other party and payment-action emails keep their existing behavior.
 
+Delivery preferences are personal and apply separately to each notification type. Turning off Email and saving prevents that type from being emailed, including pending message emails and notifications already queued when the preference changes. Customer email opt-outs cannot be bypassed by channel overrides; administrator operational alerts retain their explicit overrides. Preferences are checked again immediately before sending. Emails already accepted by the mail provider cannot be recalled.
+
+Account access emails (password resets, verification, and family invitations) and care-hour buyer emails (receipts, payment attention, and corrections) use separate delivery paths and are not controlled by notification preferences.
+
 Reading a conversation clears its related notifications and cancels pending email for that reader. Shared family members retain independent read state. Home and notification-center visits also reconcile older alerts against existing conversation read timestamps. Dashboard update links mark the selected alert read before opening its destination. The navigation badge refreshes when in-app alerts are read.
 
 Operations new-request emails exclude `is_system_generated` records, including recurring and Continuous Coverage visits.

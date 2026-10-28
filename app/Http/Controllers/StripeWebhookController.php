@@ -81,6 +81,12 @@ class StripeWebhookController extends Controller
         }
 
         try {
+            // Prepaid objects have their own durable owners; legacy booking/setup events keep their existing handlers.
+            if (app(\App\Services\CareHours\CareHourWebhookService::class)->handle($type, $object, (bool) ($event->livemode ?? false), $event->account ?? null)) {
+                $inbox->forceFill(['status' => StripeWebhookEvent::STATUS_PROCESSED, 'processed_at' => now(), 'last_error' => null])->save();
+
+                return response()->json(['ok' => true]);
+            }
             if (in_array($type, [
                 'payment_intent.amount_capturable_updated',
                 'payment_intent.succeeded',
@@ -131,7 +137,9 @@ class StripeWebhookController extends Controller
                 'last_error' => null,
             ])->save();
         } catch (Throwable $e) {
-            $inbox->forceFill([
+            // The locking claim updates a separate model. On repeated failures this stale
+            // instance already says "failed", so refresh before persisting the next failure.
+            $inbox->refresh()->forceFill([
                 'status' => StripeWebhookEvent::STATUS_FAILED,
                 'last_error' => $e->getMessage(),
             ])->save();

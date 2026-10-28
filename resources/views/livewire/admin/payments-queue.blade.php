@@ -10,7 +10,7 @@
                     <h1 class="text-xl font-semibold">Payment Operations</h1>
                     <p class="mt-1 text-sm text-slate-600">Review authorization, capture, transfer, and refund states.</p>
                 </div>
-                <div class="text-xs text-slate-500">Rows: {{ $payments->total() }}</div>
+                <div class="flex items-center gap-4"><a href="{{ route('admin.care-hours.index') }}" class="text-sm font-semibold underline">Care hours</a><span class="text-xs text-slate-500">Rows: {{ $payments->total() }}</span></div>
             </div>
         </x-slot:header>
 

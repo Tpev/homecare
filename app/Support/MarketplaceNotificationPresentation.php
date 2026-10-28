@@ -35,6 +35,8 @@ final class MarketplaceNotificationPresentation
                 MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
                 MarketplaceEvent::PAYMENT_CAPTURED,
                 MarketplaceEvent::PAYMENT_REFUNDED,
+                MarketplaceEvent::CARE_HOURS_PAYMENT_ATTENTION,
+                MarketplaceEvent::CARE_HOURS_VISIT_SETTLED,
                 MarketplaceEvent::REGULAR_CARE_ACCEPTED,
                 MarketplaceEvent::REGULAR_CARE_COUNTERED,
                 MarketplaceEvent::REGULAR_CARE_DECLINED,
@@ -149,6 +151,10 @@ final class MarketplaceNotificationPresentation
     public static function label(string $eventKey): string
     {
         return match ($eventKey) {
+            'care_hours_added' => 'Care hours added',
+            MarketplaceEvent::CARE_HOURS_PAYMENT_ATTENTION => 'Care hours need attention',
+            MarketplaceEvent::CARE_HOURS_VISIT_SETTLED => 'Care hours used for a visit',
+            'care_hours_on_hold' => 'Care-hours payment review',
             MarketplaceEvent::INVITATION_SENT => 'Invitation sent',
             MarketplaceEvent::INVITATION_RECEIVED => 'Care invitation',
             MarketplaceEvent::CAREGIVER_RECRUITMENT => 'Care opportunities from LoLo',
@@ -247,6 +253,8 @@ final class MarketplaceNotificationPresentation
     public static function actionLabel(string $eventKey): string
     {
         return match ($eventKey) {
+            MarketplaceEvent::CARE_HOURS_PAYMENT_ATTENTION => 'Review visit coverage',
+            MarketplaceEvent::CARE_HOURS_VISIT_SETTLED => 'View visit',
             MarketplaceEvent::INVITATION_SENT,
             MarketplaceEvent::INVITE_ACCEPTED,
             MarketplaceEvent::INVITE_DECLINED,
@@ -345,6 +353,8 @@ final class MarketplaceNotificationPresentation
     public static function tone(string $eventKey): string
     {
         return match ($eventKey) {
+            'care_hours_added', MarketplaceEvent::CARE_HOURS_VISIT_SETTLED => 'success',
+            MarketplaceEvent::CARE_HOURS_PAYMENT_ATTENTION, 'care_hours_on_hold' => 'warning',
             MarketplaceEvent::INVITATION_SENT,
             MarketplaceEvent::APPLICATION_SUBMITTED,
             MarketplaceEvent::INVITE_ACCEPTED,

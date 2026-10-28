@@ -150,9 +150,12 @@ class MarketplaceNotificationService
     ): void {
         $normalizedUrl = $this->normalizeUrl($url);
         $payload = $this->context->enrich($user, $eventKey, $title, $body, $payload, $subject);
-        $channels = array_replace($this->preferences->resolve($user, $eventKey), $channelOverrides);
+        $preferences = $this->preferences->resolve($user, $eventKey);
+        $channels = array_replace($preferences, $channelOverrides);
         $channels[NotificationChannels::EMAIL] = ($channels[NotificationChannels::EMAIL] ?? false)
-            && NotificationDeliveryPolicy::allowsEmail($eventKey);
+            && NotificationDeliveryPolicy::allowsEmail($eventKey)
+            // Operational alerts may force email for admins; customer opt-outs always win.
+            && ($user->isAdministrator() || $preferences[NotificationChannels::EMAIL]);
         $subjectType = $subject?->getMorphClass();
         $subjectId = $subject?->getKey();
         if ($channels[NotificationChannels::EMAIL] ?? false) {
@@ -241,14 +244,27 @@ class MarketplaceNotificationService
         $payload['tracking']['delivery_id'] = $delivery->id;
 
         try {
-            Notification::sendNow($user, new MarketplaceEventNotification(
+            $notification = new MarketplaceEventNotification(
                 eventKey: $delivery->event_key,
                 title: (string) data_get($payload, 'email.title'),
                 body: (string) data_get($payload, 'email.body'),
                 url: data_get($payload, 'email.url'),
                 channels: ['mail'],
                 payload: $payload,
-            ));
+            );
+            // A preference can change after the delivery was reserved.
+            if (! $notification->shouldSend($user, 'mail')) {
+                $delivery->forceFill(['status' => 'suppressed', 'sent_at' => null])->save();
+
+                return;
+            }
+
+            Notification::sendNow($user, $notification);
+            // Laravel checks shouldSend again; an opt-out during dispatch must stay suppressed.
+            if ($delivery->refresh()->status === 'suppressed') {
+                return;
+            }
+
             // Accepted by the configured transport; inbox delivery is not proven here.
             $delivery->forceFill(['status' => 'sent', 'sent_at' => now()])->save();
         } catch (Throwable $exception) {

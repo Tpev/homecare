@@ -2,6 +2,7 @@
 
 use App\Livewire\Forms\LoginForm;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Support\CareHourGiftClaimIntent;
 use App\Support\FamilyQuickRequestDraft;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,9 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function mount(): void
     {
+        if (CareHourGiftClaimIntent::active()) {
+            return;
+        }
         $welcome = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage();
         if ($welcome) {
             $this->form->email = (string) $welcome->email;
@@ -36,10 +40,19 @@ new #[Layout('layouts.guest')] class extends Component
 
             return;
         }
+        if ($user?->role !== 'family' || $user->isAdministrator()) {
+            CareHourGiftClaimIntent::clear();
+        }
 
         $intendedPath = (string) parse_url((string) Session::get('url.intended', ''), PHP_URL_PATH);
         if ($user?->role === 'family' && str_starts_with($intendedPath, '/family/invitations/')) {
             $this->redirectIntended(default: route('family.requests.index', absolute: false), navigate: true);
+
+            return;
+        }
+        if ($user?->role === 'family' && CareHourGiftClaimIntent::active()
+            && app(FamilyAccountContext::class)->membershipFor($user)) {
+            $this->redirect(route('family.care-hours.claim', absolute: false), navigate: true);
 
             return;
         }
@@ -80,15 +93,16 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div class="space-y-7">
+    @php($giftClaim = \App\Support\CareHourGiftClaimIntent::active())
     <div class="space-y-2">
         <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Your LoLo account</p>
-        <h1 class="font-semibold tracking-tight">Welcome back</h1>
-        <p class="text-sm leading-6 text-[#68756F]">Sign in with the email and password you used to create your account.</p>
+        <h1 class="font-semibold tracking-tight">{{ $giftClaim ? 'Sign in to claim your gift' : 'Welcome back' }}</h1>
+        <p class="text-sm leading-6 text-[#68756F]">{{ $giftClaim ? 'Your gift is saved. No card needed.' : 'Sign in with the email and password you used to create your account.' }}</p>
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    @if (\App\Support\FamilyQuickRequestDraft::has())
+    @if (! $giftClaim && \App\Support\FamilyQuickRequestDraft::has())
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
             Your quick care request is saved. Sign in and we’ll open the final review so you can publish it.
         </div>

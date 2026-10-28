@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Listeners\AttributeContentRegistration;
 use App\Listeners\InvalidateAiSupportConfirmationsOnLogout;
-use App\Listeners\SendOpsUserRegisteredAlert;
 use App\Models\BlogPost;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRecipientProfileVersion;
@@ -86,7 +85,6 @@ class AppServiceProvider extends ServiceProvider
         SupportTicket::observe(SupportTicketObserver::class);
         User::observe(UserObserver::class);
 
-        Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
         Event::listen(Registered::class, AttributeContentRegistration::class);
         Event::listen(Registered::class, function (Registered $event): void {
             app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->accountRegistered($event->user);

@@ -133,6 +133,7 @@ class CareBookingTimeCorrectionService
             'caregiver_amount_cents' => (int) $quote['caregiver_amount_cents'],
             'target_charge_label' => $this->moneyLabel((int) $quote['total_charge_cents']),
             'caregiver_amount_label' => $this->moneyLabel((int) $quote['caregiver_amount_cents']),
+            ...(isset($quote['care_hours']) ? ['care_hours' => $quote['care_hours']] : []),
             'admin_required' => $this->requiresAdminApplication($booking),
         ];
     }
@@ -600,10 +601,11 @@ class CareBookingTimeCorrectionService
         $payment = $booking->payment;
 
         try {
-            $authorizationInsufficient = ! $payment
+            $isCareHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking);
+            $authorizationInsufficient = ! $isCareHours && (! $payment
                 || $payment->status !== CareBookingPayment::STATUS_AUTHORIZED
                 || (int) $payment->amount_authorized_cents < $target
-                || ($payment->authorization_expires_at && $payment->authorization_expires_at->lte(now()->addMinutes(5)));
+                || ($payment->authorization_expires_at && $payment->authorization_expires_at->lte(now()->addMinutes(5))));
 
             if ($authorizationInsufficient) {
                 $payment = $this->payments->prepareOnSessionAuthorizationForAmount(
@@ -614,12 +616,13 @@ class CareBookingTimeCorrectionService
                 );
             }
 
-            if ($payment->status !== CareBookingPayment::STATUS_AUTHORIZED) {
+            if (! $isCareHours && $payment->status !== CareBookingPayment::STATUS_AUTHORIZED) {
                 return $this->markPaymentActionRequired($correction, $payment->last_error ?: 'Confirm the card authorization to finish the approved correction.');
             }
 
             $payment = $this->payments->captureForBooking($booking->fresh(['payment', 'family', 'caregiver.caregiverProfile', 'application']));
-            if ((int) $payment->overage_pending_cents > 0) {
+            $amountDue = $isCareHours ? (int) $payment->amount_due_cents : (int) $payment->overage_pending_cents;
+            if ($amountDue > 0) {
                 return $this->markPaymentActionRequired($correction, 'Confirm the additional visit amount to finish payment.');
             }
         } catch (PaymentException $exception) {
@@ -867,6 +870,10 @@ class CareBookingTimeCorrectionService
 
     private function requiresAdminApplication(CareBooking $booking): bool
     {
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)
+            && \App\Models\CareHourSettlement::where('care_booking_id', $booking->id)->exists()) {
+            return true;
+        }
         $booking->loadMissing('payment');
         if ($booking->family_confirmed_at) {
             return true;

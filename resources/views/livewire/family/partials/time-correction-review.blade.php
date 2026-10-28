@@ -2,6 +2,17 @@
     @php
         $timezone = app(\App\Services\Booking\CareBookingTimeCorrectionService::class)->timezoneFor($booking);
         $isPending = $correction->status === \App\Models\CareBookingTimeCorrection::STATUS_PENDING_FAMILY;
+        $correctionCoverage = data_get($correction->financial_preview, 'care_hours');
+        $isPrepaidCorrection = is_array($correctionCoverage) || app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking);
+        $quotedCorrectionCents = (int) ($correctionCoverage['card_cents'] ?? data_get($correction->financial_preview, 'target_charge_cents', 0));
+        $remainingCorrectionCents = $isPrepaidCorrection
+            ? ($correction->approved_at
+                ? (int) data_get($prepaidBookingSummary ?? [], 'settlement.amount_due_cents', $quotedCorrectionCents)
+                : $quotedCorrectionCents)
+            : 0;
+        $correctionApprovalLabel = $isPrepaidCorrection && $remainingCorrectionCents === 0
+            ? 'Approve '.$correction->durationLabel().' using care hours'
+            : 'Approve '.$correction->durationLabel().' and pay '.$correction->familyAmountLabel();
         $statusTone = match ($correction->status) {
             \App\Models\CareBookingTimeCorrection::STATUS_APPLIED => 'border-emerald-200 bg-emerald-50',
             \App\Models\CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED,
@@ -61,11 +72,23 @@
                 @endif
             </div>
             <div class="rounded-2xl border border-[#0F6B62]/30 bg-white p-4">
+                @if ($isPrepaidCorrection)
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#7B8794]">Corrected visit coverage</p>
+                    <p class="mt-2 font-display text-3xl font-semibold text-[#17313F]">{{ $correction->durationLabel() }} of care</p>
+                    <dl class="mt-3 space-y-2 text-sm text-[#607080]">
+                        <div class="flex justify-between gap-3"><dt>From care hours</dt><dd class="font-semibold text-[#17313F]">{{ isset($correctionCoverage['prepaid_minutes']) ? \App\Models\CareHourAccount::formatMinutes($correctionCoverage['prepaid_minutes']) : 'Checked on approval' }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt>Remaining payment</dt><dd class="font-semibold text-[#17313F]">${{ number_format($remainingCorrectionCents / 100, 2) }}</dd></div>
+                    </dl>
+                    @if ($remainingCorrectionCents === 0)
+                        <p class="mt-3 text-xs text-[#607080]">Nothing to pay for the corrected care.</p>
+                    @endif
+                @else
                 <p class="text-xs font-semibold uppercase tracking-wide text-[#7B8794]">Final amount if approved</p>
                 <p class="mt-2 font-display text-3xl font-semibold text-[#17313F]">{{ $correction->familyAmountLabel() }}</p>
                 <p class="mt-1 text-sm text-[#607080]">For {{ $correction->durationLabel() }} of care.</p>
                 @if ((int) data_get($correction->financial_preview, 'family_processing_fee_cents', 0) > 0)
                     <p class="mt-2 text-xs text-[#607080]">Care ${{ number_format((int) data_get($correction->financial_preview, 'family_care_amount_cents', 0) / 100, 2) }} + ${{ number_format((int) data_get($correction->financial_preview, 'family_processing_fee_cents', 0) / 100, 2) }} processing fee.</p>
+                @endif
                 @endif
             </div>
         </div>
@@ -74,7 +97,7 @@
             @if ((int) $confirmingTimeCorrectionId === (int) $correction->id)
                 <div class="mt-5 rounded-2xl border-2 border-[#0F6B62] bg-white p-4 sm:p-5" tabindex="-1" x-ref="confirmation">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[#0F6B62]">Confirm approval</p>
-                    <h4 class="mt-1 font-display text-xl font-semibold text-[#17313F]">Approve {{ $correction->durationLabel() }} and pay {{ $correction->familyAmountLabel() }}?</h4>
+                    <h4 class="mt-1 font-display text-xl font-semibold text-[#17313F]">{{ $correctionApprovalLabel }}?</h4>
                     <p class="mt-2 text-sm leading-6 text-[#607080]">This confirms the caregiver’s actual care hours. The visit record and payment will be updated together.</p>
                     @error('timeCorrectionResponse') <p class="mt-3 text-sm font-medium text-red-700" role="alert">{{ $message }}</p> @enderror
                     <div class="mt-4 grid gap-2 sm:flex sm:justify-end">
@@ -85,7 +108,7 @@
             @else
                 <div class="mt-5 grid gap-3">
                     <button x-ref="approveTrigger" type="button" wire:click="beginTimeCorrectionApproval({{ $correction->id }})" class="min-h-12 w-full rounded-xl bg-[#0F6B62] px-5 text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#0F6B62] focus:ring-offset-2 sm:w-auto sm:justify-self-start">
-                        Approve {{ $correction->durationLabel() }} and pay {{ $correction->familyAmountLabel() }}
+                        {{ $correctionApprovalLabel }}
                     </button>
                     <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4">
                         <label for="time-correction-response-note" class="text-base font-semibold text-[#17313F]">Ask {{ $caregiverFirstName }} to change this</label>

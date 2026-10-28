@@ -505,6 +505,7 @@ class DonLegacyPricingTest extends TestCase
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         CaregiverProfile::query()->create([
             'user_id' => $caregiver->id, 'status' => 'active', 'platform_hourly_rate' => 30,
+            'screening_initial_approved_at' => now(),
             'stripe_connect_account_id' => 'acct_test_don_caregiver',
             'stripe_charges_enabled' => true, 'stripe_payouts_enabled' => true,
             'stripe_connect_onboarding_completed_at' => now(),

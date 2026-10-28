@@ -36,6 +36,14 @@ class BookingPaymentService
      */
     public function quoteForWorkedMinutes(CareBooking $booking, int $workedMinutes): array
     {
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) {
+            $preview = $careHours->approvalPreview($booking, $workedMinutes);
+            $gross = $workedMinutes > 0 ? $this->pricing->prorateHourlyCents((int) ($booking->caregiver_gross_rate_cents ?? $this->pricing->caregiverGrossHourlyCents()), $workedMinutes) : 0;
+            return ['worked_minutes' => max(0, $workedMinutes), 'hourly_rate' => ($booking->family_care_rate_cents ?? 3000) / 100,
+                'subtotal_cents' => $preview['card_cents'], 'platform_fee_percent' => 0, 'platform_fee_cents' => 0,
+                'total_charge_cents' => $preview['card_cents'], 'caregiver_amount_cents' => $gross, 'care_hours' => $preview];
+        }
         $booking->loadMissing(['application', 'family', 'caregiver.caregiverProfile']);
 
         $workedMinutes = max(1, $workedMinutes);
@@ -66,9 +74,11 @@ class BookingPaymentService
         ];
     }
 
-    public function authorizeForBooking(CareBooking $booking, bool $forceReauthorize = false, bool $notify = true): CareBookingPayment
+    public function authorizeForBooking(CareBooking $booking, bool $forceReauthorize = false, bool $notify = true): CareBookingPayment|\App\Models\CareHourBookingFunding
     {
         Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) { return $careHours->prepare($booking); }
         $booking->loadMissing([
             'application',
             'family',
@@ -265,9 +275,11 @@ class BookingPaymentService
         ], true);
     }
 
-    public function retryAuthorizationForBooking(CareBooking $booking): CareBookingPayment
+    public function retryAuthorizationForBooking(CareBooking $booking): CareBookingPayment|\App\Models\CareHourBookingFunding
     {
         Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) { return $careHours->prepare($booking); }
         $booking->loadMissing('payment');
         if (! $this->canRetryAuthorization($booking)) {
             throw new PaymentException('This visit does not currently need a payment authorization retry.');
@@ -276,9 +288,11 @@ class BookingPaymentService
         return $this->authorizeForBooking($booking, true);
     }
 
-    public function prepareOnSessionAuthorization(CareBooking $booking, bool $forceNewIntent = false): CareBookingPayment
+    public function prepareOnSessionAuthorization(CareBooking $booking, bool $forceNewIntent = false): CareBookingPayment|\App\Models\CareHourBookingFunding
     {
         Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) { return $careHours->prepare($booking); }
         $booking->loadMissing([
             'application',
             'family',
@@ -320,6 +334,9 @@ class BookingPaymentService
         ?CareBookingTimeCorrection $correction = null,
     ): CareBookingPayment {
         Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            throw new PaymentException('Use this visit’s care-hours payment checkout to cover additional time.');
+        }
         if ($amountCents < 100) {
             throw new PaymentException('The approved payment amount is invalid. Please contact LoLo Care support.');
         }
@@ -553,6 +570,9 @@ class BookingPaymentService
     public function syncPreparedAuthorization(CareBooking $booking, string $paymentIntentId): CareBookingPayment
     {
         Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            throw new PaymentException('Care-hours payments are confirmed through their own checkout.');
+        }
         $booking->loadMissing(['payment', 'family', 'caregiver']);
 
         $payment = $booking->payment;
@@ -591,6 +611,7 @@ class BookingPaymentService
 
     public function recordClientAuthorizationFailure(CareBooking $booking, ?string $paymentIntentId, string $message): ?CareBookingPayment
     {
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) { return null; }
         $booking->loadMissing(['payment']);
 
         $payment = $booking->payment;
@@ -626,9 +647,12 @@ class BookingPaymentService
         return $this->reconcilePaymentPlan($payment);
     }
 
-    public function captureForBooking(CareBooking $booking, bool $notify = true): CareBookingPayment
+    public function captureForBooking(CareBooking $booking, bool $notify = true): CareBookingPayment|\App\Models\CareHourSettlement
     {
         Oct17RecoveryPaymentGuard::assertNormalFlowAllowed($booking);
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            return app(\App\Services\CareHours\PrepaidBookingSettlementService::class)->settle($booking);
+        }
         // Family confirmation records approval only while an audited prepaid reset is held.
         // Fetch current rows: callers and scheduled jobs may have loaded them before the reset.
         $heldPayment = DB::transaction(function () use ($booking): ?CareBookingPayment {
@@ -876,6 +900,8 @@ class BookingPaymentService
 
     public function cancelForBooking(CareBooking $booking): void
     {
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) { $careHours->release($booking); return; }
         $payment = CareBookingPayment::query()
             ->where('care_booking_id', $booking->id)
             ->first();

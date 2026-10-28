@@ -284,6 +284,7 @@ class PreHireChatTest extends TestCase
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::create([
             'user_id' => $caregiver->id, 'status' => 'active', 'slug' => 'chat-caregiver-'.$caregiver->id,
+            'screening_initial_approved_at' => now(),
             'bio' => str_repeat('Experienced caregiver. ', 4), 'platform_hourly_rate' => 26,
             'years_experience' => 5, 'service_area_zip' => '27601', 'service_radius_miles' => 10,
             'insurance_status' => CaregiverProfile::INSURANCE_NO,

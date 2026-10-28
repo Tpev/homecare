@@ -289,6 +289,10 @@ class CarePlanOccurrenceService
         CareRequest $request,
         CareRequestApplication $application
     ): CareBooking {
+        if (DB::transactionLevel() === 0 && app(\App\Services\CareHours\PrepaidBookingFundingService::class)->available()
+            && \App\Models\CareHourPlanPreference::where('care_plan_id', $plan->id)->where('enabled', true)->exists()) {
+            return DB::transaction(fn () => $this->attachSourceRequestAsFirstVisit($plan, $request, $application), 3);
+        }
         $occurrence = $this->firstScheduledOccurrence($plan);
 
         if (! $occurrence) {
@@ -303,6 +307,8 @@ class CarePlanOccurrenceService
                 'plan_visit_kind' => $existing->plan_visit_kind ?: 'regular',
                 'plan_schedule_version' => $existing->plan_schedule_version ?: $plan->schedule_version,
             ])->save();
+
+            app(\App\Services\CareHours\PrepaidBookingFundingService::class)->inheritPlanSelection($existing);
 
             return $existing;
         }
@@ -336,9 +342,12 @@ class CarePlanOccurrenceService
                 throw $exception;
             }
 
+            app(\App\Services\CareHours\PrepaidBookingFundingService::class)->inheritPlanSelection($booking);
+
             return $booking;
         }
 
+        app(\App\Services\CareHours\PrepaidBookingFundingService::class)->inheritPlanSelection($booking);
         $this->trust->seedTaskChecks($booking, $request->fresh(['tasks']));
         $this->trust->recordEvent($booking, $plan->family_user_id, 'family', 'regular_care_marketplace_hire', [
             'care_plan_id' => $plan->id,
@@ -499,6 +508,7 @@ class CarePlanOccurrenceService
                     'expected_minutes' => (int) $occurrence['start']->diffInMinutes($occurrence['end'], false),
                 ]);
 
+                app(\App\Services\CareHours\PrepaidBookingFundingService::class)->inheritPlanSelection($booking);
                 $this->trust->seedTaskChecks($booking, $request->fresh(['tasks']));
                 $this->trust->recordEvent($booking, null, 'system', 'regular_care_visit_created', [
                     'care_plan_id' => $plan->id,
@@ -535,6 +545,11 @@ class CarePlanOccurrenceService
      */
     private function reconcileRegularOccurrence(CareBooking $booking, CarePlan $plan, array $occurrence): CareBooking
     {
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        $funding = $careHours->forBooking($booking);
+        if ($funding && DB::transactionLevel() === 0) {
+            return DB::transaction(fn () => $this->reconcileRegularOccurrence($booking, $plan, $occurrence), 3);
+        }
         $updates = [
             'occurrence_key' => $occurrence['key'],
             'plan_visit_kind' => 'regular',
@@ -561,6 +576,16 @@ class CarePlanOccurrenceService
         }
 
         $booking->forceFill($updates)->save();
+        if ($funding?->status === 'released' && $booking->status === CareBooking::STATUS_SCHEDULED
+            && ! $funding->shortfall_cents && ! $funding->operations()->exists()
+            && ! \App\Models\CareHourAllocation::where('care_booking_id', $booking->id)->exists()) {
+            // A bulk pause also releases future selections that were never prepared.
+            // Resume those through the normal payment window without reserving the whole plan.
+            $funding->update(['status' => 'selected']);
+        }
+        if ($funding && $funding->status !== 'selected' && $booking->status === CareBooking::STATUS_SCHEDULED) {
+            $careHours->protectScheduleChange($booking);
+        }
         app(\App\Services\Screening\ScreeningBookingReviewService::class)->flagBooking($booking);
 
         return $booking->fresh();

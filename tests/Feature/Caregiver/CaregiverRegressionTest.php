@@ -10,15 +10,18 @@ use App\Livewire\Caregiver\ProfileEditor;
 use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
 use App\Models\CaregiverModerationLog;
 use App\Models\CaregiverProfile;
+use App\Models\CaregiverScreeningCase;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\Screening\CaregiverScreeningService;
 use App\Services\Screening\CaregiverWorkEligibility;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -236,13 +239,13 @@ class CaregiverRegressionTest extends TestCase
         $case = app(CaregiverScreeningService::class)->enqueue($profile);
         $due = $case->due_at->toIso8601String();
 
-        Livewire::actingAs($admin)
-            ->test(CaregiverReviewsQueue::class)
-            ->call('selectCase', $case->id)
-            ->call('claim')
-            ->set('note', 'Awaiting verified identity evidence before reviewing public records.')
-            ->call('keepPending')
-            ->assertHasNoErrors();
+        $this->assertScreeningCaseIsHidden($admin, $case);
+
+        // Awaiting-identity cases are hidden from the review queue; deferring one
+        // through the service must still preserve existing legacy work access.
+        $service = app(CaregiverScreeningService::class);
+        $claimed = $service->claim($case->id, $admin);
+        $service->defer($case->id, $admin, 'Awaiting verified identity evidence before reviewing public records.', $claimed->lock_version);
 
         $this->assertSame('active', $profile->fresh()->status);
         $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
@@ -267,14 +270,16 @@ class CaregiverRegressionTest extends TestCase
         ]);
         $case = app(CaregiverScreeningService::class)->enqueue($profile);
 
-        Livewire::actingAs($admin)
-            ->test(CaregiverReviewsQueue::class)
-            ->call('selectCase', $case->id)
-            ->call('claim')
-            ->set('outcome', 'no_match')
-            ->set('note', 'Cannot approve before verified identity and source evidence are available.')
-            ->call('decide', 'approve')
-            ->assertHasErrors(['screening']);
+        $this->assertScreeningCaseIsHidden($admin, $case);
+
+        $service = app(CaregiverScreeningService::class);
+        $claimed = $service->claim($case->id, $admin);
+        try {
+            $service->decide($case->id, $admin, 'no_match', 'approve', 'Cannot approve before verified identity and source evidence are available.', $claimed->lock_version);
+            $this->fail('Approval must require verified identity evidence.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('screening', $exception->errors());
+        }
 
         $this->assertDatabaseHas('caregiver_profiles', [
             'id' => $profile->id,
@@ -282,6 +287,17 @@ class CaregiverRegressionTest extends TestCase
         ]);
         $this->assertSame('awaiting_kyc', $case->fresh()->status);
         $this->assertNull($profile->fresh()->screening_initial_approved_at);
+    }
+
+    private function assertScreeningCaseIsHidden(User $admin, CaregiverScreeningCase $case): void
+    {
+        try {
+            Livewire::actingAs($admin)->test(CaregiverReviewsQueue::class)->call('selectCase', $case->id);
+            $this->fail('An unverified case must not be selectable in the screening queue.');
+        } catch (ModelNotFoundException $exception) {
+            $this->assertSame(CaregiverScreeningCase::class, $exception->getModel());
+            $this->assertSame([$case->id], $exception->getIds());
+        }
     }
 
     public function test_profile_editor_keeps_active_status_and_creates_version(): void

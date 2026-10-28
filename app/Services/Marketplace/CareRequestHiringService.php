@@ -31,7 +31,7 @@ class CareRequestHiringService
     ) {}
 
     /** @return array{kind:string,request:CareRequest,application:CareRequestApplication,booking:?CareBooking,payment:?CareBookingPayment,care_plan_id:?int} */
-    public function hire(User $family, CareRequestApplication $application): array
+    public function hire(User $family, CareRequestApplication $application, ?\App\Models\CareHourAccount $careHourAccount = null): array
     {
         $application->loadMissing(['careRequest.recipient', 'careRequest.tasks', 'caregiver:id,email,name']);
         $request = $application->careRequest;
@@ -47,7 +47,7 @@ class CareRequestHiringService
         }
 
         if ($request->request_type === CareRequest::TYPE_RECURRING) {
-            $plan = $this->plans->activateFromRecurringRequest($request, $application, $family);
+            $plan = $this->plans->activateFromRecurringRequest($request, $application, $family, $careHourAccount);
             $request = $request->fresh(['booking.payment']);
             FunnelTracker::track('regular_care_marketplace_hired', $family, $plan, [
                 'care_request_id' => $request->id,
@@ -63,7 +63,7 @@ class CareRequestHiringService
             ];
         }
 
-        $booking = DB::transaction(function () use ($family, $request, $application): CareBooking {
+        $booking = DB::transaction(function () use ($family, $request, $application, $careHourAccount): CareBooking {
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $application->caregiver_user_id);
             $lockedRequest = CareRequest::query()->lockForUpdate()->with(['recipient', 'tasks'])->findOrFail($request->id);
             $lockedApplication = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
@@ -104,6 +104,9 @@ class CareRequestHiringService
                 'application_id' => $lockedApplication->id,
                 'source' => 'ai_support_confirmed',
             ]);
+            if ($careHourAccount) {
+                app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForBooking($booking, $careHourAccount, $family);
+            }
             $this->payments->prepareOnSessionAuthorization($booking);
 
             return $booking->fresh(['payment', 'caregiver']);

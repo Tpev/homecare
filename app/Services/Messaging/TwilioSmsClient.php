@@ -2,11 +2,11 @@
 
 namespace App\Services\Messaging;
 
+use App\Exceptions\Messaging\TwilioSmsRejectedException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
 
@@ -22,15 +22,15 @@ class TwilioSmsClient
         $body = trim($body);
 
         if ($to === '') {
-            throw new InvalidArgumentException('A recipient phone number is required.');
+            throw new TwilioSmsRejectedException('A recipient phone number is required.');
         }
 
         if ($from === '') {
-            throw new RuntimeException('TWILIO_SMS_FROM or TWILIO_PHONE_NUMBER is not configured.');
+            throw new TwilioSmsRejectedException('TWILIO_SMS_FROM or TWILIO_PHONE_NUMBER is not configured.');
         }
 
         if ($body === '') {
-            throw new InvalidArgumentException('A message body is required.');
+            throw new TwilioSmsRejectedException('A message body is required.');
         }
 
         if ((bool) config('services.twilio.bypass', false)) {
@@ -47,7 +47,7 @@ class TwilioSmsClient
         $authToken = (string) config('services.twilio.auth_token');
 
         if ($accountSid === '' || $authToken === '') {
-            throw new RuntimeException('Twilio SMS credentials are not configured.');
+            throw new TwilioSmsRejectedException('Twilio SMS credentials are not configured.');
         }
 
         try {
@@ -75,11 +75,16 @@ class TwilioSmsClient
         }
 
         if ($response->failed()) {
+            // A timeout or server error may follow provider acceptance. Only a clear
+            // client rejection permits a replacement send without reconciliation.
+            if (in_array($response->status(), [400, 401, 403, 404, 405, 422, 429], true)) {
+                throw new TwilioSmsRejectedException($this->responseErrorMessage($response));
+            }
             throw new RuntimeException($this->responseErrorMessage($response));
         }
 
         $payload = $response->json();
-        if (! is_array($payload)) {
+        if (! is_array($payload) || ! is_string($payload['sid'] ?? null) || trim($payload['sid']) === '') {
             throw new RuntimeException('Twilio returned an invalid SMS response.');
         }
 

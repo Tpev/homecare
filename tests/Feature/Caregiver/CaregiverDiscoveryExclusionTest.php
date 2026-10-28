@@ -119,6 +119,7 @@ class CaregiverDiscoveryExclusionTest extends TestCase
             'user_id' => $user->id,
             'slug' => str($name)->slug().'-'.$user->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => 'Companionship and reliable everyday support.',
             'platform_hourly_rate' => 30,
             'years_experience' => 5,

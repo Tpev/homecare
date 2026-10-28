@@ -4,9 +4,10 @@
     $isFamilyRegistration = $routeName === 'register';
     $isCaregiverRegistration = $routeName === 'caregiver.register';
     $isPasswordFlow = in_array($routeName, ['password.request', 'password.reset', 'password.confirm'], true);
+    $isGiftClaimAuth = ($isLogin || $isFamilyRegistration) && \App\Support\CareHourGiftClaimIntent::active();
     $isWideForm = $isFamilyRegistration || $isCaregiverRegistration;
 
-    $pageTitle = match ($routeName) {
+    $pageTitle = $isGiftClaimAuth ? 'Claim your care gift' : match ($routeName) {
         'login' => 'Sign in',
         'register' => 'Create a family account',
         'caregiver.register' => 'Create a caregiver account',
@@ -353,7 +354,8 @@
     </noscript>
     <x-toast />
 
-    <div class="auth-shell lg:grid lg:grid-cols-[minmax(390px,0.86fr)_minmax(620px,1.14fr)]">
+    <div class="auth-shell {{ $isGiftClaimAuth ? '' : 'lg:grid lg:grid-cols-[minmax(390px,0.86fr)_minmax(620px,1.14fr)]' }}">
+        @unless($isGiftClaimAuth)
         <aside class="auth-story-panel hidden p-10 lg:flex lg:flex-col xl:p-14" aria-label="About LoLo Care">
             <a href="/" wire:navigate class="relative z-10 inline-flex w-fit items-center" aria-label="LoLo Care home">
                 <img src="{{ asset('images/marketing/lolo/lolo-wordmark-ivory.svg') }}" alt="LoLo Care" class="h-11 w-auto">
@@ -376,14 +378,17 @@
 
             <p class="auth-story-footer relative z-10 mb-0">LoLo Care · Flexible non-medical support at home</p>
         </aside>
+        @endunless
 
         <main class="auth-main flex flex-col">
             <header class="auth-topbar flex items-center justify-between gap-4 px-5 py-4 sm:px-8 xl:px-12">
-                <a href="/" wire:navigate class="inline-flex items-center lg:hidden" aria-label="LoLo Care home">
+                <a href="/" wire:navigate class="inline-flex items-center {{ $isGiftClaimAuth ? '' : 'lg:hidden' }}" aria-label="LoLo Care home">
                     <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" class="h-8 w-auto">
                 </a>
 
-                <a href="/" wire:navigate class="hidden text-sm lg:inline-flex">← Back to LoLo Care</a>
+                @unless($isGiftClaimAuth)
+                    <a href="/" wire:navigate class="hidden text-sm lg:inline-flex">← Back to LoLo Care</a>
+                @endunless
 
                 <p class="m-0 text-right text-xs text-[#6B746F] sm:text-sm">
                     @if ($isLogin)
@@ -400,10 +405,12 @@
 
             <div class="flex flex-1 items-center justify-center px-4 pb-8 pt-2 sm:px-8 sm:pb-10 xl:px-12">
                 <div class="w-full {{ $isWideForm ? 'max-w-3xl' : 'max-w-xl' }}">
+                    @unless($isGiftClaimAuth)
                     <div class="auth-mobile-intro lg:hidden">
                         <strong>{{ $story['kicker'] }}</strong>
                         {{ $story['description'] }}
                     </div>
+                    @endunless
 
                     <div class="auth-card">
                         {{ $slot }}

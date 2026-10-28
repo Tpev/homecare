@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\CareHourGiftClaimIntent;
 use App\Support\FamilyQuickRequestDraft;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +28,9 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function mount(): void
     {
+        if (CareHourGiftClaimIntent::active()) {
+            return;
+        }
         app(\App\Services\FamilyAcquisition\FamilySignupAttribution::class)->capture(request());
         $welcome = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage();
         if ($welcome) {
@@ -38,6 +42,12 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function register(): void
     {
+        $giftClaim = CareHourGiftClaimIntent::active();
+        if ($giftClaim) {
+            // This form does not request phone or SMS consent during gift signup.
+            $this->phone = '';
+            $this->sms_opt_in = false;
+        }
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -55,9 +65,14 @@ new #[Layout('layouts.guest')] class extends Component
         $validated['role'] = 'family';
         unset($validated['accept_terms']);
 
-        [$user, $onboarding] = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+        [$user, $onboarding] = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $giftClaim) {
             $user = User::create($validated);
-            $onboarding = app(\App\Services\Family\FamilyOnboardingService::class)->enrollRegistration($user);
+            if ($giftClaim) {
+                app(\App\Services\FamilyAccounts\FamilyAccountProvisioner::class)->provisionOwner($user, 'gift_registration');
+                $onboarding = null;
+            } else {
+                $onboarding = app(\App\Services\Family\FamilyOnboardingService::class)->enrollRegistration($user);
+            }
 
             return [$user, $onboarding];
         });
@@ -68,6 +83,12 @@ new #[Layout('layouts.guest')] class extends Component
         Auth::login($user);
         session()->regenerate();
         session()->flash('google_ads_family_signup_conversion', true);
+
+        if ($giftClaim) {
+            $this->redirect(route('family.care-hours.claim', absolute: false), navigate: true);
+
+            return;
+        }
 
         if ($onboarding) {
             app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->continueFor($user);
@@ -93,9 +114,13 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div class="space-y-7">
+    @php($giftClaim = \App\Support\CareHourGiftClaimIntent::active())
     <div class="space-y-2">
         <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Family account</p>
-        @if(app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage())
+        @if($giftClaim)
+            <h1 class="font-semibold tracking-tight">Create your account to claim your gift</h1>
+            <p class="text-sm leading-6 text-[#68756F]">Your gift is saved. No card needed.</p>
+        @elseif(app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage())
             <h1 class="font-semibold tracking-tight">Create your free account</h1>
             <p class="text-sm leading-6 text-[#68756F]">You’re about 2 minutes away from posting your care request. We’ve filled in the details you shared with LoLo Care.</p>
             <div class="flex flex-wrap gap-2 pt-2 text-xs font-semibold"><span class="rounded-full bg-emerald-100 px-3 py-2 text-emerald-900">1 · Free account</span><span class="rounded-full bg-stone-100 px-3 py-2 text-stone-600">2 · Care details</span></div>
@@ -105,6 +130,7 @@ new #[Layout('layouts.guest')] class extends Component
         @endif
     </div>
 
+    @unless($giftClaim)
     <div class="auth-role-switch">
         <span aria-hidden="true">♥</span>
         <div>
@@ -112,8 +138,9 @@ new #[Layout('layouts.guest')] class extends Component
             <a href="{{ route('caregiver.register') }}" class="underline" wire:navigate>Register as a caregiver →</a>
         </div>
     </div>
+    @endunless
 
-    @if (\App\Support\FamilyQuickRequestDraft::has())
+    @if (! $giftClaim && \App\Support\FamilyQuickRequestDraft::has())
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
             Your care request details are saved. Create your account to continue.
         </div>
@@ -123,7 +150,9 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
                 <p class="text-sm font-bold text-[#173F35]">Your details</p>
-                <p class="mt-1 text-xs text-[#77817C]">Use the contact information you want associated with care requests.</p>
+                @unless($giftClaim)
+                    <p class="mt-1 text-xs text-[#77817C]">Use the contact information you want associated with care requests.</p>
+                @endunless
             </div>
             <div class="md:col-span-2">
                 <x-input label="Full name" wire:model="name" autocomplete="name" required autofocus />
@@ -133,10 +162,12 @@ new #[Layout('layouts.guest')] class extends Component
                 <x-input type="email" label="Email" wire:model="email" autocomplete="email" required />
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
             </div>
+            @unless($giftClaim)
             <div class="md:col-span-2">
                 <x-input type="tel" label="Phone number (optional)" wire:model="phone" autocomplete="tel" />
                 <x-input-error :messages="$errors->get('phone')" class="mt-2" />
             </div>
+            @endunless
             <div class="md:col-span-2 mt-1 border-t border-[#E8DED1] pt-5">
                 <p class="text-sm font-bold text-[#173F35]">Secure your account</p>
                 <p class="mt-1 text-xs text-[#77817C]">Use at least 8 characters and keep your password private.</p>
@@ -165,13 +196,15 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-error :messages="$errors->get('accept_terms')" class="mt-2" />
         </div>
 
-        <x-sms-opt-in />
+        @unless($giftClaim)
+            <x-sms-opt-in />
+        @endunless
 
         <div class="grid grid-cols-1 gap-4 pt-1 sm:flex sm:items-center sm:justify-between">
             <a class="text-sm text-slate-600 underline" href="{{ route('login') }}" wire:navigate>
                 {{ __('Already registered?') }}
             </a>
-            <x-button type="submit" color="blue" class="auth-primary w-full justify-center sm:w-auto">{{ __('Create family account') }}</x-button>
+            <x-button type="submit" color="blue" class="auth-primary w-full justify-center sm:w-auto">{{ $giftClaim ? 'Create account and continue' : __('Create family account') }}</x-button>
         </div>
     </form>
 </div>

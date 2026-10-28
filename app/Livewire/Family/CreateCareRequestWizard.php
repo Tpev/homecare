@@ -9,9 +9,11 @@ use App\Models\CareTask;
 use App\Models\FamilyHouseholdProfile;
 use App\Models\FamilyRecipientProfile;
 use App\Services\AiSupport\AiSupportPreparationService;
+use App\Services\CareHours\CareHourRequestFundingService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\Family\FamilyOnboardingService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Support\CareHourRequestHandoff;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
 use App\Support\MarketplacePricing;
@@ -47,6 +49,29 @@ class CreateCareRequestWizard extends Component
 
     #[\Livewire\Attributes\Locked]
     public ?int $onboardingCareProfileRevision = null;
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $careHoursHandoffAccountId = null;
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $careHoursHandoffProfileId = null;
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $careHoursHandoffProfileRevision = null;
+
+    #[\Livewire\Attributes\Locked]
+    public bool $startedFromCareHours = false;
+
+    public ?int $careHourAccountId = null;
+
+    #[\Livewire\Attributes\Locked]
+    public string $careHoursRecipientKey = '';
+
+    #[\Livewire\Attributes\Locked]
+    public bool $careHoursChoiceMade = false;
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $careHoursCopiedRequestId = null;
 
     public const MODE_FAST_TRACK = 'fast_track';
 
@@ -254,17 +279,20 @@ class CreateCareRequestWizard extends Component
             $this->request_type = $requestedType;
         }
 
+        $hasCareHoursHandoff = request()->query('care_hours_account') !== null;
         $this->loadSavedProfiles();
-        $this->applyHomepageQuickRequestDraft();
+        if (! $hasCareHoursHandoff) {
+            $this->applyHomepageQuickRequestDraft();
 
-        $welcomeService = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class);
-        if ($welcomeService->continueFor($user) && ($welcome = $welcomeService->sessionMessage())) {
-            $this->zip = $this->zip ?: (string) $welcome->lead?->zip;
-            $this->additional_info = $this->additional_info ?: (string) data_get($welcome->lead?->data, 'care_preferences.help_needed', '');
-            $this->modeChosen = true;
+            $welcomeService = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class);
+            if ($welcomeService->continueFor($user) && ($welcome = $welcomeService->sessionMessage())) {
+                $this->zip = $this->zip ?: (string) $welcome->lead?->zip;
+                $this->additional_info = $this->additional_info ?: (string) data_get($welcome->lead?->data, 'care_preferences.help_needed', '');
+                $this->modeChosen = true;
+            }
+
+            $this->applyOnboardingHandoff();
         }
-
-        $this->applyOnboardingHandoff();
 
         $lastRequest = CareRequest::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
@@ -283,7 +311,7 @@ class CreateCareRequestWizard extends Component
             ];
         }
 
-        $prepared = app(AiSupportPreparationService::class)->consume($user, 'care_request_reuse_v1');
+        $prepared = $hasCareHoursHandoff ? [] : app(AiSupportPreparationService::class)->consume($user, 'care_request_reuse_v1');
         $map = [
             'recipient_profile_id' => 'selected_care_recipient_profile_id', 'recipient_name' => 'recipient_full_name',
             'additional_info' => 'additional_info', 'address_line1' => 'address_line1', 'address_line2' => 'address_line2',
@@ -307,6 +335,9 @@ class CreateCareRequestWizard extends Component
             $this->prefillApplied = true;
             $this->modeChosen = true;
         }
+
+        $this->applyCareHoursHandoff();
+        $this->syncCareHoursDefault();
     }
 
     public function getResolvedTitleProperty(): string
@@ -354,6 +385,7 @@ class CreateCareRequestWizard extends Component
     public function getEstimateAgreementProperty(): ?CarePricingAgreement
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
+
         return app(MarketplacePricing::class)->estimateAgreementForFamily($account->id);
     }
 
@@ -481,12 +513,18 @@ class CreateCareRequestWizard extends Component
         }
 
         $request = CareRequest::query()
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
             ->with(['tasks:id,name', 'recipient', 'thirdPartyContact'])
             ->find($this->lastRequestId);
 
         if (! $request) {
             return;
         }
+
+        $this->clearCareHoursHandoff();
+        $this->selected_care_recipient_profile_id = null;
+        $this->onboardingCareProfileId = $this->onboardingCareProfileRevision = null;
+        $this->createQuickCareProfile = false;
 
         $this->request_type = (string) ($request->request_type ?: CareRequest::TYPE_ONE_TIME);
         $this->title = (string) ($request->title ?? '');
@@ -567,6 +605,10 @@ class CreateCareRequestWizard extends Component
         $this->third_party_phone = (string) ($request->thirdPartyContact?->phone ?? '');
         $this->third_party_email = (string) ($request->thirdPartyContact?->email ?? '');
 
+        if ($request->recipient && ! $this->recipientIsRequester) {
+            $this->careHoursCopiedRequestId = $request->id;
+        }
+
         $this->prefillApplied = true;
         session()->flash('status', 'Last request loaded. Update schedule and publish.');
     }
@@ -593,6 +635,7 @@ class CreateCareRequestWizard extends Component
 
         $recipient = FamilyRecipientProfile::query()->forFamilyAccount($account)->first();
         if ($recipient) {
+            $this->clearCareHoursHandoff();
             $this->recipient_full_name = (string) ($recipient->full_name ?? '');
             $this->recipient_date_of_birth = $recipient->date_of_birth?->toDateString() ?? '';
             $this->recipient_gender = (string) ($recipient->gender ?? '');
@@ -699,6 +742,7 @@ class CreateCareRequestWizard extends Component
 
     public function updatedCareFor(string $value): void
     {
+        $this->clearCareHoursHandoff();
         $this->selected_care_recipient_profile_id = null;
         $this->onboardingCareProfileId = $this->onboardingCareProfileRevision = null;
 
@@ -727,6 +771,7 @@ class CreateCareRequestWizard extends Component
             ->whereNotNull('latest_ready_version_id')
             ->findOrFail($profileId);
 
+        $this->clearCareHoursHandoff();
         $this->selected_care_recipient_profile_id = $profile->id;
         $this->createQuickCareProfile = false;
         $this->care_for = $profile->recipient_is_requester ? self::CARE_FOR_SELF : self::CARE_FOR_OTHER;
@@ -738,7 +783,13 @@ class CreateCareRequestWizard extends Component
 
     public function clearCareRecipientProfile(): void
     {
+        $this->clearCareHoursHandoff();
         $this->selected_care_recipient_profile_id = null;
+    }
+
+    public function updatedSelectedCareRecipientProfileId(): void
+    {
+        $this->clearCareHoursHandoff();
     }
 
     public function chooseFastTrack(): void
@@ -763,9 +814,20 @@ class CreateCareRequestWizard extends Component
         $this->syncScheduleFields();
         $this->validateAll();
         $this->syncScheduleFields();
+        $hoursAccount = $this->syncCareHoursDefault();
+        if ($this->careHourAccountId !== null && (int) ($hoursAccount?->id ?? 0) !== $this->careHourAccountId) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose the care hours belonging to this recipient.']);
+        }
 
-        $careRequest = DB::transaction(function () {
+        $careRequest = DB::transaction(function () use ($hoursAccount) {
             $ownership = app(FamilyAccountContext::class)->ownershipAttributes(auth()->user());
+            if ($hoursAccount) {
+                \App\Models\FamilyAccount::whereKey($ownership['family_account_id'])->lockForUpdate()->firstOrFail();
+                $lockedHours = \App\Models\CareHourAccount::whereKey($hoursAccount->id)->lockForUpdate()->firstOrFail();
+                if ($lockedHours->care_recipient_profile_id) {
+                    CareRecipientProfile::whereKey($lockedHours->care_recipient_profile_id)->lockForUpdate()->firstOrFail();
+                }
+            }
             $profile = $this->resolveProfileForPublication();
             $careRequest = CareRequest::query()->create([
                 ...$ownership,
@@ -801,7 +863,7 @@ class CreateCareRequestWizard extends Component
             }
             $careRequest->tasks()->sync($attachPayload);
 
-            $careRequest->recipient()->create([
+            $recipient = $careRequest->recipient()->create([
                 'recipient_is_requester' => $this->recipientIsRequester,
                 'full_name' => $this->resolvedRecipientName,
                 'date_of_birth' => $this->recipient_date_of_birth ?: null,
@@ -813,6 +875,19 @@ class CreateCareRequestWizard extends Component
                 'care_recipient_profile_version_id' => $profile?->latest_ready_version_id,
             ]);
 
+            if ($hoursAccount) {
+                if ($this->syncCareHoursDefault()?->id !== $hoursAccount->id) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'The care balance changed. Review your payment choice and try again.']);
+                }
+                // A verified self identity can carry its balance without publishing
+                // the optional clinical profile or consuming any prepaid minutes.
+                app(\App\Services\CareHours\CareHourIdentityService::class)->linkRecipient($hoursAccount, $recipient, auth()->user());
+                $careRequest->unsetRelation('recipient');
+                app(CareHourRequestFundingService::class)->remember($careRequest, auth()->user(), $this->careHourAccountId);
+            } elseif ($this->careHoursChoiceMade && $this->careHourAccountId === null) {
+                app(CareHourRequestFundingService::class)->remember($careRequest, auth()->user(), null);
+            }
+
             if ($this->includeThirdPartyContact) {
                 $careRequest->thirdPartyContact()->create([
                     'full_name' => trim($this->third_party_full_name),
@@ -822,12 +897,14 @@ class CreateCareRequestWizard extends Component
                 ]);
             }
 
-            \App\Models\FamilyOnboarding::query()->where('family_account_id', $ownership['family_account_id'])
-                ->where('status', 'completed')->whereNull('request_handoff_completed_at')
-                ->update(['request_handoff_completed_at' => now(), 'request_context' => null]);
+            if (! $this->startedFromCareHours) {
+                \App\Models\FamilyOnboarding::query()->where('family_account_id', $ownership['family_account_id'])
+                    ->where('status', 'completed')->whereNull('request_handoff_completed_at')
+                    ->update(['request_handoff_completed_at' => now(), 'request_context' => null]);
+            }
 
             return $careRequest;
-        });
+        }, 3);
 
         $this->saveFamilyProfiles();
         if ($this->onboardingHandoffRevision !== null) {
@@ -1127,6 +1204,19 @@ class CreateCareRequestWizard extends Component
         $user = auth()->user();
         $account = app(FamilyAccountContext::class)->account($user);
 
+        $careHoursDraft = null;
+        if ($this->careHoursHandoffAccountId !== null) {
+            if (! $this->recipientIsRequester || $this->selected_care_recipient_profile_id !== null) {
+                $this->clearCareHoursHandoff();
+            } else {
+                $careHoursDraft = CareHourRequestHandoff::draftFor($this->careHoursHandoffAccountId, $user, lock: true);
+                if (! $careHoursDraft || $careHoursDraft->id !== $this->careHoursHandoffProfileId
+                    || (int) $careHoursDraft->revision !== $this->careHoursHandoffProfileRevision) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['profile' => 'This care profile changed. Return to your care hours and choose Find care again.']);
+                }
+            }
+        }
+
         if ($this->selected_care_recipient_profile_id) {
             return CareRecipientProfile::query()
                 ->forFamilyAccount($account)
@@ -1136,12 +1226,12 @@ class CreateCareRequestWizard extends Component
         }
 
         if (! $this->createQuickCareProfile) {
-            return null;
+            return $careHoursDraft;
         }
 
         $service = app(CareRecipientProfileService::class);
-        $draft = null;
-        if ($this->onboardingCareProfileId !== null) {
+        $draft = $careHoursDraft;
+        if (! $draft && $this->onboardingCareProfileId !== null) {
             $handoff = app(FamilyOnboardingService::class)->requestHandoff($user);
             abort_unless($handoff && (int) $handoff->care_recipient_profile_id === $this->onboardingCareProfileId, 409);
             $draft = CareRecipientProfile::query()->forFamilyAccount($account)
@@ -1158,7 +1248,7 @@ class CreateCareRequestWizard extends Component
             'about_them' => $this->quick_profile_about,
             'good_visit_notes' => $this->quick_profile_good_visit,
         ]);
-        $expectedRevision = $this->onboardingCareProfileRevision;
+        $expectedRevision = $careHoursDraft ? $this->careHoursHandoffProfileRevision : $this->onboardingCareProfileRevision;
         if (! $draft) {
             $draft = $service->saveDraft($user, null, $data);
             $expectedRevision = (int) $draft->revision;
@@ -1248,6 +1338,37 @@ class CreateCareRequestWizard extends Component
         $account = app(FamilyAccountContext::class)->account($user);
         $this->hasSavedHouseholdProfile = FamilyHouseholdProfile::query()->forFamilyAccount($account)->exists();
         $this->hasSavedRecipientProfile = FamilyRecipientProfile::query()->forFamilyAccount($account)->exists();
+    }
+
+    private function applyCareHoursHandoff(): void
+    {
+        $id = request()->query('care_hours_account');
+        if ($id === null) {
+            return;
+        }
+        abort_unless(is_scalar($id) && ctype_digit((string) $id) && (int) $id > 0, 404);
+        $profile = CareHourRequestHandoff::draftFor((int) $id, auth()->user());
+        abort_unless($profile, 404);
+
+        $this->startedFromCareHours = true;
+        $this->careHoursHandoffAccountId = (int) $id;
+        $this->careHoursHandoffProfileId = $profile->id;
+        $this->careHoursHandoffProfileRevision = (int) $profile->revision;
+        $this->onboardingCareProfileId = $this->onboardingCareProfileRevision = null;
+        $this->selected_care_recipient_profile_id = null;
+        $this->care_for = self::CARE_FOR_SELF;
+        $this->recipient_full_name = trim((string) auth()->user()->name);
+        $this->recipient_relationship_to_family = 'Self';
+        $this->quick_profile_about = (string) $profile->about_them;
+        $this->quick_profile_good_visit = (string) $profile->good_visit_notes;
+        $this->createQuickCareProfile = false;
+        $this->quick_profile_sharing_acknowledged = false;
+    }
+
+    private function clearCareHoursHandoff(): void
+    {
+        $this->careHoursHandoffAccountId = $this->careHoursHandoffProfileId = $this->careHoursHandoffProfileRevision = null;
+        $this->careHoursCopiedRequestId = null;
     }
 
     private function applyHomepageQuickRequestDraft(): void
@@ -1667,11 +1788,69 @@ class CreateCareRequestWizard extends Component
             ->all();
     }
 
+    public function updatedCareHourAccountId(): void
+    {
+        $this->careHoursChoiceMade = true;
+    }
+
+    private function syncCareHoursDefault(): ?\App\Models\CareHourAccount
+    {
+        $profileId = $this->selected_care_recipient_profile_id ?: $this->careHoursHandoffProfileId;
+        $copiedRequest = $this->copiedCareHoursRequest();
+        $key = $profileId ? 'profile:'.$profileId : ($copiedRequest ? 'request:'.$copiedRequest->id
+            : ($this->recipientIsRequester ? 'self:'.auth()->id() : 'new-recipient'));
+        if ($key !== $this->careHoursRecipientKey) {
+            $this->careHoursRecipientKey = $key;
+            $this->careHourAccountId = null;
+            $this->careHoursChoiceMade = false;
+        }
+        $service = app(CareHourRequestFundingService::class);
+        $account = $profileId ? $service->accountForProfile($profileId, auth()->user())
+            : ($copiedRequest ? $service->accountForRequest($copiedRequest, auth()->user())
+                : ($this->recipientIsRequester ? $service->accountForSelf(auth()->user()) : null));
+        if (! $account || $account->balance()['available_minutes'] <= 0) {
+            if (! $this->careHoursChoiceMade) {
+                $this->careHourAccountId = null;
+            }
+
+            return null;
+        }
+        if (! $this->careHoursChoiceMade) {
+            $this->careHourAccountId = $account->id;
+        }
+
+        return $account;
+    }
+
+    private function copiedCareHoursRequest(): ?CareRequest
+    {
+        if (! $this->careHoursCopiedRequestId) {
+            return null;
+        }
+        $request = CareRequest::query()->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
+            ->with('recipient')->find($this->careHoursCopiedRequestId);
+        $recipient = $request?->recipient;
+        // The explicit Copy last request action identifies this person. These
+        // comparisons only invalidate that choice when its identity is edited.
+        if (! $recipient || $this->recipientIsRequester || $recipient->recipient_is_requester
+            || trim($this->recipient_full_name) !== trim((string) $recipient->full_name)
+            || $this->recipient_date_of_birth !== (string) $recipient->date_of_birth
+            || $this->recipient_gender !== (string) $recipient->gender
+            || trim($this->recipient_relationship_to_family) !== trim((string) $recipient->relationship_to_family)) {
+            $this->careHoursCopiedRequestId = null;
+
+            return null;
+        }
+
+        return $request;
+    }
+
     public function render()
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
 
         return view('livewire.family.create-care-request-wizard', [
+            'careHoursAccount' => $this->syncCareHoursDefault(),
             'careRecipientProfiles' => CareRecipientProfile::query()
                 ->forFamilyAccount($account)
                 ->where('status', CareRecipientProfile::STATUS_READY)

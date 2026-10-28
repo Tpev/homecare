@@ -21,6 +21,23 @@ class CareBookingCheckInPolicy
             return ['allowed' => false, 'reason' => 'Accept the visit agreement before check-in.', 'code' => 'agreement'];
         }
 
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) {
+            $coverage = $careHours->readiness($booking);
+            if (! $coverage['ready']) {
+                return ['allowed' => false, 'reason' => $coverage['reason'], 'code' => 'payment_not_protected'];
+            }
+            if (! $booking->care_plan_id || $booking->hasCheckInOverride()) {
+                return ['allowed' => true, 'reason' => null, 'code' => 'care_hours_ready'];
+            }
+            $at ??= now();
+            if (($booking->checkInWindowOpensAt() && $at->lt($booking->checkInWindowOpensAt()))
+                || ($booking->checkInWindowClosesAt() && $at->gt($booking->checkInWindowClosesAt()))) {
+                return ['allowed' => false, 'reason' => 'Check-in is outside this visit’s allowed window.', 'code' => 'outside_window'];
+            }
+            return ['allowed' => true, 'reason' => null, 'code' => 'care_hours_ready'];
+        }
+
         $at ??= now();
         if ($booking->payment?->hasPrepaidVisitHold() && $booking->scheduled_start_at && $at->lt($booking->scheduled_start_at)) {
             return ['allowed' => false, 'reason' => 'This reopened visit can be started at '.$booking->scheduled_start_at->format('M j, g:i A').'.', 'code' => 'prepaid_visit_too_early'];

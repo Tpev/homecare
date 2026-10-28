@@ -90,6 +90,8 @@ class Batch10FamilyGoalJourneyTest extends TestCase
 
     public function test_complete_recurring_message_is_applied_deterministically_after_the_explicit_choice(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-10-16 12:00:00', 'America/New_York'));
+
         [, $family] = $this->eligibleFamily();
         $account = app(FamilyAccountContext::class)->account($family);
         FamilyHouseholdProfile::query()->create([

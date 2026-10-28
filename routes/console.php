@@ -25,6 +25,9 @@ Schedule::command('homecare:process-time-corrections')->hourly()->withoutOverlap
 Schedule::command('homecare:process-completed-extra-visits')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('homecare:retry-payout-transfers --limit=100')->hourly()->withoutOverlapping();
 Schedule::command('homecare:reconcile-payment-ledger-v2 --limit=100')->everyFifteenMinutes()->withoutOverlapping();
+// Accepted purchases remain recoverable even when new care-hour sales are disabled.
+Schedule::command('homecare:reconcile-care-hour-purchases --limit=100')->everyFiveMinutes()->withoutOverlapping()->runInBackground();
+Schedule::command('care-hours:reconcile-bookings --limit=100')->everyTenMinutes()->withoutOverlapping()->runInBackground();
 Schedule::command('homecare:generate-regular-care-visits')->dailyAt('02:15')->withoutOverlapping();
 Schedule::command('homecare:prepare-regular-care-payments')->hourly()->withoutOverlapping();
 Schedule::command('homecare:process-continuous-coverage')->hourly()->withoutOverlapping();

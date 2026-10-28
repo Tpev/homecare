@@ -22,6 +22,9 @@ class LeadSmsComposer extends Component
     #[Locked]
     public ?int $editingTemplateId = null;
 
+    #[Locked]
+    public ?int $pendingMessageId = null;
+
     public bool $showComposer = false;
 
     public bool $showTemplates = false;
@@ -51,6 +54,12 @@ class LeadSmsComposer extends Component
 
     public function startMessage(): void
     {
+        if ($this->pendingMessageId) {
+            $this->refreshPendingMessage();
+            if ($this->pendingMessageId) {
+                return;
+            }
+        }
         $this->resetValidation();
         $this->reset('smsBody', 'messageMode', 'selectedTemplateId', 'notice');
         $this->requestKey = (string) Str::uuid();
@@ -86,6 +95,35 @@ class LeadSmsComposer extends Component
         $this->resetValidation();
         $message = $service->send(Lead::findOrFail($this->leadId), auth()->user(), $this->smsBody, $this->requestKey);
         $this->dispatch('lead-sms-updated');
+
+        $this->showSendResult($message);
+    }
+
+    public function refreshPendingMessage(): void
+    {
+        if (! $this->pendingMessageId) {
+            return;
+        }
+        $message = SmsMessage::query()->where('lead_id', $this->leadId)
+            ->where('sent_by_user_id', auth()->id())->findOrFail($this->pendingMessageId);
+        if (! $message->awaitingProviderConfirmation()) {
+            $this->resetValidation('send');
+            $this->showSendResult($message);
+            $this->dispatch('lead-sms-updated');
+        }
+    }
+
+    private function showSendResult(SmsMessage $message): void
+    {
+        if ($message->awaitingProviderConfirmation()) {
+            $this->pendingMessageId = $message->id;
+            $this->requestKey = $message->request_key;
+            $this->notice = 'Awaiting confirmation. Please wait before sending this text again.';
+
+            return;
+        }
+        $this->pendingMessageId = null;
+        $this->notice = '';
 
         if (in_array($message->status, [SmsMessage::STATUS_FAILED, SmsMessage::STATUS_UNDELIVERED], true)) {
             $this->addError('send', 'The text could not be sent. '.$message->error_message);

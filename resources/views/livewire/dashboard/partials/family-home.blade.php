@@ -42,12 +42,14 @@
     $waitingRequest = $needsApplicants->first();
     $nextBooking = $nextShiftRequest?->booking;
     $nextPayment = $nextBooking?->payment;
-    $nextPaymentNeedsAction = $nextPayment?->requiresFamilyAction() ?? false;
-    $nextPaymentProtected = $nextPayment && in_array($nextPayment->status, [
+    $careHourReadiness = $familyData['care_hour_readiness'] ?? collect();
+    $nextCareHours = $nextBooking ? $careHourReadiness->get($nextBooking->id) : null;
+    $nextPaymentNeedsAction = $nextCareHours['needs_action'] ?? ($nextPayment?->requiresFamilyAction() ?? false);
+    $nextPaymentProtected = $nextCareHours['ready'] ?? ($nextPayment && in_array($nextPayment->status, [
         \App\Models\CareBookingPayment::STATUS_AUTHORIZED,
         \App\Models\CareBookingPayment::STATUS_CAPTURED,
         \App\Models\CareBookingPayment::STATUS_TRANSFERRED,
-    ], true);
+    ], true));
     $nextCaregiver = $nextBooking?->caregiver;
     $nextCaregiverName = trim((string) ($nextCaregiver?->name ?? ''));
     $nextCaregiverPhotoUrl = $nextCaregiver?->caregiverProfile?->profile_photo_path
@@ -72,7 +74,8 @@
     }
 
     $paymentAttentionRequest = $activeShifts->first(
-        fn ($request) => $request->booking?->payment?->requiresFamilyAction() ?? false
+        fn ($request) => $careHourReadiness->get($request->booking?->id)['needs_action']
+            ?? ($request->booking?->payment?->requiresFamilyAction() ?? false)
     );
     $paymentAttentionPlan = $regularPlans->first(function ($plan) {
         return $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION
@@ -80,6 +83,7 @@
     });
     $paymentAttentionBooking = $paymentAttentionRequest?->booking ?: $paymentAttentionPlan?->nextBooking;
     $paymentAttentionPayment = $paymentAttentionBooking?->payment;
+    $paymentAttentionCareHours = $paymentAttentionBooking ? $careHourReadiness->get($paymentAttentionBooking->id) : null;
     $paymentAttentionHref = $paymentAttentionBooking
         ? route('family.requests.show', $paymentAttentionBooking->care_request_id)
         : ($paymentAttentionPlan ? route('family.care.show', $paymentAttentionPlan->id) : null);
@@ -169,10 +173,12 @@
     }
 
     if ($paymentAttentionHref) {
-        $nextActionTitle = 'Fix payment for your visit';
-        $nextActionDescription = 'Confirm or replace your card so this visit is payment protected.';
+        $nextActionTitle = $paymentAttentionCareHours ? 'Review coverage for your visit' : 'Fix payment for your visit';
+        $nextActionDescription = $paymentAttentionCareHours
+            ? 'Review your care hours or make a one-time payment for uncovered time.'
+            : 'Confirm or replace your card so this visit is payment protected.';
         $nextActionRoute = $paymentAttentionHref;
-        $nextActionLabel = 'Fix payment';
+        $nextActionLabel = $paymentAttentionCareHours ? 'Review visit coverage' : 'Fix payment';
         $nextActionTone = 'warning';
     }
 
@@ -212,9 +218,9 @@
         ! $billingReady ? [
             'key' => 'billing-not-ready',
             'eyebrow' => 'Account setup',
-            'title' => 'Billing not ready',
+            'title' => $nextCareHours ? 'Optional backup card' : 'Billing not ready',
             'subject' => null,
-            'body' => 'Add a card so you can hire without delay.',
+            'body' => $nextCareHours ? 'Add a card if you want a backup payment option.' : 'Add a card so you can hire without delay.',
             'meta' => null,
             'label' => 'Set up billing',
             'href' => route('family.billing.show'),
@@ -263,7 +269,9 @@
         $careSummaryBody = ($nextCaregiverName !== '' ? $nextCaregiverName : 'Your caregiver').' is coming '.$nextVisitTimeLabel.'.';
         $careSummaryMeta = $nextPaymentNeedsAction
             ? 'Payment confirmation is needed for this visit.'
-            : ($nextPaymentProtected ? 'Payment confirmed. No action needed.' : 'Your card will be confirmed closer to the visit.');
+            : ($nextCareHours
+                ? ($nextPaymentProtected ? 'Visit coverage confirmed. No action needed.' : 'Care hours will be reserved closer to the visit.')
+                : ($nextPaymentProtected ? 'Payment confirmed. No action needed.' : 'Your card will be confirmed closer to the visit.'));
     }
 
     if ($liveShiftRequest) {
@@ -285,9 +293,9 @@
     }
 
     if ($paymentAttentionHref) {
-        $careSummaryTitle = 'Payment needs attention.';
+        $careSummaryTitle = $paymentAttentionCareHours ? 'Visit coverage needs attention.' : 'Payment needs attention.';
         $careSummaryBody = $paymentAttentionCaregiverName.' is scheduled '.$paymentAttentionVisitLabel.'.';
-        $careSummaryMeta = $paymentAttentionPayment?->last_error ?: 'Confirm or replace your card for this visit.';
+        $careSummaryMeta = $paymentAttentionCareHours['reason'] ?? ($paymentAttentionPayment?->last_error ?: 'Confirm or replace your card for this visit.');
     }
 
     $heroToneClass = $nextActionTone === 'warning' ? 'bg-amber-800' : 'bg-[#23483F]';

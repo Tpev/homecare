@@ -154,6 +154,7 @@ class MarketingPagesTest extends TestCase
             'user_id' => $caregiver->id,
             'slug' => 'jordan-actual-caregiver',
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => 'Calm companionship, meal preparation, and reliable daily routines.',
             'platform_hourly_rate' => 32,
             'years_experience' => 8,

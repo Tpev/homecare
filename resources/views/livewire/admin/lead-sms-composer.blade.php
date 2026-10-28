@@ -4,10 +4,10 @@
             <h3 class="text-base font-bold text-slate-950">Text messages</h3>
             <p class="mt-1 text-xs text-slate-600">Send to {{ $lead->phone ?: 'No phone saved' }}</p>
         </div>
-        <button type="button" wire:click="startMessage" @disabled($showComposer || !$lead->phone || $lead->do_not_contact_at) class="min-h-10 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">Send SMS</button>
+        <button type="button" wire:click="startMessage" @disabled($showComposer || $pendingMessageId || !$lead->phone || $lead->do_not_contact_at) class="min-h-10 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">Send SMS</button>
     </div>
     @if($lead->do_not_contact_at)<p class="mt-2 text-sm text-rose-700">This lead is marked do not contact.</p>@endif
-    @if($notice)<p role="status" class="mt-3 text-sm text-emerald-800">{{ $notice }}</p>@endif
+    @if($notice)<p role="status" @if($pendingMessageId) wire:poll.5s="refreshPendingMessage" @endif class="mt-3 text-sm text-emerald-800">{{ $notice }}</p>@endif
 
     @if($showComposer)
         <form wire:submit="sendMessage" class="mt-4 space-y-3">
@@ -16,11 +16,11 @@
                 <legend class="text-sm font-semibold text-slate-700">Write your message</legend>
                 <div class="mt-2 flex flex-wrap gap-3">
                     <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                        <input type="radio" wire:model.live="messageMode" name="sms-mode-{{ $this->getId() }}" value="free_text" class="border-slate-300 text-emerald-700 focus:ring-emerald-600">
+                        <input type="radio" wire:model.live="messageMode" @disabled($pendingMessageId) name="sms-mode-{{ $this->getId() }}" value="free_text" class="border-slate-300 text-emerald-700 focus:ring-emerald-600">
                         Free text
                     </label>
                     <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                        <input type="radio" wire:model.live="messageMode" name="sms-mode-{{ $this->getId() }}" value="template" class="border-slate-300 text-emerald-700 focus:ring-emerald-600">
+                        <input type="radio" wire:model.live="messageMode" @disabled($pendingMessageId) name="sms-mode-{{ $this->getId() }}" value="template" class="border-slate-300 text-emerald-700 focus:ring-emerald-600">
                         Use a template
                     </label>
                 </div>
@@ -28,7 +28,7 @@
             @if($messageMode === 'template')
                 <label class="block">
                     <span class="text-sm font-semibold text-slate-700">Message template</span>
-                    <select wire:model.live="selectedTemplateId" class="mt-1 min-h-11 w-full rounded-xl border-slate-200 text-sm">
+                    <select wire:model.live="selectedTemplateId" @disabled($pendingMessageId) class="mt-1 min-h-11 w-full rounded-xl border-slate-200 text-sm">
                         <option value="">Choose a template</option>
                         @foreach($templates as $template)<option value="{{ $template->id }}">{{ $template->name }}</option>@endforeach
                     </select>
@@ -39,7 +39,7 @@
             @endif
             <label class="block">
                 <span class="text-sm font-semibold text-slate-700">Message</span>
-                <textarea wire:model="smsBody" rows="4" maxlength="1600" required aria-describedby="sms-help-{{ $this->getId() }}" class="mt-1 w-full rounded-xl border-slate-200 text-sm" placeholder="Type your message here…"></textarea>
+                <textarea wire:model="smsBody" @disabled($pendingMessageId) rows="4" maxlength="1600" required aria-describedby="sms-help-{{ $this->getId() }}" class="mt-1 w-full rounded-xl border-slate-200 text-sm" placeholder="Type your message here…"></textarea>
             </label>
             <p id="sms-help-{{ $this->getId() }}" class="text-xs text-slate-500">Up to 1,600 characters.@if($messageMode === 'template') You can edit the template text before sending.@endif</p>
             @foreach(['smsBody', 'phone', 'send'] as $field)
@@ -47,7 +47,7 @@
             @endforeach
             <div class="flex flex-wrap justify-end gap-2">
                 <button type="button" wire:click="$set('showComposer', false)" wire:loading.attr="disabled" wire:target="sendMessage" class="min-h-10 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button>
-                <button type="submit" wire:loading.attr="disabled" wire:target="sendMessage" class="min-h-10 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">
+                <button type="submit" @disabled($pendingMessageId) wire:loading.attr="disabled" wire:target="sendMessage" class="min-h-10 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">
                     <span wire:loading.remove wire:target="sendMessage">Send text</span><span wire:loading wire:target="sendMessage">Sending…</span>
                 </button>
             </div>

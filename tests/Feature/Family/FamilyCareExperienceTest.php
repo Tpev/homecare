@@ -89,7 +89,7 @@ class FamilyCareExperienceTest extends TestCase
             ->assertSee('Amy Ten Broek')
             ->assertSee('One-time visit')
             ->assertSee('Visit #')
-            ->assertSee('View care')
+            ->assertSee('View visit')
             ->assertSee('Overview')
             ->assertSee('Care request')
             ->assertSee('History')

@@ -19,8 +19,39 @@
         </span>
     </label>
 
+    @if($careHoursAccount)
+        <fieldset class="mt-4 space-y-2 rounded-xl border border-[#D8E1D7] p-4 text-sm">
+            <legend class="px-1 font-semibold">Payment when you book</legend>
+            <label class="flex items-start gap-2">
+                <input type="radio" name="request-care-hour-funding" wire:model.live="careHourAccountId" value="{{ $careHoursAccount->id }}" @checked((int) $careHourAccountId === (int) $careHoursAccount->id) class="mt-1">
+                <span>Use care hours first · {{ \App\Models\CareHourAccount::formatMinutes($careHoursAccount->balance()['available_minutes']) }} for {{ $careHoursAccount->display_name }}</span>
+            </label>
+            <label class="flex items-center gap-2"><input type="radio" name="request-care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Use card instead</label>
+            <p class="text-xs text-[#485E53]">Posting is free. Review any uncovered amount before booking.</p>
+            @error('careHourAccountId')<p class="text-rose-800" role="alert">{{ $message }}</p>@enderror
+        </fieldset>
+    @endif
+
     <div class="hc-create-checkout-bar">
         <div class="hc-create-estimate">
+            @if($careHoursAccount && (int) $careHourAccountId === (int) $careHoursAccount->id)
+                @php
+                    $estimateMinutes = $this->estimatedHours === null ? null : (int) round($this->estimatedHours * 60);
+                    $coveredMinutes = $estimateMinutes === null ? 0 : min($estimateMinutes, $careHoursAccount->balance()['available_minutes']);
+                    $uncoveredMinutes = $estimateMinutes === null ? 0 : max(0, $estimateMinutes - $coveredMinutes);
+                    $uncoveredTotal = $uncoveredMinutes * $this->standardHourlyTotal / 60;
+                @endphp
+                <p>{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated first week' : 'Estimated payment' }}</p>
+                @if($estimateMinutes !== null)
+                    <p class="hc-create-estimate-total">{{ \App\Models\CareHourAccount::formatMinutes($coveredMinutes) }}<span>care hours{{ $uncoveredMinutes > 0 ? ' + $'.number_format($uncoveredTotal, 2) : '' }}</span></p>
+                    <p class="hc-create-estimate-note">{{ $uncoveredMinutes > 0 ? 'You will review the remaining payment when booking.' : 'Covered by your current care hours.' }}{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? ' Your balance is shared across visits.' : '' }}</p>
+                @else
+                    <p class="hc-create-estimate-note">Add the schedule to see how many hours will be covered.</p>
+                @endif
+                @if($this->estimateAgreement)
+                    <p class="hc-create-estimate-note">Your custom-priced caregiver uses card payment.</p>
+                @endif
+            @else
             <p>{{ ($request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated recurring care each week' : 'Estimated one-time cost').($this->estimateAgreement && ! $this->estimateAgreement->all_caregivers ? ' with '.$this->estimateAgreement->caregiver->name : '') }}</p>
             @if ($this->estimateAgreement?->all_caregivers)
                 <p class="hc-create-estimate-note">Your agreed total rate: ${{ number_format($this->estimateHourlyRate + $this->processingFeeHourlyRate, 2) }}/hour with any caregiver.</p>
@@ -48,6 +79,7 @@
                 </details>
             @else
                 <p class="hc-create-estimate-note">Add the schedule to see the estimate.</p>
+            @endif
             @endif
         </div>
 

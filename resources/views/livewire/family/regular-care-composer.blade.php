@@ -102,10 +102,16 @@
 
                 <div class="space-y-4">
                     <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4">
+                        @if($careHourAccountId)
+                        <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Using care hours</p>
+                        <p class="mt-1 font-display text-2xl font-semibold text-emerald-950">1 care hour covers 1 hour of care.</p>
+                        <p class="mt-2 text-sm text-emerald-800">No extra fee for covered time. Each visit will show its hours and any remaining payment before it is ready.</p>
+                        @else
                         <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Hourly price</p>
                         <p class="mt-1 font-display text-2xl font-semibold text-emerald-950">${{ number_format((float) $platformRate, 2) }}/hr*</p>
                         <p class="mt-1 text-sm text-emerald-800">Care ${{ number_format((float) $platformRate, 2) }} + processing fee ${{ number_format((float) $processingFeeRate, 2) }} = <strong>${{ number_format((float) $platformRate + (float) $processingFeeRate, 2) }}/hour total</strong>.</p>
                         <p class="mt-2 text-xs text-emerald-800">{{ (float) $processingFeeRate > 0 ? '*A $'.number_format((float) $processingFeeRate, 2).'/hour processing fee is added to every completed visit.' : 'Your agreed rate includes all fees. LoLo covers payment processing costs.' }}</p>
+                        @endif
                     </div>
 
                     <x-textarea label="Care notes" wire:model="careNotes" />
@@ -116,7 +122,7 @@
                 </div>
 
                 <x-slot:footer>
-                    @if ($billingSummary['ready'] ?? false)
+                    @if ($careHourAccountId || ($billingSummary['ready'] ?? false))
                         <x-button color="blue" type="submit">Send to caregiver</x-button>
                     @else
                         <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -143,7 +149,7 @@
                     <div>
                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Caregiver</p>
                         <p class="mt-1 font-semibold text-[#17313F]">{{ $caregiver?->name ?: '-' }}</p>
-                        <p class="text-[#607080]">${{ number_format((float) $platformRate, 2) }}/hr care* + ${{ number_format((float) $processingFeeRate, 2) }}/hr processing fee</p>
+                        @unless($careHourAccountId)<p class="text-[#607080]">${{ number_format((float) $platformRate, 2) }}/hr care* + ${{ number_format((float) $processingFeeRate, 2) }}/hr processing fee</p>@endunless
                     </div>
                     <div>
                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Recipient</p>
@@ -156,7 +162,16 @@
                 <x-slot:header>
                     <h2 class="font-display text-lg font-semibold">Payment</h2>
                 </x-slot:header>
-                @if ($billingSummary['ready'] ?? false)
+                @if($careHoursAccount)
+                    <fieldset class="mb-4 space-y-3 text-sm"><legend class="sr-only">Payment for future visits</legend>
+                        <label class="flex items-start gap-2"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', {{ $careHoursAccount->id }})" value="{{ $careHoursAccount->id }}" @checked((int) $careHourAccountId === (int) $careHoursAccount->id) class="mt-1"><span>Use care hours · {{ \App\Models\CareHourAccount::formatMinutes($careHoursAccount->balance()['available_minutes']) }} available</span></label>
+                        <label class="flex items-center gap-2"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Usual card payment</label>
+                        @error('careHourAccountId')<p class="text-rose-800">{{ $message }}</p>@enderror
+                    </fieldset>
+                @endif
+                @if($careHourAccountId)
+                    <p class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">Care hours will cover future visits. We will ask you to cover any shortfall before a visit is ready.</p>
+                @elseif ($billingSummary['ready'] ?? false)
                     <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
                         <p class="font-semibold">Ready for authorization</p>
                         <p class="mt-1">

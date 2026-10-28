@@ -6,6 +6,8 @@ use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestRecruitment;
 use App\Services\Booking\BookingTrustService;
+use App\Services\CareHours\PrepaidBookingFundingService;
+use App\Services\CareHours\PrepaidBookingSettlementService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\Marketplace\CareRequestRecruitmentService;
 use App\Support\AdminCareRequestSchedule;
@@ -87,7 +89,12 @@ class CareRequestShow extends Component
             $payload['cancellation_reason'] = 'Admin override from request detail panel.';
         }
 
-        $booking->update($payload);
+        $careHours = app(PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) {
+            app(PrepaidBookingSettlementService::class)->updateVisitState($booking, $payload);
+        } else {
+            $booking->update($payload);
+        }
         $this->refreshRequest();
         session()->flash('status', 'Booking status updated to '.strtoupper($status).'.');
     }

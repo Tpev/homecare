@@ -3,10 +3,10 @@
 namespace Tests\Feature\Family;
 
 use App\Livewire\Family\ManageCareRequest;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -156,6 +156,7 @@ class FamilyPrelaunchPilotFlowTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Trusted caregiver support. ', 4),
+            'screening_initial_approved_at' => now(),
             'platform_hourly_rate' => 30.00,
             'years_experience' => 4,
             'service_area_zip' => '27601',

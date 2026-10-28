@@ -2,6 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Models\MarketplaceNotificationDelivery;
+use App\Models\User;
+use App\Services\Notifications\NotificationChannels;
+use App\Services\Notifications\NotificationDeliveryPolicy;
+use App\Services\Notifications\NotificationPreferenceResolver;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplaceNotificationPresentation;
 use Illuminate\Bus\Queueable;
@@ -29,6 +34,32 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         return $this->channels;
+    }
+
+    public function shouldSend(object $notifiable, string $channel): bool
+    {
+        if ($channel !== 'mail') {
+            return true;
+        }
+
+        // Laravel also runs this guard when an already queued notification is delivered.
+        // Preserve forced operational alerts for administrators.
+        $allowed = NotificationDeliveryPolicy::allowsEmail($this->eventKey)
+            && (! $notifiable instanceof User
+                || $notifiable->isAdministrator()
+                || app(NotificationPreferenceResolver::class)->resolve($notifiable, $this->eventKey)[NotificationChannels::EMAIL]);
+
+        if (! $allowed && $notifiable instanceof User && ($deliveryId = data_get($this->payload, 'tracking.delivery_id'))) {
+            MarketplaceNotificationDelivery::query()
+                ->whereKey($deliveryId)
+                ->where('user_id', $notifiable->id)
+                ->where('event_key', $this->eventKey)
+                ->where('channel', NotificationChannels::EMAIL)
+                ->whereIn('status', ['queued', 'pending', 'sending'])
+                ->update(['status' => 'suppressed', 'sent_at' => null]);
+        }
+
+        return $allowed;
     }
 
     public function toMail(object $notifiable): MailMessage

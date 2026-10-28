@@ -755,6 +755,7 @@ class CaregiverInvitationExperienceTest extends TestCase
             'user_id' => $caregiver->id,
             'slug' => str($name)->slug().'-'.$caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => str_repeat('Experienced non-medical caregiver. ', 3),
             'platform_hourly_rate' => 30,
             'years_experience' => 5,

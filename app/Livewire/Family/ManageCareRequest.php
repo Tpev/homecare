@@ -138,6 +138,8 @@ class ManageCareRequest extends Component
 
     public bool $aiPrepared = false;
 
+    public ?int $careHourAccountId = null;
+
     public array $applicationStatusOptions = [
         ['label' => 'All caregivers', 'value' => 'all'],
         ['label' => 'Interested', 'value' => CareRequestApplication::STATUS_APPLIED],
@@ -233,6 +235,7 @@ class ManageCareRequest extends Component
             $this->activeTab = 'applicants';
             $this->reviewingApplicationId = $resumeApplicationId;
         }
+        $this->initializeCareHoursChoice();
     }
 
     public function setActiveTab(string $tab): void
@@ -376,6 +379,7 @@ class ManageCareRequest extends Component
         $this->reviewingApplicationId = $applicationId;
         $this->reviewedOfferVersion = $application->offer_version;
         $this->reviewingCompletion = false;
+        $this->initializeCareHoursChoice($application);
         $this->dispatch('care-decision-opened');
     }
 
@@ -486,10 +490,11 @@ class ManageCareRequest extends Component
             return;
         }
 
+        $selectedCareHourAccount = $this->selectedCareHourAccount($application);
         if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
             try {
                 $plan = app(\App\Services\RegularCare\CarePlanService::class)
-                    ->activateFromRecurringRequest($this->requestItem, $application, auth()->user());
+                    ->activateFromRecurringRequest($this->requestItem, $application, auth()->user(), $selectedCareHourAccount);
             } catch (PaymentException $e) {
                 $this->refreshRequestItem(preferLifecyclePrimary: true);
                 $this->addError('hire', $e->userMessage);
@@ -532,7 +537,7 @@ class ManageCareRequest extends Component
         $paymentConfirmationId = null;
 
         try {
-            DB::transaction(function () use ($application, &$paymentWarning, &$paymentConfirmationId) {
+            DB::transaction(function () use ($application, $selectedCareHourAccount, &$paymentWarning, &$paymentConfirmationId) {
                 app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $application->caregiver_user_id);
                 $this->requestItem = CareRequest::query()->lockForUpdate()->findOrFail($this->requestItem->id);
                 $application = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
@@ -591,6 +596,9 @@ class ManageCareRequest extends Component
                     ['application_id' => $application->id]
                 );
 
+                if ($selectedCareHourAccount) {
+                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForBooking($booking, $selectedCareHourAccount, auth()->user());
+                }
                 $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
                 if ($payment->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
                     $paymentConfirmationId = $payment->id;
@@ -650,6 +658,15 @@ class ManageCareRequest extends Component
 
     public function startPaymentAuthorization(): void
     {
+        $prepaidBooking = $this->requestItem->booking;
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($prepaidBooking && $careHours->isPrepaid($prepaidBooking)) {
+            $careHours->prepare($prepaidBooking);
+            $this->refreshRequestItem();
+            session()->flash('status', 'Review this visit’s care-hours coverage and use Cover remaining time if payment is needed.');
+
+            return;
+        }
         $booking = $this->requestItem->booking;
         if (! $booking) {
             session()->flash('warning', 'No visit is ready for payment authorization yet.');
@@ -745,6 +762,9 @@ class ManageCareRequest extends Component
     public function failStripeAuthorization(?string $paymentIntentId = null, string $message = ''): void
     {
         $booking = $this->requestItem->booking;
+        if ($booking && app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            return;
+        }
         if (! $booking) {
             session()->flash('warning', $message !== '' ? $message : 'Card authorization failed.');
 
@@ -821,8 +841,38 @@ class ManageCareRequest extends Component
 
     public function continueTimeCorrectionPayment(int $correctionId): void
     {
+        $ownedCorrection = $this->ownedTimeCorrection($correctionId);
+        $booking = $ownedCorrection->booking;
+        $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($booking)) {
+            try {
+                $correction = app(CareBookingTimeCorrectionService::class)->resumeApproved($ownedCorrection, auth()->user());
+                $this->refreshRequestItem();
+                if ($correction->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
+                    $checkout = $careHours->createShortfallCheckout(
+                        $booking->fresh(), auth()->user(),
+                        route('family.care-hours.shortfall.return', $booking),
+                        route('family.requests.show', $booking->care_request_id),
+                    );
+                    $this->redirect($checkout['url']);
+
+                    return;
+                }
+                session()->flash($correction->status === CareBookingTimeCorrection::STATUS_APPLIED ? 'status' : 'warning',
+                    $correction->status === CareBookingTimeCorrection::STATUS_APPLIED
+                        ? 'Visit time updated and payment completed.'
+                        : 'Hours remain approved. Payment is still being checked.');
+            } catch (PaymentException $exception) {
+                session()->flash('warning', $exception->userMessage);
+            } catch (\Stripe\Exception\ApiErrorException $exception) {
+                report($exception);
+                session()->flash('warning', 'We could not open payment just now. Your approved hours are saved. Please try again shortly.');
+            }
+
+            return;
+        }
         $correction = app(CareBookingTimeCorrectionService::class)->resumeApproved(
-            $this->ownedTimeCorrection($correctionId),
+            $ownedCorrection,
             auth()->user(),
         );
         $this->refreshRequestItem();
@@ -859,12 +909,24 @@ class ManageCareRequest extends Component
         }
 
         if (in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
-            $booking->update([
+            $completion = [
                 'status' => CareBooking::STATUS_COMPLETED,
                 'completed_at' => now(),
                 'timesheet_submitted_at' => $booking->timesheet_submitted_at ?: now(),
                 'paused_at' => null,
-            ]);
+            ];
+            if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+                // A family-ended prepaid visit uses the same actual-care clock as caregiver check-out.
+                $pausedSeconds = max(0, (int) $booking->total_paused_seconds);
+                if ($booking->status === CareBooking::STATUS_PAUSED && $booking->paused_at) {
+                    $pausedSeconds += max(0, (int) $booking->paused_at->diffInSeconds($completion['completed_at']));
+                }
+                $anchor = $booking->started_at ?: $booking->scheduled_start_at;
+                $elapsedSeconds = $anchor ? max(0, $anchor->diffInSeconds($completion['completed_at']) - $pausedSeconds) : 0;
+                $completion['worked_minutes'] = (int) floor($elapsedSeconds / 60);
+                $completion['total_paused_seconds'] = $pausedSeconds;
+            }
+            $booking->update($completion);
 
             app(BookingTrustService::class)->recordEvent(
                 $booking,
@@ -1162,6 +1224,10 @@ class ManageCareRequest extends Component
                     'last_reschedule_reason' => $changeRequest->reason,
                 ]);
                 FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
+                $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+                if ($careHours->isPrepaid($booking)) {
+                    $careHours->protectScheduleChange($booking);
+                }
             }
 
         });
@@ -1241,13 +1307,22 @@ class ManageCareRequest extends Component
             'disputeReason' => ['required', 'string', 'min:12', 'max:3000'],
         ]);
 
-        $booking->update([
+        $payload = [
             'status' => CareBooking::STATUS_DISPUTED,
             'dispute_opened_at' => now(),
             'dispute_opened_by_user_id' => auth()->id(),
             'dispute_reason' => trim($this->disputeReason),
             'dispute_status' => 'open',
-        ]);
+        ];
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            if (! app(\App\Services\CareHours\PrepaidBookingSettlementService::class)->updateVisitState(
+                $booking, $payload, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED],
+            )) {
+                return;
+            }
+        } else {
+            $booking->update($payload);
+        }
 
         SupportTicket::query()->create([
             'family_account_id' => $this->requestItem->family_account_id,
@@ -2189,6 +2264,9 @@ class ManageCareRequest extends Component
         }
 
         return view('livewire.family.manage-care-request', [
+            'careHourAccounts' => $this->careHourAccountsForRequest(),
+            'prepaidBookingSummary' => $this->requestItem->booking
+                ? app(\App\Services\CareHours\PrepaidBookingFundingService::class)->summary($this->requestItem->booking) : null,
             'hirePayment' => $this->requestItem->status === CareRequest::STATUS_OPEN
                 && ($this->activeTab === 'applicants' || $this->reviewingApplicationId)
                 ? $this->paymentReadinessForHire()
@@ -2215,6 +2293,9 @@ class ManageCareRequest extends Component
 
     private function paymentReadinessForHire(): array
     {
+        if ($this->careHourAccountId !== null) {
+            return ['ready' => $this->selectedCareHourAccount() !== null, 'unavailable' => false];
+        }
         // Cache only within this Livewire request; re-check on the next interaction.
         if ($this->hirePaymentReadiness !== null) {
             return $this->hirePaymentReadiness;
@@ -2231,6 +2312,62 @@ class ManageCareRequest extends Component
         } catch (PaymentException) {
             return $this->hirePaymentReadiness = ['ready' => false, 'unavailable' => true];
         }
+    }
+
+    public function updatedCareHourAccountId(): void
+    {
+        if ($this->requestItem->status !== CareRequest::STATUS_OPEN || $this->requestItem->booking()->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'This visit already has its payment arranged.']);
+        }
+        $this->selectedCareHourAccount();
+        app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->remember($this->requestItem, auth()->user(), $this->careHourAccountId);
+        $this->hirePaymentReadiness = null;
+    }
+
+    private function initializeCareHoursChoice(?CareRequestApplication $application = null): void
+    {
+        if ($this->requestItem->status !== CareRequest::STATUS_OPEN || $this->requestItem->booking()->exists()) {
+            $this->careHourAccountId = null;
+
+            return;
+        }
+        $this->careHourAccountId = app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->defaultAccountId($this->requestItem, auth()->user(), $application ?? $this->fundingApplication());
+        $this->hirePaymentReadiness = null;
+    }
+
+    private function fundingApplication(): ?CareRequestApplication
+    {
+        return $this->reviewingApplicationId
+            ? $this->requestItem->applications()->find($this->reviewingApplicationId)
+            : null;
+    }
+
+    private function selectedCareHourAccount(?CareRequestApplication $application = null): ?\App\Models\CareHourAccount
+    {
+        if ($this->careHourAccountId === null) {
+            return null;
+        }
+        $account = app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->accountForRequest($this->requestItem, auth()->user(), $application ?? $this->fundingApplication());
+        if ((int) ($account?->id ?? 0) !== $this->careHourAccountId) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose the care-hours balance linked to this recipient.']);
+        }
+
+        return $account;
+    }
+
+    private function careHourAccountsForRequest(): array
+    {
+        $account = app(\App\Services\CareHours\CareHourRequestFundingService::class)
+            ->accountForRequest($this->requestItem, auth()->user(), $this->fundingApplication());
+        if (! $account) {
+            return [];
+        }
+
+        return [['id' => $account->id, 'display_name' => $account->display_name,
+            'available_minutes' => $account->balance()['available_minutes']]];
     }
 
     private function certificationCriteria(): CaregiverCertificationCriteria

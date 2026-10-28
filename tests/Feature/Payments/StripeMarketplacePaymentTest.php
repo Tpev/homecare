@@ -1765,6 +1765,7 @@ class StripeMarketplacePaymentTest extends TestCase
         $caregiverProfile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => str_repeat('Experienced caregiver. ', 4),
             'platform_hourly_rate' => 28.00,
             'years_experience' => 5,

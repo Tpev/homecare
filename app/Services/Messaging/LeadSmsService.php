@@ -2,11 +2,13 @@
 
 namespace App\Services\Messaging;
 
+use App\Exceptions\Messaging\TwilioSmsRejectedException;
 use App\Jobs\SendIncomingSmsAlert;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\SmsMessage;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +37,30 @@ class LeadSmsService
             throw ValidationException::withMessages(['send' => 'The SMS sending number is not configured.']);
         }
 
-        $message = DB::transaction(function () use ($lead, $actor, $body, $to, $from, $requestKey): SmsMessage {
+        // Preserve the original attempt even after a reload creates a new request key.
+        // The payload lock covers concurrent CRM users and duplicate lead records.
+        $payloadKey = hash('sha256', $from."\0".$to."\0".$body);
+        $message = Cache::lock('crm-sms:send:'.$payloadKey, 30)->block(5, fn () => DB::transaction(function () use ($lead, $actor, $body, $to, $from, $requestKey): SmsMessage {
+            $existing = SmsMessage::query()->where('request_key', $requestKey)->first();
+            if ($existing) {
+                abort_unless($existing->lead_id === $lead->id && $existing->sent_by_user_id === $actor->id, 403);
+                if ($existing->body !== $body || $existing->to_phone !== $to || $existing->from_phone !== $from) {
+                    throw ValidationException::withMessages(['send' => 'This attempt is already recorded. Start a new message to change its text or recipient.']);
+                }
+
+                return $existing;
+            }
+            $pending = SmsMessage::query()->where('direction', SmsMessage::DIRECTION_OUTGOING)
+                ->where('from_phone', $from)->where('to_phone', $to)->whereNull('twilio_sid')
+                ->whereNotNull('request_key')->whereIn('status', [SmsMessage::STATUS_SENDING, SmsMessage::STATUS_CONFIRMATION_PENDING])
+                ->get()->first(fn (SmsMessage $candidate) => $candidate->body === $body);
+            if ($pending) {
+                if ($pending->lead_id !== $lead->id || $pending->sent_by_user_id !== $actor->id) {
+                    throw ValidationException::withMessages(['send' => 'This text is awaiting confirmation. Check its delivery status before sending it again.']);
+                }
+
+                return $pending;
+            }
             $message = SmsMessage::query()->firstOrCreate(['request_key' => $requestKey], [
                 'lead_id' => $lead->id,
                 'sent_by_user_id' => $actor->id,
@@ -46,10 +71,13 @@ class LeadSmsService
                 'body' => $body,
             ]);
             abort_unless($message->lead_id === $lead->id && $message->sent_by_user_id === $actor->id, 403);
+            if ($message->body !== $body || $message->to_phone !== $to || $message->from_phone !== $from) {
+                throw ValidationException::withMessages(['send' => 'This attempt is already recorded. Start a new message to change its text or recipient.']);
+            }
             $this->recordActivity($message);
 
             return $message;
-        });
+        }));
 
         // A retried Livewire request must never send the same message twice.
         if (! $message->wasRecentlyCreated) {
@@ -67,8 +95,9 @@ class LeadSmsService
                 // A callback may already have confirmed acceptance while the API response timed out.
                 if (! $locked->twilio_sid) {
                     $locked->update([
-                        'status' => SmsMessage::STATUS_FAILED,
-                        'error_message' => $exception->getMessage(),
+                        'status' => $exception instanceof TwilioSmsRejectedException ? SmsMessage::STATUS_FAILED : SmsMessage::STATUS_CONFIRMATION_PENDING,
+                        'error_message' => $exception instanceof TwilioSmsRejectedException ? $exception->getMessage()
+                            : 'Awaiting provider confirmation. Do not resend this text until its status is confirmed.',
                     ]);
                 }
             });
@@ -182,6 +211,13 @@ class LeadSmsService
                 'error_message' => filled($payload['ErrorMessage'] ?? null) ? (string) $payload['ErrorMessage'] : null,
                 'raw_payload' => array_merge($message->raw_payload ?? [], ['status_callback' => $payload]),
             ]);
+            if ($message->lead_id && $message->direction === SmsMessage::DIRECTION_OUTGOING) {
+                // A delayed confirmation records the original contact, never a newer one.
+                $contactedAt = $message->created_at;
+                Lead::query()->whereKey($message->lead_id)
+                    ->where(fn ($query) => $query->whereNull('last_contacted_at')->orWhere('last_contacted_at', '<', $contactedAt))
+                    ->update(['last_contacted_at' => $contactedAt]);
+            }
         });
     }
 }

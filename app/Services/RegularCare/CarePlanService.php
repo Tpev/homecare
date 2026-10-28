@@ -180,7 +180,8 @@ class CarePlanService
             ]);
         }
 
-        $billingSummary = $this->billingSummaryFor($family);
+        $careHourAccount = ! empty($payload['care_hour_account_id']) ? \App\Models\CareHourAccount::findOrFail($payload['care_hour_account_id']) : null;
+        $billingSummary = $careHourAccount ? ['ready' => true] : $this->billingSummaryFor($family);
         if (! ($billingSummary['ready'] ?? false)) {
             throw new PaymentException('Add a payment method before sending a recurring care offer.');
         }
@@ -282,6 +283,10 @@ class CarePlanService
                 ]);
                 $lockedSource->forceFill(['care_plan_id' => $plan->id])->save();
 
+                if (! empty($payload['care_hour_account_id'])) {
+                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForPlan(
+                        $plan, \App\Models\CareHourAccount::findOrFail($payload['care_hour_account_id']), $family);
+                }
                 return [$plan, true];
             });
         } catch (QueryException $exception) {
@@ -323,9 +328,11 @@ class CarePlanService
     public function activateFromRecurringRequest(
         CareRequest $source,
         CareRequestApplication $application,
-        User $family
+        User $family,
+        ?\App\Models\CareHourAccount $careHourAccount = null
     ): CarePlan {
         if (! $source->is_system_generated && ($application->selected_days !== null || $source->care_arrangement_id)) {
+            if ($careHourAccount) { throw ValidationException::withMessages(['careHourAccountId' => 'Shared care uses its existing payment flow.']); }
             return app(SharedCareService::class)->hire($source, $application, $family);
         }
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source) || ! $source->isRecurring()) {
@@ -370,7 +377,9 @@ class CarePlanService
                 $application,
                 $caregiver,
                 $schedule,
-                $hourlyRate
+                $hourlyRate,
+                $careHourAccount,
+                $family
             ): CarePlan {
                 app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
                 $lockedSource = CareRequest::query()->lockForUpdate()->findOrFail($source->id);
@@ -457,6 +466,9 @@ class CarePlanService
                     ],
                 ]);
                 $lockedSource->forceFill(['care_plan_id' => $createdPlan->id])->save();
+                if ($careHourAccount) {
+                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForPlan($createdPlan, $careHourAccount, $family);
+                }
 
                 return $createdPlan;
             });
@@ -639,7 +651,9 @@ class CarePlanService
             return $plan->fresh();
         }
 
-        $billingSummary = $this->billingSummaryFor($family);
+        $prepaidPreference = \Illuminate\Support\Facades\Schema::hasTable('care_hour_plan_preferences')
+            && \App\Models\CareHourPlanPreference::where('care_plan_id', $plan->id)->where('enabled', true)->exists();
+        $billingSummary = $prepaidPreference ? ['ready' => true] : $this->billingSummaryFor($family);
         if (! ($billingSummary['ready'] ?? false)) {
             throw new PaymentException('Add a payment method before accepting this schedule.');
         }

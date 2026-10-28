@@ -664,6 +664,7 @@ class CareRecipientProfileTest extends TestCase
             'user_id' => $caregiver->id,
             'slug' => 'caregiver-'.$suffix,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => str_repeat('Reliable caregiver support. ', 3),
             'years_experience' => 4,
             'service_area_zip' => '27601',

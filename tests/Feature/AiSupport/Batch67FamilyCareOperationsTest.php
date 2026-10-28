@@ -436,6 +436,222 @@ class Batch67FamilyCareOperationsTest extends TestCase
         $this->assertFalse($controls->enabled('general_release_enabled'));
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('careHoursCompletionModes')]
+    public function test_confirmed_ai_completion_records_actual_prepaid_time_without_changing_card_behavior(bool $prepaid, bool $paused): void
+    {
+        $this->travelTo(now()->startOfMinute());
+        [, $family] = $this->eligibleFamily();
+        config(['care_hours.enabled' => true, 'care_hours.sales_enabled' => true, 'care_hours.enrollment_enabled' => true]);
+        $caregiver = $this->caregiver('Completion Caregiver');
+        $request = $this->request($family, 'Care to complete', now()->subMinutes(90), now()->addMinutes(30));
+        $booking = $this->booking($family, $request, $caregiver, CareBooking::STATUS_SCHEDULED, $request->requested_start_at, $request->requested_end_at);
+        $account = app(\App\Services\CareHours\CareHourIdentityService::class)->enroll($request->recipient, $family);
+        $purchases = app(\App\Services\CareHours\CareHourPurchaseService::class);
+        $purchases->refresh($purchases->start($account, 5, $family, $purchases->quote($account, 5)['quote_key'], (string) Str::uuid(), url('/ok'), url('/cancel')));
+        if ($prepaid) {
+            $funding = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+            $funding->selectForBooking($booking, $account, $family);
+            $funding->prepare($booking);
+        }
+        $beforeBalance = $account->balance();
+        $booking->update(['status' => $paused ? CareBooking::STATUS_PAUSED : CareBooking::STATUS_IN_PROGRESS,
+            'started_at' => now()->subMinutes(90), 'paused_at' => $paused ? now()->subMinutes(15) : null,
+            'total_paused_seconds' => 300, 'worked_minutes' => 117]);
+        $ticket = $this->ticket($family, 'Mark visit #'.$booking->id.' complete.');
+        $this->assertTrue($this->respond($family, $ticket, 'FAM-VISIT-017', $ticket->description));
+        $action = $this->latestRecap($ticket);
+        $service = app(FamilyLifecycleActionService::class);
+        $first = $service->confirm($family, $ticket, $action->id);
+        $second = $service->confirm($family, $ticket, $action->id);
+
+        $booking->refresh();
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame(CareBooking::STATUS_COMPLETED, $booking->status);
+        $this->assertSame($prepaid ? ($paused ? 70 : 85) : 117, $booking->worked_minutes);
+        $this->assertSame($prepaid && $paused ? 1200 : 300, $booking->total_paused_seconds);
+        $this->assertNull($booking->paused_at);
+        $this->assertNotNull($booking->timesheet_submitted_at);
+        $this->assertNull($booking->family_confirmed_at);
+        $this->assertSame($beforeBalance, $account->balance());
+        $this->assertDatabaseCount('care_hour_settlements', 0);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+        $this->assertDatabaseCount('care_hour_payment_operations', 0);
+    }
+
+    public static function careHoursCompletionModes(): array
+    {
+        return ['prepaid active' => [true, false], 'prepaid paused' => [true, true],
+            'card active with unused hours' => [false, false], 'card paused with unused hours' => [false, true]];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('careHoursCancellationModes')]
+    public function test_ai_cancellation_and_no_show_restore_only_selected_funding(bool $prepaid, bool $noShow): void
+    {
+        [$family, , $booking, $account] = $this->aiFundedVisit($prepaid);
+        if ($noShow) {
+            $booking->update(['scheduled_start_at' => now()->subMinutes(45), 'scheduled_end_at' => now()->addMinutes(75)]);
+        }
+        $message = $noShow ? 'The caregiver did not show for booking #'.$booking->id.'.'
+            : 'Cancel booking #'.$booking->id.' because our family appointment changed.';
+        $ticket = $this->ticket($family, $message);
+        $this->assertTrue($this->respond($family, $ticket, $noShow ? 'FAM-VISIT-014' : 'FAM-VISIT-007', $message));
+        $action = $this->latestRecap($ticket);
+        $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking->fresh()->status);
+        $service = app(FamilyLifecycleActionService::class);
+        $receipt = $service->confirm($family, $ticket, $action->id);
+        $this->assertSame($receipt->id, $service->confirm($family, $ticket, $action->id)->id);
+        $this->assertSame($noShow ? 'caregiver_no_show_verified' : 'visit_cancelled_verified', $receipt->outcome_code);
+        $this->assertSame(CareBooking::STATUS_CANCELLED, $booking->fresh()->status);
+        $this->assertSame($noShow, (bool) $booking->fresh()->no_show_flag);
+        $this->assertSame(300, $account->balance()['available_minutes']);
+        $this->assertSame(0, $account->balance()['reserved_minutes']);
+        $this->assertSame(0, $account->balance()['used_minutes']);
+        $this->assertDatabaseCount('care_hour_settlements', 0);
+        if ($prepaid) {
+            $this->assertDatabaseCount('care_booking_payments', 0);
+            $this->assertSame('released', app(\App\Services\CareHours\PrepaidBookingFundingService::class)->forBooking($booking)->status);
+        } else {
+            $this->assertSame(\App\Models\CareBookingPayment::STATUS_CANCELLED, $booking->fresh()->payment->status);
+            $this->assertDatabaseCount('care_hour_booking_fundings', 0);
+        }
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('careHoursWriterModes')]
+    public function test_ai_hours_approval_and_review_preserve_selected_funding_and_repeat_safely(bool $prepaid): void
+    {
+        [$family, , $booking, $account] = $this->aiFundedVisit($prepaid);
+        $booking->update(['status' => CareBooking::STATUS_COMPLETED, 'worked_minutes' => 90,
+            'scheduled_start_at' => now()->subHours(3), 'scheduled_end_at' => now()->subHour(),
+            'started_at' => now()->subHours(3), 'completed_at' => now()->subMinutes(90), 'timesheet_submitted_at' => now()->subHour()]);
+        $ticket = $this->ticket($family, 'Approve submitted hours for booking #'.$booking->id.'.');
+        $this->assertTrue($this->respond($family, $ticket, 'FAM-VISIT-020', $ticket->description));
+        $action = $this->latestRecap($ticket);
+        $service = app(FamilyLifecycleActionService::class);
+        $receipt = $service->confirm($family, $ticket, $action->id);
+        $this->assertSame($receipt->id, $service->confirm($family, $ticket, $action->id)->id);
+        $this->assertSame('submitted_hours_approved_verified', $receipt->outcome_code);
+        $this->assertNotNull($booking->fresh()->family_confirmed_at);
+        $this->assertSame(90, $booking->fresh()->worked_minutes);
+        $this->assertSame($prepaid ? 210 : 300, $account->balance()['available_minutes']);
+        $this->assertSame($prepaid ? 90 : 0, $account->balance()['used_minutes']);
+        $this->assertSame(0, $account->balance()['reserved_minutes']);
+        if ($prepaid) {
+            $this->assertDatabaseCount('care_booking_payments', 0);
+            $this->assertDatabaseCount('care_hour_settlements', 1);
+        } else {
+            $this->assertSame(4650, (int) $booking->fresh()->payment->amount_captured_cents);
+            $this->assertDatabaseCount('care_hour_booking_fundings', 0);
+            $this->assertDatabaseCount('care_hour_settlements', 0);
+        }
+        $beforeReview = $account->balance();
+        $reviewTicket = $this->ticket($family, 'Leave a five star review for booking #'.$booking->id.'.');
+        $this->assertTrue($this->respond($family, $reviewTicket, 'FAM-VISIT-030', $reviewTicket->description));
+        $reviewAction = $this->latestRecap($reviewTicket);
+        $review = $service->confirm($family, $reviewTicket, $reviewAction->id);
+        $this->assertSame($review->id, $service->confirm($family, $reviewTicket, $reviewAction->id)->id);
+        $this->assertSame($beforeReview, $account->balance());
+        $this->assertDatabaseCount('care_reviews', 1);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('careHoursWriterModes')]
+    public function test_ai_time_correction_approval_uses_actual_audited_writer_in_both_funding_modes(bool $prepaid): void
+    {
+        [$family, $caregiver, $booking, $account] = $this->aiFundedVisit($prepaid);
+        config(['marketplace.time_corrections.enabled' => true]);
+        $start = now()->subDay()->startOfMinute();
+        $booking->update(['scheduled_start_at' => $start, 'scheduled_end_at' => $start->copy()->addHours(2)]);
+        $correction = app(\App\Services\Booking\CareBookingTimeCorrectionService::class)->submit($booking->fresh(), $caregiver, [
+            'reason_code' => \App\Models\CareBookingTimeCorrection::REASON_FORGOT_BOTH,
+            'explanation' => 'The caregiver forgot the visit clock and confirms the actual care time.',
+            'started_at' => $start->format('Y-m-d\TH:i'), 'completed_at' => $start->copy()->addMinutes(90)->format('Y-m-d\TH:i'),
+            'break_minutes' => 0, 'confirmed' => true,
+        ], (string) Str::uuid());
+        $ticket = $this->ticket($family, 'Approve time correction #'.$correction->id.'.');
+        $this->assertTrue($this->respond($family, $ticket, 'FAM-VISIT-024', $ticket->description));
+        $action = $this->latestRecap($ticket);
+        $service = app(FamilyLifecycleActionService::class);
+        $receipt = $service->confirm($family, $ticket, $action->id);
+        $this->assertSame($receipt->id, $service->confirm($family, $ticket, $action->id)->id);
+        $this->assertSame('time_correction_approved_verified', $receipt->outcome_code);
+        $this->assertSame(\App\Models\CareBookingTimeCorrection::STATUS_APPLIED, $correction->fresh()->status);
+        $this->assertSame(90, $booking->fresh()->worked_minutes);
+        $this->assertNotNull($booking->fresh()->family_confirmed_at);
+        $this->assertSame($prepaid ? 90 : 0, $account->balance()['used_minutes']);
+        $this->assertSame($prepaid ? 210 : 300, $account->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_booking_corrections', 1);
+        if ($prepaid) {
+            $this->assertDatabaseCount('care_booking_payments', 0);
+        } else {
+            $this->assertSame(4650, (int) $booking->fresh()->payment->amount_captured_cents);
+            $this->assertDatabaseCount('care_hour_booking_fundings', 0);
+        }
+    }
+
+    public function test_ai_hire_keeps_default_card_funding_with_an_unused_care_hour_balance(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $request = $this->request($family);
+        $account = $this->creditForAiRequest($request, $family);
+        $caregiver = $this->caregiver('Card Choice Caregiver');
+        $application = $this->application($request, $caregiver);
+        $ticket = $this->ticket($family, 'Hire Card Choice Caregiver for request #'.$request->id.'.');
+        $this->assertTrue($this->respond($family, $ticket, 'FAM-MATCH-020', $ticket->description));
+        app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $this->latestRecap($ticket)->id);
+        $booking = CareBooking::where('care_request_id', $request->id)->sole();
+        $this->assertNotNull($booking->payment);
+        $this->assertSame(CareRequestApplication::STATUS_HIRED, $application->fresh()->status);
+        $this->assertSame(300, $account->balance()['available_minutes']);
+        $this->assertSame(0, $account->balance()['reserved_minutes']);
+        $this->assertDatabaseCount('care_hour_booking_fundings', 0);
+    }
+
+    public static function careHoursWriterModes(): array
+    {
+        return ['prepaid selected' => [true], 'card with unused care hours' => [false]];
+    }
+
+    public static function careHoursCancellationModes(): array
+    {
+        return ['prepaid cancellation' => [true, false], 'prepaid no-show' => [true, true],
+            'card cancellation' => [false, false], 'card no-show' => [false, true]];
+    }
+
+    private function creditForAiRequest(CareRequest $request, User $family): \App\Models\CareHourAccount
+    {
+        config(['care_hours.enabled' => true, 'care_hours.sales_enabled' => true, 'care_hours.enrollment_enabled' => true]);
+        $account = app(\App\Services\CareHours\CareHourIdentityService::class)->enroll($request->recipient, $family);
+        $purchases = app(\App\Services\CareHours\CareHourPurchaseService::class);
+        $purchases->refresh($purchases->start($account, 5, $family, $purchases->quote($account, 5)['quote_key'], (string) Str::uuid(), url('/ok'), url('/cancel')));
+
+        return $account;
+    }
+
+    private function aiFundedVisit(bool $prepaid): array
+    {
+        [, $family] = $this->eligibleFamily();
+        config(['marketplace.pricing_v2.enabled' => true, 'services.stripe.bypass_processing_fee_percent' => 0,
+            'services.stripe.bypass_processing_fee_fixed_cents' => 0]);
+        $caregiver = $this->caregiver('AI Writer Caregiver');
+        $caregiver->caregiverProfile->update(['stripe_connect_account_id' => 'acct_ai_writer',
+            'stripe_charges_enabled' => true, 'stripe_payouts_enabled' => true, 'stripe_connect_onboarding_completed_at' => now()]);
+        $start = now()->addDay()->startOfMinute();
+        $request = $this->request($family, 'AI writer care', $start, $start->copy()->addHours(2));
+        $request->update(['status' => CareRequest::STATUS_FILLED]);
+        $application = $this->application($request, $caregiver, CareRequestApplication::STATUS_HIRED);
+        $booking = $this->booking($family, $request, $caregiver, CareBooking::STATUS_SCHEDULED, $request->requested_start_at, $request->requested_end_at);
+        $booking->update(['care_request_application_id' => $application->id, 'expected_minutes' => 120]);
+        $account = $this->creditForAiRequest($request, $family);
+        if ($prepaid) {
+            $funding = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+            $funding->selectForBooking($booking, $account, $family);
+            $funding->prepare($booking);
+        } else {
+            app(\App\Services\Payments\BookingPaymentService::class)->authorizeForBooking($booking);
+        }
+
+        return [$family, $caregiver, $booking->fresh(), $account];
+    }
+
     private function respond(User $family, SupportTicket $ticket, string $intentId, string $message): bool
     {
         return app(FamilyCareOperationsActionService::class)->respond(

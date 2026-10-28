@@ -132,6 +132,12 @@ class DispatchMarketplaceNotifications extends Command
                 CareBookingPayment::STATUS_CAPTURED,
                 CareBookingPayment::STATUS_TRANSFERRED,
             ], true));
+            if ($booking->care_plan_id) {
+                $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+                if ($careHours->isPrepaid($booking)) {
+                    $regularCarePaymentReady = $careHours->readiness($booking)['ready'];
+                }
+            }
             if ($booking->caregiver && $regularCarePaymentReady) {
                 $notifications->notify(
                     recipients: $booking->caregiver,

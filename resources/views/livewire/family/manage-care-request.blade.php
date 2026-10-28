@@ -89,7 +89,7 @@
         $paymentActionButtonLabel = $paymentTimeCorrection && $paymentActionAmountLabel
             ? 'Confirm '.$paymentActionAmountLabel.' payment'
             : 'Confirm card authorization';
-        $showPaymentAuthorizationAction = $needsPaymentAuthorization || (bool) $paymentTimeCorrection;
+        $showPaymentAuthorizationAction = ! $prepaidBookingSummary && ($needsPaymentAuthorization || (bool) $paymentTimeCorrection);
         $hasActiveTimeCorrection = $latestTimeCorrection
             && in_array($latestTimeCorrection->status, \App\Models\CareBookingTimeCorrection::activeStatuses(), true);
         $timesheetNeedsReview = $booking
@@ -620,6 +620,7 @@
                 ])
 
                 @if ($isScheduledVisit || $isLiveVisit)
+                    @if($prepaidBookingSummary)@include('care-hours.partials.booking-summary')@endif
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.45fr)]">
                         <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">
@@ -647,9 +648,11 @@
                                 </div>
                                 <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
                                     <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">Payment</p>
-                                    <p class="mt-1 font-semibold text-[#23483F]">{{ $payment ? ucfirst(str_replace('_', ' ', (string) $payment->status)) : 'Needs setup' }}</p>
+                                    <p class="mt-1 font-semibold text-[#23483F]">{{ $prepaidBookingSummary ? 'Care hours' : ($payment ? ucfirst(str_replace('_', ' ', (string) $payment->status)) : 'Needs setup') }}</p>
                                     <p class="text-sm text-[#485E53]">
-                                        @if ($payment?->amount_authorized_cents)
+                                        @if ($prepaidBookingSummary)
+                                            {{ $prepaidBookingSummary['ready'] ? 'Scheduled care covered' : 'Payment action needed' }}
+                                        @elseif ($payment?->amount_authorized_cents)
                                             Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
                                             @if($booking->pricing_agreement_id && ! $payment->amount_captured_cents)
                                                 <span class="mt-1 block">Temporary card hold. Final billing is ${{ number_format(($booking->family_care_rate_cents + $booking->family_processing_fee_rate_cents) / 100, 2) }}/hour total for approved care.</span>
@@ -723,7 +726,7 @@
                                     @endif
                                     <p>Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</p>
                                     <p>Completed: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</p>
-                                    <p>Payment: {{ $payment ? strtoupper((string) $payment->status) : 'NOT READY' }}</p>
+                                    <p>Payment: {{ $prepaidBookingSummary ? 'Care hours · '.($prepaidBookingSummary['ready'] ? 'covered' : 'needs attention') : ($payment ? strtoupper((string) $payment->status) : 'NOT READY') }}</p>
                                 </div>
                             </details>
                         </aside>
@@ -757,6 +760,7 @@
                                                 @endif
                                             </p>
                                         @endif
+                                        <x-care-hours-change-funding :change="$change" :booking="$booking" />
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <x-button color="green" light wire:click="resolveChangeRequest({{ $change->id }}, 'accept')" class="hc-action-secondary">Accept change</x-button>
                                             <x-button color="red" light wire:click="resolveChangeRequest({{ $change->id }}, 'reject')">Keep current schedule</x-button>
@@ -765,6 +769,15 @@
                                 @endforeach
                             </div>
                         </section>
+                    @endif
+                    @if($prepaidBookingSummary)
+                        @foreach($booking->changeRequests->filter(fn ($change) => $change->status === 'pending' && $change->type === 'reschedule' && (int) $change->requester_user_id === (int) auth()->id()) as $change)
+                            <section class="rounded-xl border border-[#E4DDD3] bg-white p-4 text-sm">
+                                <p class="font-semibold">Your requested schedule change</p>
+                                <p class="mt-1">{{ $change->proposed_start_at?->format('M d, Y g:i A') }}–{{ $change->proposed_end_at?->format('g:i A') }} · Waiting for caregiver</p>
+                                <x-care-hours-change-funding :change="$change" :booking="$booking" />
+                            </section>
+                        @endforeach
                     @endif
                 @else
                 <div class="grid grid-cols-1 gap-3 xl:grid-cols-4">
@@ -808,7 +821,9 @@
                 @endif
 
                 @if (! $timesheetNeedsReview && ! $isFinalVisitRecord)
-                    @if (! $payment)
+                    @if ($prepaidBookingSummary)
+                        @include('care-hours.partials.booking-summary')
+                    @elseif (! $payment)
                         <div data-ai-target="family.request.payment_attention" tabindex="-1" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none">
                             Payment authorization is not ready yet.
                             <button type="button" wire:click="startPaymentAuthorization" class="font-semibold underline underline-offset-2">Confirm card authorization</button>
@@ -879,6 +894,7 @@
 
                         @if (($booking->timesheet_submitted_at || $booking->worked_minutes) && ! $timesheetNeedsReview)
                             @if ($isFinalVisitRecord)
+                                @if($prepaidBookingSummary)@include('care-hours.partials.booking-summary')@endif
                                 <div data-ai-target="family.request.timesheet" tabindex="-1" class="rounded-2xl border border-[#CFE1D8] bg-[#F6FBF8] p-4 outline-none">
                                     <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Visit receipt</p>
                                     <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -889,13 +905,15 @@
                                         <div class="rounded-xl border border-[#D8E1D7] bg-white px-3 py-2">
                                             <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">Payment</p>
                                             <p class="mt-1 text-lg font-semibold text-[#23483F]">
-                                                @if ($payment?->amount_captured_cents)
+                                                @if ($prepaidBookingSummary)
+                                                    Care hours
+                                                @elseif ($payment?->amount_captured_cents)
                                                     ${{ number_format($payment->amount_captured_cents / 100, 2) }}
                                                 @else
                                                     ${{ number_format($shiftEarnings, 2) }}
                                                 @endif
                                             </p>
-                                            <p class="text-xs text-[#485E53]">{{ $payment ? ucfirst(str_replace('_', ' ', (string) $payment->status)) : 'No payment recorded' }}</p>
+                                            <p class="text-xs text-[#485E53]">{{ $prepaidBookingSummary ? ucfirst(str_replace('_', ' ', $prepaidBookingSummary['status'])) : ($payment ? ucfirst(str_replace('_', ' ', (string) $payment->status)) : 'No payment recorded') }}</p>
                                         </div>
                                         <div class="rounded-xl border border-[#D8E1D7] bg-white px-3 py-2">
                                             <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">Timesheet</p>
@@ -914,7 +932,7 @@
                                     </div>
                                     <div>
                                         <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">Estimated visit total</p>
-                                        <p class="mt-1 text-base font-semibold text-[#23483F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
+                                        <p class="mt-1 text-base font-semibold text-[#23483F]">{{ $prepaidBookingSummary ? 'Using care hours' : '$'.number_format($estimatedPaymentTotal, 2) }}</p>
                                         <p class="text-xs text-[#485E53]">{{ '$'.number_format($shiftRate, 2) }}/hr care{{ $usesPricingV2 ? ($processingFeeAmount > 0 ? ' + processing fee' : ' · No additional processing fee.') : '' }}</p>
                                     </div>
                                     <div>
@@ -1043,6 +1061,7 @@
                                                             {{ optional($change->proposed_end_at)->format('M d, Y H:i') }}
                                                         </p>
                                                     @endif
+                                                    <x-care-hours-change-funding :change="$change" :booking="$booking" />
                                                     @if ($change->status === 'pending' && (int) $change->requester_user_id !== (int) auth()->id())
                                                         <div class="mt-2 flex gap-2">
                                                             <x-button color="green" light wire:click="resolveChangeRequest({{ $change->id }}, 'accept')" class="hc-action-secondary">Accept</x-button>
@@ -1068,6 +1087,7 @@
                                 >
                                     <p class="font-medium">{{ strtoupper($change->type) }} - {{ strtoupper($change->status) }}</p>
                                     <p class="text-[#485E53]">{{ $change->reason }}</p>
+                                    <x-care-hours-change-funding :change="$change" :booking="$booking" />
                                 </div>
                             @endforeach
                         </div>
@@ -1185,7 +1205,7 @@
                                     </summary>
                                     <div class="mt-3 space-y-3 text-sm">
                                         <p>
-                                            This cancels the visit before caregiver check-in and releases the payment authorization when possible.
+                                            {{ $prepaidBookingSummary ? 'This cancels the visit and returns all reserved care hours. Any separate payment is adjusted through the visit payment process.' : 'This cancels the visit before caregiver check-in and releases the payment authorization when possible.' }}
                                             @if ($lateCancel)
                                                 It is inside the late-cancellation window.
                                             @endif

@@ -671,6 +671,7 @@ class CareRequestFlowTest extends TestCase
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => str_repeat('Experienced caregiver. ', 4),
             'platform_hourly_rate' => 28.50,
             'years_experience' => 5,
@@ -728,8 +729,8 @@ class CareRequestFlowTest extends TestCase
 
         $caregiverA = User::factory()->create(['role' => 'caregiver']);
         $caregiverB = User::factory()->create(['role' => 'caregiver']);
-        CaregiverProfile::query()->create(['user_id' => $caregiverA->id, 'status' => 'active']);
-        CaregiverProfile::query()->create(['user_id' => $caregiverB->id, 'status' => 'active']);
+        CaregiverProfile::query()->create(['user_id' => $caregiverA->id, 'status' => 'active', 'screening_initial_approved_at' => now()]);
+        CaregiverProfile::query()->create(['user_id' => $caregiverB->id, 'status' => 'active', 'screening_initial_approved_at' => now()]);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -793,7 +794,7 @@ class CareRequestFlowTest extends TestCase
             'role' => 'caregiver',
             'name' => 'Charles Petrini-Poli',
         ]);
-        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active', 'screening_initial_approved_at' => now()]);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -1095,7 +1096,7 @@ class CareRequestFlowTest extends TestCase
     {
         $family = User::factory()->create(['role' => 'family']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
-        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active', 'screening_initial_approved_at' => now()]);
 
         $recurringStartsOn = now()->addDays(2)->startOfDay();
 
@@ -1159,7 +1160,7 @@ class CareRequestFlowTest extends TestCase
     {
         $family = User::factory()->create(['role' => 'family']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
-        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active', 'screening_initial_approved_at' => now()]);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,

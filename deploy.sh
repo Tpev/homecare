@@ -7,9 +7,13 @@ RELEASES_DIR="$DEPLOY_ROOT/releases"
 SHARED_DIR="$DEPLOY_ROOT/shared"
 SHARED_ENV="$SHARED_DIR/.env"
 SHARED_STORAGE="$SHARED_DIR/storage"
+COMPATIBILITY_DIR="$DEPLOY_ROOT/compatibility"
+PREPAID_FLOOR_FILE="$COMPATIBILITY_DIR/prepaid-care-hours.floor"
+PREPAID_MANIFEST="docs/deployment/prepaid-care-hours-v1.sha256"
 REPOSITORY_DIR="$DEPLOY_ROOT/repository.git"
 PREVIOUS_LINK="$DEPLOY_ROOT/previous"
 BRANCH="${HOMECARE_DEPLOY_BRANCH:-master}"
+EXPECTED_COMMIT="${HOMECARE_EXPECTED_COMMIT:-}"
 DEPLOY_USER="${HOMECARE_DEPLOY_USER:-ubuntu}"
 WEB_GROUP="${HOMECARE_WEB_GROUP:-www-data}"
 KEEP_RELEASES="${HOMECARE_KEEP_RELEASES:-5}"
@@ -58,6 +62,10 @@ Usage:
   ./deploy.sh             Build and atomically activate the latest master release.
   ./deploy.sh --rollback  Atomically return to the previously active release.
   ./deploy.sh --status    Show the current and previous releases without changing anything.
+  ./deploy.sh --check-prepaid-release PATH
+                         Verify a release's prepaid compatibility contract, without booting it.
+  ./deploy.sh --prepaid-manifest PATH
+                         Print reviewed source fingerprints for an explicit manifest refresh.
   ./deploy.sh --screening-check REV
                          Stage runtime files from Git REV and inspect server setup only.
   ./deploy.sh --screening-setup REV --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
@@ -72,6 +80,12 @@ The first normal deployment converts /var/www/homecare from an in-place checkout
 to a stable symlink automatically. Screening releases require a configured
 runtime-control hook. The first screening cutover briefly drains PHP-FPM so
 legacy access can be finalized safely. No Laravel maintenance mode is used.
+Once prepaid code is activated, every later release must retain prepaid support,
+even with sales disabled. No deployment mode reverses database migrations.
+Prepaid deployments require HOMECARE_EXPECTED_COMMIT set to the full reviewed
+commit SHA. A different fetched branch tip aborts before building the release.
+The first prepaid deployment requires both prepaid and gift sales disabled in
+the warmed configuration; deployment does not change application feature flags.
 EOF
 }
 
@@ -191,6 +205,286 @@ is_screening_release() {
   [[ -f "$1/app/Console/Commands/ScreeningRollout.php" ]]
 }
 
+# Version 1 is a reviewed compatibility contract, not an application feature flag.
+# Keep the inventory explicit: a partial checkout cannot certify its own omissions.
+prepaid_compatibility_files() {
+  cat <<'EOF'
+deploy.sh
+scripts/deployment/check-prepaid-release-config.php
+app/Console/Commands/ReconcileCareHourPurchases.php
+app/Console/Commands/ReconcileCareHourBookings.php
+app/Console/Commands/CheckCareHoursHealth.php
+app/Http/Controllers/StripeWebhookController.php
+app/Http/Controllers/CareHours/AdminCareHoursController.php
+app/Http/Controllers/CareHours/AdminGiftController.php
+app/Http/Controllers/CareHours/ContributionController.php
+app/Http/Controllers/CareHours/FamilyCareHoursController.php
+app/Http/Controllers/CareHours/GiftClaimController.php
+app/Http/Controllers/CareHours/GiftClaimEntryController.php
+app/Http/Controllers/CareHours/GiftController.php
+app/Http/Controllers/CareHours/ReadsCareHourPayment.php
+app/Http/Middleware/CareHoursPrivacyHeaders.php
+app/Livewire/Admin/CareRequestsIndex.php
+app/Livewire/Admin/CareRequestShow.php
+app/Livewire/Family/ManageCareRequest.php
+app/Livewire/Family/CreateCareRequestWizard.php
+app/Livewire/Family/RegularCareComposer.php
+app/Livewire/Family/RegularCareShow.php
+app/Livewire/Dashboard/Home.php
+app/Livewire/Caregiver/ApplyToCareRequest.php
+app/Notifications/CareHourGiftNotification.php
+app/Notifications/CareHourPurchaseNotification.php
+app/Notifications/CareHourVerificationNotification.php
+app/Models/CareHourAccount.php
+app/Models/CareHourAllocation.php
+app/Models/CareHourBookingFunding.php
+app/Models/CareHourContributionLink.php
+app/Models/CareHourContributionVerification.php
+app/Models/CareHourGift.php
+app/Models/CareHourGiftVerification.php
+app/Models/CareHourLedgerEntry.php
+app/Models/CareHourLot.php
+app/Models/CareHourPaymentOperation.php
+app/Models/CareHourPlanPreference.php
+app/Models/CareHourRequestPreference.php
+app/Models/CareHourPurchase.php
+app/Models/CareHourRecipientLink.php
+app/Models/CareHourSettlement.php
+app/Models/CareBookingChangeRequest.php
+app/Models/CarePricingAgreement.php
+app/Services/CareHours/CareHourContributionService.php
+app/Services/CareHours/CareHourGiftService.php
+app/Services/CareHours/CareHourHealthService.php
+app/Services/CareHours/CareHourIdentityService.php
+app/Services/CareHours/CareHourLedgerService.php
+app/Services/CareHours/CareHourNavigation.php
+app/Services/CareHours/CareHourPaymentGateway.php
+app/Services/CareHours/CareHourPurchaseService.php
+app/Services/CareHours/CareHourEligibilityService.php
+app/Services/CareHours/CareHourRequestFundingService.php
+app/Services/CareHours/CareHourScheduleChangeFundingService.php
+app/Services/CareHours/CareHourWebhookService.php
+app/Services/CareHours/PrepaidBookingFundingService.php
+app/Services/CareHours/PrepaidBookingSettlementService.php
+app/Services/CareHours/PrepaidShortfallDisputeService.php
+app/Services/CareHours/PrepaidTransferPlanner.php
+app/Services/Payments/BookingPaymentService.php
+app/Services/Payments/StripeClient.php
+app/Services/Booking/BookingCorrectionService.php
+app/Services/Booking/CareBookingTimeCorrectionService.php
+app/Services/Booking/CaregiverCancellationService.php
+app/Services/Marketplace/CareRequestHiringService.php
+app/Services/AiSupport/FamilyCareOperationsActionService.php
+app/Services/RegularCare/CareBookingCheckInPolicy.php
+app/Services/RegularCare/CarePlanOccurrenceService.php
+app/Services/RegularCare/CarePlanPaymentWindowService.php
+app/Services/RegularCare/CarePlanService.php
+app/Services/RegularCare/CarePlanHealthService.php
+app/Support/MarketplacePricing.php
+app/Support/MarketplaceNotificationPresentation.php
+app/Support/MarketplaceEvent.php
+app/Providers/AppServiceProvider.php
+app/Console/Commands/DispatchMarketplaceNotifications.php
+app/Support/CareHourGiftClaimIntent.php
+app/Support/CareHourRequestHandoff.php
+config/care_hours.php
+database/migrations/2026_10_16_000100_create_care_hour_ledger.php
+database/migrations/2026_10_16_000110_create_care_hour_purchase_tables.php
+database/migrations/2026_10_16_000120_create_care_hour_booking_funding.php
+database/migrations/2026_10_21_000100_create_care_hour_gifts.php
+database/migrations/2026_10_21_000110_create_care_hour_gift_admin_checks.php
+database/migrations/2026_10_26_000100_create_care_hour_request_preferences.php
+database/migrations/2026_10_25_000001_add_family_wide_care_pricing_agreements.php
+routes/care-hours.php
+routes/console.php
+routes/web.php
+resources/views/care-hours/gifts/claim.blade.php
+resources/views/care-hours/gifts/enter-code.blade.php
+resources/views/care-hours/gifts/ready.blade.php
+resources/views/care-hours/gifts/receipt.blade.php
+resources/views/care-hours/gifts/receipt-access.blade.php
+resources/views/care-hours/gifts/buy.blade.php
+resources/views/care-hours/partials/purchase.blade.php
+resources/views/care-hours/partials/packages.blade.php
+resources/views/care-hours/partials/messages.blade.php
+resources/views/care-hours/partials/gift-links.blade.php
+resources/views/care-hours/partials/booking-summary.blade.php
+resources/views/care-hours/family/show.blade.php
+resources/views/care-hours/family/purchase.blade.php
+resources/views/care-hours/family/packages.blade.php
+resources/views/care-hours/family/index.blade.php
+resources/views/care-hours/public/unavailable.blade.php
+resources/views/care-hours/public/receipt.blade.php
+resources/views/care-hours/public/receipt-verification.blade.php
+resources/views/care-hours/public/contribute.blade.php
+resources/views/care-hours/admin/show.blade.php
+resources/views/care-hours/admin/operations.blade.php
+resources/views/care-hours/admin/index.blade.php
+resources/views/care-hours/admin/gifts.blade.php
+resources/views/care-hours/admin/correction.blade.php
+resources/views/components/care-hours-change-funding.blade.php
+resources/views/components/care-hours-entry.blade.php
+resources/views/components/care-hours-plan-funding.blade.php
+resources/views/layouts/care-hours-public.blade.php
+resources/views/layouts/guest.blade.php
+resources/views/livewire/family/regular-care-composer.blade.php
+resources/views/livewire/family/partials/time-correction-review.blade.php
+resources/views/livewire/family/partials/recruitment-applicants.blade.php
+resources/views/livewire/family/partials/care-workspace-header.blade.php
+resources/views/livewire/family/partials/care-decision-review.blade.php
+resources/views/livewire/family/partials/care-request-review.blade.php
+resources/views/livewire/dashboard/partials/family-home.blade.php
+resources/views/livewire/pages/auth/login.blade.php
+resources/views/livewire/pages/auth/register.blade.php
+EOF
+}
+
+prepaid_source_hash() {
+  local release="$1" path="$2" resolved digest
+  [[ -f "$release/$path" && -r "$release/$path" && ! -L "$release/$path" ]] || return 1
+  resolved="$(resolved_path "$release/$path")"
+  [[ "$resolved" == "$(resolved_path "$release")/"* ]] || return 1
+  # Git checks these text sources out with LF in production. Normalize CRLF so
+  # the same reviewed manifest can be checked from a Windows working tree.
+  digest="$(sed 's/\r$//' "$release/$path" | sha256sum)" || return 1
+  printf '%s' "${digest%% *}"
+}
+
+print_prepaid_manifest() {
+  local release="$1" path digest
+  printf 'homecare-prepaid-care-hours-v1\n'
+  while IFS= read -r path; do
+    digest="$(prepaid_source_hash "$release" "$path")" || {
+      log "Prepaid compatibility: missing, unreadable or unsafe required source: $path" >&2
+      return 1
+    }
+    printf '%s  %s\n' "$digest" "$path"
+  done < <(prepaid_compatibility_files)
+}
+
+prepaid_release_version() {
+  local release="$1" path digest line i
+  local -a lines=() paths=()
+  [[ -d "$release" && -r "$release" && -x "$release" ]] || {
+    log "Prepaid compatibility: release directory is unavailable." >&2; return 1;
+  }
+  if [[ -e "$release/$PREPAID_MANIFEST" || -L "$release/$PREPAID_MANIFEST" ]]; then
+    [[ -f "$release/$PREPAID_MANIFEST" && -r "$release/$PREPAID_MANIFEST" && ! -L "$release/$PREPAID_MANIFEST" ]] || {
+      log "Prepaid compatibility: manifest is not a readable regular file." >&2; return 1;
+    }
+    [[ "$(resolved_path "$release/$PREPAID_MANIFEST")" == "$(resolved_path "$release")/$PREPAID_MANIFEST" ]] || {
+      log "Prepaid compatibility: manifest path traverses a symlink." >&2; return 1;
+    }
+    mapfile -t lines < <(sed 's/\r$//' "$release/$PREPAID_MANIFEST")
+    mapfile -t paths < <(prepaid_compatibility_files)
+    [[ "${lines[0]:-}" == homecare-prepaid-care-hours-v1 && "${#lines[@]}" -eq "$((${#paths[@]} + 1))" ]] || {
+      log "Prepaid compatibility: manifest version or inventory is unknown." >&2; return 1;
+    }
+    for i in "${!paths[@]}"; do
+      path="${paths[$i]}"
+      line="${lines[$((i + 1))]}"
+      digest="${line%% *}"
+      [[ "$digest" =~ ^[0-9a-f]{64}$ && "$line" == "$digest  $path" ]] || {
+        log "Prepaid compatibility: invalid manifest entry for $path." >&2; return 1;
+      }
+      [[ "$(prepaid_source_hash "$release" "$path")" == "$digest" ]] || {
+        log "Prepaid compatibility: required source is missing or changed: $path" >&2; return 1;
+      }
+    done
+    printf '1\n'
+    return 0
+  fi
+  for path in config/care_hours.php routes/care-hours.php app/Services/CareHours app/Models/CareHourPurchase.php app/Http/Controllers/CareHours app/Console/Commands/ReconcileCareHourPurchases.php; do
+    if [[ -e "$release/$path" || -L "$release/$path" ]]; then
+      log "Prepaid compatibility: partial prepaid release has no reviewed manifest." >&2
+      return 1
+    fi
+  done
+  printf '0\n'
+}
+
+prepaid_floor_version() {
+  local -a floor_lines=()
+  [[ ! -L "$DEPLOY_ROOT" && ( ! -e "$DEPLOY_ROOT" || ( -d "$DEPLOY_ROOT" && -r "$DEPLOY_ROOT" && -x "$DEPLOY_ROOT" ) ) ]] || {
+    log "Prepaid compatibility: deployment state is inaccessible; refusing to infer an empty floor." >&2; return 1;
+  }
+  [[ ! -L "$COMPATIBILITY_DIR" && ( ! -e "$COMPATIBILITY_DIR" || ( -d "$COMPATIBILITY_DIR" && -r "$COMPATIBILITY_DIR" && -x "$COMPATIBILITY_DIR" ) ) ]] || {
+    log "Prepaid compatibility: persistent state directory is unsafe or inaccessible." >&2; return 1;
+  }
+  if [[ -e "$PREPAID_FLOOR_FILE" || -L "$PREPAID_FLOOR_FILE" ]]; then
+    [[ -f "$PREPAID_FLOOR_FILE" && -r "$PREPAID_FLOOR_FILE" && ! -L "$PREPAID_FLOOR_FILE" ]] \
+      && mapfile -t floor_lines < "$PREPAID_FLOOR_FILE" \
+      && [[ "${#floor_lines[@]}" -eq 1 && "${floor_lines[0]:-}" == homecare-prepaid-care-hours-v1 ]] || {
+        log "Prepaid compatibility: persistent floor is unreadable, unsafe or unknown; refusing to switch releases." >&2
+        return 1
+      }
+    printf '1\n'
+  else
+    printf '0\n'
+  fi
+}
+
+persist_prepaid_floor() {
+  local floor temporary
+  floor="$(prepaid_floor_version)" || return 1
+  if [[ "$floor" == 0 ]]; then
+    [[ -d "$DEPLOY_ROOT" && -w "$DEPLOY_ROOT" ]] || {
+      log "Prepaid compatibility: deployment state cannot persist the permanent floor." >&2; return 1;
+    }
+    # Unlike shared application storage, this parent is not web-group writable.
+    sudo chmod 755 "$DEPLOY_ROOT" || return 1
+    sudo mkdir -p "$COMPATIBILITY_DIR" || return 1
+    sudo chown "$DEPLOY_USER:$WEB_GROUP" "$COMPATIBILITY_DIR" || return 1
+    sudo chmod 750 "$COMPATIBILITY_DIR" || return 1
+    temporary="$(mktemp "$COMPATIBILITY_DIR/.prepaid-care-hours.floor.XXXXXX")" || return 1
+    if ! { printf 'homecare-prepaid-care-hours-v1\n' > "$temporary" && chmod 644 "$temporary" && mv -T -- "$temporary" "$PREPAID_FLOOR_FILE"; }; then
+      rm -f -- "$temporary"
+      log "Prepaid compatibility: failed to persist the permanent floor." >&2
+      return 1
+    fi
+    log "Pinned permanent prepaid compatibility floor v1; pre-prepaid releases cannot be selected."
+  fi
+  # Flush the rename before exposing code that can create financial obligations.
+  sync -f "$COMPATIBILITY_DIR" || {
+    log "Prepaid compatibility: cannot confirm durable floor persistence; refusing activation." >&2; return 1;
+  }
+}
+
+require_prepaid_compatibility() {
+  local current="$1" target="$2" pin="${3:-check}" current_version target_version floor
+  local -a current_manifest=()
+  floor="$(prepaid_floor_version)" || return 1
+  target_version="$(prepaid_release_version "$target")" || return 1
+  if [[ "$floor" == 1 ]]; then
+    # A broken active handler must not prevent a verified compatible repair.
+    # The durable floor is authoritative, but a newer/unknown declared contract
+    # still requires a matching newer driver instead of a blind v1 downgrade.
+    if [[ -e "$current/$PREPAID_MANIFEST" || -L "$current/$PREPAID_MANIFEST" ]]; then
+      [[ -f "$current/$PREPAID_MANIFEST" && -r "$current/$PREPAID_MANIFEST" && ! -L "$current/$PREPAID_MANIFEST" \
+        && "$(resolved_path "$current/$PREPAID_MANIFEST")" == "$(resolved_path "$current")/$PREPAID_MANIFEST" ]] || return 1
+      mapfile -t current_manifest < <(sed 's/\r$//' "$current/$PREPAID_MANIFEST")
+      [[ "${current_manifest[0]:-}" == homecare-prepaid-care-hours-v1 ]] || {
+        log "Prepaid compatibility: active release declares an unknown contract; refusing downgrade." >&2; return 1;
+      }
+    fi
+    current_version=1
+  else
+    current_version="$(prepaid_release_version "$current")" || return 1
+  fi
+  # Recover a missing floor from already active code, including before rollback.
+  if [[ "$current_version" == 1 && "$floor" == 0 ]]; then
+    persist_prepaid_floor || return 1
+    floor=1
+  fi
+  if [[ ( "$floor" == 1 || "$current_version" == 1 ) && "$target_version" != 1 ]]; then
+    log "Refusing a pre-prepaid release: durable prepaid compatibility requires a verified v1 release." >&2
+    return 1
+  fi
+  if [[ "$pin" == activate && "$target_version" == 1 ]]; then
+    persist_prepaid_floor || return 1
+  fi
+}
+
 runtime_hook() {
   "$RUNTIME_HOOK" "$1" "$APP_DIR"
 }
@@ -209,6 +503,32 @@ validate_screening_queue_config() {
   # Inspect the warmed candidate cache, not the old live cache or just .env.
   "$PHP_BIN" "$checker" "$release/bootstrap/cache/config.php" 120 \
     || die "Screening queue configuration is unsafe; the release was not activated."
+}
+
+validate_prepaid_release_config() {
+  local current="$1" release="$2"
+  local -a arguments=()
+  [[ -f "$release/$PREPAID_MANIFEST" ]] || return 0
+  # The source contract was already verified before preparing this candidate.
+  # Require a disabled introduction even if shared .env contains stale flags.
+  if [[ ! -f "$current/$PREPAID_MANIFEST" ]]; then
+    arguments+=(--require-disabled)
+  fi
+  "$PHP_BIN" "$release/scripts/deployment/check-prepaid-release-config.php" \
+    "$release/bootstrap/cache/config.php" "${arguments[@]}" \
+    || die "Prepaid cached configuration is unsafe; the release was not activated."
+}
+
+validate_prepaid_rollback_config() {
+  local current="$1" target="$2"
+  [[ -f "$target/$PREPAID_MANIFEST" ]] || return 0
+  # Retained releases keep their own config caches. A rollback must not reopen
+  # sales or undo another prepaid switch changed since that release was active.
+  "$PHP_BIN" "$target/scripts/deployment/check-prepaid-release-config.php" \
+    "$target/bootstrap/cache/config.php" --match-sales-state "$current/bootstrap/cache/config.php" || {
+      log "Prepaid rollback configuration differs or cannot be verified; use a reviewed forward release." >&2
+      return 1
+    }
 }
 
 preflight_first_screening_cutover() {
@@ -270,12 +590,17 @@ prepare_screening_cutover() {
 
 rollback_target_is_safe() {
   local state
+  require_prepaid_compatibility "$NEW_RELEASE" "$OLD_RELEASE" || return 1
+  validate_prepaid_rollback_config "$NEW_RELEASE" "$OLD_RELEASE" || return 1
   is_screening_release "$OLD_RELEASE" && return 0
   is_screening_release "$NEW_RELEASE" || return 0
   # A command can commit and then fail. Read the DB again; unknown state must
   # never restore an old release that bypasses screening decisions/new jobs.
-  state="$(run_artisan "$NEW_RELEASE" screening:rollout --status --no-interaction 2>/dev/null)" || return 1
-  [[ "$state" == pending && "$SCREENING_ACTIVATION_ATTEMPTED" -eq 0 ]]
+  state="$(run_artisan "$NEW_RELEASE" screening:rollout --status --no-interaction 2>/dev/null)" || state=unknown
+  if [[ "$state" != pending || "$SCREENING_ACTIVATION_ATTEMPTED" -ne 0 ]]; then
+    log "Screening activation is committed or uncertain. Refusing rollback to a pre-screening release."
+    return 1
+  fi
 }
 
 atomic_symlink() {
@@ -431,8 +756,7 @@ rollback_after_failure() {
         fi
       fi
     else
-      log "Screening activation is committed or uncertain. Refusing rollback to a pre-screening release."
-      log "Keeping the screening release active; repair it or deploy a screening-compatible release."
+      log "Rollback compatibility could not be verified. Keeping the active release for repair or a compatible forward fix."
     fi
   elif [[ "$BOOTSTRAP_MOVED" -eq 1 && -n "$LEGACY_RELEASE" ]]; then
     log "Restoring the bootstrap storage pointer; the original application stayed live."
@@ -513,7 +837,8 @@ prepare_shared_state() {
 
   sudo mkdir -p "$RELEASES_DIR" "$SHARED_DIR"
   sudo chown "$DEPLOY_USER:$WEB_GROUP" "$DEPLOY_ROOT" "$RELEASES_DIR" "$SHARED_DIR"
-  sudo chmod 775 "$DEPLOY_ROOT" "$RELEASES_DIR" "$SHARED_DIR"
+  sudo chmod 755 "$DEPLOY_ROOT"
+  sudo chmod 775 "$RELEASES_DIR" "$SHARED_DIR"
 
   if [[ ! -f "$SHARED_ENV" ]]; then
     [[ -f "$APP_DIR/.env" ]] || die "Cannot initialize shared .env because $APP_DIR/.env is missing."
@@ -579,6 +904,9 @@ prepare_repository() {
   git --git-dir="$REPOSITORY_DIR" fetch --prune origin \
     "+refs/heads/$BRANCH:refs/heads/$BRANCH"
   DEPLOY_COMMIT="$(git --git-dir="$REPOSITORY_DIR" rev-parse "refs/heads/$BRANCH")"
+  if [[ -n "$EXPECTED_COMMIT" && "$DEPLOY_COMMIT" != "$EXPECTED_COMMIT" ]]; then
+    die "Fetched $BRANCH is $DEPLOY_COMMIT, not reviewed commit $EXPECTED_COMMIT. No release was built."
+  fi
 }
 
 create_release() {
@@ -593,6 +921,13 @@ create_release() {
   log "Creating release $release_name..."
   git clone --shared --no-checkout "$REPOSITORY_DIR" "$NEW_RELEASE"
   git -C "$NEW_RELEASE" checkout --detach "$DEPLOY_COMMIT"
+
+  # Reject downgrade/partial candidates before dependencies, migrations or drains.
+  require_prepaid_compatibility "$current" "$NEW_RELEASE" \
+    || die "Prepaid deployment compatibility check failed."
+  if [[ -f "$NEW_RELEASE/$PREPAID_MANIFEST" && -z "$EXPECTED_COMMIT" ]]; then
+    die "Prepaid deployment requires HOMECARE_EXPECTED_COMMIT set to the full reviewed commit SHA."
+  fi
 
   if is_screening_release "$NEW_RELEASE"; then
     preflight_screening_runtime
@@ -655,6 +990,7 @@ create_release() {
   # view:cache starts by clearing compiled views. Persist a release-local path
   # so warming this release cannot delete templates still used by live workers.
   VIEW_COMPILED_PATH="$compiled_views" run_artisan "$NEW_RELEASE" config:cache
+  validate_prepaid_release_config "$current" "$NEW_RELEASE"
   if is_screening_release "$NEW_RELEASE"; then
     validate_screening_queue_config "$NEW_RELEASE"
   fi
@@ -682,6 +1018,11 @@ activate_release() {
   local current="$1"
 
   OLD_RELEASE="$current"
+
+  # Persist the floor before either atomic switch. A failed first activation is
+  # intentionally repaired forward; zero sales is not a reason to relax it.
+  require_prepaid_compatibility "$current" "$NEW_RELEASE" activate \
+    || die "Prepaid activation compatibility check failed."
 
   if [[ -L "$APP_DIR" ]]; then
     set_previous_release "$OLD_RELEASE"
@@ -771,6 +1112,11 @@ perform_rollback() {
   [[ -n "$previous" && -d "$previous" ]] || die "No previous release is available."
   [[ "$current" != "$previous" ]] || die "Current and previous releases are identical."
 
+  require_prepaid_compatibility "$current" "$previous" \
+    || die "Prepaid rollback compatibility check failed."
+  validate_prepaid_rollback_config "$current" "$previous" \
+    || die "Prepaid rollback configuration check failed."
+
   if is_screening_release "$current" && ! is_screening_release "$previous"; then
     die "Rollback to a pre-screening release is disabled: it would bypass screening decisions and cannot consume screening jobs."
   fi
@@ -782,6 +1128,8 @@ perform_rollback() {
     validate_screening_queue_config "$previous"
     prepare_screening_cutover
   fi
+  require_prepaid_compatibility "$current" "$previous" activate \
+    || die "Prepaid rollback activation compatibility check failed."
   log "Atomically rolling back from $current to $previous..."
   atomic_symlink "$previous" "$APP_DIR"
   SWITCHED=1
@@ -802,6 +1150,18 @@ perform_rollback() {
 }
 
 case "$MODE" in
+  --check-prepaid-release|--prepaid-manifest)
+    [[ "$#" -eq 2 && -d "$2" ]] || die "Usage: deploy.sh $MODE RELEASE_DIRECTORY"
+    for command_name in sha256sum sed readlink; do require_command "$command_name"; done
+    if [[ "$MODE" == --prepaid-manifest ]]; then
+      print_prepaid_manifest "$2"
+    else
+      version="$(prepaid_release_version "$2")" || die "Prepaid release verification failed."
+      [[ "$version" == 1 ]] || die "The release has no prepaid compatibility contract."
+      log "Prepaid release compatibility v1 verified."
+    fi
+    exit 0
+    ;;
   --screening-check)
     [[ "$#" -eq 2 ]] || die "Usage: deploy.sh --screening-check REV"
     screening_runtime_from_git check "$2"
@@ -842,8 +1202,10 @@ esac
 
 [[ "$KEEP_RELEASES" =~ ^[0-9]+$ && "$KEEP_RELEASES" -ge 2 ]] \
   || die "HOMECARE_KEEP_RELEASES must be an integer of at least 2."
+[[ -z "$EXPECTED_COMMIT" || "$EXPECTED_COMMIT" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] \
+  || die "HOMECARE_EXPECTED_COMMIT must be a full lowercase Git commit SHA."
 
-for command_name in curl flock git grep python3 readlink sudo systemctl; do
+for command_name in curl flock git grep mktemp python3 readlink sed sha256sum sudo sync systemctl; do
   require_command "$command_name"
 done
 

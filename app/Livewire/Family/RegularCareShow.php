@@ -12,6 +12,7 @@ use App\Models\CareRequestConversation;
 use App\Models\CompletedExtraVisitRequest;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Services\RegularCare\CarePlanPaymentWindowService;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
 use App\Support\MarketplacePricing;
@@ -37,6 +38,8 @@ class RegularCareShow extends Component
     public string $visitFilter = 'upcoming';
 
     public bool $showHelp = false;
+
+    private array $careHourSummaries = [];
 
     public string $managePanel = '';
 
@@ -380,6 +383,10 @@ class RegularCareShow extends Component
                 ->orWhere(fn (Builder $missed) => $missed->where('status', CareBooking::STATUS_SCHEDULED)
                     ->where('scheduled_start_at', '<', now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes()))
                     ->where(fn (Builder $override) => $override->whereNull('check_in_override_at')->orWhereNull('check_in_override_by_user_id')));
+            if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->available()) {
+                $bookings->orWhereIn('id', \App\Models\CareHourBookingFunding::query()->select('care_booking_id')->where('status', 'payment_attention'))
+                    ->orWhereIn('id', \App\Models\CareHourSettlement::query()->select('care_booking_id')->where('amount_due_cents', '>', 0));
+            }
         });
     }
 
@@ -405,7 +412,12 @@ class RegularCareShow extends Component
         } elseif (in_array($booking->status, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at) {
             $items[] = ['label' => 'Hours awaiting approval', 'action' => 'Review hours', 'tab' => 'shift'];
         }
-        if ($booking->payment?->requiresFamilyAction()) {
+        $careHours = $this->careHoursSummary($booking);
+        $careHoursNeedAction = $careHours && $careHours['status'] !== 'released' && ! $this->awaitingCareHoursReservation($booking, $careHours) &&
+            (($careHours['settlement']['amount_due_cents'] ?? 0) > 0 || (! $careHours['settlement'] && ! $careHours['ready']));
+        if ($careHours['payment_under_review'] ?? false) {
+            $items[] = ['label' => 'Payment under review', 'action' => 'Contact support', 'tab' => 'support'];
+        } elseif ($careHoursNeedAction || $booking->payment?->requiresFamilyAction()) {
             $items[] = ['label' => 'Payment needs attention', 'action' => 'Fix payment', 'tab' => 'shift'];
         }
         if ($booking->status === CareBooking::STATUS_DISPUTED) {
@@ -442,6 +454,23 @@ class RegularCareShow extends Component
 
     public function paymentLabel(CareBooking $booking): string
     {
+        $careHours = $this->careHoursSummary($booking);
+        if ($careHours) {
+            if ($careHours['payment_under_review'] ?? false) {
+                return 'Payment under review';
+            }
+            if ($careHours['status'] === 'released') {
+                return 'Reserved care hours returned';
+            }
+            if ($careHours['settlement']) {
+                return $careHours['settlement']['amount_due_cents'] > 0 ? 'Care hours used · additional payment needed' : 'Paid with care hours';
+            }
+            if ($this->awaitingCareHoursReservation($booking, $careHours)) {
+                return 'Care hours will be reserved closer to this visit';
+            }
+
+            return $careHours['ready'] ? 'Care hours · scheduled care covered' : 'Care hours · payment needs attention';
+        }
         if ($booking->payment?->requiresFamilyAction()) {
             return 'Payment needs attention';
         }
@@ -455,6 +484,22 @@ class RegularCareShow extends Component
             CareBookingPayment::STATUS_TRANSFER_FAILED => 'Paid · transfer needs attention',
             default => 'Payment not confirmed',
         };
+    }
+
+    private function awaitingCareHoursReservation(CareBooking $booking, array $careHours): bool
+    {
+        return $careHours['status'] === 'selected' && ! $careHours['settlement']
+            && $booking->status === CareBooking::STATUS_SCHEDULED
+            && $booking->scheduled_start_at?->isAfter(now()->addHours(app(CarePlanPaymentWindowService::class)->authorizationWindowHours()));
+    }
+
+    private function careHoursSummary(CareBooking $booking): ?array
+    {
+        if (! array_key_exists($booking->id, $this->careHourSummaries)) {
+            $this->careHourSummaries[$booking->id] = app(\App\Services\CareHours\PrepaidBookingFundingService::class)->summary($booking);
+        }
+
+        return $this->careHourSummaries[$booking->id];
     }
 
     private function planStateLabel(): string

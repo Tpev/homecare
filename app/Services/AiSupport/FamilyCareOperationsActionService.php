@@ -1515,6 +1515,8 @@ class FamilyCareOperationsActionService
                 'scheduled_end_at' => $change->proposed_end_at,
                 'last_rescheduled_at' => now(), 'last_reschedule_reason' => $change->reason,
             ]);
+            $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+            if ($careHours->isPrepaid($booking)) { $careHours->protectScheduleChange($booking); }
         }
         $this->trust->recordEvent($booking, $actor->id, 'family', $change->type === CareBookingChangeRequest::TYPE_CANCEL ? 'booking_cancelled_by_change_request' : 'booking_rescheduled_by_change_request', ['change_request_id' => $change->id, 'source' => 'ai_support_confirmed']);
         $this->trust->recomputeReliabilityForBooking($booking);
@@ -1584,10 +1586,21 @@ class FamilyCareOperationsActionService
         if (! in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
             throw ValidationException::withMessages(['confirmation' => 'Only an in-progress or paused visit can be marked complete.']);
         }
-        $booking->update([
+        $completion = [
             'status' => CareBooking::STATUS_COMPLETED, 'completed_at' => now(),
             'timesheet_submitted_at' => $booking->timesheet_submitted_at ?: now(), 'paused_at' => null,
-        ]);
+        ];
+        if (app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            $pausedSeconds = max(0, (int) $booking->total_paused_seconds);
+            if ($booking->status === CareBooking::STATUS_PAUSED && $booking->paused_at) {
+                $pausedSeconds += max(0, (int) $booking->paused_at->diffInSeconds($completion['completed_at']));
+            }
+            $anchor = $booking->started_at ?: $booking->scheduled_start_at;
+            $elapsedSeconds = $anchor ? max(0, $anchor->diffInSeconds($completion['completed_at']) - $pausedSeconds) : 0;
+            $completion['worked_minutes'] = (int) floor($elapsedSeconds / 60);
+            $completion['total_paused_seconds'] = $pausedSeconds;
+        }
+        $booking->update($completion);
         $this->trust->recordEvent($booking, $actor->id, 'family', 'booking_completed_by_family', ['source' => 'ai_support_confirmed']);
         $this->trust->recomputeReliabilityForBooking($booking);
 

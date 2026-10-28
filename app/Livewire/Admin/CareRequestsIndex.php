@@ -4,6 +4,8 @@ namespace App\Livewire\Admin;
 
 use App\Models\CareBooking;
 use App\Models\CareRequest;
+use App\Services\CareHours\PrepaidBookingFundingService;
+use App\Services\CareHours\PrepaidBookingSettlementService;
 use App\Support\AdminCareRequestSchedule;
 use App\Support\AdminCareRequestUpcomingPaginator;
 use Illuminate\Contracts\View\View;
@@ -109,7 +111,12 @@ class CareRequestsIndex extends Component
             $payload['cancellation_reason'] = 'Admin override from request operations panel.';
         }
 
-        $request->booking->update($payload);
+        $careHours = app(PrepaidBookingFundingService::class);
+        if ($careHours->isPrepaid($request->booking)) {
+            app(PrepaidBookingSettlementService::class)->updateVisitState($request->booking, $payload);
+        } else {
+            $request->booking->update($payload);
+        }
         session()->flash('status', 'Booking for request #'.$request->id.' moved to '.strtoupper($status).'.');
     }
 

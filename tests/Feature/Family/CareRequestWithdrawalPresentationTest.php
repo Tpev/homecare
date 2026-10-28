@@ -152,6 +152,7 @@ class CareRequestWithdrawalPresentationTest extends TestCase
             'user_id' => $caregiver->id,
             'slug' => str($name)->slug().'-'.$caregiver->id,
             'status' => 'active',
+            'screening_initial_approved_at' => now(),
             'bio' => 'Experienced caregiver offering companionship and everyday non-medical help.',
             'platform_hourly_rate' => 30,
             'years_experience' => 5,

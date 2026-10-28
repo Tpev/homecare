@@ -8,6 +8,8 @@ Incoming texts use the existing signed Twilio webhook. A uniquely matching norma
 
 Duplicate incoming callbacks preserve the original timestamp and do not duplicate timeline entries or completed email notifications. CRM sends have a request key to prevent duplicate submissions. Delivery callbacks retain the latest state even if they arrive out of order or before the send API responds. Existing do-not-contact flags block CRM sending.
 
+Timeouts, server errors, or incomplete send responses are shown as **Awaiting confirmation**, because Twilio may already have accepted the text. CRM retains the original attempt and blocks identical recipient/text retries while its outcome is unknown, including after a reload or from another CRM lead sharing that number. A signed delivery callback resolves the attempt. Only a definite rejection permits an ordinary replacement send; an unresolved attempt needs provider review rather than an automatic resend.
+
 ## Deployment
 
 Run `php artisan migrate --force` before serving the updated application. The migration adds SMS templates and lead/message links, and backfills the normalized phone index for existing leads. Use the existing Twilio credentials, Messaging Service, sender number, inbound webhook, and status callback configuration; no new credentials are needed.

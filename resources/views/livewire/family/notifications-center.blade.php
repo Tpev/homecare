@@ -156,7 +156,8 @@
                 </summary>
 
                 <div class="space-y-3 border-t border-[#E4DDD3] p-4 sm:p-5">
-                    <p class="text-sm text-[#5B6472]">Choose in-app updates, email, or both. SMS and push are not offered yet.</p>
+                    <p class="text-sm text-[#5B6472]">These settings apply to your account. To stop an email update, turn off its Email checkbox and save your preferences. SMS and push are not offered yet.</p>
+                    <p class="text-sm text-[#5B6472]">Password resets, verification, family invitations, and care-hour purchase emails will still be sent.</p>
                     @foreach ($preferenceGroups as $preferenceGroup)
                         <details class="group overflow-hidden rounded-xl border border-[#DED6CA] bg-[#FFFCF8]">
                             <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-3">
