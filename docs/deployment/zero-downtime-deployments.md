@@ -102,9 +102,11 @@ The final `cd` is needed only because the shell that launched the first deployme
 
 The deployment fetches Git; it cannot deploy uncommitted working-tree files. Use a reviewed, committed and pushed release containing the complete feature, all six additive migrations (including request funding preferences), the matching manifest and the updated driver. Include any subsequent pilot-access changes in that same reviewed release. Deployment and feature enablement remain separately authorized operations.
 
-Use the updated driver from that exact reviewed revision for the first prepaid deployment. An older already-running `deploy.sh` does not acquire the new checks when it fetches new application code. Use the existing Git-delivery procedure above to obtain only the reviewed driver: restore `deploy.sh` from the full reviewed commit rather than an unpinned branch name, or use the matching Git-extracted driver prepared by the screening procedure. Do not pull the whole feature into the live checkout. The selected deployment branch must still point to the reviewed commit when the driver fetches it.
+Use the updated driver for the first prepaid deployment. An older already-running `deploy.sh` does not acquire the new checks when it fetches new application code. Use the existing Git-delivery procedure above to obtain only the reviewed driver, or use the matching Git-extracted driver prepared by the screening procedure. Do not pull the whole feature into the live checkout. This one-time driver update cannot be performed by a newer script that has not yet been installed.
 
-Set `HOMECARE_EXPECTED_COMMIT` to that full lowercase commit SHA when invoking the reviewed driver. A missing pin on a prepaid candidate, malformed SHA, or changed branch tip aborts before dependencies, migrations or runtime drains. The pin selects no alternate revision: a moved branch must be reviewed again or restored through the normal release process.
+Run `./deploy.sh` as usual. The driver fetches the selected branch once, logs the resulting full commit SHA, and builds that immutable commit throughout the run. A later branch update cannot change the release already selected. A failed fetch aborts rather than using an old local branch tip.
+
+Optionally set `HOMECARE_EXPECTED_COMMIT` to a full lowercase SHA when an operator needs an exact release constraint. A malformed value or different fetched branch tip aborts before dependencies, migrations or runtime drains. The optional pin does not select an alternate revision.
 
 The first prepaid candidate must have `care_hours.enabled=false` and `care_hours.gifts_enabled=false` in its newly warmed configuration cache. The driver checks that cache and refuses activation if either flag is enabled or missing/malformed. It does not rewrite the shared `.env` or silently turn features off. This disabled introduction still applies the additive migrations and pins the permanent compatibility floor before switching code. Prepare the compatible recovery procedure described below before deployment.
 
@@ -118,20 +120,20 @@ Deploying this code does not create a staging platform or make production accoun
 
 ## Normal deployment
 
-Once the reviewed driver is installed, prepaid deployments require the full SHA of the reviewed, pushed release:
+Once the updated driver is installed, use the usual command:
 
 ```bash
 cd /var/www/homecare
-HOMECARE_EXPECTED_COMMIT='<full lowercase SHA of the reviewed pushed release>' ./deploy.sh
+./deploy.sh
 ```
 
-Legacy releases without prepaid support may omit the pin. Normal subsequent prepaid deployments validate the cached exposure flags and pilot settings and preserve the values loaded from the shared `.env`; they do not reset an already authorized launch to disabled. Keep the driver current through the reviewed Git-delivery procedure whenever it changes. No command here authorizes production access or activation.
+The optional `HOMECARE_EXPECTED_COMMIT` constraint is available for both prepaid and legacy releases. Normal subsequent prepaid deployments validate the cached exposure flags and pilot settings and preserve the values loaded from the shared `.env`; they do not reset an already authorized launch to disabled. Keep the driver current through the reviewed Git-delivery procedure whenever it changes. No command here authorizes production access or activation.
 
 The script performs these operations in order:
 
 1. acquires an exclusive deployment lock;
 2. fetches the selected branch (default `master`) into the local mirror and verifies the expected commit;
-3. creates a new inactive release and verifies its prepaid source contract and required commit pin;
+3. creates a new inactive release at the captured commit and verifies its prepaid source contract;
 4. links the protected `.env` and durable storage;
 5. installs production Composer and npm dependencies;
 6. builds frontend, hosted Content MCP, and voice-agent artifacts;
@@ -221,7 +223,9 @@ Defaults reflect the previously documented production host; this local audit has
 
 `bash tests/Deployment/atomic-deploy-smoke.sh` uses temporary repositories and mocked PHP, npm, Composer, Go, service and health commands. It checks atomic conversion, release-local views, durable sessions/evidence, normal rollback, missing runtime configuration, partial drains, interrupted/failed preparation, uncertain activation, recovery retries, blocked old-code rollback and compatible rollback. It asserts that deployment never invokes imports or Didit backfill. On Windows, directory junctions model directory links and the immutable test `.env` is copied; Unix permission assertions run on Linux only. The real Linux `renameat2` call, systemd services and production account permissions are not exercised by this offline harness.
 
-The same harness exercises first prepaid activation with a failed durable flush and failed health check, incompatible manual rollback and forward deployment, missing/unknown floor state, compatible repair of damaged active handlers, and rejection of missing handler, claim-view and migration dependencies. It also checks missing/invalid/moved commit pins, rejection of unsafe first-introduction cached settings before drains, and refusal of manual/automatic rollback when cached switches differ. Its original legacy-only and screening cases remain in the suite. `bash tests/Deployment/prepaid-rollback-state-smoke.sh` isolates floor/contract failures, safe repairs and cumulative screening decisions using small synthetic files. Neither test deploys an application, accesses production, or runs real migrations, payments or service commands.
+For a focused check of the ordinary command, `HOMECARE_DEPLOY_SMOKE_FOCUS=plain-prepaid bash tests/Deployment/atomic-deploy-smoke.sh` verifies a complete prepaid deployment without a commit override, preserves the prior live release and durable data during preparation, then rejects an invalid next package and rollback to pre-prepaid code. The default invocation still runs the full failure matrix.
+
+The same harness exercises first prepaid activation with a failed durable flush and failed health check, incompatible manual rollback and forward deployment, missing/unknown floor state, compatible repair of damaged active handlers, and rejection of missing handler, claim-view and migration dependencies. It runs without a commit override by default and also checks invalid/mismatched explicit pins, rejection of unsafe first-introduction cached settings before drains, and refusal of manual/automatic rollback when cached switches differ. `bash tests/Deployment/deploy-selection-smoke.sh` isolates immutable commit selection, optional pins, branch movement and fetch failure using local Git repositories. Its original legacy-only and screening cases remain in the suite. `bash tests/Deployment/prepaid-rollback-state-smoke.sh` isolates floor/contract failures, safe repairs and cumulative screening decisions using small synthetic files. These tests do not deploy an application, access production, or run real migrations, payments or service commands.
 
 `php tests/Deployment/prepaid-release-config-smoke.php` tests the actual cached-config helper, including missing/unreadable/malformed caches, strict boolean flags, disabled first adoption, all six rollback switches and sanitized error output. It does not boot Laravel or contact a database/provider.
 

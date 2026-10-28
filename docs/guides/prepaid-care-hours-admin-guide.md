@@ -267,7 +267,7 @@ Healthy does not verify provider connectivity, actual email delivery, scheduler 
 
 Pausing exposure or sales does not erase existing balances, cancel prepared care, invalidate accepted purchases or remove previously paid gifts' claim rights. Paid gift claims retain their accepted offer rules. Keep reconciliation, webhooks and necessary notification processing running for existing obligations.
 
-The deployment driver validates a complete, fingerprinted prepaid source package and requires a reviewed full commit pin. Its first prepaid introduction requires cached feature and gift exposure to be disabled. It applies additive migrations and records a permanent prepaid compatibility floor before activation.
+The deployment driver validates a complete, fingerprinted prepaid source package. The usual `./deploy.sh` command captures the fetched commit once and uses it throughout deployment; an explicit commit constraint is optional. Its first prepaid introduction requires cached feature and gift exposure to be disabled. It applies additive migrations and records a permanent prepaid compatibility floor before activation.
 
 Once that floor is recorded, manual rollback, automatic failure recovery and forward deployment to older code must still use prepaid-compatible code. This restriction applies even before the first sale. Do not delete the floor, reverse prepaid migrations, delete ledger data, clear holds, or start old incompatible workers to escape a failed deployment. Prepare a reviewed compatible recovery release or forward repair before introduction.
 

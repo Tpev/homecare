@@ -82,8 +82,8 @@ runtime-control hook. The first screening cutover briefly drains PHP-FPM so
 legacy access can be finalized safely. No Laravel maintenance mode is used.
 Once prepaid code is activated, every later release must retain prepaid support,
 even with sales disabled. No deployment mode reverses database migrations.
-Prepaid deployments require HOMECARE_EXPECTED_COMMIT set to the full reviewed
-commit SHA. A different fetched branch tip aborts before building the release.
+The fetched branch tip is captured once and used for the whole deployment.
+HOMECARE_EXPECTED_COMMIT is optional; when set, a different fetched commit aborts.
 The first prepaid deployment requires both prepaid and gift sales disabled in
 the warmed configuration; deployment does not change application feature flags.
 EOF
@@ -891,24 +891,34 @@ prepare_shared_state() {
   sudo find "$shared_storage_real" -path "$screening_private" -prune -o -type f -exec chmod 664 {} +
 }
 
+validate_expected_commit() {
+  [[ -z "$EXPECTED_COMMIT" || "$EXPECTED_COMMIT" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] \
+    || die "HOMECARE_EXPECTED_COMMIT must be a full lowercase Git commit SHA."
+}
+
 prepare_repository() {
   local source_release="$1"
   local origin_url
 
+  DEPLOY_COMMIT=""
   if [[ ! -d "$REPOSITORY_DIR" ]]; then
     origin_url="$(git -C "$source_release" remote get-url origin)"
     [[ -n "$origin_url" ]] || die "The current checkout has no origin remote."
     log "Initializing the local deployment repository..."
-    git clone --mirror "$origin_url" "$REPOSITORY_DIR"
+    git clone --mirror "$origin_url" "$REPOSITORY_DIR" \
+      || die "Could not initialize the deployment repository. No release was selected."
   fi
 
   log "Fetching the latest $BRANCH commit..."
   git --git-dir="$REPOSITORY_DIR" fetch --prune origin \
-    "+refs/heads/$BRANCH:refs/heads/$BRANCH"
-  DEPLOY_COMMIT="$(git --git-dir="$REPOSITORY_DIR" rev-parse "refs/heads/$BRANCH")"
+    "+refs/heads/$BRANCH:refs/heads/$BRANCH" \
+    || die "Could not fetch $BRANCH. No release was selected."
+  DEPLOY_COMMIT="$(git --git-dir="$REPOSITORY_DIR" rev-parse --verify "refs/heads/$BRANCH^{commit}")" \
+    || die "Could not resolve the fetched $BRANCH commit. No release was selected."
   if [[ -n "$EXPECTED_COMMIT" && "$DEPLOY_COMMIT" != "$EXPECTED_COMMIT" ]]; then
     die "Fetched $BRANCH is $DEPLOY_COMMIT, not reviewed commit $EXPECTED_COMMIT. No release was built."
   fi
+  log "Selected immutable deployment commit $DEPLOY_COMMIT"
 }
 
 create_release() {
@@ -927,10 +937,6 @@ create_release() {
   # Reject downgrade/partial candidates before dependencies, migrations or drains.
   require_prepaid_compatibility "$current" "$NEW_RELEASE" \
     || die "Prepaid deployment compatibility check failed."
-  if [[ -f "$NEW_RELEASE/$PREPAID_MANIFEST" && -z "$EXPECTED_COMMIT" ]]; then
-    die "Prepaid deployment requires HOMECARE_EXPECTED_COMMIT set to the full reviewed commit SHA."
-  fi
-
   if is_screening_release "$NEW_RELEASE"; then
     preflight_screening_runtime
   elif is_screening_release "$current"; then
@@ -1204,8 +1210,7 @@ esac
 
 [[ "$KEEP_RELEASES" =~ ^[0-9]+$ && "$KEEP_RELEASES" -ge 2 ]] \
   || die "HOMECARE_KEEP_RELEASES must be an integer of at least 2."
-[[ -z "$EXPECTED_COMMIT" || "$EXPECTED_COMMIT" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] \
-  || die "HOMECARE_EXPECTED_COMMIT must be a full lowercase Git commit SHA."
+validate_expected_commit
 
 for command_name in curl flock git grep mktemp python3 readlink sed sha256sum sudo sync systemctl; do
   require_command "$command_name"

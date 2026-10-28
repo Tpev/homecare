@@ -223,6 +223,15 @@ EOF
 
 cat > "$MOCK_BIN/composer" <<'EOF'
 #!/usr/bin/env bash
+set -Eeuo pipefail
+if [[ -n "${MOCK_FOCUS_APP:-}" ]]; then
+  [[ "$(readlink -f "$MOCK_FOCUS_APP")" == "$MOCK_EXPECT_ACTIVE_RELEASE" ]]
+  [[ "$(cat "$MOCK_FOCUS_APP/VERSION")" == 'release one' ]]
+  [[ "$(cat "$MOCK_FOCUS_APP/bootstrap/cache/views/compiled.php")" == 'release one' ]]
+  [[ "$(cat "$MOCK_FOCUS_APP/storage/framework/sessions/preserved-session")" == 'durable session' ]]
+  [[ "$(sha256sum "$MOCK_FOCUS_APP/.env" | cut -d ' ' -f1)" == "$MOCK_EXPECT_ENV_HASH" ]]
+  printf 'focus-build-active-unchanged\n' >> "$MOCK_EVENTS"
+fi
 mkdir -p vendor
 exit 0
 EOF
@@ -304,7 +313,7 @@ printf 'legacy compiled view\n' > "$APP_DIR/storage/framework/views/legacy-prese
 
 deploy() {
   HOMECARE_APP_DIR="$APP_DIR" \
-  HOMECARE_EXPECTED_COMMIT="${TEST_EXPECTED_COMMIT-$(git --git-dir="$ORIGIN_DIR" rev-parse "refs/heads/${HOMECARE_DEPLOY_BRANCH:-master}")}" \
+  HOMECARE_EXPECTED_COMMIT="${TEST_EXPECTED_COMMIT:-}" \
   HOMECARE_DEPLOY_ROOT="$DEPLOY_ROOT" \
   HOMECARE_DEPLOY_USER="ignored" \
   HOMECARE_WEB_GROUP="ignored" \
@@ -335,6 +344,74 @@ original_legacy_release="$(readlink -f "$DEPLOY_ROOT/previous")"
 git clone "$ORIGIN_DIR" "$AUTHOR_DIR" >/dev/null
 git -C "$AUTHOR_DIR" config user.name "Deployment Test"
 git -C "$AUTHOR_DIR" config user.email "deployment-test@example.invalid"
+
+if [[ "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == plain-prepaid ]]; then
+  # Exercise the real normal entrypoint and complete activation with no optional
+  # commit pin, without repeating the full failure/recovery matrix below.
+  [[ -z "${TEST_EXPECTED_COMMIT:-}" ]]
+  awk '/^prepaid_compatibility_files\(\)/ { reading=1; next } reading && /^EOF$/ { exit } reading && !/cat <<\x27EOF\x27/ { print }' \
+    "$DEPLOY_SCRIPT" > "$SANDBOX/prepaid-paths"
+  while IFS= read -r path; do
+    [[ -n "$path" && "$path" != /* && "$path" != *..* ]] || exit 1
+    if [[ ! -f "$AUTHOR_DIR/$path" ]]; then
+      mkdir -p "$(dirname "$AUTHOR_DIR/$path")"
+      printf 'synthetic prepaid source: %s\n' "$path" > "$AUTHOR_DIR/$path"
+    fi
+  done < "$SANDBOX/prepaid-paths"
+  mkdir -p "$AUTHOR_DIR/docs/deployment"
+  "$DEPLOY_SCRIPT" --prepaid-manifest "$AUTHOR_DIR" > "$AUTHOR_DIR/docs/deployment/prepaid-care-hours-v1.sha256"
+  printf 'plain prepaid release\n' > "$AUTHOR_DIR/VERSION"
+  git -C "$AUTHOR_DIR" add .
+  git -C "$AUTHOR_DIR" commit -m "Plain prepaid deployment fixture" >/dev/null
+  git -C "$AUTHOR_DIR" push origin master >/dev/null
+  plain_commit="$(git -C "$AUTHOR_DIR" rev-parse HEAD)"
+  shared_env_hash="$(sha256sum "$DEPLOY_ROOT/shared/.env" | cut -d ' ' -f1)"
+  old_view_hash="$(sha256sum "$first_release/bootstrap/cache/views/compiled.php" | cut -d ' ' -f1)"
+
+  if ! MOCK_FOCUS_APP="$APP_DIR" MOCK_EXPECT_ACTIVE_RELEASE="$first_release" \
+    MOCK_EXPECT_ENV_HASH="$shared_env_hash" deploy > "$SANDBOX/plain-prepaid.log" 2>&1; then
+    cat "$SANDBOX/plain-prepaid.log" >&2
+    exit 1
+  fi
+  plain_release="$(readlink -f "$APP_DIR")"
+  [[ "$plain_release" != "$first_release" ]]
+  [[ "$(git -C "$plain_release" rev-parse HEAD)" == "$plain_commit" ]]
+  [[ "$(readlink -f "$DEPLOY_ROOT/previous")" == "$first_release" ]]
+  [[ "$(cat "$DEPLOY_ROOT/compatibility/prepaid-care-hours.floor")" == homecare-prepaid-care-hours-v1 ]]
+  [[ "$(cat "$APP_DIR/storage/framework/sessions/preserved-session")" == 'durable session' ]]
+  [[ "$(cat "$APP_DIR/VERSION")" == 'plain prepaid release' ]]
+  [[ "$(cat "$APP_DIR/bootstrap/cache/views/compiled.php")" == 'plain prepaid release' ]]
+  [[ "$(cat "$first_release/VERSION")" == 'release one' ]]
+  [[ "$(sha256sum "$first_release/bootstrap/cache/views/compiled.php" | cut -d ' ' -f1)" == "$old_view_hash" ]]
+  [[ "$(sha256sum "$DEPLOY_ROOT/shared/.env" | cut -d ' ' -f1)" == "$shared_env_hash" ]]
+  [[ "$(sha256sum "$APP_DIR/.env" | cut -d ' ' -f1)" == "$shared_env_hash" ]]
+  grep -q "Selected immutable deployment commit $plain_commit" "$SANDBOX/plain-prepaid.log"
+  grep -q "Deployment complete at commit $plain_commit" "$SANDBOX/plain-prepaid.log"
+  grep -q 'focus-build-active-unchanged' "$MOCK_EVENTS"
+  grep -q 'prepaid-config-check --require-disabled' "$MOCK_EVENTS"
+  ! grep -Eq 'artisan (down|migrate:(rollback|reset|refresh))' "$MOCK_EVENTS"
+  ! grep -Eq 'artisan (screening:(import|refresh-datasets|sync)|.*refresh-identities)' "$MOCK_EVENTS"
+
+  # The successful no-pin path still rejects an incomplete candidate before
+  # migrations/runtime changes and cannot return to the prior legacy release.
+  migrations_before="$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")"
+  pauses_before="$(grep -c 'runtime pause' "$MOCK_EVENTS" || true)"
+  git -C "$AUTHOR_DIR" rm app/Services/CareHours/CareHourAccess.php >/dev/null
+  git -C "$AUTHOR_DIR" commit -m "Incomplete prepaid fixture" >/dev/null
+  git -C "$AUTHOR_DIR" push origin master >/dev/null
+  if deploy > "$SANDBOX/plain-prepaid-invalid.log" 2>&1; then exit 1; fi
+  grep -q 'CareHourAccess.php' "$SANDBOX/plain-prepaid-invalid.log"
+  [[ "$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")" == "$migrations_before" ]]
+  [[ "$(grep -c 'runtime pause' "$MOCK_EVENTS" || true)" == "$pauses_before" ]]
+  [[ "$(readlink -f "$APP_DIR")" == "$plain_release" ]]
+  if deploy --rollback > "$SANDBOX/plain-prepaid-legacy-rollback.log" 2>&1; then exit 1; fi
+  grep -q 'Prepaid rollback compatibility check failed' "$SANDBOX/plain-prepaid-legacy-rollback.log"
+  [[ "$(readlink -f "$APP_DIR")" == "$plain_release" ]]
+  [[ "$(sha256sum "$DEPLOY_ROOT/shared/.env" | cut -d ' ' -f1)" == "$shared_env_hash" ]]
+  printf 'Plain prepaid atomic deployment smoke passed (no pin, complete activation, immutable source, preserved live state/session/environment, manifest rejection, legacy rollback blocked).\n'
+  exit 0
+fi
+
 printf 'release two\n' > "$AUTHOR_DIR/VERSION"
 git -C "$AUTHOR_DIR" add VERSION
 git -C "$AUTHOR_DIR" commit -m "Release two" >/dev/null
@@ -481,11 +558,9 @@ git -C "$AUTHOR_DIR" commit -m "First prepaid-compatible release" >/dev/null
 git -C "$AUTHOR_DIR" push origin master >/dev/null
 floor="$DEPLOY_ROOT/compatibility/prepaid-care-hours.floor"
 
-# An unpinned or moved branch must fail before migrations, pauses or activation.
+# Optional explicit pins still reject a mismatch before migrations, pauses or activation.
 migrations_before="$(grep -c 'artisan migrate --force' "$MOCK_EVENTS")"
 pauses_before="$(grep -c 'runtime pause' "$MOCK_EVENTS")"
-if TEST_EXPECTED_COMMIT='' deploy > "$SANDBOX/prepaid-unpinned.log" 2>&1; then exit 1; fi
-grep -q 'requires HOMECARE_EXPECTED_COMMIT' "$SANDBOX/prepaid-unpinned.log"
 if TEST_EXPECTED_COMMIT="$prepaid_legacy_commit" deploy > "$SANDBOX/prepaid-moved-branch.log" 2>&1; then exit 1; fi
 grep -q 'not reviewed commit' "$SANDBOX/prepaid-moved-branch.log"
 if TEST_EXPECTED_COMMIT=master deploy > "$SANDBOX/prepaid-invalid-pin.log" 2>&1; then exit 1; fi
@@ -497,6 +572,7 @@ grep -q 'must be a full lowercase Git commit SHA' "$SANDBOX/prepaid-invalid-pin.
 # Cached enabled/malformed flags abort the first introduction before any drain,
 # traffic switch or compatibility floor. The PHP helper has separate real tests.
 if MOCK_PREPAID_CONFIG_FAIL=1 deploy > "$SANDBOX/prepaid-enabled-introduction.log" 2>&1; then exit 1; fi
+grep -q "Selected immutable deployment commit $(git --git-dir="$ORIGIN_DIR" rev-parse refs/heads/master)" "$SANDBOX/prepaid-enabled-introduction.log"
 grep -q 'Prepaid cached configuration is unsafe' "$SANDBOX/prepaid-enabled-introduction.log"
 grep -q 'prepaid-config-check --require-disabled' "$MOCK_EVENTS"
 [[ "$(grep -c 'runtime pause' "$MOCK_EVENTS")" == "$pauses_before" ]]
