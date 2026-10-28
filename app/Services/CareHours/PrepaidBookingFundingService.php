@@ -59,6 +59,9 @@ class PrepaidBookingFundingService
 
                 return $existing;
             }
+            if (! app(CareHourAccess::class)->canUseAccount($account, $actor)) {
+                throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this account.']);
+            }
             $this->assertCanSelect($locked, $account);
             $funding = CareHourBookingFunding::create([
                 'care_booking_id' => $locked->id, 'care_hour_account_id' => $account->id,
@@ -78,6 +81,9 @@ class PrepaidBookingFundingService
     public function selectForPlan(CarePlan $plan, CareHourAccount $account, User $actor): CareHourPlanPreference
     {
         $this->identities->assertAccess($account, $actor);
+        if (! app(CareHourAccess::class)->canUseAccount($account, $actor)) {
+            throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this account.']);
+        }
         if ((int) $plan->family_account_id !== (int) $account->family_account_id || $plan->care_arrangement_id) {
             throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this care arrangement.']);
         }

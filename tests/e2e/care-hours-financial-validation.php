@@ -53,6 +53,7 @@ try {
         'CACHE_STORE' => 'array', 'SESSION_DRIVER' => 'array', 'QUEUE_CONNECTION' => 'sync', 'MAIL_MAILER' => 'array',
         'STRIPE_BYPASS' => 'false', 'STRIPE_SECRET' => $provider['stripe_secret'], 'STRIPE_CURRENCY' => 'usd',
         'CARE_HOURS_ENABLED' => 'true', 'CARE_HOURS_ENROLLMENT_ENABLED' => 'true', 'CARE_HOURS_SALES_ENABLED' => 'true',
+        'CARE_HOURS_PILOT_ONLY' => 'false',
         'CARE_HOURS_WELCOME_BONUS_ENABLED' => 'true', 'MARKETPLACE_PRICING_V2_ENABLED' => 'true',
         'MARKETPLACE_FAMILY_CARE_HOURLY_CENTS' => '3000', 'MARKETPLACE_FAMILY_PROCESSING_FEE_HOURLY_CENTS' => '100',
         'MARKETPLACE_CAREGIVER_GROSS_HOURLY_CENTS' => '2700', 'TWILIO_BYPASS' => 'true', 'DIDIT_BYPASS' => 'true',

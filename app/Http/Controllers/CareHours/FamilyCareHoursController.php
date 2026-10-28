@@ -14,6 +14,7 @@ use App\Models\CarePlan;
 use App\Models\CareRecipient;
 use App\Models\CareRecipientProfile;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\CareHours\CareHourAccess;
 use App\Services\CareHours\CareHourContributionService;
 use App\Services\CareHours\CareHourEligibilityService;
 use App\Services\CareHours\CareHourIdentityService;
@@ -40,8 +41,8 @@ class FamilyCareHoursController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
+        abort_unless(app(\App\Services\CareHours\CareHourNavigation::class)->visible($request->user()), 404);
         $accounts = $this->identities->accountsFor($request->user());
-        abort_unless(config('care_hours.enabled') || $accounts->isNotEmpty(), 404);
         if ($accounts->count() === 1 && ! $request->boolean('choose')) {
             return redirect()->route('family.care-hours.show', $accounts->first());
         }
@@ -49,16 +50,16 @@ class FamilyCareHoursController extends Controller
         return view('care-hours.family.index', [
             'accounts' => $accounts,
             'balances' => $accounts->mapWithKeys(fn ($account) => [$account->id => $this->ledger->balance($account)]),
-            'recipients' => config('care_hours.enrollment_enabled') ? $this->identities->recipientsFor($request->user())
+            'recipients' => app(CareHourAccess::class)->canEnroll($request->user()) ? $this->identities->recipientsFor($request->user())
                 ->filter(fn ($recipient) => ! $recipient->care_recipient_profile_id && ! CareHourRecipientLink::where('care_recipient_id', $recipient->id)->exists()) : collect(),
-            'profiles' => config('care_hours.enrollment_enabled') ? $this->identities->profilesFor($request->user())
+            'profiles' => app(CareHourAccess::class)->canEnroll($request->user()) ? $this->identities->profilesFor($request->user())
                 ->reject(fn ($profile) => $accounts->contains('care_recipient_profile_id', $profile->id)) : collect(),
         ]);
     }
 
     public function enroll(Request $request): RedirectResponse
     {
-        abort_unless(config('care_hours.enabled') && config('care_hours.enrollment_enabled'), 403);
+        abort_unless(app(CareHourAccess::class)->canEnroll($request->user()), 403);
         $accounts = $this->identities->accountsFor($request->user());
         $input = $request->validate([
             'recipient' => ['required', 'regex:/^(profile|recipient):[1-9][0-9]*$/'],
@@ -86,6 +87,8 @@ class FamilyCareHoursController extends Controller
     {
         $this->identities->assertAccess($account, $request->user());
 
+        abort_unless(app(CareHourAccess::class)->allows($request->user()) || $account->lots()->exists() || $account->purchases()->exists(), 404);
+
         return view('care-hours.family.show', [
             'account' => $account,
             'accounts' => $this->identities->accountsFor($request->user()),
@@ -101,7 +104,7 @@ class FamilyCareHoursController extends Controller
     public function packages(Request $request, CareHourAccount $account): View
     {
         $this->identities->assertAccess($account, $request->user());
-        abort_unless(config('care_hours.enabled') && config('care_hours.sales_enabled') && $account->active, 403);
+        abort_unless(app(CareHourAccess::class)->canBuy($request->user()) && $account->active, 403);
         $reason = app(CareHourEligibilityService::class)->reasonFor($account);
 
         return view('care-hours.family.packages', [
@@ -146,7 +149,7 @@ class FamilyCareHoursController extends Controller
 
     public function createLink(Request $request, CareHourAccount $account): RedirectResponse
     {
-        abort_unless(config('care_hours.enabled') && config('care_hours.contributions_enabled') && config('care_hours.sales_enabled'), 403);
+        abort_unless(app(CareHourAccess::class)->canContribute($request->user()), 403);
         $this->identities->assertAccess($account, $request->user());
         abort_unless($this->identities->isOwner($account, $request->user()), 403);
         $result = $this->contributions->createLink($account, $request->user());

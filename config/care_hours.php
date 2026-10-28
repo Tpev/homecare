@@ -3,6 +3,8 @@
 return [
     // Rollout switches affect discovery/new sales, never existing entitlements.
     'enabled' => (bool) env('CARE_HOURS_ENABLED', false),
+    'pilot_only' => (bool) env('CARE_HOURS_PILOT_ONLY', true),
+    'pilot_emails' => array_values(array_filter(array_map('trim', explode(',', (string) env('CARE_HOURS_PILOT_EMAILS', 'peverelli.t@gmail.com'))), fn ($email) => $email !== '')),
     'enrollment_enabled' => (bool) env('CARE_HOURS_ENROLLMENT_ENABLED', true),
     'sales_enabled' => (bool) env('CARE_HOURS_SALES_ENABLED', true),
     'contributions_enabled' => (bool) env('CARE_HOURS_CONTRIBUTIONS_ENABLED', true),

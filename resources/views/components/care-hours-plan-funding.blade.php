@@ -9,7 +9,7 @@
         $hoursPlanPreference = \App\Models\CareHourPlanPreference::where('care_plan_id', $plan->id)->first();
     }
 @endphp
-@if($hoursPlanAccount)
+@if($hoursPlanAccount && ($hoursPlanPreference?->enabled || app(\App\Services\CareHours\CareHourAccess::class)->canUseAccount($hoursPlanAccount, auth()->user())))
     <details class="hc-surface p-5 sm:p-6"><summary class="cursor-pointer font-semibold">Payment for future visits · {{ $hoursPlanPreference?->enabled ? 'Care hours' : 'Card' }}</summary>
         <p class="mt-3 text-sm text-[#485E53]">{{ \App\Models\CareHourAccount::formatMinutes($hoursPlanAccount->balance()['available_minutes']) }} available for {{ $hoursPlanAccount->display_name }}.</p>
         <form action="{{ route('family.care-hours.plan', $plan) }}" method="POST" class="mt-4 space-y-4">

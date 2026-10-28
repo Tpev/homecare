@@ -83,6 +83,11 @@ class NotificationsCenter extends Component
         abort_unless(auth()->user()?->role === 'family', 403);
         app(\App\Services\Notifications\NotificationReadService::class)->synchronize(auth()->user());
         $this->eventKeys = MarketplaceNotificationPresentation::eventsForRole('family');
+        if (! app(\App\Services\CareHours\CareHourNavigation::class)->visible(auth()->user())) {
+            $this->eventKeys = array_values(array_diff($this->eventKeys, [
+                MarketplaceEvent::CARE_HOURS_PAYMENT_ATTENTION, MarketplaceEvent::CARE_HOURS_VISIT_SETTLED,
+            ]));
+        }
         $this->loadPreferencesFromStore();
     }
 

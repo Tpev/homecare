@@ -48,6 +48,7 @@ export function stagingEnvironment(): Record<string, string> {
         CARE_HOURS_GIFT_ONBOARDING_CONNECT_ACCOUNT: provider.connect_account_id ?? 'acct_staging_simulated',
         CARE_HOURS_GIFT_ONBOARDING_MARKER: 'isolated-gift-onboarding',
         CARE_HOURS_ENABLED: 'true', CARE_HOURS_ENROLLMENT_ENABLED: 'true',
+        CARE_HOURS_PILOT_ONLY: 'false',
         CARE_HOURS_SALES_ENABLED: 'true', CARE_HOURS_CONTRIBUTIONS_ENABLED: 'true', CARE_HOURS_WELCOME_BONUS_ENABLED: 'true',
         CARE_HOURS_GIFTS_ENABLED: 'true',
         MARKETPLACE_PRICING_V2_ENABLED: 'true', MARKETPLACE_FAMILY_CARE_HOURLY_CENTS: '3000',

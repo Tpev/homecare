@@ -14,7 +14,7 @@ class CareHourNavigation
         if (! $user || $user->role !== 'family') {
             return false;
         }
-        if (config('care_hours.enabled')) {
+        if (app(CareHourAccess::class)->canDiscover($user)) {
             return true;
         }
         if (! Schema::hasTable('care_hour_accounts')) {
@@ -23,6 +23,18 @@ class CareHourNavigation
         // Reading existing navigation must never enroll a recipient or create a family.
         $membership = app(FamilyAccountContext::class)->membershipFor($user, false);
 
-        return $membership && CareHourAccount::query()->where('family_account_id', $membership->family_account_id)->exists();
+        if (! $membership) {
+            return false;
+        }
+        $accounts = CareHourAccount::query()->where('family_account_id', $membership->family_account_id);
+        if (! app(CareHourAccess::class)->allows($user)) {
+            if (! Schema::hasTable('care_hour_lots')) {
+                return false;
+            }
+            $accounts->where(fn ($existing) => $existing->whereHas('lots')
+                ->when(Schema::hasTable('care_hour_purchases'), fn ($query) => $query->orWhereHas('purchases')));
+        }
+
+        return $accounts->exists();
     }
 }

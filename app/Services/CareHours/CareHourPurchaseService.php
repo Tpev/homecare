@@ -67,7 +67,7 @@ class CareHourPurchaseService
 
         return $this->startForBuyer($account, $hours, [
             'buyer_user_id' => $buyer->id, 'buyer_email' => strtolower($buyer->email), 'buyer_name' => $buyer->name,
-        ], $quoteKey, $requestKey, $successUrl, $cancelUrl);
+        ], $quoteKey, $requestKey, $successUrl, $cancelUrl, actor: $buyer);
     }
 
     public function startContribution(CareHourContributionLink $link, string $verifiedToken, int $hours, string $quoteKey, string $requestKey, string $successUrl, string $cancelUrl): CareHourPurchase
@@ -77,17 +77,17 @@ class CareHourPurchaseService
         return $this->startForBuyer($link->account, $hours, [
             'buyer_user_id' => null, 'buyer_email' => $buyer['email'], 'buyer_name' => $buyer['name'],
             'care_hour_contribution_link_id' => $link->id,
-        ], $quoteKey, $requestKey, $successUrl, $cancelUrl, $link);
+        ], $quoteKey, $requestKey, $successUrl, $cancelUrl, $link, auth()->user());
     }
 
-    private function startForBuyer(CareHourAccount $account, int $hours, array $buyer, string $quoteKey, string $requestKey, string $successUrl, string $cancelUrl, ?CareHourContributionLink $link = null): CareHourPurchase
+    private function startForBuyer(CareHourAccount $account, int $hours, array $buyer, string $quoteKey, string $requestKey, string $successUrl, string $cancelUrl, ?CareHourContributionLink $link = null, ?User $actor = null): CareHourPurchase
     {
         if (strlen($requestKey) < 16 || strlen($requestKey) > 200) {
             throw ValidationException::withMessages(['purchase' => 'Refresh the purchase page and try again.']);
         }
         $identity = ($buyer['buyer_user_id'] ?? 'guest:'.$buyer['buyer_email']).'|'.($link?->id ?? 0);
         $key = hash('sha256', $identity.'|'.$requestKey);
-        $purchase = DB::transaction(function () use ($account, $hours, $buyer, $quoteKey, $key, $successUrl, $cancelUrl, $link): CareHourPurchase {
+        $purchase = DB::transaction(function () use ($account, $hours, $buyer, $quoteKey, $key, $successUrl, $cancelUrl, $link, $actor): CareHourPurchase {
             // Account-wide pricing changes take the same family lock.
             FamilyAccount::query()->whereKey($account->family_account_id)->lockForUpdate()->firstOrFail();
             $locked = CareHourAccount::query()->lockForUpdate()->findOrFail($account->id);
@@ -99,12 +99,13 @@ class CareHourPurchaseService
 
                 return $existing;
             }
-            if (! config('care_hours.enabled', false) || ! config('care_hours.sales_enabled', false) || ! $locked->active
+            if (! app(CareHourAccess::class)->canBuy($actor) || ! $locked->active
                 || $locked->familyAccount->status !== FamilyAccount::STATUS_ACTIVE) {
                 throw ValidationException::withMessages(['purchase' => 'New care-hour purchases are currently unavailable.']);
             }
             if ($link) {
                 $this->contributions->assertAvailable($link);
+                $this->contributions->assertBuyerAllowed($buyer['buyer_email']);
             }
             $quote = $this->quote($locked, $hours);
             if (! hash_equals($quote['quote_key'], $quoteKey)) {

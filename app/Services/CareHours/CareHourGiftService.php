@@ -54,6 +54,7 @@ class CareHourGiftService
     public function requestVerification(string $email, string $name): CareHourGiftVerification
     {
         $this->assertSalesAvailable();
+        $this->assertBuyerAllowed($email);
 
         return $this->issueVerification($email, $name);
     }
@@ -132,6 +133,7 @@ class CareHourGiftService
                 return $existing;
             }
             $this->assertSalesAvailable();
+            $this->assertBuyerAllowed($verification->email);
             $quote = $this->quote($hours);
             if (! hash_equals($quote['quote_key'], $quoteKey)) {
                 throw ValidationException::withMessages(['package' => 'The available gift offer changed. Review the updated package before paying.']);
@@ -383,8 +385,17 @@ class CareHourGiftService
 
     private function assertSalesAvailable(): void
     {
-        if (! config('care_hours.enabled', false) || ! config('care_hours.sales_enabled', false) || ! config('care_hours.gifts_enabled', false)) {
+        if (! app(CareHourAccess::class)->canBuyGift(auth()->user())) {
             throw ValidationException::withMessages(['purchase' => 'New care-hour gifts are currently unavailable.']);
+        }
+    }
+
+    private function assertBuyerAllowed(string $email): void
+    {
+        $actor = auth()->user();
+        if (config('care_hours.pilot_only', true)
+            && (! app(CareHourAccess::class)->allows($actor) || ! hash_equals(strtolower(trim((string) $actor?->email)), strtolower(trim($email))))) {
+            throw ValidationException::withMessages(['email' => 'Use your signed-in account email for this gift.']);
         }
     }
 

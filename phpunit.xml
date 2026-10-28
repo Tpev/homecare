@@ -30,6 +30,8 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="STRIPE_BYPASS" value="true"/>
+        <!-- General behavior suites model public rollout; pilot tests opt in explicitly. -->
+        <env name="CARE_HOURS_PILOT_ONLY" value="false"/>
         <env name="STRIPE_BYPASS_PROCESSING_FEE_PERCENT" value="0"/>
         <env name="STRIPE_BYPASS_PROCESSING_FEE_FIXED_CENTS" value="0"/>
         <env name="STRIPE_CURRENCY" value="usd"/>

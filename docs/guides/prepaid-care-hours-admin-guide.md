@@ -257,6 +257,8 @@ Healthy does not verify provider connectivity, actual email delivery, scheduler 
 | Configuration switch | Controls |
 | --- | --- |
 | `CARE_HOURS_ENABLED` | Discovery and overall new-feature exposure |
+| `CARE_HOURS_PILOT_ONLY` | Restrict new exposure and purchases to signed-in family accounts on the pilot list; defaults to true |
+| `CARE_HOURS_PILOT_EMAILS` | Exact, case-insensitive family email allowlist; initially `peverelli.t@gmail.com`. Empty means nobody. |
 | `CARE_HOURS_ENROLLMENT_ENABLED` | New direct recipient enrollment |
 | `CARE_HOURS_SALES_ENABLED` | New sales |
 | `CARE_HOURS_CONTRIBUTIONS_ENABLED` | New outside contributions |
@@ -269,7 +271,9 @@ The deployment driver validates a complete, fingerprinted prepaid source package
 
 Once that floor is recorded, manual rollback, automatic failure recovery and forward deployment to older code must still use prepaid-compatible code. This restriction applies even before the first sale. Do not delete the floor, reverse prepaid migrations, delete ledger data, clear holds, or start old incompatible workers to escape a failed deployment. Prepare a reviewed compatible recovery release or forward repair before introduction.
 
-A retained rollback target must also preserve all six current cached prepaid switches. If its settings differ, use an approved forward release with the intended configuration. The driver does not silently rewrite the shared environment or reopen paused sales. Follow the [deployment runbook](../deployment/zero-downtime-deployments.md) for the exact engineering procedure.
+A retained rollback target must also preserve all six current cached prepaid switches, the pilot restriction and the effective pilot email list. If its settings differ, use an approved forward release with the intended configuration. The driver does not silently rewrite the shared environment or reopen paused sales. Follow the [deployment runbook](../deployment/zero-downtime-deployments.md) for the exact engineering procedure.
+
+The initial pilot is Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. It does not grant access to other users merely because they have the same display name, join the family, or enter that email into a guest checkout. New gift and contribution purchases also require the pilot login and its matching buyer email. Guest receipt recovery and already-paid gift claims remain available; issued hours and committed care continue working. Administrators retain their operational views. The master exposure switch remains authoritative, so a disabled introduction does not show new controls even to the pilot user.
 
 The older support-specific documents named **prepaid visit recovery** and **prepaid visit adjustment** concern already captured card-funded visits. Their case-specific commands are not generic prepaid care-hour balance tools and must not be used for these accounts.
 

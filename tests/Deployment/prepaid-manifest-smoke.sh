@@ -46,6 +46,9 @@ cp -- "$PROJECT_DIR/app/Services/CareHours/PrepaidShortfallDisputeService.php" "
 rm -- "$fixture/app/Services/CareHours/CareHourEligibilityService.php"
 reject 'CareHourEligibilityService.php'
 cp -- "$PROJECT_DIR/app/Services/CareHours/CareHourEligibilityService.php" "$fixture/app/Services/CareHours/CareHourEligibilityService.php"
+rm -- "$fixture/app/Services/CareHours/CareHourAccess.php"
+reject 'CareHourAccess.php'
+cp -- "$PROJECT_DIR/app/Services/CareHours/CareHourAccess.php" "$fixture/app/Services/CareHours/CareHourAccess.php"
 rm -- "$fixture/database/migrations/2026_10_26_000100_create_care_hour_request_preferences.php"
 reject '2026_10_26_000100_create_care_hour_request_preferences.php'
 cp -- "$PROJECT_DIR/database/migrations/2026_10_26_000100_create_care_hour_request_preferences.php" "$fixture/database/migrations/2026_10_26_000100_create_care_hour_request_preferences.php"
@@ -54,4 +57,4 @@ reject 'GiftClaimController.php'
 cp -- "$PROJECT_DIR/app/Http/Controllers/CareHours/GiftClaimController.php" "$fixture/app/Http/Controllers/CareHours/GiftClaimController.php"
 printf 'extra manifest entry\n' >> "$fixture/$PREPAID_MANIFEST"
 reject 'manifest version or inventory is unknown'
-printf 'Prepaid manifest smoke passed (full inventory, missing family/admin writers, dispute and eligibility handlers, changed claim handler, extra entry).\n'
+printf 'Prepaid manifest smoke passed (full inventory, missing family/admin writers, dispute, eligibility and pilot access handlers, changed claim handler, extra entry).\n'

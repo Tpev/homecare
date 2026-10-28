@@ -56,6 +56,7 @@ class CareHourIdentityService
 
     public function enroll(CareRecipient $recipient, User $actor, ?CareHourGift $paidGift = null): CareHourAccount
     {
+        $this->assertPilotEnrollment($actor, $paidGift);
         $family = $this->families->account($actor);
         $this->assertRecipientAccess($recipient, $actor);
 
@@ -69,7 +70,7 @@ class CareHourIdentityService
             if ($recipient->care_recipient_profile_id) {
                 $account = $this->enrollProfile($recipient->careRecipientProfile, $actor, $paidGift);
             } else {
-                $this->assertEnrollmentOpen($paidGift);
+                $this->assertEnrollmentOpen($actor, $paidGift);
                 $account = CareHourAccount::create([
                     'family_account_id' => $family->id,
                     'display_name' => trim((string) $recipient->full_name) ?: 'Care recipient',
@@ -84,12 +85,13 @@ class CareHourIdentityService
 
     public function enrollProfile(CareRecipientProfile $profile, User $actor, ?CareHourGift $paidGift = null): CareHourAccount
     {
+        $this->assertPilotEnrollment($actor, $paidGift);
         $family = $this->families->account($actor);
         if ((int) $profile->family_account_id !== (int) $family->id || $profile->status === CareRecipientProfile::STATUS_ARCHIVED) {
             throw new AuthorizationException('Choose an existing care recipient in your family.');
         }
 
-        return DB::transaction(function () use ($profile, $family, $paidGift): CareHourAccount {
+        return DB::transaction(function () use ($profile, $actor, $family, $paidGift): CareHourAccount {
             $family->newQuery()->whereKey($family->id)->lockForUpdate()->firstOrFail();
             $existing = CareHourAccount::query()->where('care_recipient_profile_id', $profile->id)->first();
             if ($existing) {
@@ -109,7 +111,7 @@ class CareHourIdentityService
 
                 return $linked;
             }
-            $this->assertEnrollmentOpen($paidGift);
+            $this->assertEnrollmentOpen($actor, $paidGift);
 
             return CareHourAccount::create([
                 'family_account_id' => $family->id, 'care_recipient_profile_id' => $profile->id,
@@ -253,14 +255,21 @@ class CareHourIdentityService
         }
     }
 
-    private function assertEnrollmentOpen(?CareHourGift $paidGift = null): void
+    private function assertPilotEnrollment(User $actor, ?CareHourGift $paidGift): void
+    {
+        if (! app(CareHourAccess::class)->allows($actor) && ! ($paidGift && $this->giftCanEnroll($paidGift))) {
+            throw ValidationException::withMessages(['care_hours' => 'New care-hours accounts are temporarily unavailable.']);
+        }
+    }
+
+    private function assertEnrollmentOpen(User $actor, ?CareHourGift $paidGift = null): void
     {
         // An existing paid entitlement can enroll an existing identity even when discovery is paused.
         // No caller-controlled boolean or global configuration override can grant this exception.
         if ($paidGift && $this->giftCanEnroll($paidGift)) {
             return;
         }
-        if (! config('care_hours.enabled') || ! config('care_hours.enrollment_enabled')) {
+        if (! app(CareHourAccess::class)->canEnroll($actor)) {
             throw ValidationException::withMessages(['care_hours' => 'New care-hours accounts are temporarily unavailable.']);
         }
     }

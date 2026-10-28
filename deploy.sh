@@ -227,6 +227,7 @@ app/Http/Middleware/CareHoursPrivacyHeaders.php
 app/Livewire/Admin/CareRequestsIndex.php
 app/Livewire/Admin/CareRequestShow.php
 app/Livewire/Family/ManageCareRequest.php
+app/Livewire/Family/NotificationsCenter.php
 app/Livewire/Family/CreateCareRequestWizard.php
 app/Livewire/Family/RegularCareComposer.php
 app/Livewire/Family/RegularCareShow.php
@@ -258,6 +259,7 @@ app/Services/CareHours/CareHourHealthService.php
 app/Services/CareHours/CareHourIdentityService.php
 app/Services/CareHours/CareHourLedgerService.php
 app/Services/CareHours/CareHourNavigation.php
+app/Services/CareHours/CareHourAccess.php
 app/Services/CareHours/CareHourPaymentGateway.php
 app/Services/CareHours/CareHourPurchaseService.php
 app/Services/CareHours/CareHourEligibilityService.php

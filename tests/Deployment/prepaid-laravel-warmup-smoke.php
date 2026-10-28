@@ -39,8 +39,8 @@ $env += [
     'DIDIT_BYPASS' => 'true', 'TWILIO_BYPASS' => 'true', 'SLACK_OPS_NOTIFICATIONS_ENABLED' => 'false',
     'AWS_EC2_METADATA_DISABLED' => 'true',
 ];
-// Intentionally omit CARE_HOURS_ENABLED and CARE_HOURS_GIFTS_ENABLED to test
-// the shipping defaults, including after config caching.
+// Intentionally omit the prepaid exposure and pilot variables to test the
+// restrictive shipping defaults, including after config caching.
 $bootstrap = <<<'PHP'
 <?php
 $app = require __ROOT__.'/bootstrap/app.php';
@@ -61,6 +61,8 @@ $app->afterBootstrapping(\Illuminate\Foundation\Bootstrap\LoadConfiguration::cla
         'no Stripe credential' => ! $app['config']->get('services.stripe.secret') && $app['config']->get('services.stripe.bypass') === true,
         'care hours disabled' => $app['config']->get('care_hours.enabled') === false,
         'gift sales disabled' => $app['config']->get('care_hours.gifts_enabled') === false,
+        'restricted pilot enabled' => $app['config']->get('care_hours.pilot_only') === true,
+        'single pilot family' => $app['config']->get('care_hours.pilot_emails') === ['peverelli.t@gmail.com'],
     ];
     foreach ($assertions as $label => $passed) {
         if (! $passed) {
@@ -131,6 +133,8 @@ if (! $failed) {
     $evidence['assertions'] = [
         'care_hours_default_disabled_after_config_cache' => ($config['care_hours']['enabled'] ?? null) === false,
         'gift_sales_default_disabled_after_config_cache' => ($config['care_hours']['gifts_enabled'] ?? null) === false,
+        'restricted_pilot_after_config_cache' => ($config['care_hours']['pilot_only'] ?? null) === true,
+        'single_pilot_family_after_config_cache' => ($config['care_hours']['pilot_emails'] ?? null) === ['peverelli.t@gmail.com'],
         'required_routes_registered_after_route_cache' => array_diff($requiredRoutes, $routeNames) === [],
         'required_commands_discovered' => array_diff($requiredCommands, $commandNames) === [],
         'purchase_reconciliation_scheduled' => str_contains($schedule, 'homecare:reconcile-care-hour-purchases'),

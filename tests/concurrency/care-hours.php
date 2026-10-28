@@ -36,7 +36,7 @@ use Symfony\Component\Process\Process;
 function enableTestFeature(): void
 {
     // In-memory configuration for this disposable test process only.
-    config(['care_hours.enabled' => true, 'care_hours.enrollment_enabled' => true,
+    config(['care_hours.enabled' => true, 'care_hours.pilot_only' => false, 'care_hours.enrollment_enabled' => true,
         'care_hours.sales_enabled' => true, 'care_hours.gifts_enabled' => true, 'care_hours.welcome_enabled' => true]);
 }
 

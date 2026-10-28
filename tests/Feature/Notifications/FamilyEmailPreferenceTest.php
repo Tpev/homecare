@@ -41,6 +41,7 @@ class FamilyEmailPreferenceTest extends TestCase
 
     public function test_saved_family_email_opt_out_survives_reload_and_blocks_every_listed_event(): void
     {
+        config(['care_hours.enabled' => true]);
         $family = User::factory()->create(['role' => 'family']);
         $events = MarketplaceNotificationPresentation::eventsForRole('family');
 

@@ -52,6 +52,7 @@ try {
         'CACHE_STORE' => 'array', 'SESSION_DRIVER' => 'array', 'QUEUE_CONNECTION' => 'sync', 'MAIL_MAILER' => 'array',
         'STRIPE_BYPASS' => 'false', 'STRIPE_SECRET' => $provider['stripe_secret'], 'STRIPE_CURRENCY' => 'usd',
         'CARE_HOURS_ENABLED' => 'true', 'CARE_HOURS_ENROLLMENT_ENABLED' => 'true', 'CARE_HOURS_SALES_ENABLED' => 'true',
+        'CARE_HOURS_PILOT_ONLY' => 'false',
         'CARE_HOURS_GIFTS_ENABLED' => 'true', 'CARE_HOURS_WELCOME_BONUS_ENABLED' => 'true',
         'TWILIO_BYPASS' => 'true', 'DIDIT_BYPASS' => 'true', 'PULSE_ENABLED' => 'false', 'TELESCOPE_ENABLED' => 'false', 'NIGHTWATCH_ENABLED' => 'false',
         'AI_SUPPORT_SAFETY_IDENTIFIER_SECRET' => 'isolated-dispute-proof',

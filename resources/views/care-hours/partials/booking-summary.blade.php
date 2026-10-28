@@ -16,7 +16,7 @@
             <p class="mt-2">{{ \App\Models\CareHourAccount::formatMinutes($prepaidBookingSummary['shortfall_minutes']) }} still needs payment · ${{ number_format($prepaidBookingSummary['shortfall_cents'] / 100, 2) }}.</p>
             <div class="mt-3 flex flex-wrap gap-3">
                 <form action="{{ route('family.care-hours.shortfall', $booking) }}" method="POST">@csrf<button type="submit" class="hc-primary-button">Pay ${{ number_format($prepaidBookingSummary['shortfall_cents'] / 100, 2) }}</button></form>
-                @if(config('care_hours.enabled') && config('care_hours.sales_enabled'))<a href="{{ route('family.care-hours.packages', $prepaidBookingSummary['account_id']) }}" wire:navigate class="hc-secondary-button">Buy more hours</a>@endif
+                @if(app(\App\Services\CareHours\CareHourAccess::class)->canBuy(auth()->user()))<a href="{{ route('family.care-hours.packages', $prepaidBookingSummary['account_id']) }}" wire:navigate class="hc-secondary-button">Buy more hours</a>@endif
                 <form action="{{ route('family.care-hours.coverage', $booking) }}" method="POST">@csrf<button type="submit" class="hc-care-text-link">Check coverage</button></form>
             </div><p class="mt-2 text-xs">You can pay this amount without saving a card.</p>
         @elseif(! $careSettlement && $prepaidBookingSummary['ready'] && $prepaidBookingSummary['status'] !== 'released')

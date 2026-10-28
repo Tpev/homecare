@@ -12,6 +12,7 @@ if (! mkdir($sandbox, 0700) || ($sandbox = realpath($sandbox)) === false) {
     throw new RuntimeException('Cannot create an isolated test directory.');
 }
 $sentinel = 'fictional-secret-never-print-847395';
+$pilotDefaults = ['pilot_only' => true, 'pilot_emails' => ['peverelli.t@gmail.com']];
 $checks = 0;
 
 $run = static function (array $arguments, int $expectedStatus, string $expectedText, ?string $script = null) use ($helper, $sentinel, &$checks): void {
@@ -56,28 +57,46 @@ $fixture = static function (string $name, mixed $configuration) use ($sandbox): 
 
 try {
     $valid = $fixture('normal-cache', [
-        'care_hours' => ['enabled' => false, 'gifts_enabled' => false, 'sales_enabled' => true],
+        'care_hours' => ['enabled' => false, 'gifts_enabled' => false, 'sales_enabled' => true] + $pilotDefaults,
         'app' => ['key' => $sentinel], 'mail' => ['default' => 'log'], 'services' => ['stripe' => ['secret' => $sentinel]],
     ]);
     $run([$valid], 0, 'cached flags are valid booleans');
     $run([$valid, '--require-disabled'], 0, 'first-adoption exposure is disabled');
     foreach ([[true, false], [false, true], [true, true]] as $index => [$enabled, $gifts]) {
-        $path = $fixture('enabled-'.$index, ['care_hours' => ['enabled' => $enabled, 'gifts_enabled' => $gifts]]);
+        $path = $fixture('enabled-'.$index, ['care_hours' => ['enabled' => $enabled, 'gifts_enabled' => $gifts] + $pilotDefaults]);
         $run([$path], 0, 'cached flags are valid booleans');
         $run([$path, '--require-disabled'], 1, 'First prepaid adoption requires');
     }
     foreach ([[], ['care_hours' => null], ['care_hours' => 'false'], false, null] as $index => $value) {
         $run([$fixture('missing-array-'.$index, $value)], 1, 'must contain a care_hours array');
     }
-    foreach (['enabled', 'gifts_enabled'] as $flag) {
-        $flags = ['enabled' => false, 'gifts_enabled' => false];
+    foreach (['enabled', 'gifts_enabled', 'pilot_only'] as $flag) {
+        $flags = ['enabled' => false, 'gifts_enabled' => false] + $pilotDefaults;
         unset($flags[$flag]);
         $run([$fixture('missing-'.$flag, ['care_hours' => $flags])], 1, $flag.' flag must be a boolean');
         foreach (['false', 'true', 0, 1, null, []] as $index => $invalid) {
-            $flags = ['enabled' => false, 'gifts_enabled' => false, $flag => $invalid];
+            $flags = array_replace(['enabled' => false, 'gifts_enabled' => false] + $pilotDefaults, [$flag => $invalid]);
             $run([$fixture('invalid-'.$flag.'-'.$index, ['care_hours' => $flags]), '--require-disabled'], 1, $flag.' flag must be a boolean');
         }
     }
+    $pilotBase = ['enabled' => false, 'gifts_enabled' => false] + $pilotDefaults;
+    $missingEmails = $pilotBase;
+    unset($missingEmails['pilot_emails']);
+    foreach ([$missingEmails, ...array_map(static fn ($value) => array_replace($pilotBase, ['pilot_emails' => $value]), [
+        null, false, 'peverelli.t@gmail.com', ['named' => 'peverelli.t@gmail.com'],
+        [false], [null], [[]], [42], [''], ['not-an-email'], ['one@example.test,two@example.test'],
+        [str_repeat('x', 245).'@example.test'],
+    ])] as $index => $flags) {
+        foreach ([false, true] as $pilotOnly) {
+            $flags['pilot_only'] = $pilotOnly;
+            $path = $fixture('invalid-pilot-list-'.$index.'-'.(int) $pilotOnly, ['care_hours' => $flags]);
+            $run([$path], 1, 'pilot_emails setting must be a list of valid email addresses');
+            $run([$path, '--require-disabled'], 1, 'pilot_emails setting must be a list of valid email addresses');
+        }
+    }
+    $emptyPilot = $fixture('empty-pilot', ['care_hours' => array_replace($pilotBase, ['pilot_emails' => []])]);
+    $run([$emptyPilot], 0, 'pilot access is valid');
+    $run([$emptyPilot, '--require-disabled'], 0, 'first-adoption exposure is disabled');
     $run([$sandbox.DIRECTORY_SEPARATOR.'missing.php'], 1, 'readable cached configuration file');
     $run([$sandbox], 1, 'readable cached configuration file');
     $run([], 1, 'Usage:');
@@ -89,13 +108,13 @@ try {
 
     // Retained rollback caches must preserve every independent exposure switch,
     // including a sales/contribution pause while the master switch stays enabled.
-    $exposureKeys = ['enabled', 'gifts_enabled', 'sales_enabled', 'enrollment_enabled', 'contributions_enabled', 'welcome_enabled'];
+    $exposureKeys = ['enabled', 'gifts_enabled', 'sales_enabled', 'enrollment_enabled', 'contributions_enabled', 'welcome_enabled', 'pilot_only'];
     foreach ([false, true] as $enabled) {
-        $sameFlags = array_fill_keys($exposureKeys, $enabled);
+        $sameFlags = array_fill_keys($exposureKeys, $enabled) + ['pilot_emails' => $pilotDefaults['pilot_emails']];
         $same = $fixture('same-'.(int) $enabled, ['care_hours' => $sameFlags]);
         $run([$same, '--match-sales-state', $same], 0, 'rollback exposure flags match');
     }
-    $baseFlags = array_fill_keys($exposureKeys, true);
+    $baseFlags = array_fill_keys($exposureKeys, true) + ['pilot_emails' => $pilotDefaults['pilot_emails']];
     $base = $fixture('rollback-current', ['care_hours' => $baseFlags]);
     foreach ($exposureKeys as $key) {
         $changedFlags = $baseFlags;
@@ -115,6 +134,26 @@ try {
             $run([$base, '--match-sales-state', $invalid], 1, $key.' flag must be a boolean');
         }
     }
+    $canonical = $fixture('canonical-pilot', ['care_hours' => array_replace($baseFlags, ['pilot_emails' => ['second@example.test', ' PEVERELLI.T@GMAIL.COM ', 'second@example.test']])]);
+    $equivalent = $fixture('equivalent-pilot', ['care_hours' => array_replace($baseFlags, ['pilot_emails' => ['peverelli.t@gmail.com', 'second@example.test']])]);
+    $run([$canonical, '--match-sales-state', $equivalent], 0, 'rollback exposure flags match');
+    $run([$equivalent, '--match-sales-state', $canonical], 0, 'rollback exposure flags match');
+    foreach ([[], ['other@example.test'], ['peverelli.t@gmail.com', 'other@example.test']] as $index => $emails) {
+        $changed = $fixture('changed-pilot-emails-'.$index, ['care_hours' => array_replace($baseFlags, ['pilot_emails' => $emails])]);
+        $run([$changed, '--match-sales-state', $base], 1, 'must preserve all cached prepaid exposure flags and pilot access');
+        $run([$base, '--match-sales-state', $changed], 1, 'must preserve all cached prepaid exposure flags and pilot access');
+    }
+    foreach (['missing', 'malformed'] as $kind) {
+        $flags = $baseFlags;
+        if ($kind === 'missing') {
+            unset($flags['pilot_emails']);
+        } else {
+            $flags['pilot_emails'] = ['not-an-email'];
+        }
+        $invalid = $fixture('rollback-pilot-emails-'.$kind, ['care_hours' => $flags]);
+        $run([$invalid, '--match-sales-state', $base], 1, 'pilot_emails setting must be a list of valid email addresses');
+        $run([$base, '--match-sales-state', $invalid], 1, 'pilot_emails setting must be a list of valid email addresses');
+    }
     $run([$base, '--match-sales-state', $sandbox.DIRECTORY_SEPARATOR.'missing-reference.php'], 1, 'readable cached configuration file');
     $run([$base, '--match-sales-state', $fixture('bad-reference-array', false)], 1, 'must contain a care_hours array');
 
@@ -126,7 +165,7 @@ try {
     $run([$broken], 1, 'could not be read');
     file_put_contents($broken, '<?php trigger_error('.var_export($sentinel, true).', E_USER_WARNING); return [];');
     $run([$broken], 1, 'could not be read');
-    file_put_contents($broken, '<?php echo '.var_export($sentinel, true).'; return '.var_export(['care_hours' => ['enabled' => false, 'gifts_enabled' => false]], true).';');
+    file_put_contents($broken, '<?php echo '.var_export($sentinel, true).'; return '.var_export(['care_hours' => ['enabled' => false, 'gifts_enabled' => false] + $pilotDefaults], true).';');
     $run([$broken, '--require-disabled'], 0, 'first-adoption exposure is disabled');
 
     // A permission-denying stream fixture exercises is_file=true/is_readable=false

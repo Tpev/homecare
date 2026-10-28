@@ -41,7 +41,7 @@ class CareHourRequestFundingService
         $booking = new CareBooking(['family_account_id' => $familyId]);
         $booking->setRelation('careRequest', $request);
 
-        return $this->usable(app(CareHourIdentityService::class)->forBooking($booking), $familyId);
+        return $this->usable(app(CareHourIdentityService::class)->forBooking($booking), $familyId, $actor);
     }
 
     public function accountForProfile(?int $profileId, User $actor): ?CareHourAccount
@@ -54,7 +54,7 @@ class CareHourRequestFundingService
             ->where('care_recipient_profile_id', $profileId)
             ->whereHas('profile', fn ($query) => $query->where('status', '!=', CareRecipientProfile::STATUS_ARCHIVED))->first();
 
-        return $this->usable($account, $familyId);
+        return $this->usable($account, $familyId, $actor);
     }
 
     public function accountForSelf(User $actor): ?CareHourAccount
@@ -93,7 +93,7 @@ class CareHourRequestFundingService
             }
         }
 
-        return $this->usable($account, $familyId);
+        return $this->usable($account, $familyId, $actor);
     }
 
     public function preferenceFor(CareRequest $request): ?CareHourRequestPreference
@@ -136,9 +136,10 @@ class CareHourRequestFundingService
         }, 3);
     }
 
-    private function usable(?CareHourAccount $account, int $familyId): ?CareHourAccount
+    private function usable(?CareHourAccount $account, int $familyId, User $actor): ?CareHourAccount
     {
         return $account && (int) $account->family_account_id === $familyId && $account->active && $account->currency === 'usd'
+            && app(CareHourAccess::class)->canUseAccount($account, $actor)
             && $account->familyAccount?->status === FamilyAccount::STATUS_ACTIVE
             && (! $account->care_recipient_profile_id || $account->profile?->status !== CareRecipientProfile::STATUS_ARCHIVED)
             && app(CareHourEligibilityService::class)->reasonFor($account) === null ? $account : null;

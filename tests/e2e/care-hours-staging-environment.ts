@@ -48,6 +48,7 @@ export function stagingEnvironment(): Record<string, string> {
         CARE_HOURS_STAGING_CONNECT_ACCOUNT: provider.connect_account_id ?? 'acct_staging_simulated',
         CARE_HOURS_STAGING_MARKER: 'isolated-customer-journey',
         CARE_HOURS_ENABLED: 'true', CARE_HOURS_ENROLLMENT_ENABLED: 'true',
+        CARE_HOURS_PILOT_ONLY: 'false',
         CARE_HOURS_SALES_ENABLED: 'true', CARE_HOURS_CONTRIBUTIONS_ENABLED: 'true', CARE_HOURS_WELCOME_BONUS_ENABLED: 'true',
         MARKETPLACE_PRICING_V2_ENABLED: 'true', MARKETPLACE_FAMILY_CARE_HOURLY_CENTS: '3000',
         MARKETPLACE_FAMILY_PROCESSING_FEE_HOURLY_CENTS: '100', MARKETPLACE_CAREGIVER_GROSS_HOURLY_CENTS: '2700',

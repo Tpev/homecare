@@ -27,7 +27,7 @@ class CareHourContributionService
     {
         $this->assertOwner($account, $actor);
         app(CareHourEligibilityService::class)->assertFamilyEligible((int) $account->family_account_id, 'care_hours');
-        if (! config('care_hours.enabled', false) || ! config('care_hours.contributions_enabled', false) || ! $account->active) {
+        if (! app(CareHourAccess::class)->canContribute($actor) || ! $account->active) {
             throw ValidationException::withMessages(['care_hours' => 'New contribution links are currently unavailable.']);
         }
         $token = Str::random(64);
@@ -58,7 +58,7 @@ class CareHourContributionService
         if (app(CareHourEligibilityService::class)->reasonFor($link->account)) {
             throw ValidationException::withMessages(['care_hours' => 'This recipient is not currently accepting care-hour contributions. Please contact the family.']);
         }
-        if (! config('care_hours.enabled', false) || ! config('care_hours.contributions_enabled', false) || ! config('care_hours.sales_enabled', false)
+        if (! app(CareHourAccess::class)->canContribute(auth()->user())
             || $link->fresh()->revoked_at || ! $link->account->fresh()->active) {
             throw ValidationException::withMessages(['care_hours' => 'This contribution link is no longer accepting purchases.']);
         }
@@ -67,8 +67,18 @@ class CareHourContributionService
     public function requestVerification(CareHourContributionLink $link, string $email, string $name): CareHourContributionVerification
     {
         $this->assertAvailable($link);
+        $this->assertBuyerAllowed($email);
 
         return $this->issueVerification($link, $email, $name);
+    }
+
+    public function assertBuyerAllowed(string $email): void
+    {
+        $actor = auth()->user();
+        if (config('care_hours.pilot_only', true)
+            && (! app(CareHourAccess::class)->allows($actor) || ! hash_equals(strtolower(trim((string) $actor?->email)), strtolower(trim($email))))) {
+            throw ValidationException::withMessages(['email' => 'Use your signed-in account email for this purchase.']);
+        }
     }
 
     public function requestReceiptVerification(CareHourPurchase $purchase, string $email): CareHourContributionVerification

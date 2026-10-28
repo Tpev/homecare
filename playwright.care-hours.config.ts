@@ -31,6 +31,7 @@ export default defineConfig({
             CACHE_STORE: 'array', SESSION_DRIVER: 'file', QUEUE_CONNECTION: 'sync', MAIL_MAILER: 'array',
             DIDIT_BYPASS: 'true', STRIPE_BYPASS: 'true', STRIPE_SECRET: '',
             CARE_HOURS_ENABLED: 'true', CARE_HOURS_ENROLLMENT_ENABLED: 'true',
+            CARE_HOURS_PILOT_ONLY: 'false',
             CARE_HOURS_SALES_ENABLED: 'true', CARE_HOURS_CONTRIBUTIONS_ENABLED: 'true', CARE_HOURS_WELCOME_BONUS_ENABLED: 'true',
             AI_SUPPORT_SAFETY_IDENTIFIER_SECRET: 'care-hours-browser-test-only',
         },

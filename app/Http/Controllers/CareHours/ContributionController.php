@@ -25,6 +25,7 @@ class ContributionController extends Controller
 
     public function show(Request $request, string $token): View|\Illuminate\Http\Response
     {
+        abort_unless(app(\App\Services\CareHours\CareHourAccess::class)->allows($request->user()), 404);
         if (! config('care_hours.enabled') || ! config('care_hours.sales_enabled')) {
             return response()->view('care-hours.public.unavailable', [], 410);
         }

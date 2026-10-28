@@ -21,7 +21,7 @@ class GiftController extends Controller
 
     public function index(Request $request): View
     {
-        abort_unless(config('care_hours.enabled') && config('care_hours.sales_enabled') && config('care_hours.gifts_enabled'), 404);
+        abort_unless(app(\App\Services\CareHours\CareHourAccess::class)->canBuyGift($request->user()), 404);
 
         return view('care-hours.gifts.buy', [
             'buyer' => $this->buyer($request), 'packages' => $this->gifts->catalog(),
