@@ -27,6 +27,88 @@ class CareHourGiftScreensTest extends TestCase
         Notification::fake();
     }
 
+    public function test_gift_packages_can_be_selected_before_email_verification_and_show_conditional_bonuses(): void
+    {
+        $response = $this->get(route('care-hours.gifts.index'))->assertOk()
+            ->assertSee('Send verification code')->assertDontSee('Continue to payment');
+        $xpath = $this->assertPackageSelection($response->getContent());
+
+        foreach ([5 => null, 10 => '+ 1 free welcome hour', 20 => '+ 2 free welcome hours', 40 => '+ 4 free welcome hours'] as $hours => $bonus) {
+            $label = $xpath->query('//input[@type="radio"][@name="hours"][@value="'.$hours.'"]/ancestor::label[1]')->item(0);
+            $this->assertNotNull($label, 'The entire '.$hours.'-hour package must be a clickable label.');
+            $text = preg_replace('/\s+/', ' ', $label->textContent);
+            if ($bonus) {
+                $this->assertStringContainsString($bonus, $text);
+            } else {
+                $this->assertStringNotContainsString('free welcome', $text);
+            }
+        }
+
+        $this->assertDatabaseCount('care_hour_purchases', 0);
+        Notification::assertNothingSent();
+    }
+
+    public function test_selected_package_survives_failed_verification_resend_and_successful_verification(): void
+    {
+        $details = ['name' => 'Daniel Bennett', 'email' => 'daniel@example.test', 'hours' => 20];
+        $this->post(route('care-hours.gifts.verify'), $details)->assertRedirect(route('care-hours.gifts.index'))
+            ->assertSessionHas('care_hours.gift_hours', 20);
+        $this->assertPackageSelection($this->get(route('care-hours.gifts.index'))->assertOk()->getContent(), 20);
+
+        $this->post(route('care-hours.gifts.confirm'), ['code' => '000000', 'hours' => 20])->assertSessionHasErrors('code');
+        $this->assertPackageSelection($this->get(route('care-hours.gifts.index'))->assertOk()->getContent(), 20);
+
+        Notification::fake();
+        $this->post(route('care-hours.gifts.verify'), $details)->assertRedirect(route('care-hours.gifts.index'))
+            ->assertSessionHas('care_hours.gift_hours', 20);
+        $this->assertPackageSelection($this->get(route('care-hours.gifts.index'))->assertOk()->getContent(), 20);
+        // Older clients can omit the selection without losing the saved package.
+        $this->post(route('care-hours.gifts.confirm'), ['code' => $this->otp()])->assertRedirect(route('care-hours.gifts.index'))
+            ->assertSessionHas('care_hours.gift_hours', 20)->assertSessionMissing('care_hours.gift_verification');
+        $this->assertPackageSelection($this->get(route('care-hours.gifts.index'))->assertOk()
+            ->assertSee('Continue to payment')->getContent(), 20);
+
+        $quote = app(CareHourGiftService::class)->quote(20);
+        $this->post(route('care-hours.gifts.checkout'), [
+            'hours' => 20, 'quotes' => [20 => $quote['quote_key']], 'request_key' => (string) Str::uuid(), 'terms' => 1,
+        ])->assertRedirect();
+        $purchase = CareHourPurchase::sole();
+        $this->assertSame(1200, $purchase->paid_minutes);
+        $this->assertSame(0, $purchase->bonus_minutes);
+        $this->assertSame(120, $purchase->gift->welcome_bonus_minutes);
+    }
+
+    public function test_invalid_package_is_rejected_before_sending_or_confirming_a_verification_code(): void
+    {
+        $this->post(route('care-hours.gifts.verify'), [
+            'name' => 'Daniel Bennett', 'email' => 'daniel@example.test', 'hours' => 7,
+        ])->assertSessionHasErrors('hours')->assertSessionMissing('care_hours.gift_hours');
+        Notification::assertNothingSent();
+        $this->assertDatabaseCount('care_hour_gift_verifications', 0);
+
+        $this->post(route('care-hours.gifts.verify'), [
+            'name' => 'Daniel Bennett', 'email' => 'daniel@example.test', 'hours' => 10,
+        ])->assertRedirect();
+        $code = $this->otp();
+        $this->post(route('care-hours.gifts.confirm'), ['code' => $code, 'hours' => 7])
+            ->assertSessionHasErrors('hours')->assertSessionHas('care_hours.gift_hours', 10)
+            ->assertSessionMissing('care_hours.gift_buyer');
+        $this->post(route('care-hours.gifts.confirm'), ['code' => $code, 'hours' => 10])
+            ->assertRedirect(route('care-hours.gifts.index'))->assertSessionHas('care_hours.gift_buyer');
+        $this->assertDatabaseCount('care_hour_purchases', 0);
+    }
+
+    public function test_disabled_welcome_offer_does_not_advertise_free_hours_before_or_after_verification(): void
+    {
+        config(['care_hours.welcome_enabled' => false]);
+        $this->get(route('care-hours.gifts.index'))->assertOk()->assertDontSee('free welcome hour');
+        $this->post(route('care-hours.gifts.verify'), ['name' => 'Daniel Bennett', 'email' => 'daniel@example.test', 'hours' => 10])
+            ->assertRedirect();
+        $this->post(route('care-hours.gifts.confirm'), ['code' => $this->otp()])->assertRedirect();
+        $this->assertPackageSelection($this->get(route('care-hours.gifts.index'))->assertOk()
+            ->assertDontSee('free welcome hour')->getContent(), 10);
+    }
+
     public function test_guest_buys_once_with_verified_email_and_receives_a_private_code_without_a_recipient_account(): void
     {
         $this->get(route('care-hours.gifts.index'))->assertOk()->assertSee('Give hours. Let them choose when.')
@@ -193,6 +275,28 @@ class CareHourGiftScreensTest extends TestCase
             ->assertOk()->assertSee('Continue payment')->assertSee($purchase->checkout_url)->assertDontSee('paid-gift-code');
         $this->assertDatabaseCount('care_hour_purchases', 1);
         $this->assertDatabaseCount('care_hour_lots', 0);
+    }
+
+    private function assertPackageSelection(string $html, ?int $hours = null): \DOMXPath
+    {
+        $document = new \DOMDocument;
+        @$document->loadHTML($html);
+        $xpath = new \DOMXPath($document);
+        $radios = $xpath->query('//input[@type="radio"][@name="hours"]');
+        $this->assertCount(4, $radios);
+        $values = [];
+        foreach ($radios as $radio) {
+            $this->assertFalse($radio->hasAttribute('disabled'));
+            $values[] = (int) $radio->getAttribute('value');
+        }
+        $this->assertSame([5, 10, 20, 40], $values);
+        $checked = $xpath->query('//input[@type="radio"][@name="hours"][@checked]');
+        $this->assertCount($hours === null ? 0 : 1, $checked);
+        if ($hours !== null) {
+            $this->assertSame((string) $hours, $checked->item(0)->getAttribute('value'));
+        }
+
+        return $xpath;
     }
 
     private function account(string $name = 'Robert Bennett'): array

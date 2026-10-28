@@ -101,8 +101,8 @@ The owner can select **Disable link** to stop new purchases through it. Complete
 ### Jane buys care for her mum Linda Bennett
 
 1. Jane opens **Buy a gift of care** from a Care hours screen, or opens LoLo's `/care-hours/gifts` page.
-2. She enters her own name and email, requests a six-digit code and verifies her email. She does not need a LoLo account to buy.
-3. She chooses **10 care hours** for **$310**, accepts the gift terms and selects **Continue to payment**.
+2. She selects **10 hours** for **$310**. The package shows **+ 1 free welcome hour**, subject to Linda's eligibility when she claims. Jane enters her own name and email, requests a six-digit code and verifies her email. Her package selection stays selected through verification and resending a code. The public journey does not require an account; the current private pilot still requires the approved signed-in account.
+3. She reviews her selected package, accepts the gift terms and selects **Continue to payment**.
 4. After confirmed payment, **Your gift is ready** shows the gift code and a claim-page link.
 5. Jane selects **Copy code** and sends the code and claim link privately to Linda, for example in a Thanksgiving card or personal message.
 

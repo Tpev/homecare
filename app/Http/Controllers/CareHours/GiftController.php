@@ -26,30 +26,43 @@ class GiftController extends Controller
         return view('care-hours.gifts.buy', [
             'buyer' => $this->buyer($request), 'packages' => $this->gifts->catalog(),
             'verificationPending' => $request->session()->has('care_hours.gift_verification'),
+            'selectedHours' => $request->old('hours', $request->session()->get('care_hours.gift_hours')),
             'requestKey' => (string) Str::uuid(),
         ]);
     }
 
     public function requestCode(Request $request): RedirectResponse
     {
-        $input = $request->validate(['name' => ['required', 'string', 'max:100'], 'email' => ['required', 'email:rfc', 'max:254']]);
+        $input = $request->validate([
+            'name' => ['required', 'string', 'max:100'], 'email' => ['required', 'email:rfc', 'max:254'],
+            'hours' => ['nullable', 'integer', 'in:5,10,20,40'],
+        ]);
         $verification = $this->gifts->requestVerification($input['email'], $input['name']);
         $request->session()->forget('care_hours.gift_buyer');
         $request->session()->put('care_hours.gift_verification', $verification->id);
+        if (isset($input['hours'])) {
+            $request->session()->put('care_hours.gift_hours', (int) $input['hours']);
+        }
 
-        return redirect()->route('care-hours.gifts.index')->with('status', 'Check your email for a verification code.');
+        return redirect()->route('care-hours.gifts.index')->withInput($request->only('name', 'email'))
+            ->with('status', 'Check your email for a verification code.');
     }
 
     public function confirmCode(Request $request): RedirectResponse
     {
-        $input = $request->validate(['code' => ['required', 'digits:6']]);
+        $input = $request->validate([
+            'code' => ['required', 'digits:6'], 'hours' => ['nullable', 'integer', 'in:5,10,20,40'],
+        ]);
         $id = (string) $request->session()->get('care_hours.gift_verification', '');
         abort_unless($id !== '', 422);
         $token = $this->gifts->verify($id, $input['code']);
         $request->session()->put('care_hours.gift_buyer', $token);
         $request->session()->forget('care_hours.gift_verification');
+        if (isset($input['hours'])) {
+            $request->session()->put('care_hours.gift_hours', (int) $input['hours']);
+        }
 
-        return redirect()->route('care-hours.gifts.index')->with('status', 'Email verified. Choose your gift.');
+        return redirect()->route('care-hours.gifts.index')->with('status', 'Email verified. Review your gift and continue to payment.');
     }
 
     public function checkout(Request $request): RedirectResponse
