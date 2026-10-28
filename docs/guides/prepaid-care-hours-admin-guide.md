@@ -2,7 +2,7 @@
 
 Updated October 28, 2026. For LoLo administrators, support and payment operations.
 
-Use this guide to trace money into a recipient's care balance, follow the hours into visits, and resolve payment or caregiver settlement issues through the recorded transaction. The feature is implemented in the local codebase. Deployment and production activation remain separate decisions; the testing report records what has actually been verified.
+Use this guide to trace money into a recipient's care balance, follow the hours into visits, and resolve payment or caregiver settlement issues through the recorded transaction. The reviewed release enables the authorized private pilot through the normal deployment. Public availability requires a separate reviewed change; the testing report records what has actually been verified.
 
 ## 1 Start with the right record
 
@@ -256,32 +256,33 @@ Healthy does not verify provider connectivity, actual email delivery, scheduler 
 
 | Configuration switch | Controls |
 | --- | --- |
-| `CARE_HOURS_ENABLED` | Discovery and overall new-feature exposure |
-| `CARE_HOURS_PILOT_ONLY` | Restrict new exposure and purchases to signed-in family accounts on the pilot list; defaults to true |
-| `CARE_HOURS_PILOT_EMAILS` | Exact, case-insensitive family email allowlist; initially `peverelli.t@gmail.com`. Empty means nobody. |
+| `CARE_HOURS_PRIVATE_PILOT_ENABLED` | Defaults to true for the code-defined private pilot. Explicit false pauses new discovery and purchases; malformed values also deny access. The setting survives ordinary redeployments. |
 | `CARE_HOURS_ENROLLMENT_ENABLED` | New direct recipient enrollment |
 | `CARE_HOURS_SALES_ENABLED` | New sales |
 | `CARE_HOURS_CONTRIBUTIONS_ENABLED` | New outside contributions |
-| `CARE_HOURS_GIFTS_ENABLED` | New gift sales |
 | `CARE_HOURS_WELCOME_BONUS_ENABLED` | New welcome-offer quoting |
+
+The release fixes the pilot restriction to the signed-in family account `peverelli.t@gmail.com`. The legacy `CARE_HOURS_ENABLED`, `CARE_HOURS_GIFTS_ENABLED`, `CARE_HOURS_PILOT_ONLY` and `CARE_HOURS_PILOT_EMAILS` environment values no longer control this private release: stale disabled flags cannot prevent the approved pilot, and stale broad settings cannot admit anyone else. Gift sales follow the private-pilot and sales switches. Enrollment, sales, contribution and welcome-offer pauses above remain effective. Expanding access requires a reviewed code change.
+
+No environment edit is needed to start the pilot: run the usual `./deploy.sh`. If an operator later needs to pause it, set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` in the protected shared environment and run the usual deployment to rebuild the candidate cache safely. Leave that setting in place to keep subsequent deployments paused. Do not clear or rebuild the active release's configuration cache outside the deployment procedure.
 
 Pausing exposure or sales does not erase existing balances, cancel prepared care, invalidate accepted purchases or remove previously paid gifts' claim rights. Paid gift claims retain their accepted offer rules. Keep reconciliation, webhooks and necessary notification processing running for existing obligations.
 
-The deployment driver validates a complete, fingerprinted prepaid source package. The usual `./deploy.sh` command captures the fetched commit once and uses it throughout deployment; an explicit commit constraint is optional. Its first prepaid introduction requires cached feature and gift exposure to be disabled. It applies additive migrations and records a permanent prepaid compatibility floor before activation.
+The deployment driver validates a complete, fingerprinted prepaid source package. The usual `./deploy.sh` command captures the fetched commit once and uses it throughout deployment; an explicit commit constraint is optional. Its first prepaid introduction accepts disabled exposure or the exact approved private pilot and rejects broader exposure. It applies additive migrations and records a permanent prepaid compatibility floor before activation.
 
 Once that floor is recorded, manual rollback, automatic failure recovery and forward deployment to older code must still use prepaid-compatible code. This restriction applies even before the first sale. Do not delete the floor, reverse prepaid migrations, delete ledger data, clear holds, or start old incompatible workers to escape a failed deployment. Prepare a reviewed compatible recovery release or forward repair before introduction.
 
 A retained rollback target must also preserve all six current cached prepaid switches, the pilot restriction and the effective pilot email list. If its settings differ, use an approved forward release with the intended configuration. The driver does not silently rewrite the shared environment or reopen paused sales. Follow the [deployment runbook](../deployment/zero-downtime-deployments.md) for the exact engineering procedure.
 
-The initial pilot is Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. It does not grant access to other users merely because they have the same display name, join the family, or enter that email into a guest checkout. New gift and contribution purchases also require the pilot login and its matching buyer email. Guest receipt recovery and already-paid gift claims remain available; issued hours and committed care continue working. Administrators retain their operational views. The master exposure switch remains authoritative, so a disabled introduction does not show new controls even to the pilot user.
+The initial pilot is Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. It does not grant access to other users merely because they have the same display name, join the family, or enter that email into a guest checkout. New gift and contribution purchases also require the pilot login and its matching buyer email. Guest receipt recovery and already-paid gift claims remain available; issued hours and committed care continue working. Administrators retain their operational views. The dedicated private-pilot pause hides new controls even from the pilot user.
 
 The older support-specific documents named **prepaid visit recovery** and **prepaid visit adjustment** concern already captured card-funded visits. Their case-specific commands are not generic prepaid care-hour balance tools and must not be used for these accounts.
 
 ## 12 Before production activation
 
-Review the latest validation report together with the proposed release. Local automated tests do not establish the current production runtime. The authorized deployment owner must verify the complete committed feature and matching manifest; all six additive migrations; warmed disabled introduction flags; compatible recovery release; production database/shared-lock behavior; current webhook delivery; scheduler and queue operation; actual email transport; caregiver payout configuration; and monitoring/support ownership.
+Review the latest validation report together with the proposed release. Local automated tests do not establish the current production runtime. The authorized deployment owner must verify the complete committed feature and matching manifest; all six additive migrations; warmed exact private-pilot or paused settings; compatible recovery release; production database/shared-lock behavior; current webhook delivery; scheduler and queue operation; actual email transport; caregiver payout configuration; and monitoring/support ownership.
 
-The current instruction is to keep production unchanged and never use SSH to the production server from this work. Nothing in this guide changes that boundary.
+The deployment owner runs the production deployment. This work must never access the production server through SSH. Nothing in this guide changes that boundary.
 
 ## Source reference
 

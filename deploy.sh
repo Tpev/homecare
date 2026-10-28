@@ -84,8 +84,8 @@ Once prepaid code is activated, every later release must retain prepaid support,
 even with sales disabled. No deployment mode reverses database migrations.
 The fetched branch tip is captured once and used for the whole deployment.
 HOMECARE_EXPECTED_COMMIT is optional; when set, a different fetched commit aborts.
-The first prepaid deployment requires both prepaid and gift sales disabled in
-the warmed configuration; deployment does not change application feature flags.
+Prepaid exposure must be disabled or restricted to the reviewed one-family pilot.
+The release enables that private pilot by default; shared .env is never rewritten.
 EOF
 }
 
@@ -512,7 +512,8 @@ validate_prepaid_release_config() {
   local -a arguments=()
   [[ -f "$release/$PREPAID_MANIFEST" ]] || return 0
   # The source contract was already verified before preparing this candidate.
-  # Require a disabled introduction even if shared .env contains stale flags.
+  # Keep this option compatible with installed drivers. The candidate checker
+  # accepts disabled exposure or the reviewed one-family pilot, never public sales.
   if [[ ! -f "$current/$PREPAID_MANIFEST" ]]; then
     arguments+=(--require-disabled)
   fi

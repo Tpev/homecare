@@ -65,8 +65,30 @@ try {
     foreach ([[true, false], [false, true], [true, true]] as $index => [$enabled, $gifts]) {
         $path = $fixture('enabled-'.$index, ['care_hours' => ['enabled' => $enabled, 'gifts_enabled' => $gifts] + $pilotDefaults]);
         $run([$path], 0, 'cached flags are valid booleans');
-        $run([$path, '--require-disabled'], 1, 'First prepaid adoption requires');
+        $run([$path, '--require-disabled'], 0, 'first-adoption exposure is the approved private pilot');
     }
+    // The old deployed driver still supplies --require-disabled. Its candidate
+    // checker may accept only the reviewed single-family pilot, never a public
+    // or wider enabled introduction. Later forward deployments enforce the same cap.
+    foreach ([
+        ['pilot_only' => false, 'pilot_emails' => ['peverelli.t@gmail.com']],
+        ['pilot_only' => true, 'pilot_emails' => []],
+        ['pilot_only' => true, 'pilot_emails' => ['other@example.test']],
+        ['pilot_only' => true, 'pilot_emails' => ['peverelli.t@gmail.com', 'other@example.test']],
+    ] as $index => $access) {
+        foreach ([[true, false], [false, true], [true, true]] as $flagsIndex => [$enabled, $gifts]) {
+            $path = $fixture('unapproved-enabled-'.$index.'-'.$flagsIndex, [
+                'care_hours' => ['enabled' => $enabled, 'gifts_enabled' => $gifts] + $access,
+            ]);
+            $run([$path], 1, 'Enabled prepaid exposure must be restricted to the approved private pilot');
+            $run([$path, '--require-disabled'], 1, 'First prepaid adoption requires');
+        }
+    }
+    $canonicalIntroduction = $fixture('canonical-approved-introduction', ['care_hours' => [
+        'enabled' => true, 'gifts_enabled' => true, 'pilot_only' => true,
+        'pilot_emails' => [' PEVERELLI.T@GMAIL.COM ', 'peverelli.t@gmail.com'],
+    ]]);
+    $run([$canonicalIntroduction, '--require-disabled'], 0, 'first-adoption exposure is the approved private pilot');
     foreach ([[], ['care_hours' => null], ['care_hours' => 'false'], false, null] as $index => $value) {
         $run([$fixture('missing-array-'.$index, $value)], 1, 'must contain a care_hours array');
     }
@@ -134,10 +156,14 @@ try {
             $run([$base, '--match-sales-state', $invalid], 1, $key.' flag must be a boolean');
         }
     }
-    $canonical = $fixture('canonical-pilot', ['care_hours' => array_replace($baseFlags, ['pilot_emails' => ['second@example.test', ' PEVERELLI.T@GMAIL.COM ', 'second@example.test']])]);
-    $equivalent = $fixture('equivalent-pilot', ['care_hours' => array_replace($baseFlags, ['pilot_emails' => ['peverelli.t@gmail.com', 'second@example.test']])]);
+    $canonical = $fixture('canonical-pilot', ['care_hours' => array_replace($baseFlags, ['pilot_emails' => [' PEVERELLI.T@GMAIL.COM ', 'peverelli.t@gmail.com']])]);
+    $equivalent = $fixture('equivalent-pilot', ['care_hours' => array_replace($baseFlags, ['pilot_emails' => ['peverelli.t@gmail.com']])]);
     $run([$canonical, '--match-sales-state', $equivalent], 0, 'rollback exposure flags match');
     $run([$equivalent, '--match-sales-state', $canonical], 0, 'rollback exposure flags match');
+    $broadRollback = $fixture('broad-matching-rollback', ['care_hours' => array_replace($baseFlags, [
+        'pilot_emails' => ['peverelli.t@gmail.com', 'other@example.test'],
+    ])]);
+    $run([$broadRollback, '--match-sales-state', $broadRollback], 1, 'Enabled prepaid exposure must be restricted to the approved private pilot');
     foreach ([[], ['other@example.test'], ['peverelli.t@gmail.com', 'other@example.test']] as $index => $emails) {
         $changed = $fixture('changed-pilot-emails-'.$index, ['care_hours' => array_replace($baseFlags, ['pilot_emails' => $emails])]);
         $run([$changed, '--match-sales-state', $base], 1, 'must preserve all cached prepaid exposure flags and pilot access');

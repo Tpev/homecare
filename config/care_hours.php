@@ -1,14 +1,20 @@
 <?php
 
+// This reviewed release enables only the named private pilot. A dedicated pause
+// survives deployments; malformed values fail closed instead of becoming truthy.
+$privatePilotEnabled = env('CARE_HOURS_PRIVATE_PILOT_ENABLED', true) === true;
+
 return [
     // Rollout switches affect discovery/new sales, never existing entitlements.
-    'enabled' => (bool) env('CARE_HOURS_ENABLED', false),
-    'pilot_only' => (bool) env('CARE_HOURS_PILOT_ONLY', true),
-    'pilot_emails' => array_values(array_filter(array_map('trim', explode(',', (string) env('CARE_HOURS_PILOT_EMAILS', 'peverelli.t@gmail.com'))), fn ($email) => $email !== '')),
+    // Legacy master/gift and pilot-list environment settings intentionally cannot
+    // disable the approved default or expand this release to other purchasers.
+    'enabled' => $privatePilotEnabled,
+    'pilot_only' => true,
+    'pilot_emails' => ['peverelli.t@gmail.com'],
     'enrollment_enabled' => (bool) env('CARE_HOURS_ENROLLMENT_ENABLED', true),
     'sales_enabled' => (bool) env('CARE_HOURS_SALES_ENABLED', true),
     'contributions_enabled' => (bool) env('CARE_HOURS_CONTRIBUTIONS_ENABLED', true),
-    'gifts_enabled' => (bool) env('CARE_HOURS_GIFTS_ENABLED', false),
+    'gifts_enabled' => $privatePilotEnabled,
     'welcome_enabled' => (bool) env('CARE_HOURS_WELCOME_BONUS_ENABLED', true),
     'currency' => 'usd',
     'terms_version' => '2026-10-16',

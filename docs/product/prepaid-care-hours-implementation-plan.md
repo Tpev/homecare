@@ -1,6 +1,6 @@
 # Prepaid care hours implementation plan
 
-Status: Implemented in the local working tree, including private contributions and gifts claimed by code for oneself or an existing recipient. Gift recipients may join after purchase. Verified on October 21, 2026 with automated tests, real Stripe sandbox journeys and an isolated MySQL migration/concurrency rehearsal; the latest signup journey is recorded below. Production activation, live deployment and working-database migrations have not been performed. Section 13 records the implementation and rollout procedure; earlier sections retain the agreed design and acceptance criteria.
+Status updated October 28, 2026: implemented, including private contributions and gifts claimed by code for oneself or an existing recipient. Gift recipients may join after purchase. The current reviewed rollout enables only Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`, through the usual `./deploy.sh`, with no manual environment edit. `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` is the persistent pause; legacy master/gift and pilot-list environment settings do not control this private release. The user reports running the preceding deployment, but its server outcome has not been independently verified. The assistant has not accessed the production server or run production migrations. Section 13 contains current deployment guidance followed by dated historical test evidence; earlier design and evidence must not override the current [deployment runbook](../deployment/zero-downtime-deployments.md#restricted-prepaid-pilot).
 
 Date: October 16, 2026
 
@@ -329,7 +329,7 @@ Each phase is a reviewable change set when implementation is later authorized. U
 
 **Depends on:** all prior phases and the verification matrix below.
 
-- Deploy additive schema and code with new enrollment, sales, contribution checkout and funding selection disabled.
+- Deploy the additive schema and reviewed code with new access limited to the exact authorized private pilot; the dedicated private-pilot pause can keep new exposure disabled when needed.
 - Verify existing card behavior first, then exercise the complete prepaid lifecycle in a non-live environment.
 - Enable a controlled cohort only after reservations, settlement, cancellation, fee retrieval and transfers have passed together.
 - Reconcile every pilot purchase and approved visit to both minute and money records; review operational failures before expanding.
@@ -410,7 +410,9 @@ Use these existing regression anchors:
 
 Use separate controls for new enrollment/purchases, outside contribution checkout, welcome awards and rollout enrollment into prepaid funding. Turning off new enrollment or sales must still allow holders of existing unused entitlements to select care-hour funding and redeem them. Existing funded bookings continue to settle and recover. If an emergency requires pausing self-service reservations, provide a support-assisted route through the same audited ledger; never require a fresh purchase or full card payment to preserve access to paid-for care. Accepted payment attempts retain their quoted terms even if sales or awards pause.
 
-Rollback means stopping new exposure while keeping the new ledger, handlers, settlement and recovery code available for existing obligations. Once live purchases exist, do not drop the new tables, remove its webhook handlers, revert to code that cannot read its funding records, or redirect prepaid visits into full-price card capture. A rollback build must remain compatible with recorded prepaid operations. Restore service through a forward-compatible fix and reconciliation rather than deleting financial history.
+The code-defined private pilot is enabled by normal deployment without editing `.env`. Set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` and use the normal deployment procedure to pause new pilot exposure and purchases; subsequent deployments preserve that pause. Malformed values also fail closed. Existing enrollment, sales, contribution and welcome-award pauses remain effective. Expanding the fixed single-family audience requires a reviewed code change.
+
+Rollback means stopping new exposure while keeping the new ledger, handlers, settlement and recovery code available for existing obligations. Before the first prepaid activation, the driver pins a permanent compatibility floor, even when sales are disabled and no purchases exist. Do not drop the new tables, remove webhook handlers, revert to code that cannot read funding records, or redirect prepaid visits into full-price card capture. A rollback build must remain compatible with recorded prepaid operations and preserve effective exposure settings. Restore service through a forward-compatible fix and reconciliation rather than deleting financial history.
 
 Monitor:
 
@@ -466,6 +468,8 @@ The implementation uses additive `care_hour_*` tables and services in `app/Servi
 
 ### Screens and access
 
+The private release exposes new prepaid screens and purchases only to the signed-in family account `peverelli.t@gmail.com`. Ordinary users keep the current card flow. Gift and contribution checkout also require that pilot login and its matching verified buyer email; private links alone do not open guest sales. Administrators retain operational screens, and existing paid gift claims, balances and recovery remain supported. The capabilities below describe the full implemented journeys once access is granted.
+
 - **Families:** a discreet Care hours entry in Care and Billing opens `/family/care-hours`. Each recipient has available/reserved/used hours, concise activity, receipts, and Buy hours. The owner can enable or revoke a private contribution link. Existing request recipients can enroll without completing an optional care profile.
 - **Booking:** Eligible available care hours are selected by default for a new visit, with a remembered **Use card instead** choice. The booked visit shows reserved time and any separate payment needed; completed care shows actual usage. New recurring offers use the same default without changing already prepared visits or existing plan preferences.
 - **Schedule changes:** a longer proposed visit can use available hours or a separate authorization for extra time. The original schedule and its funding stay protected until acceptance. Rejected, withdrawn, or unused proposals release only their extra payment; they do not release the original visit's reserved hours.
@@ -482,12 +486,12 @@ The implementation uses additive `care_hour_*` tables and services in `app/Servi
 
 ### Deployment sequence
 
-1. Prepare the release with `CARE_HOURS_ENABLED=false` and `CARE_HOURS_GIFTS_ENABLED=false`. Run the normal migration command, `php artisan migrate --force`, before routing traffic to the new code: its booking dispatch reads the additive tables even while sales are disabled. The three October 16 care-hours migrations add tables without converting existing card visits. The two October 21 migrations add gift verification/claim records and audited admin checks, and allow purchase recipient fields to remain null until gift claim. Use the normal atomic release or maintenance procedure; do not use `migrate:fresh` on an application database.
+1. Commit the complete reviewed release and matching compatibility manifest, then run the usual `./deploy.sh`. No manual `.env` change is needed to enable this exact private pilot. The driver runs all six additive care-hours migrations before routing traffic to the new code: booking dispatch reads the additive tables even while sales are paused. The three October 16 migrations add tables without converting existing card visits; the two October 21 migrations add gift verification/claim records and audited admin checks and allow an unassigned gift; the request-funding preference migration preserves recipient/payment choices. Keep this work inside the normal atomic release procedure; never use `migrate:fresh` on an application database.
 2. Keep the existing Stripe API/SDK and webhook endpoint. In the provider test environment, verify package Checkout, authenticated cards, shortfall authorization/capture, actual processing fees, connected-account transfers, refunds, disputes, and webhook retries. Package payment methods must not become the family's default card.
 3. Confirm the existing webhook subscription delivers the new domain's relevant events: Checkout completion/expiration/async outcomes, PaymentIntent success/failure/cancellation, charge refunds/disputes, refund status changes, and transfer creation/update/reversal. Retain all existing subscriptions and handlers. Signature and endpoint environment checks remain required.
 4. Run production-engine concurrency checks for recipient welcome claims, competing reservations, approval/cancellation, and provider reconciliation. Use a shared Laravel cache backend with atomic locks across all web and scheduler hosts; process-local `array` cache is for tests only.
 5. Keep the Laravel scheduler running. Purchase recovery runs every five minutes and booking recovery every ten minutes, bounded to 100 records and in separate background processes. Verify mail delivery and existing notification dispatch. Recovery must keep running while new sales are paused.
-6. Only after separate launch authorization, enable `CARE_HOURS_ENABLED=true`. `CARE_HOURS_ENROLLMENT_ENABLED`, `CARE_HOURS_SALES_ENABLED`, `CARE_HOURS_CONTRIBUTIONS_ENABLED`, `CARE_HOURS_GIFTS_ENABLED`, and `CARE_HOURS_WELCOME_BONUS_ENABLED` independently control new exposure. Refresh cached configuration through the normal deployment process. Gift sales default off, and previously paid gift claims remain available during a pause.
+6. The warmed configuration must be either paused or restricted to the exact approved family account. The code-defined pilot enables both direct and gift purchases by default, even with stale legacy master/gift disabled values. `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` pauses new exposure and gift sales across redeployments. `CARE_HOURS_ENROLLMENT_ENABLED`, `CARE_HOURS_SALES_ENABLED`, `CARE_HOURS_CONTRIBUTIONS_ENABLED`, and `CARE_HOURS_WELCOME_BONUS_ENABLED` still control their individual actions. Refresh configuration only through the normal deployment process. Previously paid gift claims remain available during a pause; public launch requires a separate reviewed change.
 
 No production environment file, provider setting, or live feature flag was changed during implementation. Provider setup for the October 21 journey was confined to the authorized Stripe sandbox.
 
@@ -526,7 +530,9 @@ Local validation completed on October 16, 2026:
 
 These are local tests with provider bypass/fakes. Real provider behavior and simultaneous transactions on the production database engine remain launch checks, as described above.
 
-### October 21 verified staging journey
+### October 21 verified staging journey (historical evidence)
+
+This dated evidence used isolated local runtimes and Stripe sandbox payments, not a hosted staging platform. Its disabled-release settings are historical; use the current deployment sequence above for the authorized private pilot.
 
 The dedicated `playwright.care-hours-staging.config.ts` runs the complete customer, caregiver and admin journey on port 8014 with its own SQLite database, storage, configuration paths and captured array-mail transport under `tmp/care-hours-staging`. Its guard rejects live Stripe keys, inherited database URLs, stale configuration caches and any database outside this exact staging path. The main application database and environment file are unchanged. Time and GPS are controlled test inputs; actual check-in and check-out actions record the visit, without inserting worked minutes or payment records.
 
@@ -552,7 +558,7 @@ The refreshed customer walkthrough is `output/care-hours-staging/index.html`, wi
 
 At this checkpoint, the original all-hours journey was verified. The additional checks below subsequently exercised MySQL concurrency, provider edge cases and simulated bank payouts. Production activation remains off and requires separate authorization.
 
-### October 21 contribution, gift and launch validation
+### October 21 contribution, gift and launch validation (historical evidence)
 
 The completed follow-up uses a separate database under `tmp/care-hours-launch-validation` and port 8015. The original port 8014 journey and its evidence remain intact. The final walkthrough is `output/care-hours-launch-validation/index.html`, with screenshots and sanitized evidence for each result. All provider writes stayed within the authorized test sandbox; the temporary launch server and webhook listener were stopped after verification.
 
@@ -606,7 +612,7 @@ The broad payment/booking/regular-care and family-access regression run passed *
 
 **Final integrated result:** after all fixes above, one combined run passed **699 tests / 5,627 assertions** with zero failures or errors in 248.64 seconds. It includes the complete `CareHours`, `Payments`, `Booking` and `RegularCare` directories, family account access/sharing, the expanded AI care-operations suite and the family dashboard suite. The final asset build passed. `output/care-hours-launch-validation/evidence/regressions.json` records the totals and source JUnit hash; individual provider and MySQL proofs are linked from the walkthrough.
 
-### October 21 seamless gift signup and self claim
+### October 21 seamless gift signup and self claim (historical evidence)
 
 The later approved journey is implemented: **enter code → create an account or sign in → For myself → review exact hours → Claim my gift → hours ready**. A recipient can join after the buyer pays. The focused authentication screen preserves ordinary credential validation, account terms, session rotation, invitation priority and access checks. It creates a normal family account without starting care-request onboarding. Normal authentication and card flows retain their existing behavior.
 
@@ -628,7 +634,7 @@ Production remains disabled. Actual inbox delivery remains deferred at the user'
 
 **Self-identity concurrency:** an additional isolated MySQL 8.0.20 / REPEATABLE-READ test ran two overlapping independent PHP workers against two distinct 10-hour gifts for one actor. A measured family-row lock wait serialized identity creation. The result was one private draft profile, one balance, two lots and exactly one welcome award: 1,200 paid + 60 bonus = 1,260 available minutes. Confirmation replays were safe. This domain test made no provider calls; actual payment was verified separately above. `tmp/care-hours-gift-onboarding/self-claim-concurrency.json` records the proof. The previous concurrency evidence stayed unchanged and the disposable port 33308 daemon was stopped.
 
-### October 22 launch safeguards and read-only production audit
+### October 22 launch safeguards and read-only production audit (historical evidence)
 
 **Access boundary:** the user explicitly prohibits SSH and production-server access. No server connection, deployment, migration, configuration change, live payment, notification, or feature activation was performed. The audit below uses only the connected Lolo Care Stripe account's GET operations. Server findings from earlier dates are not treated as current verification.
 
@@ -650,7 +656,9 @@ The full offline atomic-deployment simulation passed, including its original leg
 
 **Still unverified:** the deployed application revision, cached flags and Stripe bypass setting; the five additive migrations; scheduler, workers and shared atomic locks; mail transport and actual inbox delivery; installation of the updated deployment guard and monitoring/alert hookup; and the launch reserve/support owner. Resolving these requires a separately authorized deployment/operations process outside this assistant's prohibited server access. Production enablement and a first real prepaid journey remain separately authorized launch steps.
 
-### October 22 deployment readiness follow-up
+### October 22 deployment readiness follow-up (historical evidence)
+
+The disabled-introduction requirement and default-off flags described in this dated record were superseded by the October 28 approved private pilot. Current deployment checks accept paused exposure or the exact code-defined family pilot, while preserving the same compatibility floor and rollback protection. The prior test counts and artifacts below describe that earlier revision only.
 
 The local deployment audit confirmed the order of package discovery, additive migrations, cache warming, runtime drain and atomic activation. The normal `./deploy.sh` command captures the fetched branch tip once and deploys that immutable commit; `HOMECARE_EXPECTED_COMMIT` is an optional exact-commit constraint. The first prepaid release must have both master and gift flags disabled in its actual warmed cache, and manual/automatic rollback must preserve all six cached prepaid switches plus the pilot restriction and effective email allowlist. Missing, malformed or mismatched settings fail closed. The checks do not rewrite `.env`, modify cached settings, reverse migrations or enable a feature. A retained release with different settings requires a reviewed forward deployment instead.
 

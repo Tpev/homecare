@@ -1,8 +1,8 @@
 # LoLo prepaid care hours user guide
 
-Prepared October 28, 2026. Covers the implemented prepaid care hours and gift-code experience. Purchase and contribution controls appear when LoLo makes them available; this guide does not announce production activation.
+Prepared October 28, 2026. Covers the implemented prepaid care hours and gift-code experience. The reviewed release enables the private pilot through the normal deployment; this guide does not confirm that a particular production deployment succeeded.
 
-Initial pilot: new prepaid screens and purchases are restricted to the invited, signed-in family account. Public gift and contribution sales stay unavailable to other users during the pilot. The full journeys below describe the capability after access is granted. Already-paid gifts and existing balances retain their claim, receipt and care-payment rights.
+Initial pilot: new prepaid screens and purchases are restricted to Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. No manual environment change is needed to start this pilot. Other family accounts keep the ordinary card-payment experience, and public gift and contribution sales stay unavailable. The full journeys below describe the capability after access is granted. Already-paid gifts and existing balances retain their claim, receipt and care-payment rights.
 
 Care hours let you pay for future care for yourself or someone you love. Several relatives can add hours to the same person's balance. A gift code also lets you buy before the recipient has a LoLo account.
 

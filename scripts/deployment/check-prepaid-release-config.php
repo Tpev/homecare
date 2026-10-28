@@ -75,17 +75,30 @@ $readFlags = static function (string $cachePath) use ($fail, $requiredKeys): arr
 };
 
 $flags = $readFlags($argv[1]);
-if ($requireDisabled && ($flags['enabled'] || $flags['gifts_enabled'])) {
-    $fail('First prepaid adoption requires care_hours.enabled=false and care_hours.gifts_enabled=false in the cached configuration.');
-}
 if ($referencePath !== null) {
     if ($flags !== $readFlags($referencePath)) {
         $fail('Rollback must preserve all cached prepaid exposure flags and pilot access. Use a forward deployment for an intentional change.');
     }
+}
+
+$hasExposure = $flags['enabled'] || $flags['gifts_enabled'];
+$approvedPrivatePilot = $flags['pilot_only'] === true
+    && $flags['pilot_emails'] === ['peverelli.t@gmail.com'];
+// Keep the original CLI option compatible with an already-installed deploy.sh.
+// The authorized introduction is now either disabled or this one-family pilot;
+// no enabled public or broader pilot cache can pass any forward deployment.
+if ($hasExposure && ! $approvedPrivatePilot) {
+    $fail($requireDisabled
+        ? 'First prepaid adoption requires disabled exposure or the approved private pilot.'
+        : 'Enabled prepaid exposure must be restricted to the approved private pilot.');
+}
+if ($referencePath !== null) {
     fwrite(STDOUT, 'Prepaid release configuration check passed: rollback exposure flags match.'.PHP_EOL);
     exit(0);
 }
 
 fwrite(STDOUT, $requireDisabled
-    ? 'Prepaid release configuration check passed: first-adoption exposure is disabled.'.PHP_EOL
+    ? ($hasExposure
+        ? 'Prepaid release configuration check passed: first-adoption exposure is the approved private pilot.'.PHP_EOL
+        : 'Prepaid release configuration check passed: first-adoption exposure is disabled.'.PHP_EOL)
     : 'Prepaid release configuration check passed: cached flags are valid booleans and pilot access is valid.'.PHP_EOL);
