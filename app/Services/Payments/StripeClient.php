@@ -355,7 +355,7 @@ class StripeClient
                 'expires_at' => $expiresAt,
                 'metadata' => $metadata,
                 'setup_intent_data' => [
-                    'usage' => 'off_session',
+                    // Checkout defaults to off_session and does not accept usage here.
                     'metadata' => $metadata,
                 ],
             ], $this->requestOptions('onboarding-setup:'.$linkId.':'.$attempt));

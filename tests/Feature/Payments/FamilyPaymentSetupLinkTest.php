@@ -265,7 +265,8 @@ class FamilyPaymentSetupLinkTest extends TestCase
         $this->assertSame('https://checkout.stripe.com/c/pay/cs_sdk_guest', $service->start($link));
         $this->assertSame('setup', $params['mode']);
         $this->assertSame('usd', $params['currency']);
-        $this->assertSame('off_session', $params['setup_intent_data']['usage']);
+        // Checkout accepts only a subset of SetupIntent fields; usage is not one.
+        $this->assertArrayNotHasKey('usage', $params['setup_intent_data']);
         $this->assertSame((string) $link->id, $params['metadata']['onboarding_payment_link_id']);
         $this->assertSame($params['metadata'], $params['setup_intent_data']['metadata']);
         $this->assertArrayNotHasKey('payment_method_types', $params);
