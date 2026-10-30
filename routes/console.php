@@ -20,6 +20,11 @@ Schedule::command('homecare:expire-care-requests')->everyMinute()->withoutOverla
 Schedule::command('homecare:dispatch-unread-message-emails')->everyMinute()->withoutOverlapping();
 Schedule::command('family-onboarding:dispatch-emails')->everyMinute()->withoutOverlapping();
 Schedule::command('customer-onboarding:refresh-payments --limit=100')->hourly()->withoutOverlapping();
+if (! config('services.twilio.bypass') && config('services.twilio.account_sid')
+    && config('services.twilio.auth_token') && config('services.twilio.sms_from')) {
+    // Overlap recent days to recover missed webhooks after downtime; SIDs deduplicate.
+    Schedule::command('sms:sync-inbound --days=3')->everyFiveMinutes()->withoutOverlapping(15)->runInBackground();
+}
 Schedule::command('homecare:auto-approve-timesheets')->hourly();
 Schedule::command('homecare:process-time-corrections')->hourly()->withoutOverlapping();
 Schedule::command('homecare:process-completed-extra-visits')->everyFifteenMinutes()->withoutOverlapping();

@@ -42,9 +42,47 @@ class CrmSmsMessagingTest extends TestCase
         ]);
     }
 
+    public function test_signed_incoming_sms_preserves_whitespace_and_rejects_tampered_content(): void
+    {
+        Queue::fake();
+        $payload = $this->incoming(['Body' => "  Please call me.\n", 'ProfileName' => ' Customer ']);
+        $url = route('webhooks.twilio.sms');
+        $signature = $this->signature($url, $payload);
+
+        $this->post($url, $payload, ['X-Twilio-Signature' => $signature])->assertOk();
+        $this->assertSame($payload['Body'], SmsMessage::sole()->body);
+        $this->assertSame($payload['ProfileName'], SmsMessage::sole()->raw_payload['ProfileName']);
+        $this->post($url, array_merge($payload, ['Body' => 'Changed content']), ['X-Twilio-Signature' => $signature])->assertUnauthorized();
+        $this->assertDatabaseCount('sms_messages', 1);
+    }
+
     public static function crmRoles(): array
     {
         return [['admin'], ['sdr'], ['sales']];
+    }
+
+    public function test_signed_webhook_keeps_query_encoding_and_supports_public_url_behind_proxy(): void
+    {
+        Queue::fake();
+        $payload = $this->incoming();
+        $url = route('webhooks.twilio.sms').'?z=a+b&a=%2f';
+        $this->post($url, $payload, ['X-Twilio-Signature' => $this->signature($url, $payload)])->assertOk();
+
+        config(['services.twilio.webhook_base_url' => 'https://care.example.test']);
+        $payload['MessageSid'] = 'SM_proxy';
+        $publicUrl = 'https://care.example.test/webhooks/twilio/sms?z=a+b&a=%2f';
+        $this->post($url, $payload, ['X-Twilio-Signature' => $this->signature($publicUrl, $payload)])->assertOk();
+        $this->assertDatabaseCount('sms_messages', 2);
+    }
+
+    public function test_signed_mms_preserves_empty_body_and_empty_form_fields(): void
+    {
+        Queue::fake();
+        $payload = $this->incoming(['Body' => '', 'ToCity' => '', 'NumMedia' => '1',
+            'MediaUrl0' => 'https://api.twilio.com/media/example', 'MediaContentType0' => 'image/jpeg']);
+        $this->signedPost('webhooks.twilio.sms', $payload)->assertOk();
+        $this->assertSame('', SmsMessage::sole()->raw_payload['ToCity']);
+        $this->assertSame(1, SmsMessage::sole()->num_media);
     }
 
     #[DataProvider('crmRoles')]

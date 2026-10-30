@@ -3,8 +3,11 @@
 namespace App\Services\Messaging;
 
 use App\Exceptions\Messaging\TwilioSmsRejectedException;
+use Carbon\CarbonInterface;
+use Generator;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -97,15 +100,7 @@ class TwilioSmsClient
         if (! preg_match('/^(SM|MM)[0-9a-fA-F]{32}$/D', $messageSid)) {
             throw new RuntimeException('Enter a valid Twilio Message SID (SM or MM followed by 32 hexadecimal characters).');
         }
-        if ((bool) config('services.twilio.bypass', false)) {
-            throw new RuntimeException('Message recovery is unavailable while Twilio bypass is enabled.');
-        }
-
-        $accountSid = trim((string) config('services.twilio.account_sid'));
-        $authToken = (string) config('services.twilio.auth_token');
-        if (! preg_match('/^AC[0-9a-fA-F]{32}$/D', $accountSid) || $authToken === '') {
-            throw new RuntimeException('Twilio SMS credentials are not configured correctly.');
-        }
+        [$accountSid, $authToken] = $this->recoveryCredentials();
         $endpoint = 'https://api.twilio.com/2010-04-01/Accounts/'.$accountSid.'/Messages/'.$messageSid;
         $get = function (string $url, array $query = []) use ($accountSid, $authToken): array {
             $response = Http::withBasicAuth($accountSid, $authToken)
@@ -158,6 +153,85 @@ class TwilioSmsClient
         }
 
         return ['message' => $payload, 'media' => $media];
+    }
+
+    /** @return Generator<int, string> */
+    public function inboundMessageSidsSince(CarbonInterface $since, int $maxPages = 20): Generator
+    {
+        [$accountSid, $authToken] = $this->recoveryCredentials();
+        $ourPhone = self::normalizePhone((string) config('services.twilio.sms_from'));
+        if ($ourPhone === '') {
+            throw new RuntimeException('The app SMS phone number is not configured.');
+        }
+        if ($maxPages < 1 || $maxPages > 100) {
+            throw new RuntimeException('The page limit must be between 1 and 100.');
+        }
+        $path = '/2010-04-01/Accounts/'.$accountSid.'/Messages.json';
+        $url = 'https://api.twilio.com'.$path;
+        $query = ['To' => $ourPhone, 'DateSent>=' => $since->copy()->utc()->toDateString(), 'PageSize' => 100];
+        $seenPages = [];
+        $seenMessages = [];
+        for ($pageNumber = 0; $pageNumber < $maxPages; $pageNumber++) {
+            if (isset($seenPages[$url])) {
+                throw new RuntimeException('Twilio repeated a message page; sync stopped before looping.');
+            }
+            $seenPages[$url] = true;
+            $request = Http::withBasicAuth($accountSid, $authToken)->withoutRedirecting()
+                ->timeout((int) config('services.twilio.timeout', 15));
+            // An empty query option would erase Twilio's PageToken from the URL.
+            $response = $query === [] ? $request->get($url) : $request->get($url, $query);
+            if (! $response->successful()) {
+                throw new RuntimeException($this->responseErrorMessage($response));
+            }
+            $payload = $response->json();
+            if (! is_array($payload) || ! is_array($payload['messages'] ?? null)) {
+                throw new RuntimeException('Twilio returned an invalid message list.');
+            }
+            foreach ($payload['messages'] as $message) {
+                if (($message['account_sid'] ?? null) !== $accountSid) {
+                    throw new RuntimeException('Twilio returned a message for a different account.');
+                }
+                if (($message['direction'] ?? null) !== 'inbound' || ($message['to'] ?? null) !== $ourPhone) {
+                    continue;
+                }
+                $sid = (string) ($message['sid'] ?? '');
+                if (! preg_match('/^(SM|MM)[0-9a-fA-F]{32}$/D', $sid) || empty($message['date_created'])) {
+                    throw new RuntimeException('Twilio returned a message without a valid SID or timestamp.');
+                }
+                if (Carbon::parse($message['date_created'])->lessThan($since) || isset($seenMessages[$sid])) {
+                    continue;
+                }
+                $seenMessages[$sid] = true;
+                yield $sid;
+            }
+            $next = $payload['next_page_uri'] ?? null;
+            if ($next === null || $next === '') {
+                return;
+            }
+            // Never send credentials to a host or account supplied in a response.
+            if (! is_string($next) || ! str_starts_with($next, $path.'?')) {
+                throw new RuntimeException('Twilio returned an unexpected pagination URL.');
+            }
+            $url = 'https://api.twilio.com'.$next;
+            $query = [];
+        }
+
+        throw new RuntimeException('The page limit was reached; sync is incomplete. Rerun with a larger --max-pages value.');
+    }
+
+    /** @return array{string, string} */
+    private function recoveryCredentials(): array
+    {
+        if ((bool) config('services.twilio.bypass', false)) {
+            throw new RuntimeException('Message recovery is unavailable while Twilio bypass is enabled.');
+        }
+        $accountSid = trim((string) config('services.twilio.account_sid'));
+        $authToken = (string) config('services.twilio.auth_token');
+        if (! preg_match('/^AC[0-9a-fA-F]{32}$/D', $accountSid) || $authToken === '') {
+            throw new RuntimeException('Twilio SMS credentials are not configured correctly.');
+        }
+
+        return [$accountSid, $authToken];
     }
 
     public function hasValidWebhookSignature(Request $request): bool
@@ -228,7 +302,8 @@ class TwilioSmsClient
             return rtrim($baseUrl, '/').$request->getRequestUri();
         }
 
-        return $request->fullUrl();
+        // Preserve the exact query order/encoding included in Twilio's signature.
+        return $request->getSchemeAndHttpHost().$request->getRequestUri();
     }
 
     private function messagesEndpoint(string $accountSid): string

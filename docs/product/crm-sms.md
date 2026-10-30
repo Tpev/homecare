@@ -16,9 +16,25 @@ Run `php artisan migrate --force` before serving the updated application. The mi
 
 Incoming alerts run through `SendIncomingSmsAlert` on the default queue, with five attempts and increasing delays. Keep the application's queue worker running and restart workers with the deployment. Failed email jobs can be retried with the application's normal queue retry workflow. With the synchronous queue driver, delivery happens in the webhook request. No production SMS or email is sent by the automated tests.
 
+## Missing incoming messages
+
+In Twilio's Messaging Logs, open the incoming Message SID and check **Request Inspector**. The inbound URL is `https://carelolo.com/webhooks/twilio/sms`. A `401` response with `Invalid Twilio signature` means the app rejected the request before saving it. Twilio webhook form fields must retain their exact whitespace and empty strings during signature verification; the app exempts only Twilio webhook routes from Laravel's input normalization. Signature verification remains required. `TWILIO_WEBHOOK_BASE_URL`, when set, must match the public origin used by Twilio.
+
+After deployment, an operator can preview and recover missing messages on the application server:
+
+```bash
+php artisan sms:sync-inbound --days=7 --dry-run
+php artisan sms:sync-inbound --days=7
+```
+
+Recovery reads incoming SMS/MMS for the configured account and app number, preserves original timestamps and attachments, and deduplicates by Message SID. It creates inbox and matching CRM activity entries without sending SMS or historical alert emails. One message can also be recovered with `php artisan sms:recover-inbound SM...`. The bulk command returns a nonzero status if any message or page could not be recovered; rerunning is safe. It supports 1–30 days and `--max-pages=1..100` (default 20 pages of 100 records). A page-limit error requires a larger limit or a narrower date window.
+
+With live Twilio credentials and the sender configured, the existing Laravel scheduler runs `sms:sync-inbound --days=3` every five minutes, without overlapping scheduled runs. This catches missed callbacks after short outages. The scheduler must be running; after a longer outage, run a wider manual catch-up. Check the command summary and application warnings for incomplete syncs. Normal signed webhook deliveries still create real-time alerts.
+
 ## Verification
 
 - `php artisan test tests/Feature/Admin/CrmSmsMessagingTest.php tests/Feature/Admin/AdminSmsMessagesTest.php`
+- `php artisan test tests/Feature/Admin/InboundSmsSyncTest.php tests/Feature/Admin/InboundSmsRecoveryTest.php tests/Feature/Admin/CrmSmsRetrySafetyTest.php`
 - `npm run build`
 - `npx playwright test --config=playwright.crm-sms.config.ts`
 

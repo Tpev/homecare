@@ -18,7 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Tiptap stores meaningful word-boundary whitespace inside nested text nodes.
         // Trimming those values turns "text [link] text" into joined words in HTML.
-        $middleware->trimStrings(except: ['content_json.*.text', '*.content_json.*.text']);
+        $middleware->trimStrings(except: [
+            'content_json.*.text', '*.content_json.*.text',
+            // Twilio signs the original form values, including whitespace.
+            fn (\Illuminate\Http\Request $request) => $request->is('webhooks/twilio/*'),
+        ]);
+        $middleware->convertEmptyStringsToNull(except: [
+            fn (\Illuminate\Http\Request $request) => $request->is('webhooks/twilio/*'),
+        ]);
 
         $middleware->alias([
             'admin.email' => \App\Http\Middleware\EnsureAdminEmail::class,
