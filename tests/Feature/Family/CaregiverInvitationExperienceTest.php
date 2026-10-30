@@ -25,6 +25,7 @@ use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -69,6 +70,32 @@ class CaregiverInvitationExperienceTest extends TestCase
         $this->assertSame(CareRequestInvitation::STATUS_PENDING, $invitation->status);
         $this->assertSame('Please review this care request for our family.', $invitation->message);
         $this->assertTrue($invitation->expires_at->equalTo($request->requested_end_at));
+    }
+
+    public function test_missing_caregiver_url_cannot_crash_request_workspace_or_invitation_discovery(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $missing = $this->createReadyCaregiver('Missing Profile URL');
+        $visible = $this->createReadyCaregiver('Visible Profile URL');
+        DB::table('caregiver_profiles')->where('user_id', $missing->id)->update(['slug' => null]);
+        $request = $this->createOpenRequest($family);
+        $discovery = app(CaregiverInvitationDiscoveryService::class);
+
+        $sections = $discovery->initialSections($request, $family);
+        $this->assertSame([$visible->id], collect($sections)->flatMap(fn ($section) => $section['caregivers'])->pluck('user_id')->all());
+        $this->assertCount(0, $discovery->search($request, $family, 'Missing'));
+        $this->assertNull($discovery->caregiver($request, $family, $missing->id));
+        Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('openCaregiverInvitePanel')->assertOk()->assertSee($visible->name)->assertDontSee($missing->name);
+
+        (require database_path('migrations/2026_10_30_190000_backfill_missing_caregiver_profile_slugs.php'))->up();
+        $card = $discovery->search($request, $family, 'Missing')->sole();
+        $this->assertSame($missing->id, $card['user_id']);
+        $this->get($card['profile_url'])->assertOk();
+        Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('openCaregiverInvitePanel')->assertOk()->assertSee($visible->name)->assertSee($missing->name);
+        $this->assertSame(CareRequest::STATUS_OPEN, $request->fresh()->status);
+        $this->assertDatabaseCount('care_requests', 1);
     }
 
     public function test_same_day_invitation_deadline_is_capped_at_shift_end_and_used_in_the_notification(): void

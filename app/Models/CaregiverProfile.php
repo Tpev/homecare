@@ -121,8 +121,16 @@ class CaregiverProfile extends Model
     protected static function booted(): void
     {
         static::saving(function (self $profile): void {
-            if (! $profile->slug && $profile->relationLoaded('user')) {
-                $profile->slug = Str::slug($profile->user->name.'-'.$profile->user_id);
+            if (blank($profile->slug) && $profile->user_id) {
+                $name = $profile->relationLoaded('user') ? $profile->user?->name : $profile->user()->value('name');
+                $base = (Str::slug(Str::substr((string) $name, 0, 180)) ?: 'caregiver').'-'.$profile->user_id;
+                $slug = $base;
+                $suffix = 2;
+                while (static::query()->where('slug', $slug)
+                    ->when($profile->exists, fn (Builder $query) => $query->whereKeyNot($profile->getKey()))->exists()) {
+                    $slug = $base.'-'.$suffix++;
+                }
+                $profile->slug = $slug;
             }
 
             $pricing = app(MarketplacePricing::class);
@@ -142,10 +150,11 @@ class CaregiverProfile extends Model
     {
         $excludedSlugs = config('marketplace.caregiver_discovery_excluded_slugs', []);
 
-        return app(CaregiverWorkEligibility::class)->constrain($query)->where(function (Builder $query) use ($excludedSlugs): void {
-            $query->whereNull('caregiver_profiles.slug')
-                ->orWhereNotIn('caregiver_profiles.slug', $excludedSlugs);
-        });
+        // A broken profile URL must never take down the whole discovery page.
+        return app(CaregiverWorkEligibility::class)->constrain($query)
+            ->whereNotNull('caregiver_profiles.slug')
+            ->whereRaw("TRIM(caregiver_profiles.slug) <> ''")
+            ->whereNotIn('caregiver_profiles.slug', $excludedSlugs);
     }
 
     public function user(): BelongsTo

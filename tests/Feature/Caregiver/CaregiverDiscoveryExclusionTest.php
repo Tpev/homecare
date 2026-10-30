@@ -13,6 +13,7 @@ use App\Services\Matching\CaregiverSuggestionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -96,6 +97,57 @@ class CaregiverDiscoveryExclusionTest extends TestCase
 
         $this->assertCount(2, $discovery->search($request, $family, 'Charles'));
         $this->assertCount(2, $suggestions->topMatchesForRequest($request));
+    }
+
+    public function test_missing_slugs_are_generated_without_loading_the_user_and_existing_urls_stay_stable(): void
+    {
+        $user = User::factory()->create(['role' => 'caregiver', 'name' => 'New Caregiver']);
+        $base = 'new-caregiver-'.$user->id;
+        $this->caregiver('Existing URL owner', ['slug' => $base]);
+
+        $profile = new CaregiverProfile(['user_id' => $user->id, 'slug' => '   ']);
+        $this->assertFalse($profile->relationLoaded('user'));
+        $profile->save();
+        $this->assertSame($base.'-2', $profile->slug);
+        $user->update(['name' => 'Changed Name']);
+        $profile->update(['bio' => 'Updated profile']);
+        $this->assertSame($base.'-2', $profile->fresh()->slug);
+    }
+
+    public function test_directory_survives_missing_urls_and_migration_restores_profiles_without_changing_other_data(): void
+    {
+        $profiles = collect();
+        foreach ([null, '', '   '] as $index => $slug) {
+            $profile = $this->caregiver('Missing URL '.$index);
+            DB::table('caregiver_profiles')->where('id', $profile->id)->update(['slug' => $slug]);
+            $profiles->push($profile->fresh());
+        }
+        $blockedSlug = 'missing-url-0-'.$profiles->first()->user_id;
+        $visible = $this->caregiver('Existing URL owner', ['slug' => $blockedSlug]);
+        $original = DB::table('caregiver_profiles')->orderBy('id')->get()->keyBy('id');
+
+        Livewire::test(BrowseCaregivers::class)->assertOk()
+            ->assertViewHas('caregivers', fn (LengthAwarePaginator $result): bool => $result->total() === 1)
+            ->assertSee('Existing URL owner');
+        $this->assertNull($profiles->first()->fresh()->slug);
+
+        $migration = require database_path('migrations/2026_10_30_190000_backfill_missing_caregiver_profile_slugs.php');
+        $migration->up();
+        $slugs = CaregiverProfile::orderBy('id')->pluck('slug')->all();
+        $migration->up();
+        $this->assertSame($slugs, CaregiverProfile::orderBy('id')->pluck('slug')->all());
+        $this->assertSame($blockedSlug, $visible->fresh()->slug);
+        $this->assertSame($blockedSlug.'-2', $profiles->first()->fresh()->slug);
+        foreach ($original as $id => $before) {
+            $after = DB::table('caregiver_profiles')->where('id', $id)->first();
+            unset($before->slug, $after->slug);
+            $this->assertEquals($before, $after);
+        }
+        Livewire::test(BrowseCaregivers::class)->assertOk()
+            ->assertViewHas('caregivers', fn (LengthAwarePaginator $result): bool => $result->total() === 4);
+        foreach ($profiles as $profile) {
+            $this->get(route('caregivers.show', ['slug' => $profile->fresh()->slug]))->assertOk();
+        }
     }
 
     private function excludedCaregiver(): CaregiverProfile
