@@ -63,6 +63,7 @@ Route::middleware(['auth', 'admin.email', CareHoursPrivacyHeaders::class])
     ->prefix('admin/care-hours')->name('admin.care-hours.')->group(function () {
         Route::get('/', [AdminCareHoursController::class, 'index'])->name('index');
         Route::get('/gifts', [AdminGiftController::class, 'index'])->name('gifts.index');
+        Route::get('/gifts/{purchase:public_id}', [AdminGiftController::class, 'show'])->name('gifts.show');
         Route::post('/gifts/{purchase:public_id}/recheck', [AdminGiftController::class, 'recheck'])->middleware('throttle:10,1,care-hours-gifts.recheck:')->name('gifts.recheck');
         Route::get('/{account}', [AdminCareHoursController::class, 'show'])->whereNumber('account')->name('show');
         Route::post('/{account}/purchases/{purchase}/recheck', [AdminCareHoursController::class, 'recheck'])->whereNumber(['account', 'purchase'])->middleware('throttle:10,1,care-hours-recheck:')->name('recheck');

@@ -9,6 +9,7 @@ use App\Http\Controllers\CaregiverCertificationDocumentController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\CareAssistanceController;
+use App\Http\Controllers\CareHoursMarketingController;
 use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\DiditWebhookController;
 use App\Http\Controllers\FamilyAccessEndedController;
@@ -221,6 +222,8 @@ Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVaria
     ->name('landing.family.variant');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/about', [MarketingPagesController::class, 'about'])->name('about');
+Route::get('/prepaid-care-hours', [CareHoursMarketingController::class, 'prepaid'])->name('prepaid-care-hours');
+Route::get('/care-gift-cards', [CareHoursMarketingController::class, 'gifts'])->name('care-gift-cards');
 Route::get('/care-assistance', [CareAssistanceController::class, 'index'])
     ->middleware(\App\Http\Middleware\CareAssistancePrivacyHeaders::class)->name('care-assistance.index');
 Route::post('/care-assistance', [CareAssistanceController::class, 'store'])

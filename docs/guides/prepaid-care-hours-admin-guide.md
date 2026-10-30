@@ -16,7 +16,7 @@ Use this guide to trace money into a shared family balance, follow the hours int
 
 Do not ask a family to buy again simply because a payment result is delayed. First identify the original purchase or visit operation and its actual status. A successful payment, issued hours, approved care and caregiver transfer are different steps.
 
-Example: Jane Bennett buys a gift for her mother Linda Bennett. Before Linda claims it, find Jane's purchase under **Gift purchases**. After claim, follow the linked Linda balance. When Linda books Claire Martin, use the visit link on that balance to review care and settlement. All names in this guide are fictional.
+Example: Jane Bennett buys a gift for her mother Linda Bennett. Find Jane's purchase under **Gift purchases** and select **View gift**. After Linda claims it, the detail page identifies the person who claimed it and the receiving family account. When its hours fund a visit with Claire Martin, that visit appears under **Visits funded by this gift**. All names in this guide are fictional.
 
 ## 2 Access and navigation
 
@@ -26,7 +26,7 @@ An authenticated account with the **admin** role can open these pages. Sales and
 2. Select **Care hours** on the payments page.
 3. From **Care hours**, select a family balance, **Gift purchases**, or **Payment operations**.
 
-Direct application paths are `/admin/care-hours` and `/admin/care-hours/gifts`. They still require administrator access. Use the app's configured address; these paths are not public links to send to families.
+Direct application paths are `/admin/care-hours`, `/admin/care-hours/gifts` and `/admin/care-hours/gifts/{purchase-reference}`. They still require administrator access. Use the app's configured address; these paths are not public links to send to families.
 
 ### Find a family account
 
@@ -39,6 +39,21 @@ The attention count can include purchase, visit funding and settlement issues fo
 On **Care-hour gifts**, search by the exact purchase reference or buyer email. Filters are **All gifts**, **Awaiting claim**, **Claimed** and **Needs attention**.
 
 Each result shows paid hours and price, buyer name/email, purchase reference/date, claim state, processing fee and latest admin payment check. After claim, its family balance is linked. If a claimed gift's payment is subsequently held, the card also displays its payment status; **Claimed** alone does not mean the funding is usable.
+
+### Open one gift
+
+Select **View gift** to see the buyer, purchase and claim details, hours from that specific gift, and all visits it has funded. Opening this page is read-only: it does not contact the payment provider, issue hours, change a claim or send a notification.
+
+- **Buyer** is the name and email recorded at purchase.
+- **Claimed by** identifies the actual user who redeemed the gift, with the exact claim timestamp and displayed timezone. This can differ from the family account's current owner.
+- **Family account** identifies where the gift was credited and links to the shared family balance.
+- **Not claimed** means no receiving family or intended recipient is recorded yet. The application does not infer a recipient from the buyer's name or email.
+
+The balance cards are specific to this gift, not the receiving family's total balance. **Available** can fund new care; **Reserved** is allocated to upcoming or unapproved care; **Used** is finalized care time after corrections; **On hold** is unused time that cannot currently be spent. Paid and awarded welcome hours are shown separately. Before a gift is claimed, no spendable hours have been issued. Reversed hours are not available credit.
+
+**Visits funded by this gift** lists every associated visit, including cancelled visits with returned hours, across paginated results. Each entry identifies the care recipient, caregiver and visit date, with the hours from this gift currently used or reserved and the hours returned over time. Other gifts and card payments that helped fund the same visit are excluded from those figures. Returned hours are history, not an additional balance; the same hours can be reserved and returned more than once. Follow **View care request** for the full care request and settlement details.
+
+Raw gift codes remain hidden. The separate **Payment review** action still requires a reason and can reconcile confirmed provider results; simply viewing gift details never performs that action.
 
 ## 3 What the feature promises
 
