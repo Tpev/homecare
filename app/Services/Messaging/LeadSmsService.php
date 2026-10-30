@@ -127,7 +127,7 @@ class LeadSmsService
         return $message->refresh();
     }
 
-    public function receive(SmsMessage $message): void
+    public function receive(SmsMessage $message, bool $notify = true): void
     {
         DB::transaction(function () use ($message): void {
             $message = SmsMessage::query()->lockForUpdate()->findOrFail($message->id);
@@ -138,7 +138,7 @@ class LeadSmsService
             $this->recordActivity($message);
         });
 
-        if (! $message->fresh()->inbound_notified_at) {
+        if ($notify && ! $message->fresh()->inbound_notified_at) {
             SendIncomingSmsAlert::dispatch($message->id)->afterCommit();
         }
     }
@@ -161,6 +161,7 @@ class LeadSmsService
         $outgoing = SmsMessage::query()->where('direction', SmsMessage::DIRECTION_OUTGOING)
             ->where('to_phone', $phone)->where('from_phone', $ourPhone)
             ->whereNotNull('lead_id')->whereNotNull('twilio_sid')
+            ->when($message->received_at, fn ($query) => $query->where('created_at', '<=', $message->received_at))
             ->when($candidates->isNotEmpty(), fn ($query) => $query->whereIn('lead_id', $candidates))
             ->latest('id')->first();
 

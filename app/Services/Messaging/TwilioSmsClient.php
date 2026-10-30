@@ -91,6 +91,75 @@ class TwilioSmsClient
         return $payload;
     }
 
+    /** @return array{message: array<string, mixed>, media: list<array{url: string, content_type: string}>} */
+    public function retrieveInboundMessage(string $messageSid): array
+    {
+        if (! preg_match('/^(SM|MM)[0-9a-fA-F]{32}$/D', $messageSid)) {
+            throw new RuntimeException('Enter a valid Twilio Message SID (SM or MM followed by 32 hexadecimal characters).');
+        }
+        if ((bool) config('services.twilio.bypass', false)) {
+            throw new RuntimeException('Message recovery is unavailable while Twilio bypass is enabled.');
+        }
+
+        $accountSid = trim((string) config('services.twilio.account_sid'));
+        $authToken = (string) config('services.twilio.auth_token');
+        if (! preg_match('/^AC[0-9a-fA-F]{32}$/D', $accountSid) || $authToken === '') {
+            throw new RuntimeException('Twilio SMS credentials are not configured correctly.');
+        }
+        $endpoint = 'https://api.twilio.com/2010-04-01/Accounts/'.$accountSid.'/Messages/'.$messageSid;
+        $get = function (string $url, array $query = []) use ($accountSid, $authToken): array {
+            $response = Http::withBasicAuth($accountSid, $authToken)
+                ->withoutRedirecting()->timeout((int) config('services.twilio.timeout', 15))
+                ->get($url, $query);
+            if (! $response->successful()) {
+                throw new RuntimeException($this->responseErrorMessage($response));
+            }
+            $payload = $response->json();
+            if (! is_array($payload)) {
+                throw new RuntimeException('Twilio returned an invalid message response.');
+            }
+
+            return $payload;
+        };
+
+        $payload = $get($endpoint.'.json');
+        if (($payload['sid'] ?? null) !== $messageSid || ($payload['account_sid'] ?? null) !== $accountSid
+            || ($payload['direction'] ?? null) !== 'inbound') {
+            throw new RuntimeException('Twilio did not return the requested inbound message for this account.');
+        }
+        $ourPhone = self::normalizePhone((string) config('services.twilio.sms_from'));
+        if ($ourPhone === '' || ($payload['to'] ?? null) !== $ourPhone
+            || ! preg_match('/^\+[1-9][0-9]{7,14}$/D', (string) ($payload['from'] ?? ''))) {
+            throw new RuntimeException('This message is not an incoming SMS to the configured app phone number.');
+        }
+        $numMedia = filter_var($payload['num_media'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1000]]);
+        if ($numMedia === false || ! is_string($payload['body'] ?? null)
+            || ($payload['body'] === '' && $numMedia === 0)) {
+            throw new RuntimeException('The original message content is missing or redacted in Twilio.');
+        }
+        $media = [];
+        if ($numMedia > 0) {
+            $page = $get($endpoint.'/Media.json', ['PageSize' => 1000]);
+            if (! is_array($page['media_list'] ?? null) || count($page['media_list']) !== $numMedia
+                || ! empty($page['next_page_uri'])) {
+                throw new RuntimeException('Twilio did not return all message attachments; nothing was imported.');
+            }
+            $seen = [];
+            foreach ($page['media_list'] as $item) {
+                $sid = (string) ($item['sid'] ?? '');
+                if (! preg_match('/^ME[0-9a-fA-F]{32}$/D', $sid) || isset($seen[$sid])
+                    || ($item['account_sid'] ?? null) !== $accountSid || ($item['parent_sid'] ?? null) !== $messageSid
+                    || ! is_string($item['content_type'] ?? null) || $item['content_type'] === '') {
+                    throw new RuntimeException('Twilio returned an invalid message attachment; nothing was imported.');
+                }
+                $seen[$sid] = true;
+                $media[] = ['url' => $endpoint.'/Media/'.$sid, 'content_type' => $item['content_type']];
+            }
+        }
+
+        return ['message' => $payload, 'media' => $media];
+    }
+
     public function hasValidWebhookSignature(Request $request): bool
     {
         if ((bool) config('services.twilio.bypass', false)) {
