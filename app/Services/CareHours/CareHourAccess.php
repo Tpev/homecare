@@ -61,6 +61,7 @@ class CareHourAccess
     {
         // Existing issued hours remain usable if the pilot list or sales switches change.
         // Ownership is checked by each caller's normal family authorization.
-        return $this->allows($user) || $account->lots()->exists();
+        return $this->allows($user) || \App\Models\CareHourLot::query()
+            ->whereIn('care_hour_account_id', $account->familySourceIds())->exists();
     }
 }

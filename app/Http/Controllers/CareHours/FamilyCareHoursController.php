@@ -9,10 +9,7 @@ use App\Models\CareBookingTimeCorrection;
 use App\Models\CareHourAccount;
 use App\Models\CareHourContributionLink;
 use App\Models\CareHourPurchase;
-use App\Models\CareHourRecipientLink;
 use App\Models\CarePlan;
-use App\Models\CareRecipient;
-use App\Models\CareRecipientProfile;
 use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\CareHours\CareHourAccess;
 use App\Services\CareHours\CareHourContributionService;
@@ -24,9 +21,7 @@ use App\Services\CareHours\CareHourScheduleChangeFundingService;
 use App\Services\CareHours\PrepaidBookingFundingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class FamilyCareHoursController extends Controller
@@ -57,21 +52,14 @@ class FamilyCareHoursController extends Controller
         ]);
     }
 
-    public function buy(Request $request): View|RedirectResponse
+    public function buy(Request $request): RedirectResponse
     {
         abort_unless(app(CareHourAccess::class)->canBuy($request->user()), 403);
-        $accounts = $this->identities->accountsFor($request->user());
-        $targets = $this->purchaseTargets($request, $accounts);
-        if ($targets->count() === 1 && $targets->first()['type'] === 'account') {
-            return redirect()->route('family.care-hours.packages', $targets->first()['account']);
-        }
+        $account = $this->identities->walletFor($request->user());
 
-        return view('care-hours.family.index', [
-            'buyFlow' => true,
-            'accounts' => $accounts,
-            'purchaseTargets' => $targets,
-            'profileCreateUrl' => route('family.care-profiles.create'),
-        ]);
+        return $account
+            ? redirect()->route('family.care-hours.packages', $account)
+            : redirect()->route('family.care-hours.index');
     }
 
     public function startBuy(Request $request): RedirectResponse
@@ -81,118 +69,76 @@ class FamilyCareHoursController extends Controller
             'target' => ['nullable', 'regex:/^(account|profile|recipient):[1-9][0-9]*$/'],
             'balance_target' => ['nullable', 'regex:/^(new|[1-9][0-9]*)$/'],
         ]);
-        $accounts = $this->identities->accountsFor($request->user());
-        $targets = $this->purchaseTargets($request, $accounts);
-        if (empty($input['target']) && $targets->count() !== 1) {
-            return redirect()->route('family.care-hours.buy');
+        // Older tabs can still submit a recipient. Validate its ownership, but
+        // new purchases always belong to the current family's shared wallet.
+        if (! empty($input['target'])) {
+            $this->assertLegacyTarget($request, $input['target']);
         }
-        $target = empty($input['target']) ? $targets->first() : $targets->firstWhere('key', $input['target']);
-        // Re-resolve the canonical choices on POST; never trust a hidden ID or
-        // silently merge two people because their names happen to match.
-        abort_unless($target, 403);
-        if ($target['type'] === 'account') {
-            return redirect()->route('family.care-hours.packages', $target['account']);
+        if (! empty($input['balance_target']) && $input['balance_target'] !== 'new') {
+            $this->identities->assertAccess(CareHourAccount::findOrFail($input['balance_target']), $request->user());
         }
-        if ($target['requires_balance_choice'] && empty($input['balance_target'])) {
-            return redirect()->route('family.care-hours.buy')->withErrors([
-                'balance_target' => 'Choose an existing balance or confirm a separate care balance.',
-            ])->withInput($input);
-        }
+        $account = $this->identities->ensureFamilyWallet($request->user());
 
-        // Keep identity linking and enrollment on the existing audited POST
-        // path. Merely opening the dashboard or buy page never creates a balance.
-        $request->merge([
-            'recipient' => $target['key'],
-            'balance_target' => $target['type'] === 'profile' ? 'new' : ($input['balance_target'] ?? 'new'),
-            'intent' => 'buy',
-        ]);
-
-        return $this->enroll($request);
+        return redirect()->route('family.care-hours.packages', $account);
     }
 
-    private function purchaseTargets(Request $request, Collection $accounts): Collection
+    private function assertLegacyTarget(Request $request, string $target): void
     {
-        $accounts->loadMissing('recipientLinks.recipient');
-        $targets = $accounts->filter(fn ($account) => $account->active && $account->currency === config('care_hours.currency', 'usd'))
-            ->map(fn ($account) => [
-                'key' => 'account:'.$account->id, 'name' => $account->display_name, 'detail' => 'Existing balance',
-                'type' => 'account', 'account' => $account, 'requires_balance_choice' => false,
-            ])->values();
-        if (! app(CareHourAccess::class)->canEnroll($request->user())) {
-            return $targets;
+        [$type, $id] = explode(':', $target);
+        if ($type === 'account') {
+            $this->identities->assertAccess(CareHourAccount::findOrFail($id), $request->user());
+        } else {
+            $choices = $type === 'profile' ? $this->identities->profilesFor($request->user()) : $this->identities->recipientsFor($request->user());
+            abort_unless($choices->contains('id', (int) $id), 403);
         }
-
-        $profileIds = $accounts->pluck('care_recipient_profile_id')->filter()->merge(
-            $accounts->flatMap(fn ($account) => $account->recipientLinks->pluck('recipient.care_recipient_profile_id')->filter())
-        )->unique();
-        foreach ($this->identities->profilesFor($request->user())->reject(fn ($profile) => $profileIds->contains($profile->id)) as $profile) {
-            $targets->push([
-                'key' => 'profile:'.$profile->id, 'name' => $profile->displayName(), 'detail' => 'Care profile',
-                'type' => 'profile', 'account' => null, 'requires_balance_choice' => false,
-                'review_url' => route('family.care-profiles.edit', $profile),
-            ]);
-        }
-        $recipients = $this->identities->recipientsFor($request->user())->filter(fn ($recipient) => ! $recipient->care_recipient_profile_id);
-        $linkedIds = CareHourRecipientLink::query()->whereIn('care_recipient_id', $recipients->modelKeys())->pluck('care_recipient_id');
-        foreach ($recipients->reject(fn ($recipient) => $linkedIds->contains($recipient->id)) as $recipient) {
-            $targets->push([
-                'key' => 'recipient:'.$recipient->id, 'name' => $recipient->full_name, 'detail' => 'Care request #'.$recipient->care_request_id,
-                'type' => 'recipient', 'account' => null, 'requires_balance_choice' => $accounts->isNotEmpty(),
-            ]);
-        }
-
-        return $targets;
     }
 
     public function enroll(Request $request): RedirectResponse
     {
         abort_unless(app(CareHourAccess::class)->canEnroll($request->user()), 403);
-        $accounts = $this->identities->accountsFor($request->user());
         $input = $request->validate([
             'recipient' => ['required', 'regex:/^(profile|recipient):[1-9][0-9]*$/'],
-            'balance_target' => [$accounts->isNotEmpty() ? 'required' : 'nullable', 'regex:/^(new|[1-9][0-9]*)$/'],
+            'balance_target' => ['nullable', 'regex:/^(new|[1-9][0-9]*)$/'],
             'intent' => ['nullable', 'in:buy'],
         ]);
-        [$type, $id] = explode(':', $input['recipient']);
-        if (filled($input['balance_target'] ?? null) && $input['balance_target'] !== 'new') {
-            $account = $accounts->firstWhere('id', (int) $input['balance_target']);
-            abort_unless($account, 403);
-            if ($type === 'profile') {
-                throw ValidationException::withMessages(['recipient' => 'This care profile is a separate person. Choose their own care balance.']);
-            }
-            $this->identities->linkRecipient($account, CareRecipient::query()->findOrFail($id), $request->user());
-
-            return redirect()->route(($input['intent'] ?? null) === 'buy' ? 'family.care-hours.packages' : 'family.care-hours.show', $account)
-                ->with('status', 'This care request is now linked to the existing care balance.');
+        $this->assertLegacyTarget($request, $input['recipient']);
+        if (! empty($input['balance_target']) && $input['balance_target'] !== 'new') {
+            $this->identities->assertAccess(CareHourAccount::findOrFail($input['balance_target']), $request->user());
         }
-        $account = $type === 'profile'
-            ? $this->identities->enrollProfile(CareRecipientProfile::query()->findOrFail($id), $request->user())
-            : $this->identities->enroll(CareRecipient::query()->findOrFail($id), $request->user());
+        $account = $this->identities->ensureFamilyWallet($request->user());
 
         return redirect()->route(($input['intent'] ?? null) === 'buy' ? 'family.care-hours.packages' : 'family.care-hours.show', $account);
     }
 
-    public function show(Request $request, CareHourAccount $account): View
+    public function show(Request $request, CareHourAccount $account): View|RedirectResponse
     {
         $this->identities->assertAccess($account, $request->user());
 
-        abort_unless(app(CareHourAccess::class)->allows($request->user()) || $account->lots()->exists() || $account->purchases()->exists(), 404);
+        $wallet = $this->identities->walletFor($request->user());
+        if ($wallet && $wallet->id !== $account->id) {
+            return redirect()->route('family.care-hours.show', $wallet);
+        }
+        abort_unless(app(CareHourAccess::class)->allows($request->user()) || CareHourPurchase::whereIn('care_hour_account_id', $account->familySourceIds())->exists(), 404);
 
         return view('care-hours.family.show', [
             'account' => $account,
             'accounts' => $this->identities->accountsFor($request->user()),
             'balance' => $this->ledger->balance($account),
             'history' => $this->ledger->history($account)->where('type', '!=', 'processing_fee')->paginate(15),
-            'purchases' => CareHourPurchase::query()->where('care_hour_account_id', $account->id)->latest()->limit(10)->get(),
+            'purchases' => CareHourPurchase::query()->whereIn('care_hour_account_id', $account->familySourceIds())->latest()->limit(10)->get(),
             'isOwner' => $this->identities->isOwner($account, $request->user()),
-            'links' => CareHourContributionLink::query()->where('care_hour_account_id', $account->id)->latest()->get(),
+            'links' => CareHourContributionLink::query()->whereIn('care_hour_account_id', $account->familySourceIds())->latest()->get(),
             'eligibilityReason' => app(CareHourEligibilityService::class)->reasonFor($account),
         ]);
     }
 
-    public function packages(Request $request, CareHourAccount $account): View
+    public function packages(Request $request, CareHourAccount $account): View|RedirectResponse
     {
         $this->identities->assertAccess($account, $request->user());
+        $wallet = $this->identities->walletFor($request->user());
+        if ($wallet && $wallet->id !== $account->id) {
+            return redirect()->route('family.care-hours.packages', $wallet);
+        }
         abort_unless(app(CareHourAccess::class)->canBuy($request->user()) && $account->active, 403);
         $reason = app(CareHourEligibilityService::class)->reasonFor($account);
 
@@ -250,7 +196,7 @@ class FamilyCareHoursController extends Controller
     public function revokeLink(Request $request, CareHourAccount $account, CareHourContributionLink $link): RedirectResponse
     {
         $this->identities->assertAccess($account, $request->user());
-        abort_unless((int) $link->care_hour_account_id === (int) $account->id, 404);
+        abort_unless(in_array((int) $link->care_hour_account_id, $account->familySourceIds(), true), 404);
         $this->contributions->revoke($link, $request->user());
 
         return back()->with('status', 'This link is disabled. Completed contributions remain available.');

@@ -44,6 +44,7 @@ class PrepaidBookingSettlementService
                 throw new PaymentException('This visit funding was released. Review it before settlement.');
             }
             $minutes = max(0, (int) ($booking->worked_minutes ?? $booking->expected_minutes ?? 0));
+            \App\Models\FamilyAccount::whereKey($record->account->family_account_id)->lockForUpdate()->firstOrFail();
             \App\Models\CareHourAccount::whereKey($record->care_hour_account_id)->lockForUpdate()->firstOrFail();
             $current = CareHourSettlement::where('care_booking_id', $booking->id)->lockForUpdate()->first();
             $original = $current ? (int) $current->prepaid_minutes : (int) $record->reserved_minutes;

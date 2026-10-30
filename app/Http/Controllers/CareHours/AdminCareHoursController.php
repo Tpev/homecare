@@ -16,6 +16,7 @@ use App\Services\CareHours\PrepaidBookingSettlementService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Stripe\Exception\ApiErrorException;
 
@@ -27,20 +28,43 @@ class AdminCareHoursController extends Controller
         $attentionOnly = $request->boolean('attention');
         $pendingSettlements = $this->settlementIssues();
         $fundingIssues = $this->fundingIssues();
+        $sourceIds = function ($query): void {
+            $query->select('source.id')->from('care_hour_accounts as source')
+                ->whereColumn('source.family_account_id', 'care_hour_accounts.family_account_id')
+                ->whereColumn('source.currency', 'care_hour_accounts.currency');
+        };
+        $purchaseIssues = $this->purchaseIssues(CareHourPurchase::query())->whereIn('care_hour_account_id', $sourceIds);
+        $fundingIssues->whereIn('care_hour_account_id', $sourceIds);
+        $pendingSettlements->whereIn('care_hour_booking_fundings.care_hour_account_id', $sourceIds);
         $accounts = CareHourAccount::query()->with('familyAccount.owner')
-            ->withSum('ledgerEntries as available_minutes', 'available_delta')
-            ->withCount(['purchases as purchase_attention_count' => fn ($query) => $this->purchaseIssues($query)])
-            ->selectSub((clone $fundingIssues)->selectRaw('count(*)')->whereColumn('care_hour_account_id', 'care_hour_accounts.id'), 'funding_attention_count')
-            ->selectSub((clone $pendingSettlements)->selectRaw('count(*)')->whereColumn('care_hour_booking_fundings.care_hour_account_id', 'care_hour_accounts.id'), 'settlement_attention_count')
+            ->where('currency', config('care_hours.currency', 'usd'))
+            ->where('id', function ($query): void {
+                $query->select('canonical.id')->from('care_hour_accounts as canonical')
+                    ->whereColumn('canonical.family_account_id', 'care_hour_accounts.family_account_id')
+                    ->whereColumn('canonical.currency', 'care_hour_accounts.currency');
+                if (Schema::hasTable('care_hour_family_wallets')) {
+                    $query->leftJoin('care_hour_family_wallets as wallet', 'wallet.family_account_id', '=', 'canonical.family_account_id')
+                        ->orderByRaw('CASE WHEN canonical.id = wallet.care_hour_account_id THEN 0 ELSE 1 END');
+                }
+                $query->orderByDesc('canonical.active')->orderBy('canonical.id')->limit(1);
+            })
+            ->select('care_hour_accounts.*')
+            ->selectSub((clone $purchaseIssues)->selectRaw('count(*)'), 'purchase_attention_count')
+            ->selectSub((clone $fundingIssues)->selectRaw('count(*)'), 'funding_attention_count')
+            ->selectSub((clone $pendingSettlements)->selectRaw('count(*)'), 'settlement_attention_count')
             ->when($attentionOnly, fn ($query) => $query->where(fn ($issues) => $issues
-                ->whereHas('purchases', fn ($purchase) => $this->purchaseIssues($purchase))
-                ->orWhereIn('id', (clone $fundingIssues)->select('care_hour_account_id'))
-                ->orWhereIn('id', (clone $pendingSettlements)->select('care_hour_booking_fundings.care_hour_account_id'))))
+                ->whereExists((clone $purchaseIssues)->selectRaw('1')->toBase())
+                ->orWhereExists((clone $fundingIssues)->selectRaw('1')->toBase())
+                ->orWhereExists((clone $pendingSettlements)->selectRaw('1')->toBase())))
             ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search) {
                 $query->where('display_name', 'like', '%'.addcslashes($search, '%_\\').'%')
                     ->orWhere('id', ctype_digit($search) ? (int) $search : 0)
-                    ->orWhereHas('familyAccount.owner', fn ($owner) => $owner->where('email', $search));
+                    ->orWhereHas('familyAccount.owner', fn ($owner) => $owner->where('email', $search)
+                        ->orWhere('name', 'like', '%'.addcslashes($search, '%_\\').'%'));
             }))->latest()->paginate(25)->withQueryString();
+        $accounts->getCollection()->each(function (CareHourAccount $account): void {
+            $account->available_minutes = app(CareHourLedgerService::class)->balance($account)['available_minutes'];
+        });
 
         return view('care-hours.admin.index', compact('accounts', 'search', 'attentionOnly'));
     }
@@ -48,13 +72,13 @@ class AdminCareHoursController extends Controller
     public function show(CareHourAccount $account, CareHourLedgerService $ledger): View
     {
         $fundings = CareHourBookingFunding::query()->with(['booking', 'operations' => fn ($query) => $query->latest()->limit(25)])
-            ->where('care_hour_account_id', $account->id)->latest()->paginate(20, ['*'], 'visits')->withQueryString();
+            ->whereIn('care_hour_account_id', $account->familySourceIds())->latest()->paginate(20, ['*'], 'visits')->withQueryString();
 
         return view('care-hours.admin.show', [
             'account' => $account->load('familyAccount.owner'),
             'balance' => $ledger->balance($account),
             'history' => $ledger->history($account)->paginate(30, ['*'], 'activity')->withQueryString(),
-            'purchases' => CareHourPurchase::query()->where('care_hour_account_id', $account->id)->latest()->paginate(20, ['*'], 'purchases')->withQueryString(),
+            'purchases' => CareHourPurchase::query()->whereIn('care_hour_account_id', $account->familySourceIds())->latest()->paginate(20, ['*'], 'purchases')->withQueryString(),
             'fundings' => $fundings,
             'settlements' => CareHourSettlement::query()->whereIn('care_hour_booking_funding_id', $fundings->pluck('id'))->get(),
             'audit' => FamilyAccountActivityLog::query()->where('family_account_id', $account->family_account_id)
@@ -64,7 +88,7 @@ class AdminCareHoursController extends Controller
 
     public function recheck(Request $request, CareHourAccount $account, CareHourPurchase $purchase, CareHourPurchaseService $purchases): RedirectResponse
     {
-        abort_unless((int) $purchase->care_hour_account_id === (int) $account->id, 404);
+        abort_unless(in_array((int) $purchase->care_hour_account_id, $account->familySourceIds(), true), 404);
         $input = $request->validate(['reason' => ['required', 'string', 'min:5', 'max:500']]);
         FamilyAccountActivityLog::query()->create([
             'family_account_id' => $account->family_account_id,
@@ -89,7 +113,7 @@ class AdminCareHoursController extends Controller
 
     public function correct(Request $request, CareHourAccount $account, CareHourPurchase $purchase, CareHourPurchaseService $purchases): RedirectResponse
     {
-        abort_unless((int) $purchase->care_hour_account_id === (int) $account->id, 404);
+        abort_unless(in_array((int) $purchase->care_hour_account_id, $account->familySourceIds(), true), 404);
         $input = $request->validate(['reason' => ['required', 'string', 'min:10', 'max:1000'], 'confirm' => ['accepted']]);
         try {
             $purchases->correctUnfulfillablePurchase($purchase, $request->user(), $input['reason']);
@@ -104,7 +128,7 @@ class AdminCareHoursController extends Controller
 
     public function recheckVisit(Request $request, CareHourAccount $account, CareHourBookingFunding $funding, PrepaidBookingFundingService $coverage, PrepaidBookingSettlementService $settlements): RedirectResponse
     {
-        abort_unless((int) $funding->care_hour_account_id === (int) $account->id, 404);
+        abort_unless(in_array((int) $funding->care_hour_account_id, $account->familySourceIds(), true), 404);
         $input = $request->validate(['reason' => ['required', 'string', 'min:5', 'max:500']]);
         FamilyAccountActivityLog::create([
             'family_account_id' => $account->family_account_id, 'actor_user_id' => $request->user()->id,

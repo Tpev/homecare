@@ -11,6 +11,7 @@ class CareHourHealthService
 {
     private const REQUIRED_SCHEMA = [
         'care_hour_accounts' => ['id'],
+        'care_hour_family_wallets' => ['family_account_id', 'care_hour_account_id'],
         'care_hour_recipient_links' => ['id'],
         'care_hour_allocations' => ['id'],
         'care_hour_ledger_entries' => ['id'],

@@ -12,6 +12,7 @@ use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
 use App\Models\CaregiverProfile;
 use App\Models\CareHourAccount;
+use App\Models\CareHourPaymentOperation;
 use App\Models\CareHourPurchase;
 use App\Models\CareHourSettlement;
 use App\Models\CareRecipientProfile;
@@ -91,6 +92,9 @@ function bootIsolated(string $database, string $directory, array $settings): voi
         $_ENV[$key] = $_SERVER[$key] = $value;
     }
     $app = require dirname(__DIR__, 2).'/bootstrap/app.php';
+    // The disposable runner never reads the application's normal environment.
+    $app->useEnvironmentPath($directory);
+    $app->loadEnvironmentFrom('.env');
     $app->addAbsoluteCachePathPrefix(dirname(__DIR__, 2));
     $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
     check(config('database.default') === 'mysql' && config('database.connections.mysql.database') === $database,
@@ -207,6 +211,18 @@ function runJob(array $job): mixed
 
             return true;
         })(),
+        'cancel_funding' => DB::transaction(function () use ($booking) {
+            $current = CareBooking::lockForUpdate()->findOrFail($booking->id);
+            $current->update(['status' => CareBooking::STATUS_CANCELLED, 'cancelled_at' => now()]);
+            app(PrepaidBookingFundingService::class)->release($current);
+
+            return true;
+        }, 3),
+        'fail_shortfall' => (function () use ($job) {
+            app(PrepaidBookingFundingService::class)->failShortfall($job['operation']);
+
+            return true;
+        })(),
         // A stale reservation-release callback must never erase approved usage.
         'release_reservation' => (function () use ($booking) {
             app(CareHourLedgerService::class)->release($booking);
@@ -243,15 +259,30 @@ function worker(string $database, string $directory, string $jobId): never
     $held = false;
     $lockTimes = [];
     $familyLockTimes = [];
-    $contentionTable = $job['action'] === 'self_claim' ? 'family_accounts' : 'care_hour_accounts';
-    DB::listen(function ($query) use (&$held, &$lockTimes, &$familyLockTimes, $contentionTable) {
+    $bookingLockTimes = [];
+    $bookingLockAcquiredAt = [];
+    $orderedRelease = in_array($job['action'], ['cancel_funding', 'fail_shortfall'], true);
+    $contentionTable = $orderedRelease ? 'care_bookings' : ($job['action'] === 'self_claim' ? 'family_accounts' : 'care_hour_accounts');
+    DB::listen(function ($query) use (&$held, &$lockTimes, &$familyLockTimes, &$bookingLockTimes, &$bookingLockAcquiredAt, $contentionTable, $directory, $job) {
         if (str_contains(strtolower($query->sql), 'for update')) {
             $lockTimes[] = round($query->time, 2);
             if (str_contains($query->sql, 'family_accounts')) {
                 $familyLockTimes[] = round($query->time, 2);
             }
+            if (str_contains($query->sql, 'care_bookings')) {
+                $bookingLockTimes[] = round($query->time, 2);
+                $bookingLockAcquiredAt[] = microtime(true);
+            }
             if (! $held && str_contains($query->sql, $contentionTable)) {
                 $held = true;
+                if ($job['first_booking_lock'] ?? false) {
+                    file_put_contents($directory.'/'.$job['race'].'.booking-held', (string) getmypid());
+                    $deadline = microtime(true) + 10;
+                    while (! is_file($directory.'/'.$job['race'].'.competitor-starting')) {
+                        check(microtime(true) < $deadline, 'Ordered lock competitor did not start.');
+                        usleep(10000);
+                    }
+                }
                 // Deterministically keep the real row lock long enough for its competitor to wait.
                 usleep(300000);
             }
@@ -265,6 +296,14 @@ function worker(string $database, string $directory, string $jobId): never
     }
     $result = ['pid' => getmypid(), 'started_at' => microtime(true)];
     try {
+        if ($job['wait_for_booking_lock'] ?? false) {
+            $deadline = microtime(true) + 10;
+            while (! is_file($directory.'/'.$job['race'].'.booking-held')) {
+                check(microtime(true) < $deadline, 'Ordered booking lock was not acquired.');
+                usleep(10000);
+            }
+            file_put_contents($directory.'/'.$job['race'].'.competitor-starting', (string) getmypid());
+        }
         $result['value'] = runJob($job);
         $result['outcome'] = 'success';
     } catch (ValidationException|\App\Exceptions\Payments\PaymentException $error) {
@@ -278,6 +317,8 @@ function worker(string $database, string $directory, string $jobId): never
     $result['finished_at'] = microtime(true);
     $result['locking_query_ms'] = $lockTimes;
     $result['family_locking_query_ms'] = $familyLockTimes;
+    $result['booking_locking_query_ms'] = $bookingLockTimes;
+    $result['booking_lock_acquired_at'] = $bookingLockAcquiredAt;
     file_put_contents($directory.'/'.$jobId.'.result.json', json_encode($result, JSON_PRETTY_PRINT));
     exit($result['outcome'] === 'error' ? 1 : 0);
 }
@@ -326,8 +367,9 @@ function race(string $database, string $directory, string $name, array $jobs): a
 function assertConservation(CareHourAccount $account): void
 {
     $balance = $account->balance();
-    check(array_sum($balance) === (int) $account->lots()->where('status', '!=', 'reversed')->sum('total_minutes'), 'Minute conservation failed.');
-    foreach ($account->lots as $lot) {
+    $lots = \App\Models\CareHourLot::whereIn('care_hour_account_id', $account->familySourceIds())->get();
+    check(array_sum($balance) === (int) $lots->where('status', '!=', 'reversed')->sum('total_minutes'), 'Minute conservation failed.');
+    foreach ($lots as $lot) {
         $end = 0;
         foreach ($lot->allocations()->whereIn('status', ['reserved', 'used'])->orderBy('start_minute')->get() as $allocation) {
             check($allocation->start_minute >= $end, 'Two active allocations overlap.');
@@ -353,13 +395,10 @@ function selfClaimCheck(string $database, string $directory): array
     $familyLockWait = max(array_merge(...array_column($results, 'family_locking_query_ms')));
     check($familyLockWait >= 200, 'Self-claim workers did not contend on the real family lock.');
     check(count(array_filter($results, fn ($result) => $result['outcome'] === 'success')) >= 1, 'Neither concurrent self claim succeeded.');
-    check(CareRecipientProfile::where('family_account_id', $family->id)->count() === 1
-        && CareHourAccount::where('family_account_id', $family->id)->count() === 1, 'Concurrent self claims created duplicate identities.');
+    check(CareRecipientProfile::where('family_account_id', $family->id)->count() === 0
+        && CareHourAccount::where('family_account_id', $family->id)->count() === 1, 'Concurrent gift claims must create one family wallet without a care profile.');
     $account = CareHourAccount::where('family_account_id', $family->id)->sole();
-    $profile = CareRecipientProfile::where('family_account_id', $family->id)->sole();
-    check($account->care_recipient_profile_id === $profile->id && $profile->created_by_user_id === $actor->id
-        && $profile->recipient_is_requester && $profile->status === 'draft' && $profile->latest_ready_version_id === null
-        && $profile->sharing_acknowledged_at === null, 'Self claim did not retain one private self identity.');
+    check($account->care_recipient_profile_id === null, 'Receiving credit must not create a recipient identity.');
     $requoted = 0;
     foreach ([[$firstPurchase, $firstCode], [$secondPurchase, $secondCode]] as $index => [$purchase, $code]) {
         if ($results[$index]['outcome'] === 'rejected') {
@@ -383,9 +422,76 @@ function selfClaimCheck(string $database, string $directory): array
     assertConservation($account);
 
     return ['independent_pids' => array_column($results, 'pid'), 'overlapping_workers' => true,
-        'family_lock_wait_ms' => $familyLockWait, 'profiles' => 1, 'accounts' => 1, 'distinct_paid_gifts' => 2,
+        'family_lock_wait_ms' => $familyLockWait, 'profiles' => 0, 'accounts' => 1, 'distinct_paid_gifts' => 2,
         'lots' => 2, 'welcome_awards' => 1, 'paid_minutes' => 1200, 'bonus_minutes' => 60,
-        'available_minutes' => 1260, 'private_draft' => true, 'confirmation_replays_safe' => true, 'stale_quote_reviews' => $requoted];
+        'available_minutes' => 1260, 'no_recipient_required' => true, 'confirmation_replays_safe' => true, 'stale_quote_reviews' => $requoted];
+}
+
+function fundingReleaseCheck(string $database, string $directory): array
+{
+    enableTestFeature();
+    $report = [];
+    $cardRowsBefore = hash('sha256', CareBookingPayment::orderBy('id')->get()->toJson());
+    foreach (['cancel_funding', 'fail_shortfall'] as $firstAction) {
+        [$wallet, $owner, $booking] = seedAccount();
+        $source = CareHourAccount::create(['family_account_id' => $wallet->family_account_id,
+            'display_name' => 'Historical second care balance', 'currency' => 'usd']);
+        credit($wallet, $owner, 35);
+        credit($source, $owner, 25);
+        $service = app(PrepaidBookingFundingService::class);
+        $service->selectForBooking($booking, $wallet, $owner);
+        $funding = $service->prepare($booking);
+        $operation = CareHourPaymentOperation::create(['public_id' => (string) Str::uuid(), 'operation_key' => (string) Str::uuid(),
+            'care_hour_booking_funding_id' => $funding->id, 'kind' => 'shortfall', 'status' => 'checkout',
+            'amount_cents' => $funding->shortfall_cents, 'currency' => 'usd', 'metadata' => ['funding_revision' => $funding->revision]]);
+        check($funding->reserved_minutes === 60 && $funding->shortfall_minutes === 60, 'Expected a pooled mixed-funding fixture.');
+        $ranges = DB::table('care_hour_allocations')->where('care_booking_id', $booking->id)->orderBy('id')->get();
+        check($ranges->count() === 2 && $ranges->pluck('care_hour_account_id')->all() === [$wallet->id, $source->id], 'Both historical sources must fund the visit.');
+        $common = ['booking' => $booking->id, 'operation' => $operation->public_id];
+        $secondAction = $firstAction === 'cancel_funding' ? 'fail_shortfall' : 'cancel_funding';
+        $results = race($database, $directory, 'pooled-release-'.$firstAction, [
+            $common + ['action' => $firstAction, 'first_booking_lock' => true],
+            $common + ['action' => $secondAction, 'wait_for_booking_lock' => true],
+        ]);
+        check(count(array_filter($results, fn ($result) => $result['outcome'] === 'success')) === 2, 'Both concurrent callbacks must succeed.');
+        check($results[0]['booking_lock_acquired_at'][0] < $results[1]['booking_lock_acquired_at'][0], 'Callbacks acquired their locks in the wrong order.');
+        $wait = max($results[1]['booking_locking_query_ms']);
+        check($wait >= 200, 'The competing callback did not wait on a real MySQL booking lock.');
+        foreach ([$firstAction, $secondAction] as $index => $action) {
+            check(count($results[$index]['booking_locking_query_ms']) === ($action === 'cancel_funding' ? 2 : 1), 'A transaction retried or reacquired its initial lock unexpectedly.');
+        }
+        $funding->refresh();
+        check($funding->status === 'released' && $funding->reserved_minutes === 0, 'Cancellation must leave funding released.');
+        check($booking->fresh()->status === CareBooking::STATUS_CANCELLED && $operation->fresh()->status === 'failed', 'Final callback states are incorrect.');
+        check($wallet->balance() === ['available_minutes' => 60, 'reserved_minutes' => 0, 'used_minutes' => 0, 'held_minutes' => 0], 'Pooled minutes were not restored exactly once.');
+        $released = DB::table('care_hour_allocations')->where('care_booking_id', $booking->id)->orderBy('id')->get();
+        foreach ($ranges as $index => $range) {
+            $current = $released[$index];
+            check($current->status === 'released' && $current->care_hour_account_id === $range->care_hour_account_id
+                && $current->care_hour_lot_id === $range->care_hour_lot_id && $current->start_minute === $range->start_minute
+                && $current->minutes === $range->minutes, 'Release changed a historical source range.');
+        }
+        $releaseEntries = app(CareHourLedgerService::class)->history($wallet)->where('type', 'release')->reorder('care_hour_account_id')->get();
+        check($releaseEntries->count() === 2 && $releaseEntries->pluck('care_hour_account_id')->all() === [$wallet->id, $source->id]
+            && $releaseEntries->sum('minutes') === 60, 'Source release ledger was duplicated or repointed.');
+        $beforeReplay = hash('sha256', json_encode([\Illuminate\Support\Arr::except($funding->fresh()->getAttributes(), ['updated_at']), $released->toArray(),
+            app(CareHourLedgerService::class)->history($wallet)->get()->toArray()]));
+        $service->failShortfall($operation->public_id);
+        $service->release($booking->fresh());
+        $service->failShortfall($operation->public_id);
+        check($beforeReplay === hash('sha256', json_encode([\Illuminate\Support\Arr::except($funding->fresh()->getAttributes(), ['updated_at']),
+            DB::table('care_hour_allocations')->where('care_booking_id', $booking->id)->orderBy('id')->get()->toArray(),
+            app(CareHourLedgerService::class)->history($wallet)->get()->toArray()])), 'A late callback changed released credit or funding.');
+        assertConservation($wallet);
+        $report[$firstAction.'_first'] = ['independent_pids' => array_column($results, 'pid'), 'overlapping_workers' => true,
+            'booking_lock_wait_ms' => $wait, 'transaction_retries' => 0, 'source_accounts' => 2,
+            'restored_minutes' => 60, 'source_release_entries' => 2, 'funding_status' => 'released',
+            'original_ranges_preserved' => true, 'late_replays_unchanged' => true];
+    }
+    check($cardRowsBefore === hash('sha256', CareBookingPayment::orderBy('id')->get()->toJson()), 'Existing card payment rows changed.');
+    $report['existing_card_rows_unchanged'] = true;
+
+    return $report;
 }
 
 function concurrencyChecks(string $database, string $directory): array
@@ -426,6 +532,39 @@ function concurrencyChecks(string $database, string $directory): array
     assertConservation($account);
     $report['competing_reservations'] = ['reserved_per_visit' => $minutes, 'overlapping_allocations' => false];
 
+    // Different historical recipient accounts must contend on the same family wallet.
+    [$account, $family, $firstBooking] = seedAccount();
+    [, , $secondBooking] = seedBooking($family);
+    $legacy = CareHourAccount::create(['family_account_id' => $account->family_account_id,
+        'display_name' => 'Historical second recipient', 'currency' => 'usd', 'active' => true]);
+    credit($account, $family, 90);
+    credit($legacy, $family, 90);
+    $reservations = race($database, $directory, 'pooled-competing-reservations', [
+        ['action' => 'reserve', 'account' => $account->id, 'booking' => $firstBooking->id, 'minutes' => 120],
+        ['action' => 'reserve', 'account' => $legacy->id, 'booking' => $secondBooking->id, 'minutes' => 120],
+    ]);
+    $minutes = array_column($reservations, 'value');
+    sort($minutes);
+    check($minutes === [60, 120] && $account->balance()['reserved_minutes'] === 180, 'Pooled sources overspent their shared hours.');
+    check(DB::table('care_hour_allocations as a')->join('care_hour_lots as l', 'l.id', '=', 'a.care_hour_lot_id')
+        ->whereIn('a.care_booking_id', [$firstBooking->id, $secondBooking->id])
+        ->whereColumn('a.care_hour_account_id', '!=', 'l.care_hour_account_id')->count() === 0, 'An allocation lost its historical source identity.');
+    assertConservation($account);
+    $ledger->release($firstBooking);
+    $ledger->release($secondBooking);
+    check($account->balance()['available_minutes'] === 180, 'Pooled cancellation did not restore the exact hours.');
+    $report['pooled_competing_reservations'] = ['reserved_per_visit' => $minutes, 'source_accounts' => 2,
+        'source_identity_preserved' => true, 'restored_minutes' => 180];
+
+    $firstQuote = $purchases->quote($account, 10);
+    $otherQuote = $purchases->quote($legacy, 10);
+    $welcome = race($database, $directory, 'pooled-family-welcome', [
+        ['action' => 'purchase', 'account' => $account->id, 'actor' => $family->id, 'quote' => $firstQuote['quote_key'], 'request' => (string) Str::uuid()],
+        ['action' => 'purchase', 'account' => $legacy->id, 'actor' => $family->id, 'quote' => $otherQuote['quote_key'], 'request' => (string) Str::uuid()],
+    ]);
+    check(count(array_filter($welcome, fn ($r) => $r['outcome'] === 'success')) === 1, 'Different historical sources both won a family welcome bonus.');
+    $report['pooled_family_welcome'] = ['successful_welcome_purchases' => 1, 'source_accounts' => 2];
+
     [$account, $family, $booking] = seedAccount();
     credit($account, $family, 180);
     $funding->selectForBooking($booking, $account, $family);
@@ -454,6 +593,7 @@ function concurrencyChecks(string $database, string $directory): array
     check($account->balance()['available_minutes'] === 120 && $account->balance()['reserved_minutes'] === 0, 'Cancellation did not restore exactly the reserved hours.');
     assertConservation($account);
     $report['cancellation_replay'] = ['restored_minutes' => 120, 'settlements' => CareHourSettlement::where('care_booking_id', $booking->id)->count()];
+    $report['pooled_release_failure_callbacks'] = fundingReleaseCheck($database, $directory);
 
     [$firstAccount, $firstOwner] = seedAccount();
     [$secondAccount, $secondOwner] = seedAccount();
@@ -515,21 +655,29 @@ try {
     }
     $settings = connectionSettings();
     $root = dirname(__DIR__, 2);
-    if (($argv[1] ?? '') === '--self-claim-owned') {
+    if (in_array($argv[1] ?? '', ['--self-claim-owned', '--funding-release-owned'], true)) {
+        $target = $argv[1] === '--funding-release-owned' ? 'funding-release' : 'self-claim';
         $database = $argv[2] ?? '';
         check(getenv('CARE_HOURS_CONCURRENCY_PORT') === '33308', 'Targeted reuse requires the existing isolated daemon on port 33308.');
         check((bool) preg_match('/^care_hours_concurrency_[a-z0-9_]+$/', $database), 'Invalid disposable run name.');
         $directory = $root.'/tmp/care-hours-concurrency/'.$database;
+        $suffix = gmdate('Ymd_His').'-'.bin2hex(random_bytes(3));
+        $targetedReportFile = $directory.'/'.$target.'-'.$suffix.'.report.json';
+        $targetedFailureFile = $directory.'/'.$target.'-'.$suffix.'.failure.log';
         $owned = json_decode(file_get_contents($directory.'/report.json'), true, flags: JSON_THROW_ON_ERROR);
         check(($owned['database'] ?? '') === $database && ($owned['passed'] ?? false) && isset($owned['migration']), 'No successful owned migration rehearsal exists.');
-        $suffix = gmdate('Ymd_His').'-'.bin2hex(random_bytes(3));
-        $targetedReportFile = $directory.'/self-claim-'.$suffix.'.report.json';
-        $targetedFailureFile = $directory.'/self-claim-'.$suffix.'.failure.log';
+        if ($target === 'funding-release') {
+            $dataDirectory = serverConnection($settings)->query('SELECT @@datadir')->fetchColumn();
+            check(strtolower(str_replace('\\', '/', rtrim($dataDirectory, '/\\'))) === strtolower(str_replace('\\', '/', $root).'/tmp/care-hours-concurrency/mysql-isolated/data'),
+                'Targeted funding reuse requires the explicitly owned isolated MySQL data directory.');
+        }
+        $originalReportHash = hash_file('sha256', $directory.'/report.json');
         $report = ['database' => $database, 'provider_io' => false, 'original_report_preserved' => true,
             'created_at' => gmdate(DATE_ATOM), 'passed' => false];
         bootIsolated($database, $directory, $settings);
         $report['engine'] = (array) DB::selectOne('SELECT VERSION() AS version, @@version_comment AS edition, @@transaction_isolation AS isolation_level');
-        $report['concurrency'] = selfClaimCheck($database, $directory);
+        $report['concurrency'] = $target === 'funding-release' ? fundingReleaseCheck($database, $directory) : selfClaimCheck($database, $directory);
+        check(hash_file('sha256', $directory.'/report.json') === $originalReportHash, 'The original evidence report changed.');
         $report['passed'] = true;
         file_put_contents($targetedReportFile, json_encode($report, JSON_PRETTY_PRINT));
         echo json_encode($report + ['evidence_path' => $targetedReportFile], JSON_PRETTY_PRINT).PHP_EOL;

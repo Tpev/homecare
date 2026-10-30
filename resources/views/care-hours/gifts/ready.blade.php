@@ -8,7 +8,7 @@
                 @if($purchase->bonus_minutes > 0)
                     + {{ \App\Models\CareHourAccount::formatMinutes($purchase->bonus_minutes) }} free welcome care
                 @endif
-                for {{ $account->display_name }}.
+                to your family balance.
             </p>
             <p class="border-t border-[#D8E1D7] pt-4">Available balance: <strong>{{ \App\Models\CareHourAccount::formatMinutes($account->balance()['available_minutes']) }}</strong></p>
         </section>

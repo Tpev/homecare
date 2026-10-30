@@ -24,7 +24,7 @@
             <legend class="px-1 font-semibold">Payment when you book</legend>
             <label class="flex items-start gap-2">
                 <input type="radio" name="request-care-hour-funding" wire:model.live="careHourAccountId" value="{{ $careHoursAccount->id }}" @checked((int) $careHourAccountId === (int) $careHoursAccount->id) class="mt-1">
-                <span>Use care hours first · {{ \App\Models\CareHourAccount::formatMinutes($careHoursAccount->balance()['available_minutes']) }} for {{ $careHoursAccount->display_name }}</span>
+                <span>Use care hours first · {{ \App\Models\CareHourAccount::formatMinutes($careHoursAccount->balance()['available_minutes']) }} in your family balance</span>
             </label>
             <label class="flex items-center gap-2"><input type="radio" name="request-care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Use card instead</label>
             <p class="text-xs text-[#485E53]">Posting is free. Review any uncovered amount before booking.</p>

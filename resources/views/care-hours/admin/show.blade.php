@@ -1,6 +1,6 @@
 <x-app-layout><div class="hc-page space-y-6 py-8">
     <a href="{{ route('admin.care-hours.index') }}" class="hc-care-text-link">← Care hours</a>
-    <header><h1 class="font-display text-3xl font-semibold">{{ $account->display_name }}</h1><p class="mt-2 text-sm">Account #{{ $account->id }} · Family #{{ $account->family_account_id }} · {{ $account->familyAccount?->owner?->email }}</p></header>
+    <header><h1 class="font-display text-3xl font-semibold">{{ $account->familyAccount?->owner?->name ?: 'Family care balance' }}’s family wallet</h1><p class="mt-2 text-sm">Account #{{ $account->id }} · Family #{{ $account->family_account_id }} · {{ $account->familyAccount?->owner?->email }}</p></header>
     @include('care-hours.partials.messages')
     <dl class="grid grid-cols-2 gap-3 md:grid-cols-4">@foreach(['available_minutes' => 'Available', 'reserved_minutes' => 'Reserved', 'used_minutes' => 'Used', 'held_minutes' => 'On hold'] as $key => $label)<div class="rounded-xl border bg-white p-4"><dt class="text-sm text-slate-600">{{ $label }}</dt><dd class="mt-2 text-xl font-semibold">{{ \App\Models\CareHourAccount::formatMinutes($balance[$key]) }}</dd></div>@endforeach</dl>
     <section class="rounded-xl border bg-white p-5"><h2 class="text-xl font-semibold">Purchases and payment issues</h2><div class="mt-3 divide-y">

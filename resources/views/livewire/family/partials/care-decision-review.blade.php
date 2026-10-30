@@ -61,7 +61,7 @@
                 @if(!empty($careHourAccounts))
                     <fieldset class="space-y-2 rounded-xl border border-[#D8E1D7] p-4"><legend class="px-1 text-sm font-semibold">Payment for this visit</legend>
                         @foreach($careHourAccounts as $hoursAccount)
-                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', {{ $hoursAccount['id'] }})" value="{{ $hoursAccount['id'] }}" @checked((int) $careHourAccountId === (int) $hoursAccount['id'])>Use care hours · {{ \App\Models\CareHourAccount::formatMinutes($hoursAccount['available_minutes']) }} available for {{ $hoursAccount['display_name'] }}</label>
+                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', {{ $hoursAccount['id'] }})" value="{{ $hoursAccount['id'] }}" @checked((int) $careHourAccountId === (int) $hoursAccount['id'])>Use care hours · {{ \App\Models\CareHourAccount::formatMinutes($hoursAccount['available_minutes']) }} in your family balance</label>
                         @endforeach
                         <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Usual card payment</label>
                     @error('careHourAccountId')<p class="text-sm text-rose-800" role="alert">{{ $message }}</p>@enderror</fieldset>

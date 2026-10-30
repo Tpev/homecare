@@ -32,7 +32,7 @@ class GiftSelfClaimTest extends TestCase
         Notification::fake();
     }
 
-    public function test_new_family_can_inspect_then_claim_for_self_with_only_a_private_draft_identity(): void
+    public function test_new_family_can_inspect_then_claim_without_creating_a_care_profile(): void
     {
         [$purchase, $code] = $this->gift();
         $gifts = app(CareHourGiftService::class);
@@ -41,13 +41,8 @@ class GiftSelfClaimTest extends TestCase
         $actor = User::factory()->create(['role' => 'family', 'name' => 'New Mum']);
         $account = $gifts->resolveSelfClaimAccount($code, $actor);
         $this->assertSame($account->id, $gifts->resolveSelfClaimAccount($code, $actor)->id);
-        $profile = CareRecipientProfile::sole();
-        $this->assertSame('New Mum', $profile->full_name);
-        $this->assertTrue($profile->recipient_is_requester);
-        $this->assertSame($actor->id, $profile->created_by_user_id);
-        $this->assertSame(CareRecipientProfile::STATUS_DRAFT, $profile->status);
-        $this->assertNull($profile->sharing_acknowledged_at);
-        $this->assertNull($profile->latest_ready_version_id);
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertDatabaseCount('care_recipient_profile_versions', 0);
         $this->assertSame(0, $account->balance()['available_minutes']);
         $quote = $gifts->previewForClaim($code, $account, $actor);
@@ -63,7 +58,7 @@ class GiftSelfClaimTest extends TestCase
         $this->assertNull($actor->fresh()->stripe_customer_id);
     }
 
-    public function test_family_member_self_claim_does_not_reuse_the_owners_self_identity_or_same_name(): void
+    public function test_family_member_claim_uses_the_owners_shared_family_wallet(): void
     {
         $owner = User::factory()->create(['role' => 'family', 'name' => 'Same Name']);
         $family = app(FamilyAccountContext::class)->account($owner);
@@ -75,13 +70,12 @@ class GiftSelfClaimTest extends TestCase
         [, $code] = $this->gift();
         $gifts = app(CareHourGiftService::class);
         $account = $gifts->resolveSelfClaimAccount($code, $member);
-        $this->assertNotSame($ownerAccount->id, $account->id);
-        $profile = CareRecipientProfile::findOrFail($account->care_recipient_profile_id);
-        $this->assertSame($member->id, $profile->created_by_user_id);
-        $this->assertSame($family->id, $profile->family_account_id);
+        $this->assertSame($ownerAccount->id, $account->id);
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_recipient_profiles', 1);
         $quote = $gifts->previewForClaim($code, $account, $member);
         $gifts->claim($code, $account, $member, $quote['quote_key']);
-        $this->assertSame(0, $ownerAccount->balance()['available_minutes']);
+        $this->assertSame(660, $ownerAccount->balance()['available_minutes']);
         $this->assertSame(660, $account->balance()['available_minutes']);
         $this->assertSame($ownerProfile->id, $family->fresh()->default_care_recipient_profile_id);
     }
@@ -124,7 +118,7 @@ class GiftSelfClaimTest extends TestCase
         $this->assertSame(60, $quote['bonus_minutes']);
         $gifts->claim($ten, $account, $actor, $quote['quote_key']);
         $this->assertSame(960, $account->balance()['available_minutes']);
-        $this->assertDatabaseCount('care_recipient_profiles', 1);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertDatabaseCount('care_hour_accounts', 1);
     }
 
@@ -140,13 +134,13 @@ class GiftSelfClaimTest extends TestCase
         [, $code] = $this->gift();
         $resolved = app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $actor);
         $this->assertSame($account->id, $resolved->id);
-        $this->assertNotNull($resolved->care_recipient_profile_id);
-        $this->assertSame('Current Name', CareRecipientProfile::sole()->full_name);
+        $this->assertNull($resolved->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertDatabaseCount('care_hour_accounts', 1);
         $this->assertDatabaseCount('care_requests', 1);
     }
 
-    public function test_a_loved_one_created_by_the_actor_is_not_mistaken_for_the_actor(): void
+    public function test_claim_uses_shared_wallet_without_changing_a_loved_ones_profile(): void
     {
         $actor = User::factory()->create(['role' => 'family', 'name' => 'Same Name']);
         $lovedOne = app(CareRecipientProfileService::class)->saveDraft($actor, null, [
@@ -155,12 +149,12 @@ class GiftSelfClaimTest extends TestCase
         $lovedOneAccount = app(CareHourIdentityService::class)->enrollProfile($lovedOne, $actor);
         [, $code] = $this->gift();
         $account = app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $actor);
-        $this->assertNotSame($lovedOneAccount->id, $account->id);
-        $this->assertTrue(CareRecipientProfile::findOrFail($account->care_recipient_profile_id)->recipient_is_requester);
-        $this->assertDatabaseCount('care_recipient_profiles', 2);
+        $this->assertSame($lovedOneAccount->id, $account->id);
+        $this->assertFalse($lovedOne->fresh()->recipient_is_requester);
+        $this->assertDatabaseCount('care_recipient_profiles', 1);
     }
 
-    public function test_member_self_request_linked_to_another_persons_profile_is_rejected(): void
+    public function test_member_claim_does_not_depend_on_request_recipient_identity(): void
     {
         $owner = User::factory()->create(['role' => 'family']);
         $family = app(FamilyAccountContext::class)->account($owner);
@@ -174,12 +168,14 @@ class GiftSelfClaimTest extends TestCase
         $request->recipient()->create(['recipient_is_requester' => true, 'relationship_to_family' => 'self',
             'full_name' => $member->name, 'care_recipient_profile_id' => $ownerProfile->id]);
         [, $code] = $this->gift();
-        $this->assertUnavailable(fn () => app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $member));
+        $account = app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $member);
+        $this->assertSame($family->id, $account->family_account_id);
+        $this->assertNull($account->care_recipient_profile_id);
         $this->assertDatabaseCount('care_recipient_profiles', 1);
-        $this->assertDatabaseCount('care_hour_accounts', 0);
+        $this->assertDatabaseCount('care_hour_accounts', 1);
     }
 
-    public function test_ambiguous_archived_and_inactive_self_identities_block_replacement(): void
+    public function test_profiles_do_not_block_claim_but_an_inactive_family_wallet_cannot_be_replaced(): void
     {
         foreach (['ambiguous', 'archived', 'inactive'] as $case) {
             $actor = User::factory()->create(['role' => 'family']);
@@ -194,7 +190,12 @@ class GiftSelfClaimTest extends TestCase
             }
             [, $code] = $this->gift();
             $before = CareRecipientProfile::count();
-            $this->assertUnavailable(fn () => app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $actor));
+            if ($case === 'inactive') {
+                $this->assertUnavailable(fn () => app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $actor));
+            } else {
+                $account = app(CareHourGiftService::class)->resolveSelfClaimAccount($code, $actor);
+                $this->assertNull($account->care_recipient_profile_id);
+            }
             $this->assertSame($before, CareRecipientProfile::count());
         }
     }
@@ -226,8 +227,8 @@ class GiftSelfClaimTest extends TestCase
         $actor = User::factory()->create(['role' => 'family']);
         $real = app(CareHourIdentityService::class);
         $identities = Mockery::mock(CareHourIdentityService::class);
-        $identities->shouldReceive('enrollSelfForGift')->once()->andReturnUsing(function ($user, $gift) use ($real, $purchase) {
-            $account = $real->enrollSelfForGift($user, $gift);
+        $identities->shouldReceive('ensureFamilyWallet')->once()->andReturnUsing(function ($user, $gift) use ($real, $purchase) {
+            $account = $real->ensureFamilyWallet($user, $gift);
             $purchase->update(['status' => 'held']);
 
             return $account;
@@ -260,7 +261,7 @@ class GiftSelfClaimTest extends TestCase
     {
         try {
             $callback();
-            $this->fail('An unavailable gift or ambiguous identity must not create another recipient.');
+            $this->fail('An unavailable gift or inactive wallet must not create another wallet.');
         } catch (ValidationException $exception) {
             $this->assertNotEmpty($exception->errors());
         }

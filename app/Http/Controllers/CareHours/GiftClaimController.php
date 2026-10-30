@@ -6,7 +6,6 @@ use App\Exceptions\Payments\PaymentException;
 use App\Http\Controllers\Controller;
 use App\Models\CareHourAccount;
 use App\Models\CareHourPurchase;
-use App\Models\CareHourRecipientLink;
 use App\Services\CareHours\CareHourGiftService;
 use App\Services\CareHours\CareHourIdentityService;
 use App\Support\CareHourGiftClaimIntent;
@@ -35,9 +34,6 @@ class GiftClaimController extends Controller
         return view('care-hours.gifts.claim', [
             'accounts' => $accounts->where('active', true), 'draft' => $draft, 'selectedAccount' => $selectedAccount,
             'giftIntent' => CareHourGiftClaimIntent::summary(),
-            'profiles' => $this->identities->profilesFor($request->user())->reject(fn ($profile) => $accounts->contains('care_recipient_profile_id', $profile->id)),
-            'recipients' => $this->identities->recipientsFor($request->user())->filter(fn ($recipient) => ! $recipient->care_recipient_profile_id
-                && ! CareHourRecipientLink::where('care_recipient_id', $recipient->id)->exists()),
         ]);
     }
 
@@ -51,11 +47,11 @@ class GiftClaimController extends Controller
         $request->session()->forget('care_hours.gift_claim');
         $input = Validator::make(['code' => $code, 'recipient' => $request->input('recipient')], [
             'code' => ['required', 'string', 'max:80'],
-            'recipient' => ['required', $guided ? 'regex:/^(self|(account|profile|recipient):[1-9][0-9]*)$/' : 'regex:/^(account|profile|recipient):[1-9][0-9]*$/'],
+            'recipient' => ['nullable', $guided ? 'regex:/^(self|(account|profile|recipient):[1-9][0-9]*)$/' : 'regex:/^(account|profile|recipient):[1-9][0-9]*$/'],
         ])->validate();
         try {
-            $account = $input['recipient'] === 'self'
-                ? $this->gifts->resolveSelfClaimAccount($input['code'], $request->user())
+            $account = empty($input['recipient']) || $input['recipient'] === 'self'
+                ? $this->gifts->resolveFamilyClaimAccount($input['code'], $request->user())
                 : $this->gifts->resolveClaimAccount($input['code'], $request->user(), $input['recipient']);
             $quote = $this->gifts->previewForClaim($input['code'], $account, $request->user());
         } catch (PaymentException|ApiErrorException) {
@@ -64,7 +60,7 @@ class GiftClaimController extends Controller
         $request->session()->put('care_hours.gift_claim', [
             'encrypted_code' => Crypt::encryptString($input['code']), 'account_id' => $account->id,
             'quote' => $quote, 'nonce' => Str::random(40), 'guided' => $guided,
-            'for_self' => $input['recipient'] === 'self', 'actor_id' => $request->user()->id,
+            'for_self' => false, 'actor_id' => $request->user()->id,
         ]);
 
         return redirect()->route('family.care-hours.claim');
@@ -91,7 +87,7 @@ class GiftClaimController extends Controller
         }
 
         return redirect()->route('family.care-hours.show', $account)->with('status',
-            CareHourAccount::formatMinutes($purchase->total_minutes).' added for '.$account->display_name.'.');
+            CareHourAccount::formatMinutes($purchase->total_minutes).' added to your family balance.');
     }
 
     public function reset(Request $request): RedirectResponse

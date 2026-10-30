@@ -129,15 +129,16 @@ class PrepaidHiringCompatibilityTest extends TestCase
         $this->assertDatabaseCount('care_hour_booking_fundings', 0);
     }
 
-    public function test_same_named_recipient_without_the_balance_link_does_not_inherit_hours(): void
+    public function test_another_recipient_in_the_family_uses_the_same_balance_without_a_recipient_link(): void
     {
         [$family, $request, , $account] = $this->scenario();
         $otherRequest = $request->replicate();
         $otherRequest->save();
-        $otherRequest->recipient()->create(['full_name' => 'Margaret', 'relationship_to_family' => 'Mother']);
+        $otherRequest->recipient()->create(['full_name' => 'Robert', 'relationship_to_family' => 'Father']);
         Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $otherRequest->id])
-            ->assertSet('careHourAccountId', null)->assertDontSee('Use care hours');
+            ->assertSet('careHourAccountId', $account->id);
         $this->assertSame(300, $account->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_hour_booking_fundings', 0);
     }
 
     public function test_custom_priced_applicant_review_uses_card_and_direct_hire_cannot_apply_hours(): void

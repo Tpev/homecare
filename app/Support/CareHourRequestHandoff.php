@@ -7,13 +7,14 @@ use App\Models\CareRecipientProfile;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 
-/** Carries a private self identity into a request without publishing a caregiver profile. */
+/** Family credit is available in the normal request flow, independently of a care profile. */
 class CareHourRequestHandoff
 {
     public static function url(CareHourAccount $account, User $actor): string
     {
-        return route('family.requests.create', self::draftFor($account->id, $actor)
-            ? ['care_hours_account' => $account->id] : []);
+        app(\App\Services\CareHours\CareHourIdentityService::class)->assertAccess($account, $actor);
+
+        return route('family.requests.create');
     }
 
     public static function draftFor(int $accountId, User $actor, bool $lock = false): ?CareRecipientProfile

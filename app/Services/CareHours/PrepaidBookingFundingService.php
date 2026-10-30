@@ -10,6 +10,7 @@ use App\Models\CareHourPaymentOperation;
 use App\Models\CareHourPlanPreference;
 use App\Models\CareHourSettlement;
 use App\Models\CarePlan;
+use App\Models\FamilyAccount;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Payments\StripeClient;
@@ -54,7 +55,7 @@ class PrepaidBookingFundingService
             $existing = $this->forBooking($locked);
             if ($existing) {
                 if ((int) $existing->care_hour_account_id !== (int) $account->id) {
-                    throw ValidationException::withMessages(['careHourAccountId' => 'This visit already has a committed care-hours recipient.']);
+                    throw ValidationException::withMessages(['careHourAccountId' => 'This visit already has committed prepaid funding.']);
                 }
 
                 return $existing;
@@ -84,13 +85,9 @@ class PrepaidBookingFundingService
         if (! app(CareHourAccess::class)->canUseAccount($account, $actor)) {
             throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this account.']);
         }
-        if ((int) $plan->family_account_id !== (int) $account->family_account_id || $plan->care_arrangement_id) {
+        if ((int) $plan->family_account_id !== (int) $account->family_account_id || $plan->care_arrangement_id
+            || ! $account->active || $account->currency !== 'usd') {
             throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this care arrangement.']);
-        }
-        // The source request must be explicitly mapped to this account; names are never a match.
-        $source = $plan->sourceCareRequest?->recipient;
-        if ($source) {
-            $this->identities->linkRecipient($account, $source, $actor);
         }
 
         return DB::transaction(function () use ($plan, $account, $actor) {
@@ -148,10 +145,6 @@ class PrepaidBookingFundingService
                 return;
             }
             $actor = $preference->account->familyAccount->owner;
-            // Preserve the plan's stable target on each newly materialized request recipient.
-            if ($locked->careRequest?->recipient) {
-                $this->identities->linkRecipient($preference->account, $locked->careRequest->recipient, $actor);
-            }
             $this->selectForBooking($locked, $preference->account, $actor);
         }, 3);
     }
@@ -384,6 +377,11 @@ class PrepaidBookingFundingService
     {
         $operation = CareHourPaymentOperation::where('public_id', $id)->where('kind', 'shortfall')->firstOrFail();
         DB::transaction(function () use ($operation) {
+            // Use the same booking -> family -> funding order as cancellation.
+            // Holding funding while waiting for the family lock can deadlock a
+            // cancellation that has already returned this wallet's allocations.
+            $booking = CareBooking::lockForUpdate()->findOrFail($operation->funding->care_booking_id);
+            FamilyAccount::whereKey($operation->funding->account->family_account_id)->lockForUpdate()->firstOrFail();
             $funding = CareHourBookingFunding::lockForUpdate()->findOrFail($operation->care_hour_booking_funding_id);
             $operation = CareHourPaymentOperation::lockForUpdate()->findOrFail($operation->id);
             if (in_array($operation->status, ['authorized', 'captured', 'cancelled', 'refunded'], true)) {
@@ -396,9 +394,9 @@ class PrepaidBookingFundingService
             if ((int) data_get($operation->metadata, 'funding_revision') !== (int) $funding->revision || in_array($funding->status, ['ready', 'released'], true)) {
                 return;
             }
-            $this->ledger->release($funding->booking);
+            $this->ledger->release($booking);
             $funding->update(['status' => 'payment_attention', 'reserved_minutes' => 0, 'revision' => $funding->revision + 1, 'last_error' => 'Payment did not complete. Review care coverage and try again.']);
-        });
+        }, 3);
     }
 
     /** An expired Checkout cannot revoke a hold; an authoritative cancelled intent can. */
@@ -445,8 +443,11 @@ class PrepaidBookingFundingService
             return;
         }
         DB::transaction(function () use ($booking, $funding) {
-            $this->ledger->release($booking);
-            $funding->update(['status' => 'released', 'reserved_minutes' => 0, 'last_error' => null]);
+            $lockedBooking = CareBooking::lockForUpdate()->findOrFail($booking->id);
+            FamilyAccount::whereKey($funding->account->family_account_id)->lockForUpdate()->firstOrFail();
+            $lockedFunding = CareHourBookingFunding::lockForUpdate()->findOrFail($funding->id);
+            $this->ledger->release($lockedBooking);
+            $lockedFunding->update(['status' => 'released', 'reserved_minutes' => 0, 'last_error' => null]);
         }, 3);
         if (DB::transactionLevel() > 0) {
             DB::afterCommit(fn () => $this->reconcileReleased($funding->id));
@@ -483,7 +484,7 @@ class PrepaidBookingFundingService
         $settlement = CareHourSettlement::where('care_booking_id', $booking->id)->first();
 
         return [
-            'id' => $funding->id, 'account_id' => $funding->care_hour_account_id, 'status' => $funding->status, 'recipient' => $funding->account->display_name,
+            'id' => $funding->id, 'account_id' => $funding->care_hour_account_id, 'status' => $funding->status, 'recipient' => 'Family care balance',
             'planned_minutes' => (int) $funding->planned_minutes, 'reserved_minutes' => (int) $funding->reserved_minutes,
             'shortfall_minutes' => (int) $funding->shortfall_minutes, 'shortfall_cents' => (int) $funding->shortfall_cents,
             'ready' => $this->readiness($booking)['ready'], 'last_error' => $funding->last_error,
@@ -575,8 +576,9 @@ class PrepaidBookingFundingService
             throw ValidationException::withMessages(['careHourAccountId' => 'Only a new, unprepared visit can use care hours. Existing card payments stay unchanged.']);
         }
         if ((int) $booking->family_account_id !== (int) $account->family_account_id
-            || (int) $this->identities->forBooking($booking)?->id !== (int) $account->id) {
-            throw ValidationException::withMessages(['careHourAccountId' => 'Choose the care-hours balance explicitly linked to this recipient.']);
+            || ! $account->active || $account->currency !== 'usd'
+            || ! in_array((int) $this->identities->forBooking($booking)?->id, $account->familySourceIds(), true)) {
+            throw ValidationException::withMessages(['careHourAccountId' => 'Choose your family care balance.']);
         }
         if ($booking->pricing_agreement_id || $this->pricing->hasUnappliedAgreement($booking)
             || $booking->carePlan?->care_arrangement_id || \App\Models\ContinuousCoverageShift::where('care_booking_id', $booking->id)->exists()

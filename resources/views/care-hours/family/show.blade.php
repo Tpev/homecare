@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="hc-page max-w-3xl space-y-6 py-8">
         <a href="{{ route('family.care-hours.index') }}" wire:navigate class="hc-care-text-link">← Prepaid care hours</a>
-        <header><h1 class="font-display text-3xl font-semibold text-[#23483F]">Prepaid care hours</h1><p class="mt-2 text-[#485E53]">{{ $account->display_name }}’s care balance</p></header>
+        <header><h1 class="font-display text-3xl font-semibold text-[#23483F]">Prepaid care hours</h1><p class="mt-2 text-[#485E53]">Your family balance</p></header>
         @include('care-hours.partials.messages')
         @include('care-hours.partials.gift-links')
         @if($eligibilityReason)<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{{ $eligibilityReason }} <a href="{{ route('support.index') }}" class="underline">Contact support</a>.</p>@endif
@@ -10,15 +10,15 @@
             @if ($balance['reserved_minutes'] > 0)<p class="text-sm text-[#485E53]">{{ \App\Models\CareHourAccount::formatMinutes($balance['reserved_minutes']) }} reserved for upcoming visits or hours awaiting approval.</p>@endif
             @if ($balance['held_minutes'] > 0)<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{{ \App\Models\CareHourAccount::formatMinutes($balance['held_minutes']) }} temporarily on hold. <a href="{{ route('support.index') }}" class="underline">Contact support</a>.</p>@endif
             <div class="flex flex-wrap gap-3">
-                @if(\App\Support\CareHourRequestHandoff::draftFor($account->id, auth()->user()))<a href="{{ \App\Support\CareHourRequestHandoff::url($account, auth()->user()) }}" wire:navigate class="hc-secondary-button">Find care</a>@endif
+                <a href="{{ \App\Support\CareHourRequestHandoff::url($account, auth()->user()) }}" wire:navigate class="hc-secondary-button">Find care</a>
                 @if(! $eligibilityReason && app(\App\Services\CareHours\CareHourAccess::class)->canBuy(auth()->user()) && $account->active)<a href="{{ route('family.care-hours.packages', $account) }}" wire:navigate class="hc-primary-button">Buy prepaid care</a>@endif
             </div>
-            <p class="text-sm text-[#485E53]">No expiry. Available hours are selected first when you book eligible care.</p>
+            <p class="text-sm text-[#485E53]">Use these hours for anyone in your family account. Available hours are selected first for eligible care.</p>
         </section>
         @if ($isOwner && (app(\App\Services\CareHours\CareHourAccess::class)->canContribute(auth()->user()) || $links->whereNull('revoked_at')->isNotEmpty()))
             <details id="contributions" class="hc-surface p-5" @if(session('contribution_url')) open @endif>
                 <summary class="cursor-pointer font-semibold">{{ app(\App\Services\CareHours\CareHourAccess::class)->canContribute(auth()->user()) ? 'Let someone contribute' : 'Manage contribution links' }}</summary>
-                @if(app(\App\Services\CareHours\CareHourAccess::class)->canContribute(auth()->user()))<p class="mt-3 text-sm text-[#485E53]">Your link shows only the name “{{ $account->display_name }}” and care packages. Contributors cannot see your balance or care details.</p>@endif
+                @if(app(\App\Services\CareHours\CareHourAccess::class)->canContribute(auth()->user()))<p class="mt-3 text-sm text-[#485E53]">Your private link lets someone add hours to your family balance. Contributors cannot see your balance or care details.</p>@endif
                 @if(session('contribution_url') && app(\App\Services\CareHours\CareHourAccess::class)->canContribute(auth()->user()))
                     <label for="contribution-url" class="mt-4 block text-sm font-semibold">Your private link</label>
                     <input id="contribution-url" readonly value="{{ session('contribution_url') }}" class="mt-2 min-h-12 w-full rounded-xl border-[#D8E1D7]" onclick="this.select()" />

@@ -134,11 +134,11 @@ class CareHourGiftScreensTest extends TestCase
         $this->get($receipt)->assertOk()->assertDontSee('paid-gift-code')->assertDontSee('$310')->assertDontSee('daniel@example.test');
     }
 
-    public function test_claim_previews_exact_recipient_and_bonus_then_adds_once_without_exposing_code_or_donor(): void
+    public function test_claim_previews_family_wallet_and_bonus_then_adds_once_without_exposing_code_or_donor(): void
     {
         [$owner, $account] = $this->account();
         [$purchase, $code] = $this->gift();
-        $this->actingAs($owner)->get(route('family.care-hours.claim'))->assertOk()->assertSee('Robert Bennett');
+        $this->actingAs($owner)->get(route('family.care-hours.claim'))->assertOk()->assertSee('Add hours to your family balance')->assertDontSee('name="recipient"', false);
         $this->post(route('family.care-hours.claim.preview'), ['code' => $code, 'recipient' => 'account:'.$account->id])->assertRedirect();
         $this->assertSame(0, $account->balance()['available_minutes']);
         $draft = session('care_hours.gift_claim');
@@ -211,7 +211,7 @@ class CareHourGiftScreensTest extends TestCase
         $this->assertDatabaseHas('care_hour_gift_admin_checks', ['care_hour_purchase_id' => $purchase->id, 'actor_user_id' => $admin->id]);
         $gifts = app(CareHourGiftService::class);
         $gifts->claim($code, $account, $owner, $gifts->previewForClaim($code, $account, $owner)['quote_key']);
-        $this->get(route('admin.care-hours.gifts.index', ['state' => 'claimed']))->assertOk()->assertSee('Robert Bennett')->assertSee('Claimed')->assertDontSee($code);
+        $this->get(route('admin.care-hours.gifts.index', ['state' => 'claimed']))->assertOk()->assertSee($owner->name)->assertSee('Claimed')->assertDontSee($code);
         $this->get(route('admin.care-hours.gifts.index'))->assertSee('Buyer requested a payment review');
     }
 
@@ -238,7 +238,7 @@ class CareHourGiftScreensTest extends TestCase
         $this->get(route('family.care-hours.claim'))->assertRedirect(route('login'));
         $owner = User::factory()->create(['role' => 'family']);
         $this->actingAs($owner)->get(route('family.care-hours.claim'))->assertOk()->assertSee('Gift code')
-            ->assertSee('No card or care request needed')->assertSee('Your gift does not expire')->assertDontSee('Set up care');
+            ->assertSee('Add hours to your family balance')->assertSee('hours never expire')->assertDontSee('Set up care');
     }
 
     public function test_gift_receipts_use_their_private_receipt_flow_even_from_other_purchase_urls(): void

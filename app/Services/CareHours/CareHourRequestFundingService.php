@@ -5,7 +5,6 @@ namespace App\Services\CareHours;
 use App\Models\CareBooking;
 use App\Models\CareHourAccount;
 use App\Models\CareHourRequestPreference;
-use App\Models\CareRecipient;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -44,56 +43,30 @@ class CareHourRequestFundingService
         return $this->usable(app(CareHourIdentityService::class)->forBooking($booking), $familyId, $actor);
     }
 
-    public function accountForProfile(?int $profileId, User $actor): ?CareHourAccount
-    {
-        if (! $profileId || ! $this->available()) {
-            return null;
-        }
-        $familyId = (int) app(FamilyAccountContext::class)->account($actor)->id;
-        $account = CareHourAccount::query()->where('family_account_id', $familyId)
-            ->where('care_recipient_profile_id', $profileId)
-            ->whereHas('profile', fn ($query) => $query->where('status', '!=', CareRecipientProfile::STATUS_ARCHIVED))->first();
-
-        return $this->usable($account, $familyId, $actor);
-    }
-
-    public function accountForSelf(User $actor): ?CareHourAccount
+    public function accountForFamily(User $actor): ?CareHourAccount
     {
         if (! $this->available()) {
             return null;
         }
         $familyId = (int) app(FamilyAccountContext::class)->account($actor)->id;
-        // Match the authenticated person's explicit self records, never their name
-        // or another family member's recipient profile.
-        $profiles = CareRecipientProfile::query()->where('family_account_id', $familyId)
-            ->where('status', '!=', CareRecipientProfile::STATUS_ARCHIVED)->where('recipient_is_requester', true)
-            ->where(fn ($query) => $query->where('created_by_user_id', $actor->id)
-                ->orWhere(fn ($legacy) => $legacy->whereNull('created_by_user_id')->where('legacy_family_user_id', $actor->id)))->pluck('id');
-        $recipients = CareRecipient::query()->where('recipient_is_requester', true)
-            ->whereHas('careRequest', fn ($query) => $query->forFamilyAccount(app(FamilyAccountContext::class)->account($actor))
-                ->where(fn ($owner) => $owner->where('created_by_user_id', $actor->id)
-                    ->orWhere(fn ($legacy) => $legacy->whereNull('created_by_user_id')->where('family_user_id', $actor->id))))->get();
-        $profileIds = $profiles->merge($recipients->pluck('care_recipient_profile_id')->filter())->unique();
-        if ($profileIds->count() > 1) {
+
+        return $this->usable(app(CareHourIdentityService::class)->walletFor($actor), $familyId, $actor);
+    }
+
+    public function accountForProfile(?int $profileId, User $actor): ?CareHourAccount
+    {
+        $familyId = (int) app(FamilyAccountContext::class)->account($actor)->id;
+        if (! $profileId || ! CareRecipientProfile::query()->whereKey($profileId)->where('family_account_id', $familyId)
+            ->where('status', '!=', CareRecipientProfile::STATUS_ARCHIVED)->exists()) {
             return null;
         }
-        $accounts = CareHourAccount::query()->where('family_account_id', $familyId)
-            ->where(fn ($query) => $query->whereIn('care_recipient_profile_id', $profileIds)
-                ->orWhereHas('recipientLinks', fn ($links) => $links->whereIn('care_recipient_id', $recipients->modelKeys())))->get();
 
-        if ($accounts->count() !== 1) {
-            return null;
-        }
-        $account = $accounts->first();
-        if ($account->care_recipient_profile_id) {
-            $profile = $account->profile;
-            if (! $profile?->recipient_is_requester
-                || (int) ($profile->created_by_user_id ?? $profile->legacy_family_user_id) !== (int) $actor->id) {
-                return null;
-            }
-        }
+        return $this->accountForFamily($actor);
+    }
 
-        return $this->usable($account, $familyId, $actor);
+    public function accountForSelf(User $actor): ?CareHourAccount
+    {
+        return $this->accountForFamily($actor);
     }
 
     public function preferenceFor(CareRequest $request): ?CareHourRequestPreference
@@ -108,7 +81,7 @@ class CareHourRequestFundingService
             return null;
         }
         $account = $this->accountForRequest($request, $actor, $application);
-        if (! $account || ($preference && (int) $preference->care_hour_account_id !== (int) $account->id)) {
+        if (! $account || ($preference && ! in_array((int) $preference->care_hour_account_id, $account->familySourceIds(), true))) {
             return null;
         }
 
@@ -127,11 +100,12 @@ class CareHourRequestFundingService
         }
         DB::transaction(function () use ($request, $actor, $accountId): void {
             FamilyAccount::query()->whereKey($request->family_account_id ?: app(FamilyAccountContext::class)->account($actor)->id)->lockForUpdate()->firstOrFail();
-            if ($accountId !== null && (int) ($this->accountForRequest($request, $actor)?->id ?? 0) !== $accountId) {
-                throw ValidationException::withMessages(['careHourAccountId' => 'Choose the care hours belonging to this recipient.']);
+            $account = $accountId !== null ? $this->accountForRequest($request, $actor) : null;
+            if ($accountId !== null && (! $account || ! in_array($accountId, $account->familySourceIds(), true))) {
+                throw ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
             }
             CareHourRequestPreference::updateOrCreate(['care_request_id' => $request->id], [
-                'care_hour_account_id' => $accountId, 'enabled' => $accountId !== null, 'selected_by_user_id' => $actor->id,
+                'care_hour_account_id' => $account?->id, 'enabled' => $accountId !== null, 'selected_by_user_id' => $actor->id,
             ]);
         }, 3);
     }
@@ -141,7 +115,6 @@ class CareHourRequestFundingService
         return $account && (int) $account->family_account_id === $familyId && $account->active && $account->currency === 'usd'
             && app(CareHourAccess::class)->canUseAccount($account, $actor)
             && $account->familyAccount?->status === FamilyAccount::STATUS_ACTIVE
-            && (! $account->care_recipient_profile_id || $account->profile?->status !== CareRecipientProfile::STATUS_ARCHIVED)
             && app(CareHourEligibilityService::class)->reasonFor($account) === null ? $account : null;
     }
 }

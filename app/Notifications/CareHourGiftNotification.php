@@ -29,7 +29,7 @@ class CareHourGiftNotification extends Notification
                 $mail->line('This gift has already been claimed. Your private purchase receipt remains available.');
             } else {
                 $mail->line('Open your private receipt and verify your email to view the gift code. Share it privately with the family you choose.')
-                    ->line('They can create a free LoLo account, then claim for themselves or someone they already care for. Any eligible welcome hours are confirmed when claimed.');
+                    ->line('They can create a free LoLo account, then add the gift to their family balance. Any eligible welcome hours are confirmed when claimed.');
             }
             $mail->line('Non-refundable. No expiry.');
         }

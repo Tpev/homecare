@@ -38,7 +38,9 @@ class CareHourPaymentGateway
                     'product_data' => [
                         'name' => ($purchase->paid_minutes / 60).' care hours'.($purchase->bonus_minutes ? ' + '.($purchase->bonus_minutes / 60).' welcome hours' : ''),
                         'description' => $purchase->gift()->exists()
-                            ? 'Gift claimed once for an existing recipient. Welcome hours depend on their eligibility at claim. Non-refundable. No expiry. Includes the hourly family fee.'
+                            ? (str_starts_with($purchase->terms_version, '2026-10-30-family-wallet')
+                                ? 'Gift claimed once into a family care balance. Welcome hours depend on family eligibility at claim. Non-refundable. No expiry. Includes the hourly family fee.'
+                                : 'Gift claimed once for an existing recipient. Welcome hours depend on their eligibility at claim. Non-refundable. No expiry. Includes the hourly family fee.')
                             : 'Non-refundable. No expiry. Includes the hourly family fee.',
                     ],
                 ],

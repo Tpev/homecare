@@ -45,20 +45,17 @@ class GiftRequestHandoffTest extends TestCase
     public function test_claim_find_care_and_publish_without_optional_profile_keeps_gift_identity_private_and_available(): void
     {
         [$actor, $account, $purchase] = $this->claimedGift();
-        $url = route('family.requests.create', ['care_hours_account' => $account->id]);
+        $url = route('family.requests.create');
         $this->actingAs($actor)->get(route('family.care-hours.claim.ready', $purchase->public_id))->assertOk()->assertSee($url, false);
         $this->get(route('family.care-hours.show', $account))->assertOk()->assertSee($url, false);
         $this->get($url)->assertOk();
-        $this->composer($actor, $account)->assertSet('care_for', 'self')
+        $this->composer($actor)->set('care_for', 'self')
             ->assertSet('createQuickCareProfile', false)->assertSet('selected_care_recipient_profile_id', null)
             ->call('publish')->assertHasNoErrors();
 
         $request = CareRequest::sole();
-        $profile = CareRecipientProfile::sole();
-        $this->assertSame($account->care_recipient_profile_id, $request->recipient->care_recipient_profile_id);
-        $this->assertSame(CareRecipientProfile::STATUS_DRAFT, $profile->status);
-        $this->assertNull($request->recipient->care_recipient_profile_version_id);
-        $this->assertNull($profile->sharing_acknowledged_at);
+        $this->assertNull($request->recipient->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertDatabaseCount('care_recipient_profile_versions', 0);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $this->assertNull(app(CareRecipientProfilePresenter::class)->forCareRequest($caregiver, $request));
@@ -71,21 +68,21 @@ class GiftRequestHandoffTest extends TestCase
         $this->assertNull($actor->fresh()->stripe_customer_id);
     }
 
-    public function test_optional_profile_completes_the_same_gift_draft_only_after_existing_sharing_consent(): void
+    public function test_optional_profile_requires_existing_sharing_consent_and_does_not_own_the_gift_balance(): void
     {
         [$actor, $account] = $this->claimedGift();
-        $composer = $this->composer($actor, $account)->set('createQuickCareProfile', true)
+        $composer = $this->composer($actor)->set('care_for', 'self')->set('createQuickCareProfile', true)
             ->set('quick_profile_about', 'I enjoy a walk and a friendly conversation.')
             ->set('quick_profile_good_visit', 'Please explain the plan when you arrive.')
             ->call('publish')->assertHasErrors('quick_profile_sharing_acknowledged');
         $this->assertDatabaseCount('care_requests', 0);
-        $this->assertDatabaseCount('care_recipient_profiles', 1);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertDatabaseCount('care_recipient_profile_versions', 0);
         $composer->set('quick_profile_sharing_acknowledged', true)->call('publish')->assertHasNoErrors();
 
         $profile = CareRecipientProfile::sole();
         $request = CareRequest::sole();
-        $this->assertSame($account->care_recipient_profile_id, $profile->id);
+        $this->assertNull($account->care_recipient_profile_id);
         $this->assertTrue($profile->isReady());
         $this->assertNotNull($profile->sharing_acknowledged_at);
         $this->assertSame($profile->latest_ready_version_id, $request->recipient->care_recipient_profile_version_id);
@@ -94,21 +91,21 @@ class GiftRequestHandoffTest extends TestCase
         $this->assertSame(660, $account->balance()['available_minutes']);
     }
 
-    public function test_switching_to_another_person_clears_gift_handoff_and_cannot_attach_the_self_balance(): void
+    public function test_gift_hours_are_available_for_another_person_in_the_family(): void
     {
         [$actor, $account] = $this->claimedGift();
-        $this->composer($actor, $account)->set('care_for', 'other')
+        $this->composer($actor)->set('care_for', 'other')
             ->assertSet('careHoursHandoffAccountId', null)->assertSet('careHoursHandoffProfileId', null)
             ->set('recipient_full_name', 'Another person')->set('recipient_relationship_to_family', 'Friend')
             ->call('publish')->assertHasNoErrors();
         $request = CareRequest::sole();
         $this->assertNull($request->recipient->care_recipient_profile_id);
-        $this->assertNull($this->bookingAccount($request));
+        $this->assertSame($account->id, $this->bookingAccount($request)?->id);
         $this->assertSame(660, $account->balance()['available_minutes']);
-        $this->assertDatabaseCount('care_recipient_profiles', 1);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
     }
 
-    public function test_selecting_an_existing_other_profile_clears_gift_handoff(): void
+    public function test_selecting_an_existing_profile_uses_the_shared_family_gift_balance(): void
     {
         [$actor, $account] = $this->claimedGift();
         $profiles = app(CareRecipientProfileService::class);
@@ -116,24 +113,33 @@ class GiftRequestHandoffTest extends TestCase
             'relationship_to_family' => 'Mother', 'about_them' => 'She enjoys gardening.'];
         $other = $profiles->saveDraft($actor, null, $data);
         $other = $profiles->makeReady($actor, $other, $data, $other->revision, true);
-        $this->composer($actor, $account)->call('selectCareRecipientProfile', $other->id)
+        $this->composer($actor)->call('selectCareRecipientProfile', $other->id)
             ->assertSet('careHoursHandoffAccountId', null)->call('publish')->assertHasNoErrors();
         $request = CareRequest::sole();
         $this->assertSame($other->id, $request->recipient->care_recipient_profile_id);
-        $this->assertNull($this->bookingAccount($request));
+        $this->assertSame($account->id, $this->bookingAccount($request)?->id);
         $this->assertSame(660, $account->balance()['available_minutes']);
     }
 
     public function test_another_family_and_same_family_member_cannot_use_someone_elses_self_handoff(): void
     {
-        [$actor, $account] = $this->claimedGift();
+        [$actor, $account] = $this->legacyClaimedGift();
         $outsider = User::factory()->create(['role' => 'family', 'name' => $actor->name]);
         $member = User::factory()->create(['role' => 'family', 'name' => $actor->name]);
         FamilyAccountMember::create(['family_account_id' => $account->family_account_id, 'user_id' => $member->id,
             'status' => 'active', 'access_level' => 'member', 'joined_at' => now()]);
         foreach ([$outsider, $member] as $other) {
             $this->actingAs($other)->get(route('family.requests.create', ['care_hours_account' => $account->id]))->assertNotFound();
-            $this->assertSame(route('family.requests.create'), CareHourRequestHandoff::url($account, $other));
+            if ($other->is($member)) {
+                $this->assertSame(route('family.requests.create'), CareHourRequestHandoff::url($account, $other));
+            } else {
+                try {
+                    CareHourRequestHandoff::url($account, $other);
+                    $this->fail('Foreign family wallet access must be rejected.');
+                } catch (\Illuminate\Auth\Access\AuthorizationException) {
+                    $this->assertTrue(true);
+                }
+            }
         }
         $this->assertDatabaseCount('care_requests', 0);
         $this->assertDatabaseCount('care_recipient_profiles', 1);
@@ -141,7 +147,7 @@ class GiftRequestHandoffTest extends TestCase
 
     public function test_publish_revalidates_changed_profile_and_inactive_account_without_creating_requests(): void
     {
-        [$actor, $account] = $this->claimedGift();
+        [$actor, $account] = $this->legacyClaimedGift();
         $composer = $this->composer($actor, $account);
         $account->profile->increment('revision');
         $composer->call('publish')->assertHasErrors('profile');
@@ -169,7 +175,7 @@ class GiftRequestHandoffTest extends TestCase
 
     public function test_archived_or_changed_self_identity_is_rejected_at_publication_and_handoff_cannot_be_tampered_with(): void
     {
-        [$actor, $account] = $this->claimedGift();
+        [$actor, $account] = $this->legacyClaimedGift();
         $composer = $this->composer($actor, $account);
         $account->profile->update(['recipient_is_requester' => false]);
         $composer->call('publish')->assertHasErrors('profile');
@@ -182,7 +188,7 @@ class GiftRequestHandoffTest extends TestCase
 
     public function test_explicit_self_handoff_does_not_load_or_consume_another_persons_saved_request(): void
     {
-        [$actor, $account] = $this->claimedGift();
+        [$actor, $account] = $this->legacyClaimedGift();
         $context = ['wizard_state' => ['recipient_date_of_birth' => '1940-01-01', 'recipient_gender' => 'female',
             'recipient_mobility_level' => 'wheelchair_user', 'recipient_care_notes' => 'Another person private notes',
             'includeThirdPartyContact' => true, 'third_party_full_name' => 'Another contact']];
@@ -224,6 +230,18 @@ class GiftRequestHandoffTest extends TestCase
         $booking->setRelation('careRequest', $request->fresh('recipient'));
 
         return app(CareHourIdentityService::class)->forBooking($booking);
+    }
+
+    private function legacyClaimedGift(): array
+    {
+        [$actor, $account, $purchase] = $this->claimedGift();
+        $profile = app(CareRecipientProfileService::class)->saveDraft($actor, null, [
+            'full_name' => $actor->name, 'recipient_is_requester' => true,
+        ]);
+        // Historical self-claim URLs must retain their original privacy guards.
+        $account->update(['care_recipient_profile_id' => $profile->id]);
+
+        return [$actor, $account->fresh(), $purchase];
     }
 
     private function claimedGift(): array

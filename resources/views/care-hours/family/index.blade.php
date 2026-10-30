@@ -1,6 +1,5 @@
 <x-app-layout>
     @php
-        $buyFlow = $buyFlow ?? false;
         $access = app(\App\Services\CareHours\CareHourAccess::class);
         $icons = [
             'arrow' => '<path d="M5 12h14m-5-5 5 5-5 5"/>',
@@ -14,61 +13,14 @@
         ];
     @endphp
     <div class="hc-prepaid-page">
-        <a href="{{ $buyFlow ? route('family.care-hours.index') : route('family.requests.index') }}" wire:navigate class="hc-prepaid-back">
+        <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-prepaid-back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">{!! $icons['back'] !!}</svg>
-            {{ $buyFlow ? 'Prepaid care hours' : 'Back to Care' }}
+            Back to Care
         </a>
 
-        @if($buyFlow)
-            <header class="hc-prepaid-heading">
-                <h1>Buy prepaid care</h1>
-                <p>{{ $purchaseTargets->count() > 1 ? 'Choose a care balance to continue.' : 'A little care, ready for later.' }}</p>
-            </header>
-            @include('care-hours.partials.messages')
-            <div class="hc-prepaid-targets">
-                @forelse($purchaseTargets as $target)
-                    <form action="{{ route('family.care-hours.buy.start') }}" method="POST" class="hc-prepaid-target">
-                        @csrf
-                        <input type="hidden" name="target" value="{{ $target['key'] }}">
-                        <div class="hc-prepaid-target-heading">
-                            <span class="hc-prepaid-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">{!! $icons['person'] !!}</svg></span>
-                            <div><h2>{{ $target['name'] }}</h2><p>{{ $target['detail'] ?? ($target['type'] === 'account' ? 'Your saved care balance' : 'Set up prepaid care') }}</p></div>
-                        </div>
-                        @if(! empty($target['review_url']))
-                            <a href="{{ $target['review_url'] }}" wire:navigate class="hc-care-text-link text-sm">Review care profile <span aria-hidden="true">↗</span></a>
-                        @endif
-                        @if($target['requires_balance_choice'])
-                            <label for="balance-{{ $loop->index }}" class="hc-prepaid-field-label">Use an existing balance or start a separate one</label>
-                            <select id="balance-{{ $loop->index }}" name="balance_target" required class="hc-prepaid-select">
-                                <option value="">Choose a balance</option>
-                                @foreach($accounts->where('active', true)->where('currency', 'usd') as $existing)
-                                    <option value="{{ $existing->id }}">{{ $existing->display_name }}’s existing balance</option>
-                                @endforeach
-                                <option value="new">A different person — new balance</option>
-                            </select>
-                            <p class="hc-prepaid-note">Keep the same person’s hours together.</p>
-                        @endif
-                        <button type="submit" class="hc-prepaid-button hc-prepaid-button-green">Continue to packages <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">{!! $icons['arrow'] !!}</svg></button>
-                    </form>
-                @empty
-                    <section class="hc-prepaid-target hc-prepaid-empty-target">
-                        <span class="hc-prepaid-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">{!! $icons['person'] !!}</svg></span>
-                        @if($accounts->isEmpty() && $access->canEnroll(auth()->user()))
-                            <h2>Add a care profile to get started</h2>
-                            <p>Your prepaid hours will stay with that person.</p>
-                            <a href="{{ $profileCreateUrl }}" wire:navigate class="hc-prepaid-button hc-prepaid-button-green">Add a care profile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">{!! $icons['arrow'] !!}</svg></a>
-                        @else
-                            <h2>No balance is available for new purchases</h2>
-                            <p>Contact us for help with your prepaid care.</p>
-                            <a href="{{ route('support.index') }}" wire:navigate class="hc-prepaid-button hc-prepaid-button-green">Contact support</a>
-                        @endif
-                    </section>
-                @endforelse
-            </div>
-        @else
             <header class="hc-prepaid-heading">
                 <h1>Prepaid care hours</h1>
-                <p>Buy care now. Use it when you need it.</p>
+                <p>One balance for all your family’s care.</p>
             </header>
             @include('care-hours.partials.messages')
 
@@ -117,19 +69,18 @@
                     @endif
                     <a href="{{ route('care-hours.claim') }}" class="hc-prepaid-gift-card">
                         <span class="hc-prepaid-icon hc-prepaid-icon-code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">{!! $icons['code'] !!}</svg></span>
-                        <span class="hc-prepaid-gift-copy"><strong>Have a gift code?</strong><span>Add your gift to your care balance.</span></span>
+                        <span class="hc-prepaid-gift-copy"><strong>Have a gift code?</strong><span>Add your gift to your family balance.</span></span>
                         <svg class="hc-prepaid-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">{!! $icons['arrow'] !!}</svg>
                     </a>
                 </section>
             @endif
 
             <section class="hc-prepaid-activity" aria-label="Prepaid care activity">
-                <div class="hc-prepaid-section-heading"><h2>{{ $accounts->count() > 1 ? 'Your care balances' : 'Your activity' }}</h2>@if($accounts->count() === 1)<a href="{{ route('family.care-hours.show', $accounts->first()) }}" wire:navigate>View activity <span aria-hidden="true">→</span></a>@endif</div>
-                @if($accounts->count() > 1)<p class="hc-prepaid-note">Credit stays with each person’s care balance.</p>@endif
+                <div class="hc-prepaid-section-heading"><h2>Your activity</h2>@if($accounts->count() === 1)<a href="{{ route('family.care-hours.show', $accounts->first()) }}" wire:navigate>View activity <span aria-hidden="true">→</span></a>@endif</div>
                 @forelse($accounts as $account)
                     <a href="{{ route('family.care-hours.show', $account) }}" wire:navigate class="hc-prepaid-account-row">
                         <span class="hc-prepaid-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">{!! $icons['activity'] !!}</svg></span>
-                        <span class="hc-prepaid-account-name"><strong>{{ $account->display_name }}</strong><span>{{ $account->active ? 'Purchases, visits & receipts' : 'Inactive balance' }}</span></span>
+                        <span class="hc-prepaid-account-name"><strong>Your family balance</strong><span>{{ $account->active ? 'Purchases, visits & receipts' : 'Inactive balance' }}</span></span>
                         <span class="hc-prepaid-account-amount">{{ \App\Models\CareHourAccount::formatMinutes($balances[$account->id]['available_minutes']) }}<span>{{ $account->active ? 'available' : 'credit' }}</span></span>
                         <svg class="hc-prepaid-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">{!! $icons['arrow'] !!}</svg>
                     </a>
@@ -137,6 +88,5 @@
                     <div class="hc-prepaid-empty-activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">{!! $icons['activity'] !!}</svg><p>Your purchases and care-hour usage will appear here.</p></div>
                 @endforelse
             </section>
-        @endif
     </div>
 </x-app-layout>

@@ -1,16 +1,16 @@
 # Prepaid care hours administration guide
 
-Updated October 28, 2026. For LoLo administrators, support and payment operations.
+Updated October 30, 2026. For LoLo administrators, support and payment operations.
 
-Use this guide to trace money into a recipient's care balance, follow the hours into visits, and resolve payment or caregiver settlement issues through the recorded transaction. The reviewed release enables the authorized private pilot through the normal deployment. Public availability requires a separate reviewed change; the testing report records what has actually been verified.
+Use this guide to trace money into a shared family balance, follow the hours into visits, and resolve payment or caregiver settlement issues through the recorded transaction. The family-wallet release is prepared locally, not deployed or verified in production. Delivery requires a bridge release before the wallet release; see section 11. Public availability requires a separate reviewed change.
 
 ## 1 Start with the right record
 
 | The person reports | Start here | Match these details |
 | --- | --- | --- |
-| Hours missing after buying or contributing | **Care hours** | Recipient account and purchase reference; confirm buyer email |
+| Hours missing after buying or contributing | **Care hours** | Family account and purchase reference; confirm buyer email |
 | Gift missing, code unavailable or claim blocked | **Gift purchases** | Purchase reference or buyer email |
-| A visit needs payment or returned hours are missing | Recipient account, **Visit funding and caregiver settlement** | Visit number and its funding status |
+| A visit needs payment or returned hours are missing | Family account, **Visit funding and caregiver settlement** | Visit number and its funding status |
 | A caregiver has not received payment | The same visit's settlement and **Payment details and recovery** | Caregiver net, Paid, operation references and last error |
 | Several cases look stuck | **Needs attention** and the read-only health report | Age, failure category and original provider reference |
 
@@ -24,13 +24,13 @@ An authenticated account with the **admin** role can open these pages. Sales and
 
 1. Open **Communications & money → Admin Payments**.
 2. Select **Care hours** on the payments page.
-3. From **Care hours**, select a recipient, **Gift purchases**, or **Payment operations**.
+3. From **Care hours**, select a family balance, **Gift purchases**, or **Payment operations**.
 
 Direct application paths are `/admin/care-hours` and `/admin/care-hours/gifts`. They still require administrator access. Use the app's configured address; these paths are not public links to send to families.
 
-### Find a recipient account
+### Find a family account
 
-On **Care hours**, search by a recipient name fragment, numeric account ID, or the family owner's exact email address. Select **Needs attention** to narrow the list. The list shows recipient/account number, family owner email, available hours, active/inactive state, attention count and opening date.
+On **Care hours**, search by family/owner label, numeric account ID, or the family owner's exact email address. Select **Needs attention** to narrow the list. The list shows family/account number, family owner email, available hours, active/inactive state, attention count and opening date.
 
 The attention count can include purchase, visit funding and settlement issues for the same incident. It is not a count of unique customers. Some unresolved work is visible in health monitoring before it appears in this filter, so an empty list is not a complete operational health check.
 
@@ -38,7 +38,7 @@ The attention count can include purchase, visit funding and settlement issues fo
 
 On **Care-hour gifts**, search by the exact purchase reference or buyer email. Filters are **All gifts**, **Awaiting claim**, **Claimed** and **Needs attention**.
 
-Each result shows paid hours and price, buyer name/email, purchase reference/date, claim state, processing fee and latest admin payment check. After claim, its recipient balance is linked. If a claimed gift's payment is subsequently held, the card also displays its payment status; **Claimed** alone does not mean the funding is usable.
+Each result shows paid hours and price, buyer name/email, purchase reference/date, claim state, processing fee and latest admin payment check. After claim, its family balance is linked. If a claimed gift's payment is subsequently held, the card also displays its payment status; **Claimed** alone does not mean the funding is usable.
 
 ## 3 What the feature promises
 
@@ -49,17 +49,17 @@ Each result shows paid hours and price, buyer name/email, purchase reference/dat
 | 20 hours | $620 | 2 hours | 22, otherwise 20 |
 | 40 hours | $1,240 | 4 hours | 44, otherwise 40 |
 
-Paid hours cost $31 each, including the hourly platform fee. The welcome bonus is automatic and available once per recipient on their first eligible 10-, 20- or 40-hour package, regardless of who pays. A 5-hour purchase preserves that eligibility. Gift bonuses are resolved for the recipient at claim; a gift advertises a conditional bonus, not an unconditional extra entitlement.
+Paid hours cost $31 each, including the hourly platform fee. The welcome bonus is automatic and available once per family account on their first eligible 10-, 20- or 40-hour package, regardless of who pays. A 5-hour purchase preserves that eligibility. Gift bonuses are resolved for the claiming family account at claim; a gift advertises a conditional bonus, not an unconditional extra entitlement.
 
 Paid and awarded bonus hours follow the same care rules. They do not expire. One hour remains one hour of eligible standard-priced care after a platform price increase. Valid purchases, including unused packages and unclaimed gifts, are non-refundable. Cancelling an undelivered visit or recording a no-show restores its reserved hours; there is no cancellation/no-show fee.
 
-Hours belong to a particular recipient, with family-account access controlling who can arrange their care. A donor does not gain access to the family, care information or booking rights. Several relatives can contribute to one recipient through a private link. The software retains the individual purchase records behind that shared balance.
+Hours belong to one stable family account, managed by its owner and usable by authorized members for eligible care across its recipients. A donor gains no family access, care information or booking rights. New private contribution links display **Family care balance**, without an editable name; historical links retain their approved label snapshot. The software retains each purchase and its original funding source behind the shared balance; changes to the owner or membership do not move or erase credit.
 
-Family-wide custom pricing blocks buying/claiming hours for that family. A caregiver-specific custom agreement allows standard-priced care with other caregivers, but that particular custom-priced booking uses card. Shared-care arrangements are also excluded from prepaid booking. Escalate identity or pricing incompatibilities instead of creating duplicate recipient balances to work around them.
+Family-wide custom pricing blocks buying/claiming hours for that family. A caregiver-specific custom agreement allows standard-priced care with other caregivers, but that particular custom-priced booking uses card. Shared-care arrangements are also excluded from prepaid booking. Escalate family access or pricing incompatibilities instead of creating another account to work around them.
 
-## 4 Read a recipient account
+## 4 Read a family account
 
-The account header identifies the recipient, care-hour account number, family number and family owner's email. Check all four before taking action.
+The account header identifies the family, care-hour account number, stable family number and family owner's email. Check these before taking action. The page combines the family's eligible source accounts; it does not create a separate spendable balance for each recipient.
 
 ### The four balance cards
 
@@ -71,6 +71,14 @@ The account header identifies the recipient, care-hour account number, family nu
 | **On hold** | Unallocated hours withheld because the underlying purchase needs review |
 
 The display is in hours and minutes. The ledger records minutes. A held purchase can also affect minutes already allocated to a visit; inspect the visit error and settlement state rather than relying only on the **On hold** card.
+
+### Existing records and welcome eligibility
+
+The `care_hour_family_wallets` mapping selects one canonical wallet for a stable `family_account_id`. Historical recipient accounts remain internal sources. Their purchases, lots, exact minute ranges, funding allocations, ledger history, settlement records and Stripe references are retained; no bulk reassignment or deletion of those financial rows is needed. Held or inactive source hours do not become spendable through pooling.
+
+Previously awarded welcome hours stay intact. A prior valid award anywhere in the family consumes the once-per-family offer; changing recipient, payer, owner or contribution link cannot earn another award. An accepted pending qualifying checkout must resolve before a competing welcome claim proceeds. Five-hour packages preserve eligibility.
+
+Current acceptance uses terms version `2026-10-30-family-wallet`. Historical accepted terms and quotes remain attached to their original purchases. Never overwrite old acceptance evidence or remove a past award to make it match the new rule.
 
 ### Purchases and payment issues
 
@@ -96,7 +104,7 @@ This history shows event time, description, minutes, visit ID and purchase ID. U
 | --- | --- |
 | **Pending** | Payment/checkout has not been confirmed. Locate the original attempt before another payment is made. |
 | **Paid** | Payment is confirmed. A ready unclaimed gift legitimately remains here until claim; other unissued purchases may still need fulfillment. |
-| **Issued** | Hours were added to a recipient balance. This does not mean they have all been used. |
+| **Issued** | Hours were added to a family balance. This does not mean they have all been used. |
 | **Failed / Expired** | The recorded attempt failed or its checkout expired. Reconcile an uncertain provider result before advising another attempt. |
 | **Recovery** | Automatic fulfillment or safe retry could not finish. Review the original payment and error. |
 | **Held** | A dispute or reversal requires funding review. A claim or payout may be blocked. |
@@ -104,7 +112,7 @@ This history shows event time, description, minutes, visit ID and purchase ID. U
 
 ### Recheck a purchase
 
-1. Open the recipient account and locate the exact purchase.
+1. Open the family account and locate the exact purchase.
 2. Expand **Recheck provider status**.
 3. Enter a reason of 5 to 500 characters, ideally including the support reference.
 4. Select **Recheck payment**.
@@ -119,13 +127,13 @@ This is a recovery action, not a read-only lookup. It records who requested the 
 3. Enter a reason of 5 to 500 characters.
 4. Select **Recheck gift payment** and review the result.
 
-Gift checks have their own audit record, which also works before a gift is assigned to a family. Rechecking payment does not claim a gift for a recipient.
+Gift checks have their own audit record, which also works before a gift is assigned to a family. Rechecking payment does not claim a gift into a family account.
 
 ### Support a missing or rejected gift code
 
 The admin list deliberately does not reveal the raw claim code and has no code-reset, claim-on-behalf or reassignment control. Ask the buyer to reopen their gift receipt and verify the purchase email when requested; the verified receipt provides their code. Do not request the code in a support ticket when the purchase reference is enough.
 
-If the gift is already claimed, follow the recipient link. If payment is held, investigate that original purchase. If an unclaimed gift is paid and ready, age alone is not an error: gifts have no expiry. If the recipient has custom family pricing, a different existing account, or an ambiguous identity, resolve that access/eligibility issue before claim; do not move hours by direct database edits.
+If the gift is already claimed, follow the family-balance link. If payment is held, investigate that original purchase. If an unclaimed gift is paid and ready, age alone is not an error: gifts have no expiry. If the claiming family has custom pricing or the person is signed in to the wrong family account, resolve that access/eligibility issue before claim; do not move hours by direct database edits.
 
 ### Correct an invalid paid purchase
 
@@ -143,7 +151,7 @@ For **Billing correction: pending**, use **Recheck provider status** on the exis
 
 The ordinary card path remains available. Owning prepaid hours does not change previously arranged card bookings or existing plan funding.
 
-1. **Request posted.** Eligible recipient hours are preselected on a new request. A family can select card, and that choice is remembered. Posting saves a preference only; it does not charge or reserve hours.
+1. **Request posted.** Eligible available family hours are preselected on a new request for any eligible family recipient, including a newly added person. A family can select card, and that choice is remembered, including across recipient changes. Posting saves a preference only; it does not charge or reserve hours.
 2. **Care booked.** The family reviews coverage before confirming. Full coverage needs no saved card. A shortfall requires a separate payment action or more hours. A donor's payment method is never reused as the family's card.
 3. **Visit prepared.** Planned prepaid minutes are reserved. Future regular-care visits are prepared through the existing payment window; creating a plan does not spend the entire balance immediately.
 4. **Care delivered.** Existing check-in, pause, checkout and approval steps continue. A visit requiring coverage is not ready for check-in until its funding is protected.
@@ -194,11 +202,11 @@ Do not confuse a restored hour reservation with a cash refund. Cancelling a prep
 
 ### Robert's children contribute to one balance
 
-Emily owns the family account and creates Robert's private contribution link. Daniel and Sophie each buy hours through it. Search Robert's account to see the combined balance and both separate purchases. Verify whether the once-per-recipient welcome offer was already used or reserved by another checkout. Revoke/replace a leaked contribution link through the owner's existing control; this does not reverse completed purchases or grant donors family access.
+Emily owns the family account and creates a private link showing **Family care balance** for relatives helping with Robert's care. Daniel and Sophie each buy hours through it. Search the family account to see the combined balance and both separate purchases. Verify whether the once-per-family welcome offer was already used or reserved by another checkout. Revoke/replace a leaked contribution link through the owner's existing control; this does not reverse completed purchases or grant donors family access.
 
 ### Linda cancels and cannot see all hours returned
 
-Match the correct visit and ensure the cancellation/no-show was recorded, rather than merely requested. Check the **Released** funding state and **Usage and balance history**. Reserved hours should return to the same recipient, including bonus hours. If the source purchase is held, returned hours can remain held. If a shortfall card operation remains, use its recorded recovery control; do not buy replacement hours or manually add a matching balance.
+Match the correct visit and ensure the cancellation/no-show was recorded, rather than merely requested. Check the **Released** funding state and **Usage and balance history**. Reserved hours should return to the same family balance and original source allocations, including bonus hours. If the source purchase is held, returned hours can remain held. If a shortfall card operation remains, use its recorded recovery control; do not buy replacement hours or manually add a matching balance.
 
 ### Claire completed care but has not been paid
 
@@ -210,7 +218,7 @@ The purchase and its associated lot can be held, and the family receives the app
 
 ### The family says hours were not selected
 
-Check that the chosen recipient is the one linked to the balance, hours are available rather than reserved/held, the account/profile is active, and the booking supports prepaid pricing. A remembered card choice is intentional. Existing prepared card visits do not convert. Copying an eligible prior request preserves its explicit recipient identity; changing the recipient clears that selection. Never match recipients solely by identical names.
+Check the signed-in family, available rather than reserved/held hours, active sources and booking eligibility. All eligible recipients in the family use the same pool; no recipient-to-balance match is needed. A remembered card choice is intentional and survives recipient changes. Existing prepared card visits and plan preferences do not convert. Gift claim creates no synthetic self profile: care details are entered through normal request setup later.
 
 ## 9 Notifications and delivery operations
 
@@ -246,7 +254,7 @@ The limits are bounded to 1-500 by the reconciliation commands. The booking reco
 
 Exit **0 / healthy** means no persisted backlog is older than the selected thresholds. Exit **1 / attention** means at least one category is overdue. Exit **2 / unknown** means schema, parameters or inspection could not establish health. Treat unknown as requiring investigation, not as an empty backlog.
 
-The default age is 30 minutes, with a 1,500-minute grace period for ordinary open checkouts. The command validates the required prepaid schema, including request funding preferences. It checks purchase fulfillment/fees/corrections, settlements, payment releases/operations, booking checkouts, purchase notices, prepaid visit coverage/settlement/earnings notices, holds and the shared Stripe webhook inbox. Ordinary card payout alerts are excluded from the prepaid-specific notice check.
+The default age is 30 minutes, with a 1,500-minute grace period for ordinary open checkouts. The command validates the required prepaid schema, including request funding preferences and the family-wallet mapping. It checks purchase fulfillment/fees/corrections, settlements, payment releases/operations, booking checkouts, purchase notices, prepaid visit coverage/settlement/earnings notices, holds and the shared Stripe webhook inbox. Ordinary card payout alerts are excluded from the prepaid-specific notice check.
 
 Counts overlap. Ages use stable original business/creation timestamps, not the last retry time. A ready, unclaimed gift is a valid non-expiring obligation and is excluded from stuck fulfillment. The shared webhook category covers ordinary card payments too; its errors are not automatically prepaid errors.
 
@@ -257,22 +265,22 @@ Healthy does not verify provider connectivity, actual email delivery, scheduler 
 | Configuration switch | Controls |
 | --- | --- |
 | `CARE_HOURS_PRIVATE_PILOT_ENABLED` | Defaults to true for the code-defined private pilot. Explicit false pauses new discovery and purchases; malformed values also deny access. The setting survives ordinary redeployments. |
-| `CARE_HOURS_ENROLLMENT_ENABLED` | New direct recipient enrollment |
+| `CARE_HOURS_ENROLLMENT_ENABLED` | New direct family-wallet enrollment |
 | `CARE_HOURS_SALES_ENABLED` | New sales |
 | `CARE_HOURS_CONTRIBUTIONS_ENABLED` | New outside contributions |
 | `CARE_HOURS_WELCOME_BONUS_ENABLED` | New welcome-offer quoting |
 
 The release fixes the pilot restriction to the signed-in family account `peverelli.t@gmail.com`. The legacy `CARE_HOURS_ENABLED`, `CARE_HOURS_GIFTS_ENABLED`, `CARE_HOURS_PILOT_ONLY` and `CARE_HOURS_PILOT_EMAILS` environment values no longer control this private release: stale disabled flags cannot prevent the approved pilot, and stale broad settings cannot admit anyone else. Gift sales follow the private-pilot and sales switches. Enrollment, sales, contribution and welcome-offer pauses above remain effective. Expanding access requires a reviewed code change.
 
-No environment edit is needed to start the pilot: run the usual `./deploy.sh`. If an operator later needs to pause it, set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` in the protected shared environment and run the usual deployment to rebuild the candidate cache safely. Leave that setting in place to keep subsequent deployments paused. Do not clear or rebuild the active release's configuration cache outside the deployment procedure.
+No manual environment edit is needed for the approved pilot. The family-wallet change requires two separately reviewed releases: first deploy the v1 bridge, then deploy the v2 family-wallet release, using the usual `./deploy.sh` for each. The currently installed v1-only driver rejects a direct v2 upgrade before activation. Do not present the locally prepared v2 as ready for a single invocation of that old driver. If an operator later needs to pause it, set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` in the protected shared environment and run the usual deployment to rebuild the candidate cache safely. Leave that setting in place to keep subsequent deployments paused. Do not clear or rebuild the active release's configuration cache outside the deployment procedure.
 
 Pausing exposure or sales does not erase existing balances, cancel prepared care, invalidate accepted purchases or remove previously paid gifts' claim rights. Paid gift claims retain their accepted offer rules. Keep reconciliation, webhooks and necessary notification processing running for existing obligations.
 
 The deployment driver validates a complete, fingerprinted prepaid source package. The usual `./deploy.sh` command captures the fetched commit once and uses it throughout deployment; an explicit commit constraint is optional. Its first prepaid introduction accepts disabled exposure or the exact approved private pilot and rejects broader exposure. It applies additive migrations and records a permanent prepaid compatibility floor before activation.
 
-Once that floor is recorded, manual rollback, automatic failure recovery and forward deployment to older code must still use prepaid-compatible code. This restriction applies even before the first sale. Do not delete the floor, reverse prepaid migrations, delete ledger data, clear holds, or start old incompatible workers to escape a failed deployment. Prepare a reviewed compatible recovery release or forward repair before introduction.
+The bridge supports the existing v1 recipient contract and the new v2 family-wallet contract. Before v2 activation, the driver durably pins floor 2. Manual rollback, automatic failure recovery and forward deployment then require v2-compatible code; v1 is no longer a recovery target. A failed first v2 activation needs a v2 repair release. This restriction applies even before the first sale. Do not delete the floor, reverse prepaid migrations, delete ledger data, clear holds, or start old incompatible workers to escape a failed deployment. Prepare a reviewed compatible recovery release or forward repair before introduction.
 
-A retained rollback target must also preserve all six current cached prepaid switches, the pilot restriction and the effective pilot email list. If its settings differ, use an approved forward release with the intended configuration. The driver does not silently rewrite the shared environment or reopen paused sales. Follow the [deployment runbook](../deployment/zero-downtime-deployments.md) for the exact engineering procedure.
+A retained rollback target must also preserve all six current cached prepaid switches, the pilot restriction, effective pilot email list and wallet scope. The v2 cache must declare `care_hours.wallet_scope=family`; v1 requires recipient scope. Source manifest and cache scope must agree. If its settings differ, use an approved forward release with the intended configuration. The driver does not silently rewrite the shared environment or reopen paused sales. Follow the [deployment runbook](../deployment/zero-downtime-deployments.md) for the exact engineering procedure.
 
 The initial pilot is Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. It does not grant access to other users merely because they have the same display name, join the family, or enter that email into a guest checkout. New gift and contribution purchases also require the pilot login and its matching buyer email. Guest receipt recovery and already-paid gift claims remain available; issued hours and committed care continue working. Administrators retain their operational views. The dedicated private-pilot pause hides new controls even from the pilot user.
 
@@ -280,7 +288,7 @@ The older support-specific documents named **prepaid visit recovery** and **prep
 
 ## 12 Before production activation
 
-Review the latest validation report together with the proposed release. Local automated tests do not establish the current production runtime. The authorized deployment owner must verify the complete committed feature and matching manifest; all six additive migrations; warmed exact private-pilot or paused settings; compatible recovery release; production database/shared-lock behavior; current webhook delivery; scheduler and queue operation; actual email transport; caregiver payout configuration; and monitoring/support ownership.
+Review the latest validation report together with the proposed release. Local automated tests do not establish the current production runtime. The authorized deployment owner must verify the complete committed feature and matching manifest; all seven additive care-hours migrations, including `2026_10_30_000100_create_care_hour_family_wallets`; warmed exact private-pilot or paused settings; confirmed bridge installation and a compatible v2 recovery release; production database/shared-lock behavior; current webhook delivery; scheduler and queue operation; actual email transport; caregiver payout configuration; and monitoring/support ownership.
 
 The deployment owner runs the production deployment. This work must never access the production server through SSH. Nothing in this guide changes that boundary.
 

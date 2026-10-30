@@ -10,8 +10,8 @@
             </label>
         @endforeach
     </div></fieldset>
-    @if(collect($packages)->contains(fn ($package) => $package['bonus_minutes'] > 0))<p class="text-sm text-[#485E53]">The welcome bonus applies once per care recipient, on their first 10-, 20-, or 40-hour package. A 5-hour purchase keeps them eligible.</p>@endif
-    @if(collect($packages)->contains(fn ($package) => $package['welcome_pending'] ?? false))<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">A welcome-bonus purchase is already processing for this person. Wait for its result before buying another package.</p>@endif
+    @if(collect($packages)->contains(fn ($package) => $package['bonus_minutes'] > 0))<p class="text-sm text-[#485E53]">The welcome bonus applies once per family account, on its first 10-, 20-, or 40-hour package. A 5-hour purchase keeps your family eligible.</p>@endif
+    @if(collect($packages)->contains(fn ($package) => $package['welcome_pending'] ?? false))<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">A welcome-bonus purchase is already processing for this family account. Wait for its result before buying another package.</p>@endif
     <label class="flex items-start gap-3 text-sm"><input type="checkbox" name="terms" value="1" required class="mt-1 rounded border-[#D8E1D7]"><span>I agree this purchase is non-refundable. Paid and free hours never expire.</span></label>
     <button type="submit" class="hc-primary-button w-full sm:w-auto">Continue to payment</button>
 </form>

@@ -85,7 +85,7 @@ class CareHourPilotServicesTest extends TestCase
         $this->assertDatabaseCount('care_hour_recipient_links', 0);
     }
 
-    public function test_pilot_can_enroll_its_existing_profile(): void
+    public function test_pilot_legacy_profile_entry_creates_the_family_wallet_without_linking_a_person(): void
     {
         $owner = User::factory()->create(['role' => 'family', 'email' => self::PILOT_EMAIL]);
         $family = app(FamilyAccountContext::class)->account($owner);
@@ -94,7 +94,9 @@ class CareHourPilotServicesTest extends TestCase
             'full_name' => 'Pilot recipient', 'status' => 'active',
         ]);
         $account = app(CareHourIdentityService::class)->enrollProfile($profile, $owner);
-        $this->assertSame($profile->id, $account->care_recipient_profile_id);
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->assertSame($family->id, $account->family_account_id);
+        $this->assertSame('Pilot recipient', $profile->fresh()->full_name);
     }
 
     public function test_global_pause_still_blocks_the_pilot(): void

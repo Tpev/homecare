@@ -228,6 +228,11 @@ class CareHourGiftService
 
     public function resolveSelfClaimAccount(#[\SensitiveParameter] string $code, User $actor): CareHourAccount
     {
+        return $this->resolveFamilyClaimAccount($code, $actor);
+    }
+
+    public function resolveFamilyClaimAccount(#[\SensitiveParameter] string $code, User $actor): CareHourAccount
+    {
         $gift = $this->findCode($code);
         $purchase = app(CareHourPurchaseService::class)->refresh($gift->purchase);
         $gift->refresh();
@@ -235,18 +240,18 @@ class CareHourGiftService
             $this->unavailable();
         }
         if ($actor->role !== 'family') {
-            throw new AuthorizationException('Sign in to your family account to claim these hours for yourself.');
+            throw new AuthorizationException('Sign in to your family account to claim these hours.');
         }
         $family = $this->families->account($actor);
 
         return DB::transaction(function () use ($actor, $family, $gift): CareHourAccount {
             $family->newQuery()->whereKey($family->id)->lockForUpdate()->firstOrFail();
             app(CareHourEligibilityService::class)->assertFamilyEligible((int) $family->id, 'recipient');
-            $account = app(CareHourIdentityService::class)->enrollSelfForGift($actor, $gift);
+            $account = app(CareHourIdentityService::class)->ensureFamilyWallet($actor, $gift);
             $account = CareHourAccount::query()->whereKey($account->id)->lockForUpdate()->firstOrFail();
             $this->assertRecipient($account, $actor);
             // Match claim's account -> purchase -> gift order. A concurrent hold or claim
-            // rolls back any draft identity creation, without provider I/O under these locks.
+            // rolls back wallet creation, without provider I/O under these locks.
             $purchase = CareHourPurchase::query()->whereKey($gift->care_hour_purchase_id)->lockForUpdate()->firstOrFail();
             $currentGift = CareHourGift::query()->whereKey($gift->id)->lockForUpdate()->firstOrFail();
             if (! $this->claimable($purchase, $currentGift)) {
@@ -270,19 +275,20 @@ class CareHourGiftService
         }
         app(CareHourEligibilityService::class)->assertFamilyEligible((int) $this->families->account($actor)->id, 'recipient');
         $identities = app(CareHourIdentityService::class);
-        $account = match ($selection[1]) {
-            'account' => $identities->accountsFor($actor)->firstWhere('id', (int) $selection[2]),
-            'profile' => ($profile = $identities->profilesFor($actor)->firstWhere('id', (int) $selection[2]))
-                ? $identities->enrollProfile($profile, $actor, $gift) : null,
-            'recipient' => ($recipient = $identities->recipientsFor($actor)->firstWhere('id', (int) $selection[2]))
-                ? $identities->enroll($recipient, $actor, $gift) : null,
+        $selected = match ($selection[1]) {
+            'account' => CareHourAccount::query()->whereKey((int) $selection[2])
+                ->where('family_account_id', $this->families->account($actor)->id)->first(),
+            'profile' => $identities->profilesFor($actor)->firstWhere('id', (int) $selection[2]),
+            'recipient' => $identities->recipientsFor($actor)->firstWhere('id', (int) $selection[2]),
         };
-        if (! $account) {
+        if (! $selected) {
             throw new AuthorizationException('Choose an existing care recipient in your family.');
         }
-        $this->assertRecipient($account, $actor);
+        if ($selected instanceof CareHourAccount) {
+            $this->assertRecipient($selected, $actor);
+        }
 
-        return $account;
+        return $this->resolveFamilyClaimAccount($code, $actor);
     }
 
     public function claim(#[\SensitiveParameter] string $code, CareHourAccount $account, User $actor, string $quoteKey): CareHourPurchase
@@ -334,9 +340,9 @@ class CareHourGiftService
 
     private function claimQuote(CareHourGift $gift, CareHourPurchase $purchase, CareHourAccount $account): array
     {
-        $welcome = DB::table('care_hour_welcome_claims')->where('care_hour_account_id', $account->id)->first();
+        $welcome = app(CareHourPurchaseService::class)->welcomeClaim($account);
         if ($gift->welcome_bonus_minutes > 0 && $welcome?->status === 'reserved') {
-            throw ValidationException::withMessages(['gift_code' => 'Another purchase is confirming this recipient’s welcome offer. Please try again when it finishes.']);
+            throw ValidationException::withMessages(['gift_code' => 'Another purchase is confirming your family’s welcome offer. Please try again when it finishes.']);
         }
         $bonus = (! $welcome || $welcome->status === 'available') ? $gift->welcome_bonus_minutes : 0;
         $quote = ['paid_hours' => $purchase->paid_minutes / 60, 'paid_minutes' => $purchase->paid_minutes,
@@ -376,7 +382,7 @@ class CareHourGiftService
             throw new AuthorizationException('You do not have access to this care balance.');
         }
         if (! $account->active || $account->familyAccount->status !== FamilyAccount::STATUS_ACTIVE || $account->currency !== 'usd') {
-            throw ValidationException::withMessages(['recipient' => 'Choose an active existing care recipient.']);
+            throw ValidationException::withMessages(['recipient' => 'Your family care balance is currently unavailable.']);
         }
         if ($enforceEligibility) {
             app(CareHourEligibilityService::class)->assertFamilyEligible((int) $account->family_account_id, 'recipient');

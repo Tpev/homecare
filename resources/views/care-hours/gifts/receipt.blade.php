@@ -29,5 +29,5 @@
             <div class="space-y-1 border-t border-[#D8E1D7] pt-3"><dt>Reference</dt><dd class="break-all">{{ $purchase->public_id }}</dd></div>
         </dl>
     </section>
-    <p class="text-sm text-[#485E53]">Non-refundable · No expiry. Any eligible welcome bonus is confirmed when the gift is claimed. Buying a gift does not give access to the recipient’s care account.</p>
+    <p class="text-sm text-[#485E53]">Non-refundable · No expiry. Any eligible welcome bonus is confirmed when the gift is claimed. Buying a gift does not give access to the family account that claims it.</p>
 @endsection

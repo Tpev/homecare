@@ -1,13 +1,13 @@
 # Prepaid care hours notification reference
 
-Updated October 28, 2026. This reference covers prepaid purchases, gifts, contributions and their booking and payment notifications in the local release. Production remains a separate activation decision. A recorded email send means the configured mail transport accepted the message; actual inbox delivery has not been verified for this release.
+Updated October 30, 2026. This reference covers prepaid purchases, gifts, contributions and their booking and payment notifications in the locally prepared shared family-wallet release. Its bridge and v2 release have not been deployed or verified in production. A recorded email send means the configured mail transport accepted the message; actual inbox delivery has not been verified for this release.
 
 Use this with the [user guide](prepaid-care-hours-user-guide.md) and [admin guide](prepaid-care-hours-admin-guide.md). Names in examples are fictional.
 
 ## Who receives what
 
 - **Buyer** means the person who paid. A guest contributor or gift purchaser can receive transactional email without creating a LoLo account.
-- **Family** means active members of the recipient's family account, including its owner. Shared visit events expand to those members; they retain separate notification preferences and read states.
+- **Family** means active authorized members of the family account that owns the wallet, including its owner. Shared visit events expand to those members; they retain separate notification preferences and read states.
 - **Caregiver** means the person assigned to the visit. A contributor does not receive caregiver or booking updates merely because they funded hours.
 - **In-app** means a notification in the signed-in person's notification center. It does not mean a text message or a mobile push notification.
 
@@ -22,7 +22,7 @@ Linda's account creation also triggers the normal family signup messages. These 
 | A new family account is registered, including signup while claiming a gift | The new account holder; in-app and email under normal preferences | **Welcome to LoLo Care**; email subject **[LoLo Care] Welcome to LoLo Care** | **Find care** opens request creation. Explains creating a request, reviewing caregivers and messaging them. One welcome delivery per account and channel. |
 | The same family registration completes | Configured operations recipients; email only | **[LoLo Care] New family registration: [account email]** | **Review family account** opens the admin user record. Includes signup contact details and account creation information; absent optional details are marked as not provided. One email to each intended operations recipient for that registration. |
 
-Jane does not receive Linda's signup messages merely because she bought the gift. The buyer email-verification message is also separate from Linda's account welcome. Registration does not create a care booking or confirm a caregiver payment.
+Jane does not receive Linda's signup messages merely because she bought the gift. The buyer email-verification message is also separate from Linda's account welcome. Registration does not create a care profile or booking or confirm a caregiver payment. Claim review goes directly to the family balance; **Find care** later opens normal request setup.
 
 ## Purchase gift and contribution messages
 
@@ -31,17 +31,19 @@ The following subjects and titles are the text used by the application. Verifica
 | Trigger | Recipient and channel | Exact subject or title | Destination and behavior |
 | --- | --- | --- | --- |
 | A guest requests email verification for a contribution, gift purchase or protected receipt | Entered buyer email; email only | **Your LoLo care-hours verification code** | Contains a six-digit code. Default validity is 20 minutes. No gift claim code is included. Requests are limited to three per 15 minutes for the applicable email scope. |
-| A direct purchase or private-link contribution has paid and its hours have been issued | Buyer; email only | **Your LoLo care-hours receipt** | **View receipt**. Shows recipient display name, total hours, price, any welcome hours, included family fee, non-refundable terms and no expiry. A contributor receives their own purchase receipt. |
-| The same hours are issued to a recipient | Active family members; in-app only | **Care hours added** | Opens that recipient's Care hours page. States the number of hours added. The buyer does not receive family access through this notification. |
-| A gift payment is confirmed, before a recipient is chosen | Gift buyer; email only | **Your LoLo care-hours gift** | **View gift receipt**. Shows purchased hours and price. The buyer opens the private receipt and verifies their email to reveal the claim code. The email does not expose the eventual recipient. |
-| A paid gift is successfully claimed | Active members of the claiming family; in-app only | **Care hours added** | Opens the recipient's Care hours page. The credited total includes any welcome bonus confirmed at claim. No separate gift-claimed email is sent to the purchaser. |
+| A direct purchase or private-link contribution has paid and its hours have been issued | Buyer; email only | **Your LoLo care-hours receipt** | **View receipt**. Shows the family destination, total hours, price, any welcome hours, included family fee, non-refundable terms and no expiry. A contributor receives their own purchase receipt. |
+| The same hours are issued to a family wallet | Active family members; in-app only | **Care hours added** | Opens the family's Prepaid care hours page. States the number of hours added. The buyer does not receive family access through this notification. |
+| A gift payment is confirmed, before a family claims the gift | Gift buyer; email only | **Your LoLo care-hours gift** | **View gift receipt**. Shows purchased hours and price. The buyer opens the private receipt and verifies their email to reveal the claim code. The email does not expose the eventual recipient. |
+| A paid gift is successfully claimed | Active members of the claiming family; in-app only | **Care hours added** | Opens the family's Prepaid care hours page. The credited total includes any welcome bonus confirmed at claim. No separate gift-claimed email is sent to the purchaser. |
 | A normal package purchase fails or needs payment attention before completion | Buyer; email only | **Your LoLo care-hours payment needs attention** | **Review purchase**. Says the purchase has not completed and no hours were added. A queued warning is suppressed if hours have already been issued by delivery time. |
 | A gift payment needs attention before payment completes | Gift buyer; email only | **Your LoLo care-hours gift** | **View gift receipt**. The body says to review the current payment status before sharing the gift. A queued warning is suppressed if payment has completed by delivery time. |
-| A purchase is held after a payment dispute or funding review | Active family members, if a family is attached; in-app only | **Care hours need review** | Opens the recipient balance. Says some hours are on hold and to contact LoLo for help with affected visits. Suppressed if the purchase is no longer held when the pending message is delivered. |
+| A purchase is held after a payment dispute or funding review | Active family members, if a family is attached; in-app only | **Care hours need review** | Opens the family balance. Says some hours are on hold and to contact LoLo for help with affected visits. Suppressed if the purchase is no longer held when the pending message is delivered. |
 | A gift purchase is held | Gift buyer; email only | **Your LoLo gift needs review** | **View gift receipt**. Also queues the family hold message when the gift has already been claimed. The buyer message is suppressed if the purchase is no longer held when dispatched. |
 | An authorized correction of an invalid, unissued purchase succeeds | Buyer; email only | **Your LoLo purchase was corrected** | **View purchase**. Says no hours were issued and the purchase amount was returned to the original payment method. This is an operational correction, not a refund option for valid packages. |
 
 Buyer transactional messages are not controlled by family notification email preferences. The family balance-added and hold messages also use the direct purchase outbox rather than marketplace preference toggles. These messages do not send SMS or push notifications.
+
+Family balance links resolve historical purchase source accounts into the same authorized family wallet. New contribution links and receipts use **Family care balance**; historical links retain their approved display-name snapshot. No balance notice implies a separate recipient wallet, and changing the care recipient does not send a transfer notification. Existing source purchase IDs and notice deduplication keys remain intact. Welcome eligibility is once per family account; gift review confirms its exact award before claim. Current purchase/claim terms are `2026-10-30-family-wallet`; prior accepted terms remain in the financial history.
 
 ## Visit coverage settlement and caregiver earnings
 
@@ -73,7 +75,7 @@ Prepaid funding changes how a visit is paid. It preserves the surrounding applic
 | Eligible, undisputed timesheet is automatically approved after 24 hours | Family and caregiver | **Timesheet approved**; in-app and email by preference. A pending time correction or applicable hold prevents automatic approval. |
 | One party proposes a visit schedule change | Other party | **Visit change request**; in-app and email by preference. |
 | Proposed visit schedule change is answered | Original requester | **Visit change accepted** or **Visit change declined**; in-app and email by preference. |
-| Family cancels a scheduled visit | Caregiver | **Visit cancelled**; in-app and email by preference. Reserved prepaid hours return to the recipient balance through the cancellation workflow. |
+| Family cancels a scheduled visit | Caregiver | **Visit cancelled**; in-app and email by preference. Reserved prepaid hours return to the family balance through the cancellation workflow. |
 | Family records caregiver no-show | Caregiver | **Visit marked no-show**; in-app and email by preference. Reserved hours are restored; no cancellation/no-show fee applies. |
 | A caregiver cancellation reopens a request for replacement | Family | **Choose a replacement caregiver**; in-app and email by preference. |
 | Family submits a caregiver review | Caregiver | **You received a new review**; in-app and email by preference. |
@@ -177,11 +179,11 @@ The read-only `care-hours:health --json` report checks overdue purchase notices 
 
 Jane Bennett buys a 10-hour gift for her mother Linda Bennett. Jane receives an email verification code and, after payment succeeds, a gift receipt email. She opens her protected receipt, views the gift code and shares it privately.
 
-Linda enters the gift code, creates her account and claims for herself. If she qualifies for the welcome bonus, 11 hours are added and her family account receives **Care hours added** in-app. Jane does not receive Linda's account or care details.
+Linda enters the gift code, creates her account, reviews the exact hours and claims into her family wallet, without choosing or creating a care profile. If her family qualifies for the welcome bonus, 11 hours are added and her family account receives **Care hours added** in-app. Jane does not receive Linda's account or care details.
 
 Linda posts a two-hour request with care hours selected by default. Posting sends no prepaid payment receipt and does not reserve the balance. When she hires Claire, the usual hire messages apply. Scheduled reminders, check-in and checkout updates follow the visit workflow.
 
-After Linda approves two hours, the family receives **Care hours used for your visit** with no additional visit payment. Once Claire's full net transfer is confirmed, Claire receives **Earnings available in Stripe**. The remaining nine hours stay in Linda's balance. If Claire's payout setup needs attention, the family settlement can still be complete while the earnings notice waits for a confirmed payout.
+After Linda approves two hours, the family receives **Care hours used for your visit** with no additional visit payment. Once Claire's full net transfer is confirmed, Claire receives **Earnings available in Stripe**. The remaining nine hours stay in Linda's family balance and can cover eligible care for any recipient in that family. If Claire's payout setup needs attention, the family settlement can still be complete while the earnings notice waits for a confirmed payout.
 
 ## Implementation references
 

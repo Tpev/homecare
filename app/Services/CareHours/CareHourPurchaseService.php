@@ -40,12 +40,15 @@ class CareHourPurchaseService
 
     public function quote(CareHourAccount $account, int $hours): array
     {
+        if ($account->currency !== 'usd') {
+            throw ValidationException::withMessages(['package' => 'This care balance uses an unsupported currency. Contact support before buying hours.']);
+        }
         app(CareHourEligibilityService::class)->assertFamilyEligible((int) $account->family_account_id);
         $package = config('care_hours.packages.'.$hours);
         if (! is_array($package) || ! in_array($hours, [5, 10, 20, 40], true)) {
             throw ValidationException::withMessages(['package' => 'Choose one of the available packages.']);
         }
-        $claim = DB::table('care_hour_welcome_claims')->where('care_hour_account_id', $account->id)->first();
+        $claim = $this->welcomeClaim($account);
         $eligible = config('care_hours.welcome_enabled', false) && (! $claim || $claim->status === 'available');
         $bonus = $eligible && $hours !== 5 ? (int) $package['bonus_minutes'] : 0;
         $quote = [
@@ -57,6 +60,16 @@ class CareHourPurchaseService
         $quote['quote_key'] = hash_hmac('sha256', $account->id.'|'.json_encode($quote), (string) config('app.key'));
 
         return $quote;
+    }
+
+    /** New offers share family eligibility; accepted historical purchases keep their original claims. */
+    public function welcomeClaim(CareHourAccount $account): ?object
+    {
+        return DB::table('care_hour_welcome_claims')
+            ->whereIn('care_hour_account_id', CareHourAccount::query()
+                ->where('family_account_id', $account->family_account_id)->select('id'))
+            ->orderByRaw("CASE status WHEN 'awarded' THEN 0 WHEN 'reserved' THEN 1 WHEN 'available' THEN 3 ELSE 2 END")
+            ->orderBy('care_hour_account_id')->first();
     }
 
     public function start(CareHourAccount $account, int $hours, User $buyer, string $quoteKey, string $requestKey, string $successUrl, string $cancelUrl): CareHourPurchase
@@ -200,7 +213,7 @@ class CareHourPurchaseService
     {
         $this->assertFinancials($purchase, $financials);
         DB::transaction(function () use ($purchase, $financials): void {
-            $account = $purchase->care_hour_account_id ? CareHourAccount::query()->lockForUpdate()->findOrFail($purchase->care_hour_account_id) : null;
+            $account = $purchase->care_hour_account_id ? $this->lockPurchaseAccount($purchase) : null;
             $current = CareHourPurchase::query()->lockForUpdate()->findOrFail($purchase->id);
             $this->assertFinancials($current, $financials);
             // A claim may assign an account while this reconciliation waits for the purchase lock.
@@ -268,11 +281,19 @@ class CareHourPurchaseService
         return $purchase->fresh();
     }
 
+    private function lockPurchaseAccount(CareHourPurchase $purchase): CareHourAccount
+    {
+        $account = CareHourAccount::query()->findOrFail($purchase->care_hour_account_id);
+        FamilyAccount::query()->whereKey($account->family_account_id)->lockForUpdate()->firstOrFail();
+
+        return CareHourAccount::query()->lockForUpdate()->findOrFail($account->id);
+    }
+
     public function markFailed(CareHourPurchase $purchase, string $status = 'failed'): void
     {
         DB::transaction(function () use ($purchase, $status): void {
             if ($purchase->care_hour_account_id) {
-                CareHourAccount::query()->lockForUpdate()->findOrFail($purchase->care_hour_account_id);
+                $this->lockPurchaseAccount($purchase);
             }
             $current = CareHourPurchase::query()->lockForUpdate()->findOrFail($purchase->id);
             if ($current->paid_at || $current->issued_at) {
@@ -289,9 +310,12 @@ class CareHourPurchaseService
     {
         DB::transaction(function () use ($purchase, $amountCents): void {
             if ($purchase->care_hour_account_id) {
-                CareHourAccount::query()->lockForUpdate()->findOrFail($purchase->care_hour_account_id);
+                $this->lockPurchaseAccount($purchase);
             }
             $current = CareHourPurchase::query()->lockForUpdate()->findOrFail($purchase->id);
+            if ((int) $current->care_hour_account_id !== (int) $purchase->care_hour_account_id) {
+                throw new PaymentException('The gift was just claimed. Retry payment reconciliation.');
+            }
             $this->ledger->holdPurchase($current, 'Package payment reversed; affected care needs funding review.');
             $current->forceFill(['status' => 'held', 'amount_reversed_cents' => max($current->amount_reversed_cents, $amountCents), 'last_error' => 'Package payment reversal requires review.'])->save();
             $this->queueHoldNotice($current);
@@ -344,7 +368,7 @@ class CareHourPurchaseService
             }
         }
         DB::transaction(function () use ($purchase, $admin, $reason, $failedRefund): void {
-            CareHourAccount::query()->lockForUpdate()->findOrFail($purchase->care_hour_account_id);
+            $this->lockPurchaseAccount($purchase);
             $current = CareHourPurchase::query()->lockForUpdate()->findOrFail($purchase->id);
             if ($current->correction_state !== null && $current->correction_state !== 'failed') {
                 return;
@@ -392,7 +416,7 @@ class CareHourPurchaseService
                 throw new PaymentException('The correction result does not match this purchase.');
             }
             DB::transaction(function () use ($purchase, $result, $attemptKey): void {
-                CareHourAccount::query()->lockForUpdate()->findOrFail($purchase->care_hour_account_id);
+                $this->lockPurchaseAccount($purchase);
                 $current = CareHourPurchase::query()->lockForUpdate()->findOrFail($purchase->id);
                 if ($current->correction_state !== 'pending' || $this->correctionAttemptKey($current) !== $attemptKey) {
                     return;

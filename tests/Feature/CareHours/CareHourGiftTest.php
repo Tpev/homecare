@@ -4,7 +4,6 @@ namespace Tests\Feature\CareHours;
 
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareHourAccount;
-use App\Models\CareHourGift;
 use App\Models\CareHourPurchase;
 use App\Models\CareRecipientProfile;
 use App\Models\User;
@@ -143,7 +142,9 @@ class CareHourGiftTest extends TestCase
         config(['care_hours.enabled' => false, 'care_hours.gifts_enabled' => false, 'care_hours.sales_enabled' => false, 'care_hours.enrollment_enabled' => false, 'care_hours.welcome_enabled' => false]);
         $gifts = app(CareHourGiftService::class);
         $account = $gifts->resolveClaimAccount($code, $owner, 'profile:'.$profile->id);
-        $this->assertSame($profile->id, $account->care_recipient_profile_id);
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->assertSame($profile->family_account_id, $account->family_account_id);
+        $this->assertDatabaseHas('care_recipient_profiles', ['id' => $profile->id, 'full_name' => $profile->full_name]);
         $preview = $gifts->previewForClaim($code, $account, $owner);
         $this->assertSame(60, $preview['bonus_minutes']);
         $gifts->claim($code, $account, $owner, $preview['quote_key']);

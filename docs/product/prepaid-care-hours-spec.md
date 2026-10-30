@@ -1,16 +1,16 @@
 # LoLo prepaid care hours product specification
 
-Status: Product contract implemented in the local working tree. Live activation remains separate; see the implementation plan for verification and rollout requirements.
+Status: Shared family-wallet contract prepared in the local working tree. It has not been deployed or verified in production. Delivery requires the v1 deployment bridge before the v2 family-wallet release; see the implementation plan and deployment runbook. The pilot remains restricted to `peverelli.t@gmail.com`.
 
-Date: October 16, 2026; gift-claim scope updated October 21, 2026; prepaid default updated October 26, 2026
+Date: October 30, 2026. Supersedes recipient-scoped ownership and bonus rules; terms version `2026-10-30-family-wallet`.
 
 Audience: Product, design, engineering, operations, and support
 
 Implementation handoff: [Detailed implementation plan](/C:/Users/Epicpp/homecare/docs/product/prepaid-care-hours-implementation-plan.md)
 
-LoLo lets people pay upfront for care hours for themselves or a loved one. Direct purchases and private contributions add hours to an existing recipient's balance; gift codes let someone buy before the recipient has joined LoLo. Authorized family members use the balance for future visits, and LoLo settles usage against approved care time. Purchased hours cost $31 each. The recipient's first 10-, 20-, or 40-hour package receives a one-time bonus; five-hour purchases preserve that eligibility and receive no bonus.
+LoLo lets people pay upfront for care hours for themselves or a loved one. Direct purchases and private contributions add hours to one shared family balance; gift codes let someone buy before the recipient has joined LoLo. The family owner manages the wallet, and authorized members can use it for eligible care for anyone in that family. Authorized family members use the balance for future visits, and LoLo settles usage against approved care time. Purchased hours cost $31 each. The family account's first 10-, 20-, or 40-hour package receives a one-time bonus; five-hour purchases preserve that eligibility and receive no bonus.
 
-This specification defines the product behavior for a first release. The core commercial decisions are confirmed. Section 4 records the package prices and automatic welcome bonus, available once per care recipient regardless of who pays. Five-hour purchases preserve eligibility for the recipient's first 10-, 20-, or 40-hour package bonus. Awarded bonus hours follow the same care rules and protections as paid hours. Actual purchase processing fees are spread across all originally issued hours, including bonus hours. No promo code or other promotion is offered at launch. Supporting product defaults and implementation requirements are specified below; launch configuration and technical design remain separate from these settled policies. No code or live payment configuration is changed by this document.
+This specification defines the product behavior for a first release. The core commercial decisions are confirmed. Section 4 records the package prices and automatic welcome bonus, available once per family account regardless of who pays. Five-hour purchases preserve eligibility for the family account's first 10-, 20-, or 40-hour package bonus. Awarded bonus hours follow the same care rules and protections as paid hours. Actual purchase processing fees are spread across all originally issued hours, including bonus hours. No promo code or other promotion is offered at launch. Supporting product defaults and implementation requirements are specified below; launch configuration and technical design remain separate from these settled policies. No code or live payment configuration is changed by this document.
 
 **Compatibility requirement:** prepaid care hours must preserve the current credit-card booking and payment experience. Existing bookings and regular-care plans remain on their existing card flow. Buying a package or holding a balance does not change a payment method, release an authorization, alter a charge, or change a plan. Eligible available care hours are preselected for a new request or booking, with a visible card option and any uncovered amount reviewed before confirmation. An explicit card choice is remembered. Existing plans require an explicit change for future, not-yet-funded visits. The prepaid-first funding rules below apply only inside the selected mode; prepared card funding is preserved.
 
@@ -23,49 +23,51 @@ The following requirements are confirmed:
 - The launch promotion awards bonus hours while keeping purchased hours at $31 each.
 - Prepaid hours must work with bookings and their final billable duration.
 - **Existing credit-card behavior must remain unchanged.** Eligible available hours are preselected for a new request or booking, with a clear option to use card instead. Explicit card choices are remembered. Balances never trigger automatic conversion of existing card bookings or plans, and prepared card funding is not replaced.
-- **Gift recipients can join LoLo after purchase.** A buyer may purchase a gift before choosing its recipient, then privately share a claim code. The recipient enters the code, creates a free account or signs in, and chooses **For myself**. LoLo creates or reuses their private recipient identity and confirms the exact hours before claim. An authorized family member can instead select an existing recipient in their family. Buying by an arbitrary recipient email address is not supported.
+- **Gift recipients can join LoLo after purchase.** A buyer purchases an unassigned gift and privately shares its code. The person enters the code, creates a free family account or signs in, reviews the exact hours and claims into the family's wallet. No recipient chooser or synthetic self profile is created. **Find care** then opens normal request setup. Buying by arbitrary recipient email is not supported.
+
 - **LoLo pays the actual Stripe processing fee upfront on a package purchase, then recovers it proportionally from caregiver earnings as its care hours are completed and settled.** Spread the actual fee across all originally issued paid and bonus minutes. Allocation is based on finalized billable minutes drawn from that purchase, not merely the duration initially reserved. Keep the caregiver's agreed gross rate for every delivered hour, including bonus hours.
-- **Care-hour package purchases are non-refundable**, including unused or partially used packages and contributions for loved ones. Cancelling an undelivered visit restores its full reserved hour credit to the recipient's balance, without returning the package purchase in cash.
+- **Care-hour package purchases are non-refundable**, including unused or partially used packages and contributions for loved ones. Cancelling an undelivered visit restores its full reserved hour credit to the family's balance, without returning the package purchase in cash.
 - **Paid and awarded bonus care hours have no expiry**, including self-purchases and contributions. Inactivity, a campaign ending, or a package being retired does not expire the care balance.
 - **One paid or awarded bonus hour continues to cover one full hour of the same eligible care if prices increase, with no extra charge.** This includes the hourly family fee; the remaining time entitlement is not reduced or converted into a fixed dollar balance.
 - **An explicitly prepaid visit can be booked without a saved card when hours fully cover it.** Reserve the planned duration without an extra buffer. A backup card is optional. Planned shortfalls in prepaid mode can be covered by a one-off payment without saving a card or by purchasing more hours; approved extensions use available hours first, and unavoidable unpaid overruns are recorded for payment follow-up. These rules do not replace the existing card-only flow.
-- **There are no cancellation or no-show fees.** Return the full reserved prepaid time for a cancelled or no-show visit to the same recipient's balance, including late cancellations and whether the family or caregiver is responsible.
-- **Outside contributions use private links enabled by the family account owner for an existing recipient.** Contributors verify their email and pay without joining the family account. A contribution adds hours after successful payment and grants no booking rights or access to care information; the owner can disable the link without undoing completed purchases.
-- **The welcome bonus is available once per care recipient on their first 10-, 20-, or 40-hour package, regardless of who pays.** A recipient's self-purchase, a relative's purchase, and an outside contribution all share that recipient's eligibility. Changing the payer does not create another welcome bonus.
-- **The five-hour package costs $155 and receives no bonus**, including on a first purchase. It always credits five hours. Buying it preserves eligibility for the bonus on the recipient's first 10-, 20-, or 40-hour package.
-- **Awarded bonus hours follow the same care rules as paid hours.** They have the same eligible care coverage, booking rules, no expiry, price protection, and included hourly family fee. Cancellations and no-shows restore the full reserved paid and bonus credit to the same recipient. Families use one combined care balance.
+- **There are no cancellation or no-show fees.** Return the full reserved prepaid time for a cancelled or no-show visit to the same family's balance, including late cancellations and whether the family or caregiver is responsible.
+- **Outside contributions use private links enabled by the family account owner for their family wallet.** Contributors verify their email and pay without joining the family account. A contribution adds hours after successful payment and grants no booking rights or access to care information; the owner can disable the link without undoing completed purchases.
+- **The welcome bonus is available once per family account on their first 10-, 20-, or 40-hour package, regardless of who pays.** Direct purchases, private contributions and claimed gifts share that family account’s eligibility. Changing payer, care recipient, owner or link does not create another welcome bonus. Previously awarded hours remain intact; an earlier valid award anywhere in the family consumes eligibility.
+- **The five-hour package costs $155 and receives no bonus**, including on a first purchase. It always credits five hours. Buying it preserves eligibility for the bonus on the family account's first 10-, 20-, or 40-hour package.
+- **Awarded bonus hours follow the same care rules as paid hours.** They have the same eligible care coverage, booking rules, no expiry, price protection, and included hourly family fee. Cancellations and no-shows restore the full reserved paid and bonus credit to the same family balance. Families use one combined care balance.
 - **The welcome bonus applies automatically, with no code needed, and is the only promotion at launch.** Eligible self-purchases and private-link contributions show the bonus before payment. There are no other launch promotions to combine with it.
 
-**Confirmed launch catalog:** 5 hours for $155, 10 hours for $310, 20 hours for $620, and 40 hours for $1,240. The first qualifying purchase for a recipient adds 1 free hour to the 10-hour package, 2 to the 20-hour package, or 4 to the 40-hour package. Subsequent qualifying-size purchases receive the paid hours only. Section 4 defines these prices, eligibility, care rules, and processing-fee policy.
+**Confirmed launch catalog:** 5 hours for $155, 10 hours for $310, 20 hours for $620, and 40 hours for $1,240. The first qualifying purchase for a family account adds 1 free hour to the 10-hour package, 2 to the 20-hour package, or 4 to the 40-hour package. Subsequent qualifying-size purchases receive the paid hours only. Section 4 defines these prices, eligibility, care rules, and processing-fee policy.
 
-Supporting defaults in this specification include one balance per recipient, oldest purchase allocations used first, and payment-state safeguards. These give the confirmed policies concrete behavior for design and engineering; they are not separate claims of explicit user approval. Section 6 defines the booking payment approach: card mode retains current behavior; explicitly selected prepaid mode applies available care hours before any separately authorized payment for uncovered time. Section 11 records the confirmed decisions and separates technical-design and launch-configuration work from product policy.
+The user confirmed one balance per family account, managed by the owner. Oldest eligible purchase allocations are used first, with payment-state safeguards and complete source history. Section 6 defines the booking payment approach: card mode retains current behavior; explicitly selected prepaid mode applies available care hours before any separately authorized payment for uncovered time. Section 11 records the confirmed decisions and separates technical-design and launch-configuration work from product policy.
 
 One paid or awarded bonus hour covers 60 billable minutes of eligible care, including the hourly family fee. The family is not charged that fee again when redeeming hours. Packages do not reserve a caregiver or guarantee availability; normal booking and care eligibility rules still apply.
 
-## 2 Scope and recipient ownership
+## 2 Scope and family ownership
 
 ### First release
 
-- Purchases for yourself or an existing loved one.
-- Contributions from several people to the same recipient.
-- Contributions by someone outside the recipient's family account through a private contribution link.
-- Unassigned gifts with a private claim code, redeemed once for the signed-in person or an existing recipient in their family. The recipient need not have an account when the gift is bought.
-- A configurable package catalog with the automatic welcome bonus and no promotion-code entry or other promotions at launch.
-- One-time visits and individual visits within regular care under the standard pricing offering, currently $31 per hour. A later standard price increase does not remove coverage from previously purchased hours.
-- Entirely prepaid bookings and bookings funded partly by hours and partly by an authorized payment for uncovered time.
-- Balance and transaction history, booking reservations, adjustments, billing-error recovery, and operational reporting.
+- One shared family balance for eligible care for yourself or anyone in the family.
+- Direct purchases without choosing a recipient or setting up care first.
+- Private contributions into the family wallet through an owner-managed link.
+- Unassigned gifts claimed once into the signed-in person's family account, including after signup. The gift recipient need not have an account when the gift is bought.
+- The fixed package catalog and automatic once-per-family welcome bonus; no promotion codes or other launch promotions.
+- Standard-priced individual visits, including eligible regular-care visits, fully or partly covered by hours. Existing exclusions for shared care, Continuous Coverage and custom pricing remain.
+- Combined balances, reservations and history, with source purchases, adjustments and settlement records retained.
 
 ### Later releases
 
-Creating another person's recipient profile during gift claim, recipient lookup by email, transferable balances, shared balances across recipients, automatic package purchases, package subscriptions, public fundraising pages, anonymous gifts, separate caregiver-specific packages, promo codes, and promotions beyond the welcome bonus are deferred. Continuous Coverage, shared-care arrangements, custom pricing agreements, and historical visit backfills require separate compatibility work before accepting these hours.
+Recipient lookup by email, transfers between family accounts, automatic package purchases, package subscriptions, public fundraising pages, anonymous gifts, caregiver-specific packages, promo codes and other promotions are deferred. Custom-price arrangements, Continuous Coverage, shared care and historical visit backfills need separate compatibility work. Buying or claiming does not create another person's care profile; normal request setup handles care details later.
 
-### Recipient and family account
+### Family account and wallet
 
-The balance belongs to one stable care recipient within one family account. Two relatives buying for the same person add to the same balance; two recipients in the same family account have separate balances. Changes to the account owner or membership do not move or erase purchased hours.
+One wallet belongs to the stable `family_account_id`, managed by the family owner and available under existing family permissions. Two relatives buying add to the same balance; two care recipients in the same family can use that balance for eligible visits. The current owner's user ID, a name, a profile or a request-specific recipient ID is not the wallet key. Changes to ownership or membership do not erase or move credit.
 
-An existing care recipient does not need their own login. A relative may manage their care through the existing family account. Buying for yourself selects the existing recipient identity representing you. A new gift recipient can create a basic family account, then choose **For myself** to create a minimal private draft profile. Claiming requires neither a care request, medical details, a published profile nor a payment card. Later care setup completes this same profile, preserving its balance.
+No care recipient or profile is required to buy or claim hours. A new gift recipient can create a basic family account, review the gift and claim immediately. Claiming requires no care request, phone, medical details or payment card and creates no artificial self profile. **Find care** opens the normal request setup afterward.
 
-Recipient identity must persist across care requests and visits. The application currently has reusable care profiles as well as request-specific recipient records. A request-specific record, a person's name, or the current account owner must not become the balance key. Where an existing recipient has no reusable profile, establish an explicit stable identity link without requiring completion of an optional medical or care profile. Ambiguous matches require family selection before hours can be purchased or used. Resolve these links only for care-hours enrollment and use; ordinary card requests must not require new identity fields, mandatory backfills, or profile completion.
+The additive `care_hour_family_wallets` mapping selects a canonical wallet for each family. Existing recipient accounts remain internal source accounts. Preserve all purchases, lots, exact allocations, committed booking funding, usage history and Stripe references on their original rows; never merge financial history by name or bulk-repoint it. Combine same-family, same-currency sources for balances and allocation, while retaining holds and inactive-source restrictions. Old links and records must resolve to the same authorized family wallet without losing recovery access.
+
+Existing welcome awards remain intact. A valid historical award anywhere in the family prevents a new family welcome award. Accepted pending qualifying attempts keep their quote and resolve before another competing claim. These rules apply across direct purchases, contributions and gifts; recipient or payer changes cannot reset them.
 
 ### Permissions
 
@@ -73,7 +75,7 @@ Recipient identity must persist across care requests and visits. The application
 | --- | --- | --- |
 | Family account owner | Buy hours, book with the balance, view family billing, enable or revoke contribution links, manage access | Existing account powers continue; no cash withdrawal or package refund |
 | Active family member | Buy hours, book and approve care using the balance, view family balance and billing | Existing operational permissions continue; cannot grant family access through a purchase |
-| Outside contributor | Buy for the recipient identified by a valid contribution link and view their own receipt | No package refund or withdrawal; no access to care details, booking history, other contributions, or the combined balance |
+| Outside contributor | Buy for the family identified by a valid contribution link and view their own receipt | No package refund or withdrawal; no access to care details, booking history, other contributions, or the combined balance |
 | Caregiver | See that a visit has payment coverage and view their earnings | No access to who gifted hours or which promotion the family used |
 | Authorized support or finance staff | Inspect allocations and resolve permitted adjustments, billing errors, or payment reversals | No discretionary unused-package refund flow; every action requires an actor, reason, and audit history |
 
@@ -81,44 +83,43 @@ A contribution never creates family membership or booking permission. Removing a
 
 ## 3 Purchase journeys
 
-### Buying for yourself or a recipient you already manage
+### Buy prepaid care for your family
 
-1. Open **Care hours** from the family dashboard or billing area.
-2. Confirm the existing recipient. Show **For me** when the selected recipient represents the signed-in person; otherwise show **For [name]**. With multiple recipients, require an explicit selection.
-3. Choose one package and review paid hours, any eligible bonus hours, total care time, amount due, and effective hourly price. Apply the welcome bonus automatically when eligible; show paid and free hours separately, with no promo-code field.
-4. Review the recipient and the terms **Non-refundable · No expiry**, then select **Buy [number] hours**.
-5. Pay using an authorized payment method. A personal contribution can use its own payment method without replacing the family's saved card.
-6. After payment success is confirmed, show the receipt and updated available balance. Pending payment displays **Payment processing** and contributes no spendable hours.
+1. Open **Prepaid care hours** from Care or Billing. See one **Available credit** balance, including zero, and separate reserved or held time.
+2. Select **Buy prepaid care** to open packages directly. Do not require a recipient chooser, care profile or care request.
+3. Choose a package and review paid hours, eligible free hours, total care time and price. Apply the welcome offer automatically; no promo-code field.
+4. Accept the current family-wallet terms and select **Continue to payment**. An individual payment does not replace the family's saved card.
+5. Confirmed payment shows the receipt and updated family balance. A pending payment shows **Payment processing** and issues no spendable hours.
 
-The confirmation states: **These hours are for [name] and will be available to the people authorized to manage their care.** Before payment, also show **Care-hour packages are non-refundable. Paid and bonus hours have no expiry. Each hour covers one hour of eligible care, even if our hourly price increases. Cancelled visits and no-shows return the full reserved hour credit to the care balance, with no fee.** Recipient selection is fixed for that purchase after payment succeeds.
+State before payment: **These hours go into your family balance and can cover eligible care for anyone in your family. Care-hour packages are non-refundable. Paid and bonus hours have no expiry. Each hour covers one hour of eligible care, even if our hourly price increases. Cancelled visits and no-shows return the full reserved hour credit, with no fee.** New acceptance records use `2026-10-30-family-wallet`; historical terms and accepted quotes remain unchanged.
 
 ### Confirmed outside contribution flow
 
-1. The family owner enables **Let someone contribute care hours** for an existing recipient and previews the name that will be shared.
-2. LoLo provides a private, revocable link. The owner chooses whom to share it with.
-3. The contributor sees a minimal page such as **Contribute care hours for Margaret**, chooses a package, and confirms the recipient before paying. Apply any eligible welcome bonus automatically using the recipient's eligibility, with no promo code.
-4. The contributor verifies their email for the receipt and uses their own payment method. This flow does not require joining or creating a family care account. An existing LoLo login may be reused without changing its family membership.
-5. Confirmed payment credits the recipient immediately. No separate gift claim or recipient onboarding is required.
-6. The contributor receives a receipt. Authorized family members receive a contribution notification and the balance updates.
+1. The family owner enables **Let someone contribute**. New links display **Family care balance**; there is no editable recipient or label field.
+2. LoLo provides a private, revocable link. The owner shares it privately.
+3. The contributor reviews that label, chooses a package and verifies their own email. The family's welcome eligibility determines any bonus. No family membership is created.
+4. Payment uses the contributor's own method. Confirmed payment adds hours to the target family balance with no separate claim.
+5. The buyer receives their own receipt. Authorized family members receive an hours-added notification.
 
-The link reveals only the owner-approved recipient display name and purchase information. It exposes no address, care needs, caregiver details, account balance, or searchable directory of recipients. Knowledge of a name or email alone does not authorize a contribution target. Invalid, revoked, or ineligible links prevent new checkout; earlier purchases remain valid. A checkout already accepted before link revocation can finish against its saved recipient. If the recipient becomes ineligible before the purchase can be fulfilled, reconcile the payment as an invalid-purchase billing correction without issuing usable hours.
+Only the link's display label and purchase information are public. New links use **Family care balance**; older links retain their previously approved display-name snapshot while their hours credit the same family wallet. Do not expose balances, membership, addresses, care needs, caregivers, other purchases or booking history. A name or email alone cannot select a target. Link revocation prevents new checkouts but does not undo completed contributions; already accepted payment attempts keep their immutable family target and terms. A payment that cannot validly be fulfilled follows audited invalid-purchase correction, without issuing usable hours.
 
-The contribution page states: **Your purchase adds care hours to [name]'s balance. It does not give you access to their care account. Care-hour packages are non-refundable and have no expiry.** Show this before payment and retain the accepted terms with the purchase. A contributor cannot revoke a successful contribution to withdraw its unused hours in cash.
+State: **Your purchase adds care hours to [family label]. It does not give you access to their care account. Care-hour packages are non-refundable and have no expiry.** Retain accepted terms; a contributor cannot withdraw a completed contribution.
 
 ### Buy a gift, then claim it
 
-1. The buyer opens **Buy a gift**, verifies their own email, chooses 5, 10, 20 or 40 hours at the existing package prices, and pays. No recipient or LoLo login is required at purchase.
-2. Only authoritative payment confirmation makes a private gift code available in the buyer's secured receipt. No recipient balance, spendable minutes or welcome award exists yet. Email notifications link to receipt verification; they do not contain the code.
-3. The buyer shares the code and the general claim-page link privately. The code is a bearer entitlement: whoever claims it first chooses the recipient. LoLo does not email a gift to an unverified recipient address.
-4. The recipient opens **Claim your gift of care** and enters the code. A valid paid gift continues to a focused signup or sign-in screen. The encrypted code stays in the server session, never in a URL, authentication page or flashed form input. This navigation session lasts one hour; the gift itself does not expire and can be entered again.
-5. After authentication, choose **For myself**, or expand **For someone I care for** to select an existing recipient in the family. **For myself** reuses an explicitly linked self identity or creates a minimal private draft. Names alone do not merge people; ambiguous, archived or conflicting records require review. The gift review shows the paid hours, any eligible welcome bonus, and exact total. The family confirms that the hours cannot move to another recipient after claim.
-6. **Claim my gift** atomically binds the original purchase to the recipient and issues one lot. Duplicate attempts cannot issue more hours. The original payment, actual processing fee and funding source remain attached to that same purchase. **Your care hours are ready** shows the hours added, available balance and optional **Find care** next step. Claiming creates no booking or card payment.
+1. The buyer opens **Buy a gift of care**, selects 5, 10, 20 or 40 hours, verifies their email and pays. Package selection survives verification. No recipient is chosen. The general guest capability remains subject to the current signed-in pilot restriction.
+2. Authoritative payment confirmation makes a private code available in the verified buyer's receipt. No family balance, spendable minutes or welcome award exists until claim. Emails link to receipt verification and never include the code.
+3. The buyer shares the code and general claim-page link privately. Whoever claims it first adds its entitlement to their family account. LoLo does not automatically email the eventual recipient.
+4. The recipient enters the code and creates a free family account or signs in. The encrypted code stays in a one-hour server-session intent, never in URLs, auth HTML or flashed input. The gift itself has no expiry and can be entered again.
+5. Review the exact paid hours, eligible welcome bonus and total to add to the signed-in family balance. No recipient selection or self-profile creation is needed. Confirm the family-wallet terms.
+6. **Claim my gift** atomically binds the original purchase to the family's wallet and issues one lot. Repeated claims cannot add hours. Original charge, actual fee and source remain attached to the purchase.
+7. **Your care hours are ready** shows the credited hours and family balance. **Find care** opens normal request setup for yourself or another family recipient. Claiming itself creates no profile, request, booking or card payment.
 
-Example: Jane buys 10 hours for $310 before her mum Linda has a LoLo account. Linda later enters the code, creates her account, chooses **For myself** and confirms 10 gifted hours plus her eligible 1-hour welcome bonus. Her balance is 11 hours. Jane's receipt never reveals Linda's account or care information.
+Example: Jane buys 10 hours for $310 for Thanksgiving before her mum Linda has a LoLo account. Linda enters the code, creates her account, reviews 10 paid hours plus an eligible 1-hour family welcome bonus and confirms. Her family balance has 11 hours ready. Jane's receipt reveals neither Linda's family identity nor care details.
 
-The welcome offer is conditional at gift purchase and evaluated against the recipient at claim. Record the offered bonus with the gift, so a later campaign pause does not withdraw that conditional offer. A recipient who already received the welcome bonus gets the paid hours only; a five-hour gift preserves eligibility. A pending qualifying purchase must resolve before a competing gift can consume welcome eligibility. If eligibility changes after review, require a new review before claiming.
+Gift purchase records the conditional welcome offer; eligibility is checked for the claiming family. A later campaign pause does not withdraw an accepted conditional offer. A previous family award means paid hours only; a five-hour gift preserves eligibility. An accepted pending qualifying purchase must resolve before a competing gift can consume the family's welcome eligibility. A changed review requires reconfirmation.
 
-Unclaimed gifts have no expiry and are non-refundable. Refunds, disputes or invalid payments block claiming until resolved. Claimed hours use all the existing care-hour rules. Stopping new gift sales or enrollment does not prevent redemption of a valid paid gift, including the minimal self-profile setup needed to receive it. Buyer receipts disclose neither the recipient's identity nor their balance after claim. Admins can follow unclaimed and claimed gifts, payment attention and reasoned payment checks without showing bearer codes in the gift list.
+Unclaimed gifts have no expiry and are non-refundable. Holds, disputes and invalid payments block claim until resolved. Pausing new sales or enrollment does not prevent valid paid gifts being claimed, including creation of the necessary family-wallet mapping. Admins can follow unclaimed and claimed gifts and reasoned payment rechecks without showing raw bearer codes. Receipts do not disclose the claiming family's identity or balance.
 
 ### Payment outcome rules
 
@@ -130,7 +131,7 @@ Unclaimed gifts have no expiry and are non-refundable. Refunds, disputes or inva
 
 ## 4 Packages and promotions
 
-All amounts in this specification are USD. The following package prices and bonus eligibility are confirmed. Purchased hours cost $31 each, including the hourly family fee. The welcome offer adds free hours on the recipient's first 10-, 20-, or 40-hour package. Self-purchases and contributions for loved ones share the once-per-recipient eligibility rule below.
+All amounts in this specification are USD. The following package prices and bonus eligibility are confirmed. Purchased hours cost $31 each, including the hourly family fee. The welcome offer adds free hours on the family account's first 10-, 20-, or 40-hour package. Self-purchases and contributions for loved ones share the once-per-family eligibility rule below.
 
 | Paid hours | Package price | First-purchase bonus | Total care time with bonus | Effective price per care hour |
 | --- | ---: | ---: | ---: | ---: |
@@ -143,30 +144,30 @@ The 10-, 20-, and 40-hour offers each provide 10% additional care time on the el
 
 **Confirmed five-hour package:** $155 buys exactly five hours, with no free minutes on either a first or later purchase. It remains the smaller purchase and gift option.
 
-**Confirmed eligibility after five-hour purchases:** buying five-hour packages does not consume the recipient's welcome-offer eligibility. The bonus applies to their first qualifying purchase of a 10-, 20-, or 40-hour package, regardless of who pays. For example, a five-hour purchase followed by a 10-hour purchase credits 5 hours and then 11 hours; a later 20-hour purchase credits 20 hours without another bonus. Separate five-hour purchases do not combine retrospectively into a qualifying package. Describe the offer as **your first 10-, 20-, or 40-hour package** rather than implying that any first purchase earns a bonus.
+**Confirmed eligibility after five-hour purchases:** buying five-hour packages does not consume the family account's welcome-offer eligibility. The bonus applies to their first qualifying purchase of a 10-, 20-, or 40-hour package, regardless of who pays. For example, a five-hour purchase followed by a 10-hour purchase credits 5 hours and then 11 hours; a later 20-hour purchase credits 20 hours without another bonus. Separate five-hour purchases do not combine retrospectively into a qualifying package. Describe the offer as **your first 10-, 20-, or 40-hour package** rather than implying that any first purchase earns a bonus.
 
 Packages must show the full payable total prominently, with **Includes the hourly platform fee**. For example: **Buy 10 hours + get 1 hour free · $310 · 11 hours of care in total**. Display the $31 rate for paid hours and identify any effective rate as including the bonus. Do not imply that all 11 hours cost $31 each or that the family pays less than $310. A two-hour visit uses two hours of the available care balance.
 
-Each catalog entry defines paid hours, price, and availability. The offer separately defines bonus minutes and eligibility. The recorded purchase retains paid minutes, bonus minutes, total minutes issued, exact amount paid, promotion, recipient, buyer, and accepted terms even if the catalog or offer later changes. No campaign is activated by this specification.
+Each catalog entry defines paid hours, price, and availability. The offer separately defines bonus minutes and eligibility. The recorded purchase retains paid minutes, bonus minutes, total minutes issued, exact amount paid, promotion, family and original source account, buyer, and accepted terms even if the catalog or offer later changes. No campaign is activated by this specification.
 
 ### First-purchase promotion rules
 
-**Confirmed:** the welcome bonus applies to the recipient's first 10-, 20-, or 40-hour package and is available once per care recipient, regardless of whether the buyer is the recipient, a relative, or an outside contributor. A different payer or contribution link does not reset eligibility. For example, if a daughter buys an eligible package and her mother receives the welcome bonus, a later purchase by her brother for that same mother does not earn another welcome bonus. Each distinct care recipient has their own eligibility. Five-hour purchases never receive the bonus and preserve eligibility for a later qualifying package.
+**Confirmed October 30:** the welcome bonus applies once per stable family account on its first qualifying 10-, 20-, or 40-hour package, regardless of payer or care recipient. Direct purchases, contributions and gifts share eligibility. A prior valid award on any historical source account consumes eligibility; all previously awarded hours remain intact. Five-hour purchases receive no bonus and preserve eligibility.
 
-**Confirmed bonus-hour care rules:** awarded bonus hours follow the same eligible care coverage, booking rules, no-expiry promise, and protection against future price increases as paid hours. One bonus hour covers one full eligible care hour, including the hourly family fee. Cancelled or no-show visits restore their full reserved paid and bonus time to the original allocations. Bonus hours remain with the recipient, have no cash-withdrawal entitlement, and appear in the same usable care balance. Ending the offer does not expire previously awarded hours. For example, buying 10 hours plus 1 free hour produces 11 usable care hours with these protections. The confirmed processing-fee policy below uses all originally issued paid and bonus minutes; internal minute-category consumption order remains a technical-design detail.
+**Confirmed bonus-hour care rules:** awarded bonus hours follow the same eligible care coverage, booking rules, no-expiry promise, and protection against future price increases as paid hours. One bonus hour covers one full eligible care hour, including the hourly family fee. Cancelled or no-show visits restore their full reserved paid and bonus time to the original allocations. Bonus hours remain with the family account, have no cash-withdrawal entitlement, and appear in the same usable care balance. Ending the offer does not expire previously awarded hours. For example, buying 10 hours plus 1 free hour produces 11 usable care hours with these protections. The confirmed processing-fee policy below uses all originally issued paid and bonus minutes; internal minute-category consumption order remains a technical-design detail.
 
-**Confirmed automatic application:** apply the welcome bonus whenever the selected recipient and package qualify, including private-link contributions. Require no promo code or manual support request. Show the paid hours, free hours, final total care time and amount due before payment. There are no other promotions at launch, including code-based, fixed-dollar or percentage discounts, and no stacking. For example: **10 hours + 1 free welcome hour · 11 hours total · $310**. Ineligible purchases show their paid hours and price without implying that a bonus will be added.
+**Confirmed automatic application:** apply the welcome bonus whenever the family account and package qualify, including private-link contributions. Require no promo code or manual support request. Show the paid hours, free hours, final total care time and amount due before payment. There are no other promotions at launch, including code-based, fixed-dollar or percentage discounts, and no stacking. For example: **10 hours + 1 free welcome hour · 11 hours total · $310**. Ineligible purchases show their paid hours and price without implying that a bonus will be added.
 
 Operating rules supporting the confirmed offer:
 
-- Use one package per checkout. Subsequent purchases are separate transactions and recheck the same recipient's eligibility; multiple packages cannot multiply the welcome award within one checkout.
-- A failed or abandoned payment issues no paid or bonus minutes and does not consume eligibility. Reserve eligibility during checkout so concurrent contributors cannot both receive a once-per-recipient bonus. An uncertain payment remains pending until reconciled; an accepted payment attempt keeps its disclosed quote through resolution.
+- Use one package per checkout. Subsequent purchases are separate transactions and recheck the same family account's eligibility; multiple packages cannot multiply the welcome award within one checkout.
+- A failed or abandoned payment issues no paid or bonus minutes and does not consume eligibility. Reserve eligibility during checkout so concurrent contributors cannot both receive a once-per-family bonus. An uncertain payment remains pending until reconciled; an accepted payment attempt keeps its disclosed quote through resolution.
 - Credit paid and bonus minutes together exactly once after confirmed payment. Keep their origins separately traceable while showing one usable care balance.
-- A purchase dispute or reversal does not automatically reset welcome eligibility. If support fully voids an invalid or duplicate purchase that owns the recorded welcome claim, eligibility can be restored only after all its issued minutes have been removed, none remain used or reserved, and no other valid welcome award exists for that recipient. Reversing a valid purchase whose care was consumed must not create another welcome bonus. Preserve audit history and resolve affected visit funding before releasing any reservation.
+- A purchase dispute or reversal does not automatically reset welcome eligibility. If support fully voids an invalid or duplicate purchase that owns the recorded welcome claim, eligibility can be restored only after all its issued minutes have been removed, none remain used or reserved, and no other valid welcome award exists for that family account. Reversing a valid purchase whose care was consumed must not create another welcome bonus. Preserve audit history and resolve affected visit funding before releasing any reservation.
 
 ### Launch configuration
 
-Set the offer's activation timing and operating budget before going live, and provide an audited way to pause new awards. Any chosen end date or award cap is launch configuration; this specification does not invent a campaign duration or approve a spending limit. Checkout must reflect the current published offer, and a pause or change must honor already accepted payment-attempt quotes and previously awarded hours. Inactivity or the end of the offer never expires issued care time. These configuration tasks do not reopen the confirmed package prices, once-per-recipient eligibility, no-expiry rule, or other commercial policies.
+Set the offer's activation timing and operating budget before going live, and provide an audited way to pause new awards. Any chosen end date or award cap is launch configuration; this specification does not invent a campaign duration or approve a spending limit. Checkout must reflect the current published offer, and a pause or change must honor already accepted payment-attempt quotes and previously awarded hours. Inactivity or the end of the offer never expires issued care time. These configuration tasks do not reopen the confirmed package prices, once-per-family eligibility, no-expiry rule, or other commercial policies.
 
 ### Confirmed protection against price increases
 
@@ -206,7 +207,7 @@ For a purchase without bonus hours, the original issued minutes equal its paid m
 
 - A booking reserves minutes and their source purchases; it does not yet deduct a fee from caregiver earnings. Finalize the deduction with approved care time and earnings.
 - If several caregivers use the package, each bears only the share corresponding to the minutes they deliver. A cancelled or no-show visit creates no package processing-fee deduction for undelivered time. Its full minute and original fee allocations return to the purchase for future use.
-- If a visit draws from several purchases, calculate the share separately using each purchase's actual fee and original total paid-plus-bonus minutes, then add the shares. Never average fees across unrelated contributors or recipient balances.
+- If a visit draws from several purchases, calculate the share separately using each purchase's actual fee and original total paid-plus-bonus minutes, then add the shares. Never average fees across unrelated contributors or family balances.
 - For a mixed visit, add the actual processing fee on any new successful card payment under the existing policy, exactly once. Do not invent another card-processing fee for prepaid time or deduct the original package fee a second time.
 - Keep the original total issued-minute denominator, including bonus minutes, after usage corrections or payment reversals. Fees associated with unused paid or bonus hours must not be reassigned to caregivers delivering the remaining hours.
 - Use deterministic cent allocation across all issued paid and bonus minutes. Full redemption allocates the full actual fee once; partial redemption allocates only the corresponding share. Repeated settlement must not repeat a deduction.
@@ -220,7 +221,7 @@ Caregiver earnings show gross care earnings, the allocated processing-fee deduct
 
 Paid and awarded bonus hours remain valid without a time limit. No annual expiry, inactivity countdown, or requirement to make another purchase applies. The same rule covers gifts and promotional purchases. Booking usage, approved corrections, and payment-dispute holds still follow their own rules; passage of time alone does not reduce the balance.
 
-The recipient sees one combined balance with these labels:
+The family sees one combined balance with these labels:
 
 | Label | Meaning |
 | --- | --- |
@@ -231,7 +232,7 @@ The recipient sees one combined balance with these labels:
 
 Store and calculate time in whole minutes, using the platform's existing billable-time rules. Display hours and minutes, such as **8 h 30 min**. Do not introduce package-specific quarter-hour rounding. Existing minimum visit lengths remain unchanged.
 
-Each purchase creates a separately traceable allocation of time, referred to internally as a purchase lot. It retains the buyer, recipient, paid minutes, any bonus minutes, total issued minutes, price paid, promotion, payment reference, actual processing fee, fee allocations and reversals, terms, and subsequent usage or billing corrections. The family does not need to manage these lots. Technical design must preserve both minute categories through reservations, usage and restoration, and define their deterministic consumption order without changing the promised usable time or requiring the family to choose between balances.
+Each purchase creates a separately traceable allocation of time, referred to internally as a purchase lot. It retains the buyer, family and original source account, paid minutes, any bonus minutes, total issued minutes, price paid, promotion, payment reference, actual processing fee, fee allocations and reversals, terms, and subsequent usage or billing corrections. The family does not need to manage these lots. Technical design must preserve both minute categories through reservations, usage and restoration, and define their deterministic consumption order without changing the promised usable time or requiring the family to choose between balances.
 
 Use the oldest available purchase allocation first, including its paid and bonus minutes, with a stable purchase identifier as the tie-breaker. Within an allocation, the technical design must use a deterministic category order and retain the same fee share per delivered minute. A reservation retains its exact purchase allocations through settlement. Cancellations and corrections restore minutes to those original purchases. New contributions never replace another visit's existing allocation automatically.
 
@@ -243,7 +244,7 @@ Allocate purchase value to minutes deterministically so all usage, remaining val
 
 ### Explicit funding mode and existing behavior
 
-For a new request, hire or recurring offer, preselect care hours when the selected recipient has an unambiguous eligible balance with available minutes. Show the available hours and any uncovered estimate, and offer **Use card instead**. Remember an explicit card choice across publication and reloads. With no eligible available balance, keep the ordinary card flow. Existing bookings and plans retain their authorization, capture, saved-card, correction, check-in, cancellation and payout behavior; hours are never an automatic fallback for a failed card payment.
+For a new request, hire or recurring offer, preselect care hours when the family has available eligible hours. The same balance covers any eligible recipient in the family, including someone added during request setup. Show the available hours and any uncovered estimate, and offer **Use card instead**. Remember an explicit card choice across recipient changes, publication and reloads. With no eligible available balance, keep the ordinary card flow. Existing bookings and plans retain their authorization, capture, saved-card, correction, check-in, cancellation and payout behavior; hours are never an automatic fallback for a failed card payment.
 
 The family reviews the selected funding before confirming an eligible booking or recurring offer. Posting a request saves only a preference: it reserves no hours and creates no payment. Commit the booking selection atomically before preparing funding; a draft screen choice or quote does not change the booking's mode. Existing authorizations, charges and prepared or unresolved payment attempts retain their original mode; changing a plan preference does not rewrite them. Funding history determines settlement and recovery even if new enrollment is disabled later. Existing unused hours remain redeemable when new sales or enrollment are paused.
 
@@ -251,7 +252,7 @@ The remainder of this section describes explicitly prepaid bookings, including t
 
 ### Eligibility and funding order
 
-Prepaid hours apply to future visits under the eligible standard-care offering for the same recipient, including after a standard price increase. Eligibility must not require an old purchase price to equal the visit's newer standard hourly rate. Normal caregiver eligibility, minimum durations, and availability still apply. Incompatible legacy or custom-price bookings show their existing payment flow and an explanation that the package does not apply; their agreements are not silently changed. A purchased package is not made ineligible merely because its historical price is lower than today's standard price.
+Prepaid hours apply to future visits under the eligible standard-care offering for any eligible recipient in the same family, including after a standard price increase. Eligibility must not require an old purchase price to equal the visit's newer standard hourly rate. Normal caregiver eligibility, minimum durations, and availability still apply. Incompatible legacy or custom-price bookings show their existing payment flow and an explanation that the package does not apply; their agreements are not silently changed. A purchased package is not made ineligible merely because its historical price is lower than today's standard price.
 
 Within prepaid mode, use available hours first, then a separately authorized payment for uncovered time at the applicable booking rate. The booking summary shows planned duration, prepaid time, remaining payment amount, and any temporary card hold separately. At the current standard price, for example: **2-hour visit · 1 h 30 min from your care hours · $15.50 for the remaining 30 minutes**. Do not charge the difference between the old package price and a higher booking rate on the prepaid portion. A card-mode booking continues to use its existing card payment and leaves the care balance untouched.
 
@@ -291,7 +292,7 @@ Example: a recipient buys 10 hours without a welcome bonus and reserves three. T
 
 ### Extra time and mixed funding
 
-An approved extension requires additional coverage. Use still-available recipient hours first and disclose any remaining amount under the existing extra-time approval process. Hours committed to another visit are not available for the extension. If more payment is needed, offer a separately authorized one-off payment or optional family card; do not require saving a card. Deliberate extensions should be approved and funded before the extra time begins. Remind the caregiver and family as the planned end approaches so additional time can be discussed before coverage runs out.
+An approved extension requires additional coverage. Use still-available family hours first and disclose any remaining amount under the existing extra-time approval process. Hours committed to another visit are not available for the extension. If more payment is needed, offer a separately authorized one-off payment or optional family card; do not require saving a card. Deliberate extensions should be approved and funded before the extra time begins. Remind the caregiver and family as the planned end approaches so additional time can be discussed before coverage runs out.
 
 The app must not automatically stop time recording or end an active visit because prepaid coverage runs out. If unavoidable extra time has already been worked and payment cannot be completed, preserve the actual time, obtain its approval through the usual process, and create a separate amount due with a payment-attention case. Do not alter worked time, invent a negative hour balance, charge the gift buyer, or silently treat the visit as fully settled. Record any prepaid portion already settled so recovery cannot consume it twice.
 
@@ -311,7 +312,7 @@ New purchases apply to future funding preparations by default. They do not autom
 | Reschedule accepted with the same duration and recipient | Preserve the existing reservation; show the new visit details |
 | Longer duration accepted | Reserve additional available minutes and resolve any card shortfall before confirming increased coverage |
 | Shorter duration accepted | Reduce unnecessary card coverage first; then release prepaid minutes exceeding the new duration to their original purchases |
-| Recipient changes | Resolve coverage for the new recipient and release the old allocation as one coordinated change; if new coverage fails, keep the original booking unchanged |
+| Recipient changes | Revalidate care eligibility within the same family; keep funding atomic and preserve the original booking if the change fails. A family recipient change does not choose another wallet |
 | Caregiver replacement | Release the cancelled visit's funding and independently fund the replacement; do not keep both reservations |
 | Regular care paused, ended, or a visit skipped | Release only affected cancelled visits; retain funding for visits that still proceed |
 | Time disputed | Keep disputed prepaid minutes reserved or held until resolution; block automatic usage finalization |
@@ -319,7 +320,7 @@ New purchases apply to future funding preparations by default. They do not autom
 
 ### Confirmed cancellation and no-show policy
 
-LoLo has no cancellation fee and no no-show fee. A cancelled or confirmed no-show visit returns its full reserved prepaid time to the same recipient's care balance. This applies to advance and late cancellations and to both family and caregiver no-shows. No hours are withheld as a penalty, and no separate cancellation or no-show payment is requested.
+LoLo has no cancellation fee and no no-show fee. A cancelled or confirmed no-show visit returns its full reserved prepaid time to the same family's care balance and original source allocations. This applies to advance and late cancellations and to both family and caregiver no-shows. No hours are withheld as a penalty, and no separate cancellation or no-show payment is requested.
 
 Restore the minutes to their original purchases without changing their price protection, processing-fee allocation, or absence of expiry. A cancelled three-hour visit returns all three reserved hours. The package remains non-refundable in cash.
 
@@ -332,10 +333,10 @@ Actual care already delivered follows the normal approved-time settlement proces
 Successfully fulfilled care-hour package purchases are non-refundable. This applies equally to self-purchases and contributions for loved ones, whether completely unused, partly used, accompanied by a welcome bonus, or reserved for upcoming care. Neither the buyer nor the recipient can withdraw the balance in cash. Support does not offer a discretionary unused-package refund flow.
 
 - Show the non-refundable condition before payment and on the receipt; retain the version accepted by the buyer.
-- A cancelled or no-show visit returns its full reservation to the same recipient's balance and original purchases. A released reservation or approved downward time correction restores its corresponding minutes. These operations do not return the package price in cash.
+- A cancelled or no-show visit returns its full reservation to the same family's balance and original purchases. A released reservation or approved downward time correction restores its corresponding minutes. These operations do not return the package price in cash.
 - For example, after purchasing 20 hours without a bonus for $620 and using two, the recipient retains 18 hours for future eligible care. There is no cash refund for those remaining hours.
 - A contributor cannot revoke a successful contribution because some or all of the hours remain unused. Leaving the family account does not undo the contribution.
-- Confirm the recipient before purchase. Selecting the wrong valid recipient does not create an automatic refund or transfer entitlement. Transfers between recipients are outside the first release.
+- Confirm the family account before purchase or claim. Using the wrong valid family account does not create an automatic refund or transfer entitlement. Transfers between family accounts are outside the first release; eligible recipients within one family already share its balance.
 - Recipient archival or account closure prevents new contributions and requires resolution of outstanding visits and preservation of balance records. It does not automatically refund or silently erase unused hours.
 - Paid and awarded bonus hours have no expiry. Non-refundability, inactivity, and the end of a promotional campaign do not introduce an expiry date.
 
@@ -351,7 +352,7 @@ If a package payment is disputed or reversed, hold its unspent minutes and ident
 
 ### Family screens
 
-**Care hours** shows the selected recipient, available time, reserved time, and **Buy hours**. Provide **Contributions and usage** for history and the owner-only action **Let someone contribute**. With multiple recipients, keep the selected person visible throughout purchasing and booking.
+**Prepaid care hours** shows one family **Available credit**, reserved/held time and **Buy prepaid care**. Packages open directly. Provide **Contributions and usage** and owner-only **Let someone contribute**. Buying and claiming have no recipient chooser; the normal care workflow identifies who receives each visit.
 
 New care-hours screens and the optional funding choice are additive. Preserve existing card billing screens, saved-card setup, readiness indicators and notifications for card-mode users. Show separate prepaid coverage information only in the care-hours experience or when that funding mode is selected. Purchases and gifts never replace the family's saved payment method or suppress a card-mode payment requirement.
 
@@ -359,7 +360,7 @@ History distinguishes purchases, contributions, reservations, released reservati
 
 At booking, show the funding split before confirmation. At time approval, show planned time, actual billable time, hours to use or restore, and any additional card amount. After settlement, show **Paid with care hours** and the resulting balance.
 
-Purchase receipts identify the buyer, intended recipient, paid package hours, any bonus hours, total care time issued, price per paid hour, total paid, payment status, and accepted terms including **Non-refundable · No expiry**, plus the promise that paid and awarded bonus hours remain fully covered if standard prices increase. State explicitly that the same care rules apply to paid and bonus hours. Show a billing-correction reference when relevant. A contributor receipt links only to that person's purchase information. Avoid showing the technical terms purchase lot, ledger, or payment operation in family-facing screens.
+Purchase receipts identify the buyer, intended family label where applicable, paid package hours, any bonus hours, total care time issued, price per paid hour, total paid, payment status, and accepted terms including **Non-refundable · No expiry**, plus the promise that paid and awarded bonus hours remain fully covered if standard prices increase. State explicitly that the same care rules apply to paid and bonus hours. Show a billing-correction reference when relevant. A contributor receipt links only to that person's purchase information. Avoid showing the technical terms purchase lot, ledger, or payment operation in family-facing screens.
 
 ### Notifications
 
@@ -372,7 +373,7 @@ Purchase receipts identify the buyer, intended recipient, paid package hours, an
 
 ### Administration and reporting
 
-Authorized administrators can configure availability and pause or retire the catalog or welcome offer, with an audit of changes. Launch administration must not expose creation of additional promotion types or promo codes. Any subsequent commercial-policy change requires its own specification update and must preserve existing purchases and accepted quotes. Support can inspect a recipient balance, each purchase and buyer, allocations to visits, billing corrections, and disputed funds. Financial adjustments require a reason and immutable history; arbitrary balance overwrites and discretionary unused-package refunds are prohibited.
+Authorized administrators can configure availability and pause or retire the catalog or welcome offer, with an audit of changes. Launch administration must not expose creation of additional promotion types or promo codes. Any subsequent commercial-policy change requires its own specification update and must preserve existing purchases and accepted quotes. Support can inspect a family balance, each purchase and buyer, allocations to visits, billing corrections, and disputed funds. Financial adjustments require a reason and immutable history; arbitrary balance overwrites and discretionary unused-package refunds are prohibited.
 
 Reports distinguish cash collected from package purchases, paid and bonus minutes issued, reserved and used, promotional care costs, unused purchase value, billing corrections and payment reversals, card shortfalls, caregiver gross and net earnings, processing fees paid upfront, and fees recovered or still unrecovered. Bonus-hour face value is not an additional cash receipt. A package purchase and its later booking redemption must not be counted as two cash receipts.
 
@@ -385,13 +386,13 @@ These are implementation requirements to carry into technical design, not a pres
 **Compatibility boundary:** use a small explicit committed-funding-mode dispatcher and separate prepaid services. Preserve the existing card state machine and handler behavior; do not bundle a broad payments refactor, provider-account migration, SDK upgrade, pricing change, or historical booking conversion into this feature. Add regression evidence for feature-disabled, feature-enabled-but-not-selected, and card-selected-with-a-positive-balance cases. Disabling new package sales or enrollment must still allow existing unused hours to be redeemed and funded prepaid care to settle and recover.
 
 1. **Separate purchasing from visit payment.** A package may exist before any booking. One purchase can fund several visits and caregivers; one visit can draw from several purchases plus a family card.
-2. **Trace the complete chain.** Preserve purchase → recipient → reservation → approved minutes → caregiver earnings, and any corresponding billing correction or dispute.
+2. **Trace the complete chain.** Preserve purchase → family wallet and original source → visit reservation → approved minutes → caregiver earnings, and any corresponding billing correction or dispute. The visit retains its actual care recipient.
 3. **Support check-in and settlement for fully prepaid visits.** Existing check-in protection recognizes payment states, and payment finalization expects a successful visit charge and associated fees. A valid prepaid reservation must satisfy readiness without a saved card and settle without creating a new charge or marking a fake card payment as successful. Incomplete or disputed coverage must still trigger payment attention. One-off shortfall payments must not require enrolling a family in saved-card billing.
 4. **Count fees and funds once.** A package charge must not be copied as a separate cash receipt for every visit. Allocate its actual processing fee by finalized minutes against the original total paid-plus-bonus minutes, retain the purchase-to-visit fee records, and reconcile deductions and reversals under section 4. Do not deduct the entire purchase fee for every redemption or charge it again as a visit fee.
 5. **Preserve compensation rules.** Promotions cannot silently change caregiver gross rates. Deduct the allocated actual package fee from caregiver earnings as confirmed in section 4, plus any applicable actual processing fee on a new card charge once. Fee records for mixed payments, time corrections, and payment reversals must be visible and reconciled before payout.
 6. **Preserve access boundaries.** Existing family membership controls spending. Contributor checkout and receipts remain independent of family membership and the saved family card.
 7. **Make retries safe.** Purchase issuance, reservations, usage, and billing reversals must each have a stable operation identity. Duplicate or out-of-order confirmations must not duplicate effects. Validate authoritative payment notifications before issuing hours.
-8. **Handle existing records and prices explicitly.** Require unambiguous recipient mapping and an eligible care offering. Honor purchased minutes after standard rate increases without a surcharge or fee recalculation; preserve the original purchase price and actual processing fee. Existing card authorizations and completed visits are not retroactively converted on launch.
+8. **Handle existing records and prices explicitly.** Require stable family ownership, same-family source grouping and an eligible care offering. Honor purchased minutes after standard rate increases without a surcharge or fee recalculation; preserve the original purchase price and actual processing fee. Existing card authorizations and completed visits are not retroactively converted on launch.
 9. **Keep exceptional prepaid recovery separate.** The application's existing special prepaid-visit recovery holds are a different workflow; those flags must not be reused for ordinary package purchases or accidentally block their settlement.
 10. **Update affected guidance.** Revise family billing and regular-care copy to explain prepaid funding, and extend payment terms and support guidance for the approved package policies. Regular care still settles visit by visit even though families can separately purchase hours upfront.
 
@@ -400,27 +401,27 @@ These are implementation requirements to carry into technical design, not a pres
 | Scenario | Expected result |
 | --- | --- |
 | No eligible balance, or the family selects card | Existing card provider calls, amounts, timing, statuses and saved-card behavior remain unchanged |
-| Eligible available hours for the selected recipient | Preselect hours on the new request and carry the choice into booking; reserve only after booking confirmation |
+| Eligible available family hours for a new recipient or existing recipient | Preselect hours on the new request and carry the choice into booking; reserve only after booking confirmation |
 | Family owns care hours but selects card for a booking | Use the existing card path and leave all care-hour minutes untouched |
 | Family buys a package while a card booking or recurring plan already exists | Do not change the plan, release authorizations, replace charges, or convert prepared visits |
 | Family selects prepaid for future unfunded regular-care visits | Only those visits use the prepaid path; existing prepared card visits keep their funding and recovery behavior |
 | New prepaid selection is disabled after a prepaid visit was funded | Honor the persisted funding mode for settlement, cancellation and reconciliation; do not charge the full visit again by card |
 | New enrollment or package sales are paused while a recipient has unused hours | Keep existing entitlements redeemable; do not require another purchase or force full card payment |
 | Prepaid selection is still a draft or loses a race to card preparation | Do not redirect the booking or replace the card operation; commit mode only while the booking has no existing payment operation |
-| Buy 10 standard hours without bonus eligibility | A confirmed $310 payment adds 600 available minutes to your existing recipient balance |
+| Buy 10 standard hours without bonus eligibility | A confirmed $310 payment adds 600 available minutes to your existing family balance |
 | Buy the 5-hour package, whether first or later | A confirmed $155 payment adds exactly 300 paid minutes and no bonus minutes |
 | Buy five hours before a later qualifying larger package | Preserve welcome eligibility; the later first 10-, 20-, or 40-hour package receives its one-time bonus |
 | Buy two separate five-hour packages | Each $155 purchase credits 300 minutes with no bonus; do not combine the purchases for a bonus, and preserve eligibility for the first qualifying larger package |
 | Buy the 40-hour package without bonus eligibility | A confirmed $1,240 payment adds 2,400 minutes |
-| Two relatives each buy 10 hours without bonus eligibility for the same recipient | One 20-hour recipient balance; two independently traceable purchases |
-| Buy for a different recipient in the same family | Only the selected recipient's balance changes |
+| Two relatives each buy 10 hours without bonus eligibility for the same recipient | One 20-hour family balance; two independently traceable purchases |
+| Arrange eligible care for different recipients in one family | Both use the same family balance; exact source allocations stay traceable |
 | Outside contributor uses a valid link | Hours are added; the buyer gains no family access and does not replace the saved family card |
 | Contributor already belongs to a different family account | Allow the contribution without changing either family's membership or exposing recipient care information |
 | Owner disables a contribution link | Prevent new checkout through that link; preserve completed contributions and handle already accepted payment attempts under section 3 |
 | Buy a gift before selecting its recipient | Record the paid unassigned gift; issue no spendable hours until an authorized claim |
-| Gift recipient has no LoLo account | Enter code, register, choose For myself, review and claim; create only a private draft identity and one balance |
-| Try claiming for someone outside the signed-in family | Reject the selection without consuming the code |
-| Claim the same paid gift twice | Issue one lot only; other recipients receive no credit |
+| Gift recipient has no LoLo account | Enter code, register, review and claim into the family wallet; create no care profile or request |
+| Attempt to claim into another family by changing an ID | Reject without consuming the code; only the signed-in authorized family is eligible |
+| Claim the same paid gift twice | Issue one lot only; other family accounts receive no credit |
 | Payment remains pending or fails | No available minutes are issued |
 | Payment success is delivered twice | One purchase and one credit only |
 | Buy the 20-hour package without bonus eligibility | $620 is paid, 1,200 minutes are issued, and the purchase price is retained |
@@ -433,8 +434,9 @@ These are implementation requirements to carry into technical design, not a pres
 | A valid purchase is disputed after bonus-funded care was consumed | Do not reset welcome eligibility or award another bonus automatically; use the payment-recovery process |
 | Welcome awards are paused while a payment attempt is already accepted | Preserve that attempt's disclosed quote through resolution; prevent new quotes from advertising an unavailable bonus, and retain all previously awarded hours |
 | A daughter buys the first eligible package for her mother, then a son buys for the same mother | Only the first purchase receives the welcome bonus; the son's different identity or payment method does not restore eligibility |
-| The same buyer purchases for two different eligible care recipients | Each recipient has independent first-purchase eligibility |
-| Two contributors attempt the once-per-recipient offer concurrently | At most one receives the bonus; show and obtain acceptance of any changed quote for the other before payment |
+| Two care recipients share one family account | They share one welcome eligibility; changing the person receiving care cannot award another bonus |
+| The same buyer contributes to two separate eligible family accounts | Each stable family account has independent welcome eligibility; payer identity does not combine them |
+| Two contributors attempt the once-per-family offer concurrently | At most one receives the bonus; show and obtain acceptance of any changed quote for the other before payment |
 | Book a visit using awarded bonus time | Apply the same eligible care and funding rules as paid time, including no saved-card requirement when the full planned visit is covered |
 | Cancel or record a no-show for an undelivered visit using paid and bonus time | Restore all reserved paid and bonus minutes to their original allocations with no fee |
 | Standard price increases after a qualifying 10 + 1-hour purchase | All 11 hours still cover the same eligible care, including the hourly family fee, without a surcharge |
@@ -461,18 +463,18 @@ These are implementation requirements to carry into technical design, not a pres
 | An extension has insufficient hours and card coverage fails | Preserve actual time and settled portions, flag the unpaid remainder, and avoid a negative balance or donor charge |
 | A visit needs extra time and unreserved hours are available | Obtain the usual approval and reserve those minutes without requiring a card |
 | Unavoidable extra time is worked without enough hours or a successful additional payment | Keep actual time and approved earnings, record an amount due, and involve support; no automatic checkout, donor charge, or negative prepaid balance |
-| Cancel a three-hour visit before care is delivered | Return all three reserved hours to the same recipient and original purchases, with no fee |
+| Cancel a three-hour visit before care is delivered | Return all three reserved hours to the same family and original purchases, with no fee |
 | Family cancels late or is a confirmed no-show | Return the full reserved hour credit; no hour penalty or separate payment request |
 | Caregiver cancels or is a confirmed no-show | Return the full reserved hour credit; no fee |
 | Cancel a mixed-funded visit before care is delivered | Restore all prepaid minutes and release or correct the visit's unused card payment; keep the original package purchase intact |
 | A visit ends early after some care was delivered | Settle approved worked minutes and restore unused reserved time without a cancellation penalty |
 | Request a cash refund of unused or reserved package hours | Explain the non-refundable purchase terms; no refund workflow or cash withdrawal is offered |
-| Buy 20 hours without a bonus for $620 and use two | Keep 18 hours in the recipient's balance for future care; no cash refund |
-| Contributor asks to revoke an entirely unused purchase | Preserve the recipient's hours and apply the same non-refundable terms as self-purchases |
-| Buyer reviews package checkout | Show recipient, price, and non-refundable terms before payment and retain the accepted terms |
+| Buy 20 hours without a bonus for $620 and use two | Keep 18 hours in the family's balance for future care; no cash refund |
+| Contributor asks to revoke an entirely unused purchase | Preserve the family's hours and apply the same non-refundable terms as self-purchases |
+| Buyer reviews package checkout | Show family destination, price, and non-refundable terms before payment and retain the accepted terms |
 | A mixed visit's approved time is corrected downward | Reduce card-funded time first, then restore any excess prepaid time; never issue duplicate compensation |
 | Shorten a two-hour booking funded by 90 prepaid minutes and $15.50 to 90 minutes | Keep the 90-minute reservation and release all scheduled-care card coverage |
-| Change a booking's recipient and funding for the new recipient fails | Keep the original recipient, booking, and reservation unchanged |
+| Change a booking's recipient and the revised care eligibility/funding fails | Keep the original recipient, booking, and reservation unchanged |
 | Family member leaves the account | Their prior contributions remain; future care access ends; their own receipt remains accessible |
 | A package payment is disputed after several visits | Isolate the affected purchase and linked visits; preserve other contributors' funds and completed earning records |
 | A fully prepaid visit settles | Caregiver earnings can be paid without a new family card charge |
@@ -488,6 +490,8 @@ These are implementation requirements to carry into technical design, not a pres
 
 ## 11 Decision record and handoff
 
+Confirmed October 30, 2026: credit belongs to one stable family account, managed by its owner and shared across eligible family recipients. Purchases and claims do not select or create a recipient. Welcome eligibility is once per family account, superseding the earlier once-per-recipient policy. Preserve all existing awards and source financial rows. Current terms are `2026-10-30-family-wallet`; older acceptances remain immutable. The approved private pilot audience and ordinary card flow are unchanged.
+
 Core commercial decisions are complete. The following record captures the confirmed policies; supporting defaults elsewhere in the specification make them concrete for product design and engineering.
 
 Confirmed on October 26, 2026: eligible prepaid hours should be selected by default when posting a new care request. This replaces the earlier card-first UI default. The family can choose card instead, and that choice persists. Posting does not spend or reserve hours. Existing card bookings, plans, authorizations, charges and prepared visits retain their original flow; the default applies only to new eligible choices reviewed before booking.
@@ -502,15 +506,15 @@ Confirmed on October 16, 2026: one purchased hour continues to cover one hour of
 
 Confirmed on October 16, 2026: fully prepaid visits can be booked without a saved card or extra reserved-time buffer. A backup card is optional; planned shortfalls require a one-off payment or more hours. Approved extensions use available hours first, and unavoidable already-worked overruns follow the payment-attention process without an automatic cutoff or donor charge. Section 6 defines the booking and settlement rules.
 
-Confirmed on October 16, 2026: no cancellation or no-show fee applies. Return the full reserved hour credit for an undelivered visit to the same recipient's balance, including late cancellations and family or caregiver no-shows. Section 7 defines the restoration and the separate treatment of actual care already delivered.
+Confirmed on October 16, 2026: no cancellation or no-show fee applies. Return the full reserved hour credit for an undelivered visit to the same family's balance, including late cancellations and family or caregiver no-shows. Section 7 defines the restoration and the separate treatment of actual care already delivered.
 
-Confirmed on October 16, 2026: outside contributors use owner-enabled private links tied to an existing care recipient. Contributors verify email and pay without joining the family account or gaining care access. The owner can disable new link use while completed contributions remain in the recipient's balance. Section 3 defines this flow.
+Confirmed on October 16 and updated October 30, 2026: outside contributors use owner-enabled private links tied to the family wallet. Contributors verify email and pay without joining the family account or gaining care access. The owner can disable new link use while completed contributions remain in the family's balance. Section 3 defines this flow.
 
 Confirmed launch catalog as of October 16, 2026: purchased hours cost $31 each. Packages are 5 hours for $155, 10 hours for $310, 20 hours for $620, and 40 hours for $1,240. The first qualifying purchase receives 1, 2, or 4 bonus hours for the 10-, 20-, or 40-hour package respectively. Section 4 records the economics and bonus policies.
 
-Confirmed on October 16, 2026: the first-purchase welcome bonus is once per care recipient, regardless of who pays. Self-purchases, relatives, and outside contributors share that recipient's eligibility. A later purchase by a different contributor does not earn another welcome bonus. Section 4 records the rule.
+Confirmed on October 30, 2026: the first-purchase welcome bonus is once per family account, replacing the October 16 once-per-recipient rule. Direct purchases, relatives, outside contributors and gifts share eligibility. Existing awards remain intact. Section 4 records the current rule.
 
-Confirmed on October 16, 2026: the five-hour package has no bonus. It remains $155 for exactly five hours. Buying five-hour packages preserves eligibility for the bonus on the recipient's first 10-, 20-, or 40-hour package, regardless of who pays. These purchases do not accumulate into a larger package for a retrospective bonus.
+Confirmed on October 16, 2026: the five-hour package has no bonus. It remains $155 for exactly five hours. Buying five-hour packages preserves eligibility for the bonus on the family account's first 10-, 20-, or 40-hour package, regardless of who pays. These purchases do not accumulate into a larger package for a retrospective bonus.
 
 Confirmed on October 16, 2026: awarded bonus hours follow the same care rules as paid hours. They have no expiry, preserve one hour of eligible care after price increases, include the hourly family fee, follow the same booking rules, and return in full when an undelivered visit is cancelled or recorded as a no-show. Paid and bonus hours appear in one usable care balance. The separately confirmed fee policy spreads the actual purchase fee across all originally issued paid and bonus hours.
 
@@ -521,11 +525,11 @@ The remaining work is a handoff, not another round of core product decisions:
 | Workstream | Implementation status and launch work | Constraint |
 | --- | --- | --- |
 | Product design | Purchase, contribution, gift claim, balance, booking and admin screens implemented; walkthrough records the staging experience | Preserve the confirmed prices, eligibility and terms |
-| Technical design | Recipient mapping, ledger, fee allocation, settlement and recovery implemented and tested; see implementation plan for exact evidence | Follow sections 5–10; do not invent a new charge for bonus hours or change the care entitlement |
+| Technical design | Additive family-wallet mapping, pooled source accounting, fee allocation, settlement and recovery prepared locally; see implementation plan for exact current evidence | Follow sections 5–10; do not invent a new charge for bonus hours or change the care entitlement |
 | Launch configuration | Choose activation timing, operating budget, monitoring and authorized pause controls | Honor accepted payment attempts and issued hours; no live offer is activated by this document |
 | Operations and guidance | Update family billing explanations, caregiver statements, support procedures and payment terms for these policies | Keep package purchases distinct from visit charges and billing corrections |
 
-On October 21, 2026, the user first approved unassigned gifts claimed for an existing recipient, then explicitly expanded redemption to **enter code → create an account → claim for myself → hours ready**, including Jane buying before her mum has an account. The self-profile setup is now in scope; creating another person's profile during claim, recipient lookup by email and transfer of claimed balances remain outside scope. Implementation and staging verification are authorized; production enablement remains explicitly prohibited until separately authorized. Actual email-delivery testing was deferred by the user; buyer email verification stays in the product.
+On October 21, 2026, the user expanded gifting to someone who joins LoLo after purchase. The October 30 family-wallet decision simplifies that journey to **enter code → create an account → review → claim into family balance → hours ready**. It removes the earlier self-profile setup and recipient chooser. Email lookup and transfers between family accounts remain outside scope. Actual email-delivery testing was deferred by the user; buyer email verification stays in the product. This local change does not broaden the approved pilot or authorize production-server access.
 
 ## 12 Existing product and implementation references
 

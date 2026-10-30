@@ -48,14 +48,13 @@ class PrepaidDashboardTest extends TestCase
     {
         $owner = $this->owner();
         $profile = $this->profile($owner, 'Linda Bennett');
-        $this->actingAs($owner)->get(route('family.care-hours.buy'))->assertOk()
-            ->assertViewHas('purchaseTargets', fn ($targets) => $targets->pluck('key')->all() === ['profile:'.$profile->id]);
+        $this->actingAs($owner)->get(route('family.care-hours.buy'))->assertRedirect(route('family.care-hours.index'));
         $this->assertDatabaseCount('care_hour_accounts', 0);
         $this->post(route('family.care-hours.buy.start'))->assertRedirect();
         $account = CareHourAccount::sole();
-        $this->assertSame($profile->id, $account->care_recipient_profile_id);
+        $this->assertNull($account->care_recipient_profile_id);
         $this->post(route('family.care-hours.buy.start'))->assertRedirect(route('family.care-hours.packages', $account));
-        $this->get(route('family.care-hours.index'))->assertOk()->assertViewHas('buyFlow', false);
+        $this->get(route('family.care-hours.index'))->assertOk()->assertDontSee('Choose a care balance');
         $this->assertDatabaseCount('care_hour_accounts', 1);
         $this->assertDatabaseCount('care_hour_purchases', 0);
     }
@@ -70,20 +69,19 @@ class PrepaidDashboardTest extends TestCase
         $this->assertDatabaseCount('care_hour_purchases', 0);
     }
 
-    public function test_multiple_profiles_require_explicit_choice_and_are_never_merged_by_name(): void
+    public function test_multiple_profiles_use_one_family_wallet_without_merging_care_profiles(): void
     {
         $owner = $this->owner();
         $first = $this->profile($owner, 'Alex Bennett');
         $second = $this->profile($owner, 'Alex Bennett');
-        $this->actingAs($owner)->post(route('family.care-hours.buy.start'))->assertRedirect(route('family.care-hours.buy'));
-        $this->get(route('family.care-hours.buy'))->assertOk()
-            ->assertViewHas('purchaseTargets', fn ($targets) => $targets->pluck('review_url')->sort()->values()->all()
-                === collect([route('family.care-profiles.edit', $first), route('family.care-profiles.edit', $second)])->sort()->values()->all())
-            ->assertSee(route('family.care-profiles.edit', $first), false)
-            ->assertSee(route('family.care-profiles.edit', $second), false);
-        $this->assertDatabaseCount('care_hour_accounts', 0);
-        $this->post(route('family.care-hours.buy.start'), ['target' => 'profile:'.$second->id])->assertRedirect();
-        $this->assertSame($second->id, CareHourAccount::sole()->care_recipient_profile_id);
+        $this->actingAs($owner)->post(route('family.care-hours.buy.start'))->assertRedirect();
+        $account = CareHourAccount::sole();
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->get(route('family.care-hours.buy'))->assertRedirect(route('family.care-hours.packages', $account));
+        $this->post(route('family.care-hours.buy.start'), ['target' => 'profile:'.$second->id])
+            ->assertRedirect(route('family.care-hours.packages', $account));
+        $this->assertDatabaseCount('care_hour_accounts', 1);
+        $this->assertDatabaseCount('care_recipient_profiles', 2);
         $this->assertDatabaseMissing('care_hour_accounts', ['care_recipient_profile_id' => $first->id]);
     }
 
@@ -98,9 +96,10 @@ class PrepaidDashboardTest extends TestCase
         $archived->update(['status' => 'archived']);
         $inactive = $this->account($owner, 'Inactive account');
         $inactive->update(['active' => false]);
-        foreach (['profile:'.$foreign->id, 'recipient:'.$foreignRecipient->id, 'profile:'.$archived->id, 'account:'.$foreignAccount->id, 'account:'.$inactive->id, 'profile:999999'] as $target) {
+        foreach (['profile:'.$foreign->id, 'recipient:'.$foreignRecipient->id, 'profile:'.$archived->id, 'account:'.$foreignAccount->id, 'profile:999999'] as $target) {
             $this->actingAs($owner)->post(route('family.care-hours.buy.start'), ['target' => $target])->assertForbidden();
         }
+        $this->post(route('family.care-hours.buy.start'), ['target' => 'account:'.$inactive->id])->assertSessionHasErrors();
         $this->assertDatabaseCount('care_hour_accounts', 2);
         $this->assertDatabaseCount('care_hour_purchases', 0);
         $this->assertDatabaseCount('care_hour_recipient_links', 0);
@@ -119,18 +118,18 @@ class PrepaidDashboardTest extends TestCase
         $this->assertDatabaseCount('care_hour_accounts', 1);
     }
 
-    public function test_unlinked_legacy_recipient_needs_an_explicit_balance_decision(): void
+    public function test_unlinked_legacy_recipient_uses_family_wallet_without_another_balance_decision(): void
     {
         $owner = $this->owner();
         $account = $this->account($owner, 'Linda Bennett');
         $recipient = $this->recipient($owner, 'Linda Bennett');
         $this->actingAs($owner)->post(route('family.care-hours.buy.start'), ['target' => 'recipient:'.$recipient->id])
-            ->assertRedirect(route('family.care-hours.buy'))->assertSessionHasErrors('balance_target');
+            ->assertRedirect(route('family.care-hours.packages', $account));
         $this->assertDatabaseCount('care_hour_accounts', 1);
         $this->assertDatabaseCount('care_hour_recipient_links', 0);
         $this->post(route('family.care-hours.buy.start'), ['target' => 'recipient:'.$recipient->id, 'balance_target' => $account->id])
             ->assertRedirect(route('family.care-hours.packages', $account));
-        $this->assertDatabaseHas('care_hour_recipient_links', ['care_recipient_id' => $recipient->id, 'care_hour_account_id' => $account->id]);
+        $this->assertDatabaseCount('care_hour_recipient_links', 0);
         $this->assertDatabaseCount('care_hour_accounts', 1);
     }
 
@@ -142,7 +141,7 @@ class PrepaidDashboardTest extends TestCase
         $this->buy($first, $owner, 5);
         $this->buy($second, $owner, 10);
         $this->actingAs($owner)->get(route('family.care-hours.index'))->assertOk()
-            ->assertViewHas('availableMinutes', 960)->assertSee('Linda Bennett')->assertSee('Robert Bennett');
+            ->assertViewHas('availableMinutes', 960)->assertSee('Your family balance')->assertDontSee('Linda Bennett')->assertDontSee('Robert Bennett');
         $first->lots()->update(['status' => 'held']);
         $this->get(route('family.care-hours.index'))->assertOk()
             ->assertViewHas('availableMinutes', 660)->assertViewHas('heldMinutes', 300);
@@ -151,14 +150,16 @@ class PrepaidDashboardTest extends TestCase
         $this->assertDatabaseCount('care_hour_accounts', 2);
     }
 
-    public function test_no_recipient_has_a_profile_setup_path_and_creates_no_empty_balance(): void
+    public function test_buy_without_a_recipient_creates_only_the_family_wallet(): void
     {
         $owner = $this->owner();
-        $this->actingAs($owner)->post(route('family.care-hours.buy.start'))->assertRedirect(route('family.care-hours.buy'));
-        $this->get(route('family.care-hours.buy'))->assertOk()
-            ->assertViewHas('purchaseTargets', fn ($targets) => $targets->isEmpty())
-            ->assertViewHas('profileCreateUrl', route('family.care-profiles.create'));
-        $this->assertDatabaseCount('care_hour_accounts', 0);
+        $this->actingAs($owner)->post(route('family.care-hours.buy.start'))->assertRedirect();
+        $account = CareHourAccount::sole();
+        $this->get(route('family.care-hours.buy'))->assertRedirect(route('family.care-hours.packages', $account));
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
+        $this->assertDatabaseCount('care_requests', 0);
+        $this->assertDatabaseCount('care_hour_purchases', 0);
     }
 
     public function test_pilot_sales_and_enrollment_guards_remain_enforced(): void

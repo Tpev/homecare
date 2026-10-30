@@ -47,6 +47,14 @@ class CareHourAccount extends Model
         return $this->hasMany(CareHourLedgerEntry::class);
     }
 
+    /** Historical account IDs remain the sources of one family-owned wallet. */
+    public function familySourceIds(bool $activeOnly = false): array
+    {
+        return self::query()->where('family_account_id', $this->family_account_id)
+            ->where('currency', $this->currency)->when($activeOnly, fn ($query) => $query->where('active', true))
+            ->orderBy('id')->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
+
     public function balance(): array
     {
         return app(\App\Services\CareHours\CareHourLedgerService::class)->balance($this);

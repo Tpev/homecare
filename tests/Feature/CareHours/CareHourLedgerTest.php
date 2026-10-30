@@ -220,19 +220,22 @@ class CareHourLedgerTest extends TestCase
         $this->assertSame($account->id, $identity->forBooking($booking->fresh())->id);
     }
 
-    public function test_shared_names_do_not_merge_recipients_or_move_an_existing_profile_balance(): void
+    public function test_family_wallet_shares_credit_without_merging_recipient_records(): void
     {
         [$account, $owner] = $this->account();
         $profile = CareRecipientProfile::create(['family_account_id' => $account->family_account_id,
             'full_name' => 'Margaret', 'status' => 'draft']);
         $identity = app(CareHourIdentityService::class);
         $other = $identity->enrollProfile($profile, $owner);
-        $this->assertNotSame($account->id, $other->id);
+        $this->assertSame($account->id, $other->id);
         $booking = $this->booking($owner);
         $recipient = CareRecipient::create(['care_request_id' => $booking->care_request_id,
             'full_name' => 'Margaret', 'relationship_to_family' => 'Mother', 'care_recipient_profile_id' => $profile->id]);
-        $this->expectException(ValidationException::class);
         $identity->linkRecipient($account, $recipient, $owner);
+        $this->assertSame($profile->id, $recipient->fresh()->care_recipient_profile_id);
+        $this->assertNull($account->fresh()->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_hour_accounts', 1);
+        $this->assertDatabaseCount('care_hour_recipient_links', 0);
     }
 
     private function account(): array

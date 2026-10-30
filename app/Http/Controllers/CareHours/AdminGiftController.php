@@ -18,7 +18,7 @@ class AdminGiftController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $state = in_array($request->query('state'), ['unclaimed', 'claimed', 'attention'], true) ? $request->query('state') : 'all';
-        $gifts = CareHourPurchase::query()->whereHas('gift')->with(['gift', 'account'])
+        $gifts = CareHourPurchase::query()->whereHas('gift')->with(['gift', 'account.familyAccount.owner'])
             ->when($state === 'unclaimed', fn ($query) => $query->where('status', 'paid')->whereHas('gift', fn ($gift) => $gift->whereNull('claimed_at')->whereNotNull('ready_at')))
             ->when($state === 'claimed', fn ($query) => $query->whereHas('gift', fn ($gift) => $gift->whereNotNull('claimed_at')))
             ->when($state === 'attention', fn ($query) => $query->where(fn ($issues) => $issues->whereIn('status', ['held', 'recovery'])

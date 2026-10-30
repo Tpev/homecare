@@ -102,7 +102,7 @@ class RegularCareComposer extends Component
         $this->validate($rules);
 
         if ($this->careHourAccountId !== null && (int) ($this->careHoursAccount()?->id ?? 0) !== $this->careHourAccountId) {
-            throw ValidationException::withMessages(['careHourAccountId' => 'Choose the care balance linked to this recipient.']);
+            throw ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
         }
 
         try {
@@ -158,7 +158,7 @@ class RegularCareComposer extends Component
     public function updatedCareHourAccountId(): void
     {
         if ($this->careHourAccountId !== null && (int) ($this->careHoursAccount()?->id ?? 0) !== $this->careHourAccountId) {
-            throw ValidationException::withMessages(['careHourAccountId' => 'Choose the care balance linked to this recipient.']);
+            throw ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
         }
         app(\App\Services\CareHours\CareHourRequestFundingService::class)
             ->remember($this->requestItem, auth()->user(), $this->careHourAccountId);

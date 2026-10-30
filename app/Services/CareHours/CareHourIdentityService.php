@@ -5,11 +5,10 @@ namespace App\Services\CareHours;
 use App\Models\CareBooking;
 use App\Models\CareHourAccount;
 use App\Models\CareHourGift;
-use App\Models\CareHourRecipientLink;
 use App\Models\CareRecipient;
 use App\Models\CareRecipientProfile;
+use App\Models\FamilyAccount;
 use App\Models\User;
-use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
@@ -23,7 +22,66 @@ class CareHourIdentityService
 
     public function accountsFor(User $user): Collection
     {
-        return CareHourAccount::query()->where('family_account_id', $this->families->account($user)->id)->orderBy('display_name')->get();
+        $wallet = $this->walletFor($user);
+
+        return new Collection($wallet ? [$wallet] : []);
+    }
+
+    public function walletFor(User $user): ?CareHourAccount
+    {
+        return $this->walletForFamily((int) $this->families->account($user)->id);
+    }
+
+    /** Read only: opening the dashboard never creates a wallet or enrollment. */
+    public function walletForFamily(int $familyId): ?CareHourAccount
+    {
+        if ($familyId < 1) {
+            return null;
+        }
+        if (Schema::hasTable('care_hour_family_wallets')) {
+            $id = DB::table('care_hour_family_wallets')->where('family_account_id', $familyId)->value('care_hour_account_id');
+            if ($id) {
+                return CareHourAccount::query()->whereKey($id)->where('family_account_id', $familyId)
+                    ->where('currency', config('care_hours.currency', 'usd'))->firstOrFail();
+            }
+        }
+
+        // Reuse historical balances without rewriting their financial references.
+        return CareHourAccount::query()->where('family_account_id', $familyId)
+            ->where('currency', config('care_hours.currency', 'usd'))->orderByDesc('active')->orderBy('id')->first();
+    }
+
+    public function ensureFamilyWallet(User $actor, ?CareHourGift $paidGift = null): CareHourAccount
+    {
+        $this->assertPilotEnrollment($actor, $paidGift);
+        $family = $this->families->account($actor);
+        if (! Schema::hasTable('care_hour_family_wallets')) {
+            throw ValidationException::withMessages(['care_hours' => 'Prepaid care is being updated. Please try again shortly.']);
+        }
+
+        return DB::transaction(function () use ($actor, $family, $paidGift): CareHourAccount {
+            $lockedFamily = FamilyAccount::query()->whereKey($family->id)->lockForUpdate()->firstOrFail();
+            if ($lockedFamily->status !== FamilyAccount::STATUS_ACTIVE) {
+                throw new AuthorizationException('This family account is unavailable.');
+            }
+            $account = $this->walletForFamily((int) $family->id);
+            if (! $account) {
+                $this->assertEnrollmentOpen($actor, $paidGift);
+                $account = CareHourAccount::create([
+                    'family_account_id' => $family->id, 'display_name' => 'Family care balance',
+                    'currency' => config('care_hours.currency', 'usd'),
+                ]);
+            }
+            if (! $account->active) {
+                throw ValidationException::withMessages(['care_hours' => 'This family care balance is unavailable. Please contact support.']);
+            }
+            DB::table('care_hour_family_wallets')->insertOrIgnore([
+                'family_account_id' => $family->id, 'care_hour_account_id' => $account->id,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            return $account;
+        }, 3);
     }
 
     public function recipientsFor(User $user): Collection
@@ -54,198 +112,71 @@ class CareHourIdentityService
         return $this->families->canAccessAccount($user, (int) $account->family_account_id) && $this->families->isOwner($user);
     }
 
+    /** Compatibility for old entry points; the supplied record grants no wallet ownership. */
     public function enroll(CareRecipient $recipient, User $actor, ?CareHourGift $paidGift = null): CareHourAccount
     {
         $this->assertPilotEnrollment($actor, $paidGift);
-        $family = $this->families->account($actor);
         $this->assertRecipientAccess($recipient, $actor);
 
-        return DB::transaction(function () use ($recipient, $actor, $family, $paidGift): CareHourAccount {
-            // A family lock serializes enrollment, including recipients without optional profiles.
-            $family->newQuery()->whereKey($family->id)->lockForUpdate()->firstOrFail();
-            $linked = CareHourRecipientLink::query()->where('care_recipient_id', $recipient->id)->first();
-            if ($linked) {
-                return $linked->account;
-            }
-            if ($recipient->care_recipient_profile_id) {
-                $account = $this->enrollProfile($recipient->careRecipientProfile, $actor, $paidGift);
-            } else {
-                $this->assertEnrollmentOpen($actor, $paidGift);
-                $account = CareHourAccount::create([
-                    'family_account_id' => $family->id,
-                    'display_name' => trim((string) $recipient->full_name) ?: 'Care recipient',
-                    'currency' => config('care_hours.currency', 'usd'),
-                ]);
-            }
-            $this->linkRecipient($account, $recipient, $actor);
-
-            return $account;
-        }, 3);
+        return $this->ensureFamilyWallet($actor, $paidGift);
     }
 
     public function enrollProfile(CareRecipientProfile $profile, User $actor, ?CareHourGift $paidGift = null): CareHourAccount
     {
         $this->assertPilotEnrollment($actor, $paidGift);
-        $family = $this->families->account($actor);
-        if ((int) $profile->family_account_id !== (int) $family->id || $profile->status === CareRecipientProfile::STATUS_ARCHIVED) {
-            throw new AuthorizationException('Choose an existing care recipient in your family.');
+        if ((int) $profile->family_account_id !== (int) $this->families->account($actor)->id || $profile->isArchived()) {
+            throw new AuthorizationException('Choose an existing care profile in your family.');
         }
 
-        return DB::transaction(function () use ($profile, $actor, $family, $paidGift): CareHourAccount {
-            $family->newQuery()->whereKey($family->id)->lockForUpdate()->firstOrFail();
-            $existing = CareHourAccount::query()->where('care_recipient_profile_id', $profile->id)->first();
-            if ($existing) {
-                return $existing;
-            }
-            $linkedAccounts = CareHourAccount::query()->where('family_account_id', $family->id)
-                ->whereHas('recipientLinks.recipient', fn ($query) => $query->where('care_recipient_profile_id', $profile->id))->get();
-            if ($linkedAccounts->count() > 1) {
-                throw ValidationException::withMessages(['care_hours' => 'This recipient needs an account review. Please contact support.']);
-            }
-            if ($linkedAccounts->count() === 1) {
-                $linked = $linkedAccounts->first();
-                if ($linked->care_recipient_profile_id && (int) $linked->care_recipient_profile_id !== (int) $profile->id) {
-                    throw ValidationException::withMessages(['care_hours' => 'This recipient is already linked to a different care profile.']);
-                }
-                $linked->update(['care_recipient_profile_id' => $profile->id]);
-
-                return $linked;
-            }
-            $this->assertEnrollmentOpen($actor, $paidGift);
-
-            return CareHourAccount::create([
-                'family_account_id' => $family->id, 'care_recipient_profile_id' => $profile->id,
-                'display_name' => trim((string) $profile->preferred_name) ?: $profile->full_name,
-                'currency' => config('care_hours.currency', 'usd'),
-            ]);
-        }, 3);
+        return $this->ensureFamilyWallet($actor, $paidGift);
     }
 
+    /** Historical recipient links remain audit records; funding now follows family ownership. */
     public function linkRecipient(CareHourAccount $account, CareRecipient $recipient, User $actor): void
     {
         $this->assertAccess($account, $actor);
         $this->assertRecipientAccess($recipient, $actor);
-        if (! $account->active) {
-            throw ValidationException::withMessages(['care_hours' => 'This care recipient is unavailable.']);
+        $requestFamilyId = (int) ($recipient->careRequest->family_account_id ?: $this->families->account($actor)->id);
+        if ($requestFamilyId !== (int) $account->family_account_id) {
+            throw new AuthorizationException('These hours belong to a different family account.');
         }
-        $request = $recipient->careRequest;
-        $familyId = $request->family_account_id ?: $this->families->account($actor)->id;
-        if ((int) $account->family_account_id !== (int) $familyId
-            || ($account->care_recipient_profile_id && $recipient->care_recipient_profile_id
-                && (int) $account->care_recipient_profile_id !== (int) $recipient->care_recipient_profile_id)) {
-            throw ValidationException::withMessages(['care_hours' => 'These hours belong to a different care recipient.']);
-        }
-
-        DB::transaction(function () use ($account, $recipient, $actor): void {
-            $account->familyAccount()->lockForUpdate()->firstOrFail();
-            $account = CareHourAccount::query()->whereKey($account->id)->lockForUpdate()->firstOrFail();
-            $recipient = $recipient->newQuery()->whereKey($recipient->id)->lockForUpdate()->firstOrFail();
-            if ($recipient->care_recipient_profile_id) {
-                CareRecipientProfile::query()->whereKey($recipient->care_recipient_profile_id)->lockForUpdate()->firstOrFail();
-                $profileAccount = CareHourAccount::query()->where('care_recipient_profile_id', $recipient->care_recipient_profile_id)->first();
-                if (($profileAccount && $profileAccount->id !== $account->id)
-                    || ($account->care_recipient_profile_id && (int) $account->care_recipient_profile_id !== (int) $recipient->care_recipient_profile_id)) {
-                    throw ValidationException::withMessages(['care_hours' => 'This care profile already belongs to a different care-hours account.']);
-                }
-                if (! $account->care_recipient_profile_id) {
-                    $account->update(['care_recipient_profile_id' => $recipient->care_recipient_profile_id]);
-                }
-            }
-            $existing = CareHourRecipientLink::query()->where('care_recipient_id', $recipient->id)->first();
-            if ($existing && (int) $existing->care_hour_account_id !== (int) $account->id) {
-                throw ValidationException::withMessages(['care_hours' => 'This recipient already has a care-hours account.']);
-            }
-            CareHourRecipientLink::firstOrCreate(['care_recipient_id' => $recipient->id], [
-                'care_hour_account_id' => $account->id, 'linked_by_user_id' => $actor->id,
-            ]);
-        }, 3);
     }
 
-    /** Only the validated paid-gift flow may introduce a minimal private self identity. */
+    /** A paid gift can establish a wallet without inventing a care-recipient profile. */
     public function enrollSelfForGift(User $actor, CareHourGift $paidGift): CareHourAccount
     {
         if ($actor->role !== 'family' || ! $this->giftCanEnroll($paidGift)) {
-            throw ValidationException::withMessages(['gift_code' => 'This gift is unavailable for a new recipient.']);
+            throw ValidationException::withMessages(['gift_code' => 'This gift is unavailable for a new family balance.']);
         }
-        $family = $this->families->account($actor);
 
-        return DB::transaction(function () use ($actor, $family, $paidGift): CareHourAccount {
-            $family->newQuery()->whereKey($family->id)->lockForUpdate()->firstOrFail();
-            $profiles = CareRecipientProfile::query()->where('family_account_id', $family->id)
-                ->where('recipient_is_requester', true)->where(fn ($query) => $query->where('created_by_user_id', $actor->id)
-                ->orWhere(fn ($legacy) => $legacy->whereNull('created_by_user_id')->where('legacy_family_user_id', $actor->id)))->get();
-            $recipients = CareRecipient::query()->with('careRequest')
-                ->where(fn ($query) => $query->where('recipient_is_requester', true)->orWhere('relationship_to_family', 'self'))
-                ->whereHas('careRequest', fn ($query) => $query
-                    ->where(fn ($scope) => $scope->where('family_account_id', $family->id)
-                        ->orWhere(fn ($legacy) => $legacy->whereNull('family_account_id')->where('family_user_id', $family->owner_user_id)))
-                    ->where(fn ($identity) => $identity->where('created_by_user_id', $actor->id)
-                        ->orWhere(fn ($legacy) => $legacy->whereNull('created_by_user_id')->where('family_user_id', $actor->id))))->get();
-            $profileIds = $profiles->pluck('id')->merge($recipients->pluck('care_recipient_profile_id')->filter())->unique()->values();
-            $accountIds = CareHourRecipientLink::query()->whereIn('care_recipient_id', $recipients->modelKeys())->pluck('care_hour_account_id')
-                ->merge(CareHourAccount::query()->whereIn('care_recipient_profile_id', $profileIds)->pluck('id'))->unique()->values();
-            if ($profileIds->count() > 1 || $accountIds->count() > 1) {
-                $this->ambiguousSelf();
-            }
-            $existing = $accountIds->isNotEmpty() ? CareHourAccount::query()->whereKey($accountIds->first())->lockForUpdate()->firstOrFail() : null;
-            if ($existing && ((int) $existing->family_account_id !== (int) $family->id || ! $existing->active || $existing->currency !== 'usd')) {
-                $this->ambiguousSelf();
-            }
-            if ($existing?->care_recipient_profile_id) {
-                $profileIds = $profileIds->push($existing->care_recipient_profile_id)->unique()->values();
-            }
-            if ($profileIds->count() > 1) {
-                $this->ambiguousSelf();
-            }
-            $profile = $profileIds->isNotEmpty() ? CareRecipientProfile::query()->whereKey($profileIds->first())->lockForUpdate()->firstOrFail() : null;
-            if ($profile && ((int) $profile->family_account_id !== (int) $family->id || $profile->isArchived()
-                || ! $profile->recipient_is_requester
-                || ($profile->created_by_user_id !== null ? (int) $profile->created_by_user_id !== (int) $actor->id
-                    : (int) $profile->legacy_family_user_id !== (int) $actor->id))) {
-                $this->ambiguousSelf();
-            }
-            if (! $profile) {
-                $name = trim((string) $actor->name);
-                if ($name === '') {
-                    throw ValidationException::withMessages(['recipient' => 'Add your name to your account before claiming these hours for yourself.']);
-                }
-                $profile = app(CareRecipientProfileService::class)->saveDraft($actor, null, [
-                    'full_name' => $name, 'recipient_is_requester' => true,
-                ]);
-            }
-            if ($existing && ! $existing->care_recipient_profile_id) {
-                $existing->update(['care_recipient_profile_id' => $profile->id]);
-            }
-            $account = $existing ?: $this->enrollProfile($profile, $actor, $paidGift);
-            foreach ($recipients as $recipient) {
-                $this->linkRecipient($account, $recipient, $actor);
-            }
-
-            return $account;
-        }, 3);
+        return $this->ensureFamilyWallet($actor, $paidGift);
     }
 
     public function forBooking(CareBooking $booking): ?CareHourAccount
     {
-        $recipient = $booking->careRequest?->recipient;
-        if ($recipient instanceof CareRecipient) {
-            $link = CareHourRecipientLink::query()->where('care_recipient_id', $recipient->id)->first();
-            if ($link) {
-                return $link->account;
+        $familyId = (int) $booking->family_account_id;
+        if ($familyId < 1) {
+            $request = $booking->careRequest;
+            if (! $booking->family_user_id || ($request && (int) $request->family_user_id !== (int) $booking->family_user_id)) {
+                return null;
             }
-            if ($recipient->care_recipient_profile_id) {
-                return CareHourAccount::query()->where('care_recipient_profile_id', $recipient->care_recipient_profile_id)
-                    ->where('family_account_id', $booking->family_account_id)->first();
+            $familyId = (int) FamilyAccount::query()->where('owner_user_id', $booking->family_user_id)->value('id');
+            if ($request?->family_account_id && (int) $request->family_account_id !== $familyId) {
+                return null;
             }
         }
-        if ($booking->care_plan_id && Schema::hasTable('care_hour_plan_preferences')) {
-            $accountId = DB::table('care_hour_plan_preferences')->where('care_plan_id', $booking->care_plan_id)->value('care_hour_account_id');
+        if ($familyId < 1) {
+            return null;
+        }
+        if ($booking->exists && Schema::hasTable('care_hour_booking_fundings')) {
+            $accountId = DB::table('care_hour_booking_fundings')->where('care_booking_id', $booking->id)
+                ->whereNotNull('committed_at')->value('care_hour_account_id');
             if ($accountId) {
-                return CareHourAccount::query()->whereKey($accountId)->where('family_account_id', $booking->family_account_id)->first();
+                return CareHourAccount::query()->whereKey($accountId)->where('family_account_id', $familyId)->first();
             }
         }
 
-        return null;
+        return $this->walletForFamily($familyId);
     }
 
     private function assertRecipientAccess(CareRecipient $recipient, User $actor): void
@@ -264,8 +195,6 @@ class CareHourIdentityService
 
     private function assertEnrollmentOpen(User $actor, ?CareHourGift $paidGift = null): void
     {
-        // An existing paid entitlement can enroll an existing identity even when discovery is paused.
-        // No caller-controlled boolean or global configuration override can grant this exception.
         if ($paidGift && $this->giftCanEnroll($paidGift)) {
             return;
         }
@@ -281,10 +210,5 @@ class CareHourIdentityService
                 ->whereNotNull('stripe_payment_intent_id')->whereNotNull('stripe_charge_id')->whereNotNull('livemode')
                 ->whereNull('care_hour_account_id')->whereNull('family_account_id')->whereNull('correction_state')->where('amount_reversed_cents', 0)
                 ->where(fn ($dispute) => $dispute->whereNull('dispute_id')->orWhere('dispute_status', 'won')))->exists();
-    }
-
-    private function ambiguousSelf(): never
-    {
-        throw ValidationException::withMessages(['recipient' => 'Your existing recipient records need review. Choose your existing recipient or contact support before claiming for yourself.']);
     }
 }

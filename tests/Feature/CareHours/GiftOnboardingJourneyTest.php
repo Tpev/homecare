@@ -50,15 +50,12 @@ class GiftOnboardingJourneyTest extends TestCase
         $mum = User::where('email', 'linda@example.test')->sole();
         $this->assertAuthenticatedAs($mum);
         $this->assertDatabaseCount('care_recipient_profiles', 0);
-        $this->get(route('family.care-hours.claim'))->assertOk()->assertSee('Who is this gift for?')
-            ->assertSee('For myself')->assertDontSee('Set up care')->assertDontSee($code);
+        $this->get(route('family.care-hours.claim'))->assertOk()->assertSee('Your gift is saved. No card or care profile needed.')
+            ->assertDontSee('name="recipient"', false)->assertDontSee('Set up care')->assertDontSee($code);
         $this->post(route('family.care-hours.claim.preview'), ['recipient' => 'self'])->assertRedirect(route('family.care-hours.claim'));
         $account = CareHourAccount::sole();
-        $profile = CareRecipientProfile::sole();
-        $this->assertSame($mum->id, $profile->created_by_user_id);
-        $this->assertTrue($profile->recipient_is_requester);
-        $this->assertSame('draft', $profile->status);
-        $this->assertNull($profile->sharing_acknowledged_at);
+        $this->assertNull($account->care_recipient_profile_id);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertSame(0, $account->balance()['available_minutes']);
         $this->get(route('family.care-hours.claim'))->assertOk()->assertSee('Review your gift')->assertSee('11 h')
             ->assertSee('Free welcome hours')->assertDontSee($code)->assertDontSee($purchase->buyer_email);
@@ -132,7 +129,7 @@ class GiftOnboardingJourneyTest extends TestCase
         $this->assertNull($purchase->gift->fresh()->claimed_at);
     }
 
-    public function test_guided_claim_can_choose_existing_recipient_and_ready_page_is_family_scoped(): void
+    public function test_legacy_recipient_claim_payload_resolves_to_family_wallet_and_ready_page_is_family_scoped(): void
     {
         [$purchase, $code] = $this->gift();
         $actor = User::factory()->create(['role' => 'family']);
@@ -140,7 +137,7 @@ class GiftOnboardingJourneyTest extends TestCase
         $profile = CareRecipientProfile::create(['family_account_id' => $family->id, 'created_by_user_id' => $actor->id,
             'full_name' => 'Robert Bennett', 'status' => 'draft']);
         $this->actingAs($actor)->post(route('care-hours.claim.start'), ['code' => $code])->assertRedirect();
-        $this->get(route('family.care-hours.claim'))->assertOk()->assertSee('For someone I care for')->assertSee('Robert Bennett');
+        $this->get(route('family.care-hours.claim'))->assertOk()->assertSee('Your gift is saved. No card or care profile needed.')->assertDontSee('Robert Bennett');
         $this->post(route('family.care-hours.claim.preview'), ['recipient' => 'profile:'.$profile->id])->assertRedirect();
         $this->post(route('family.care-hours.claim.confirm'), ['nonce' => session('care_hours.gift_claim.nonce'), 'confirm' => 1])
             ->assertRedirect(route('family.care-hours.claim.ready', $purchase->public_id));

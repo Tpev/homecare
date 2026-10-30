@@ -85,7 +85,7 @@ class CareHoursScreensTest extends TestCase
         $response = $this->post(route('family.care-hours.checkout', $account), $payload + ['terms' => 1]);
         $response->assertRedirect();
         $purchase = CareHourPurchase::sole();
-        $this->get(route('family.care-hours.purchase', $purchase->public_id))->assertOk()->assertSee('11 h added for Margaret');
+        $this->get(route('family.care-hours.purchase', $purchase->public_id))->assertOk()->assertSee('11 h added to the family care balance for '.$owner->name);
         $this->post(route('family.care-hours.checkout', $account), $payload + ['terms' => 1])->assertRedirect();
         $this->assertDatabaseCount('care_hour_purchases', 1);
         $this->assertSame(660, app(CareHourLedgerService::class)->balance($account)['available_minutes']);
@@ -110,7 +110,7 @@ class CareHoursScreensTest extends TestCase
         [$owner, $account] = $this->account();
         $created = app(CareHourContributionService::class)->createLink($account, $owner);
         $token = $created['token'];
-        $this->get(route('care-hours.contribute', $token))->assertOk()->assertSee('Give care hours to Margaret')
+        $this->get(route('care-hours.contribute', $token))->assertOk()->assertSee('Give prepaid care hours')
             ->assertDontSee($owner->email)->assertDontSee('Care hours balance')->assertDontSee('Contributions and usage')
             ->assertHeader('Referrer-Policy', 'no-referrer')->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
         $quote = app(CareHourPurchaseService::class)->quote($account, 10);
@@ -128,7 +128,7 @@ class CareHoursScreensTest extends TestCase
         $purchase = CareHourPurchase::sole();
         $account->update(['display_name' => 'Private legal name never shared']);
         $this->get(route('care-hours.receipt', $purchase->public_id))->assertOk()->assertSee('Your care hours are ready')->assertDontSee('Available')->assertDontSee($owner->email);
-        $this->get(route('care-hours.receipt', $purchase->public_id))->assertSee('Margaret')->assertDontSee('Private legal name never shared');
+        $this->get(route('care-hours.receipt', $purchase->public_id))->assertSee('added to the family care balance')->assertDontSee('for Family care balance')->assertDontSee('Private legal name never shared');
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('family_account_members', 1);
         $this->flushSession();
@@ -159,7 +159,7 @@ class CareHoursScreensTest extends TestCase
             return true;
         });
         $this->post(route('care-hours.receipt.confirm', $purchase->public_id), ['code' => $code])->assertRedirect();
-        $this->get(route('care-hours.receipt', $purchase->public_id))->assertOk()->assertSee('5 h added for Margaret');
+        $this->get(route('care-hours.receipt', $purchase->public_id))->assertOk()->assertSee('5 h added to the family care balance');
     }
 
     public function test_removed_member_keeps_own_receipt_but_cannot_read_current_balance(): void
@@ -174,15 +174,15 @@ class CareHoursScreensTest extends TestCase
         $this->actingAs($owner)->get(route('family.care-hours.purchase', $purchase->public_id))->assertForbidden();
     }
 
-    public function test_existing_recipient_can_be_explicitly_linked_without_duplicate_balance(): void
+    public function test_legacy_enrollment_payload_reuses_family_wallet_without_recipient_link(): void
     {
         [$owner, $account] = $this->account();
         $request = CareRequest::create(['family_user_id' => $owner->id, 'family_account_id' => $account->family_account_id, 'title' => 'Care for Margaret', 'request_type' => 'one_time', 'status' => 'open', 'address_line1' => '123 Test St', 'city' => 'Raleigh', 'state' => 'NC', 'zip' => '27601']);
         $recipient = CareRecipient::create(['care_request_id' => $request->id, 'full_name' => 'Margaret', 'relationship_to_family' => 'Mother']);
-        $this->actingAs($owner)->post(route('family.care-hours.enroll'), ['recipient' => 'recipient:'.$recipient->id])->assertSessionHasErrors('balance_target');
+        $this->actingAs($owner)->post(route('family.care-hours.enroll'), ['recipient' => 'recipient:'.$recipient->id])->assertRedirect(route('family.care-hours.show', $account));
         $this->post(route('family.care-hours.enroll'), ['recipient' => 'recipient:'.$recipient->id, 'balance_target' => $account->id])->assertRedirect(route('family.care-hours.show', $account));
         $this->assertDatabaseCount('care_hour_accounts', 1);
-        $this->assertDatabaseHas('care_hour_recipient_links', ['care_recipient_id' => $recipient->id, 'care_hour_account_id' => $account->id]);
+        $this->assertDatabaseCount('care_hour_recipient_links', 0);
     }
 
     public function test_admin_can_search_read_and_audit_a_provider_recheck_without_manual_credit_controls(): void
@@ -190,7 +190,7 @@ class CareHoursScreensTest extends TestCase
         [$owner, $account] = $this->account();
         $purchase = $this->buy($account, $owner, 10);
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->actingAs($admin)->get(route('admin.care-hours.index', ['search' => 'Margaret']))->assertOk()->assertSee('Margaret');
+        $this->actingAs($admin)->get(route('admin.care-hours.index', ['search' => $owner->email]))->assertOk()->assertSee($owner->name);
         $this->get(route('admin.care-hours.show', $account))->assertOk()->assertSee('Visit funding and caregiver settlement')->assertSee('11 h');
         $this->post(route('admin.care-hours.recheck', [$account, $purchase]), ['reason' => 'Verify payment after support question'])->assertRedirect();
         $this->assertDatabaseHas('family_account_activity_logs', ['action' => 'care_hours_purchase_recheck', 'actor_user_id' => $admin->id]);
@@ -204,7 +204,7 @@ class CareHoursScreensTest extends TestCase
         $this->mock(\App\Services\CareHours\CareHourPaymentGateway::class)->shouldReceive('retrieveCheckout')
             ->andThrow(new \App\Exceptions\Payments\PaymentException('Provider unavailable', 'private-provider-debug-value'));
         $this->actingAs($owner)->get(route('family.care-hours.purchase', $purchase->public_id))->assertOk()
-            ->assertSee('We could not check the payment provider')->assertDontSee('private-provider-debug-value')->assertSee('5 h added for Margaret');
+            ->assertSee('We could not check the payment provider')->assertDontSee('private-provider-debug-value')->assertSee('5 h added to the family care balance');
     }
 
     public function test_admin_attention_filter_shows_held_accounts_and_hides_healthy_accounts(): void
@@ -216,7 +216,7 @@ class CareHoursScreensTest extends TestCase
         app(CareHourPurchaseService::class)->holdForReversal($purchase, $purchase->amount_cents);
         $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)->get(route('admin.care-hours.index', ['attention' => 1]))->assertOk()
-            ->assertSee('Needs attention recipient')->assertSee('1 need attention')->assertDontSee('Healthy recipient');
+            ->assertSee($owner->name)->assertSee('1 need attention')->assertDontSee($other->name);
     }
 
     public function test_admin_attention_includes_unissued_purchase_errors_but_not_normal_checkout_or_terminal_failure(): void
@@ -230,10 +230,10 @@ class CareHoursScreensTest extends TestCase
         $start($healthy, $other);
         $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)->get(route('admin.care-hours.index', ['attention' => 1]))->assertOk()
-            ->assertSee('Stalled package recipient')->assertSee('1 need attention')->assertDontSee('Normal checkout recipient');
+            ->assertSee($owner->name)->assertSee('1 need attention')->assertDontSee($other->name);
         $purchase->update(['status' => 'failed']);
         $this->get(route('admin.care-hours.index', ['attention' => 1]))->assertOk()
-            ->assertDontSee('Stalled package recipient')->assertDontSee('Normal checkout recipient');
+            ->assertDontSee($owner->name)->assertDontSee($other->name);
     }
 
     public function test_admin_attention_tracks_cancelled_visit_refunds_without_a_settlement_and_clears_after_recovery(): void
@@ -259,24 +259,24 @@ class CareHoursScreensTest extends TestCase
         $this->assertDatabaseCount('care_hour_settlements', 0);
         $admin = User::factory()->create(['role' => 'admin']);
         $url = route('admin.care-hours.index', ['attention' => 1]);
-        $this->actingAs($admin)->get($url)->assertOk()->assertSee('Refund recovery recipient')->assertSee('1 need attention');
+        $this->actingAs($admin)->get($url)->assertOk()->assertSee($owner->name)->assertSee('1 need attention');
         $refund->update(['status' => 'pending', 'last_error' => null]);
-        $this->get($url)->assertOk()->assertSee('Refund recovery recipient')->assertSee('1 need attention');
+        $this->get($url)->assertOk()->assertSee($owner->name)->assertSee('1 need attention');
         $refund->update(['status' => 'failed']); // Historical failure must not keep a recovered visit in the queue.
         $payment->update(['refunded_cents' => 1550]);
-        $this->get($url)->assertOk()->assertDontSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertDontSee($owner->name);
         $payment->update(['status' => 'authorized', 'captured_cents' => 0, 'refunded_cents' => 0]);
-        $this->get($url)->assertOk()->assertSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertSee($owner->name);
         $payment->update(['status' => 'cancelled']);
-        $this->get($url)->assertOk()->assertDontSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertDontSee($owner->name);
         $payment->update(['status' => 'checkout', 'last_error' => null]);
-        $this->get($url)->assertOk()->assertDontSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertDontSee($owner->name);
         $payment->update(['last_error' => 'Provider result could not be checked.']);
-        $this->get($url)->assertOk()->assertSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertSee($owner->name);
         $payment->update(['last_error' => null, 'created_at' => now()->subHours(24)]);
-        $this->get($url)->assertOk()->assertSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertSee($owner->name);
         $payment->update(['status' => 'failed']);
-        $this->get($url)->assertOk()->assertDontSee('Refund recovery recipient');
+        $this->get($url)->assertOk()->assertDontSee($owner->name);
     }
 
     public function test_active_prepaid_visit_displays_coverage_without_card_setup_prompts(): void

@@ -8,6 +8,7 @@ use App\Models\CareHourAllocation;
 use App\Models\CareHourLedgerEntry;
 use App\Models\CareHourLot;
 use App\Models\CareHourPurchase;
+use App\Models\FamilyAccount;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,7 +21,8 @@ class CareHourLedgerService
 {
     public function balance(CareHourAccount $account): array
     {
-        $lots = $account->lots()->where('status', '!=', 'reversed')
+        $lots = CareHourLot::query()->whereIn('care_hour_account_id', $account->familySourceIds())
+            ->where('status', '!=', 'reversed')->with('account')
             ->withSum(['allocations as reserved' => fn ($q) => $q->where('status', 'reserved')], 'minutes')
             ->withSum(['allocations as used' => fn ($q) => $q->where('status', 'used')], 'minutes')->get();
         $balance = ['available_minutes' => 0, 'reserved_minutes' => 0, 'used_minutes' => 0, 'held_minutes' => 0];
@@ -33,7 +35,7 @@ class CareHourLedgerService
             }
             $balance['reserved_minutes'] += $reserved;
             $balance['used_minutes'] += $used;
-            $balance[$lot->status === 'held' ? 'held_minutes' : 'available_minutes'] += $free;
+            $balance[$lot->status === 'held' || ! $lot->account->active ? 'held_minutes' : 'available_minutes'] += $free;
         }
 
         return $balance;
@@ -41,7 +43,7 @@ class CareHourLedgerService
 
     public function history(CareHourAccount $account): Builder
     {
-        return CareHourLedgerEntry::query()->where('care_hour_account_id', $account->id)->latest('id');
+        return CareHourLedgerEntry::query()->whereIn('care_hour_account_id', $account->familySourceIds())->latest('id');
     }
 
     public function issuePurchase(CareHourPurchase $purchase): CareHourLot
@@ -54,6 +56,7 @@ class CareHourLedgerService
                 return $existing;
             }
             if (! in_array($purchase->status, ['paid', 'issued'], true) || ! $account->active
+                || (int) $purchase->family_account_id !== (int) $account->family_account_id
                 || strtolower((string) $purchase->currency) !== strtolower($account->currency)
                 || $purchase->total_minutes < 1
                 || $purchase->total_minutes !== $purchase->paid_minutes + $purchase->bonus_minutes) {
@@ -105,9 +108,6 @@ class CareHourLedgerService
         return DB::transaction(function () use ($account, $booking, $targetMinutes): int {
             $account = $this->lockAccount($account->id);
             $this->assertBookingAccount($account, $booking);
-            if (! $account->active) {
-                throw ValidationException::withMessages(['care_hours' => 'This care recipient is unavailable.']);
-            }
             if ($this->allocationsFor($booking)->where('status', 'used')->isNotEmpty()) {
                 throw ValidationException::withMessages(['care_hours' => 'This visit has already used its care hours.']);
             }
@@ -146,7 +146,7 @@ class CareHourLedgerService
                     throw ValidationException::withMessages(['care_hours' => 'Some reserved hours need payment review.']);
                 }
                 $allocation->update(['status' => 'used']);
-                $this->entry($account, 'usage', $allocation->minutes, 'Care hours used', [
+                $this->entry($allocation->lot->account, 'usage', $allocation->minutes, 'Care hours used', [
                     'care_hour_lot_id' => $allocation->care_hour_lot_id, 'care_booking_id' => $booking->id,
                     'care_hour_purchase_id' => $allocation->lot->care_hour_purchase_id,
                     'reserved_delta' => -$allocation->minutes, 'used_delta' => $allocation->minutes,
@@ -172,6 +172,7 @@ class CareHourLedgerService
         }
         DB::transaction(function () use ($account, $booking): void {
             $account = $this->lockAccount($account->id);
+            $this->assertBookingAccount($account, $booking);
             foreach ($this->activeAllocations($booking, 'reserved') as $allocation) {
                 $this->restoreAllocation($account, $allocation, $allocation->minutes);
             }
@@ -268,7 +269,8 @@ class CareHourLedgerService
         if ($needed <= 0) {
             return $current;
         }
-        $lots = $account->lots()->where('status', 'available')->orderBy('issued_at')->orderBy('id')->lockForUpdate()->get();
+        $lots = CareHourLot::query()->whereIn('care_hour_account_id', $account->familySourceIds(true))
+            ->where('status', 'available')->with('account')->orderBy('issued_at')->orderBy('id')->lockForUpdate()->get();
         foreach ($lots as $lot) {
             foreach ($this->freeRanges($lot) as [$start, $length]) {
                 $take = min($needed, $length);
@@ -276,10 +278,10 @@ class CareHourLedgerService
                     break 2;
                 }
                 $allocation = CareHourAllocation::create([
-                    'care_hour_account_id' => $account->id, 'care_hour_lot_id' => $lot->id,
+                    'care_hour_account_id' => $lot->care_hour_account_id, 'care_hour_lot_id' => $lot->id,
                     'care_booking_id' => $booking->id, 'start_minute' => $start, 'minutes' => $take, 'status' => 'reserved',
                 ]);
-                $this->entry($account, 'reservation', $take, 'Hours reserved for a visit', [
+                $this->entry($lot->account, 'reservation', $take, 'Hours reserved for a visit', [
                     'care_hour_lot_id' => $lot->id, 'care_booking_id' => $booking->id,
                     'care_hour_purchase_id' => $lot->care_hour_purchase_id,
                     'available_delta' => -$take, 'reserved_delta' => $take,
@@ -295,6 +297,14 @@ class CareHourLedgerService
 
     private function restoreAllocation(CareHourAccount $account, CareHourAllocation $allocation, int $minutes): void
     {
+        // A pooled visit can draw from several original purchase accounts. Keep
+        // every allocation and correction attached to its original source lot.
+        $source = $allocation->lot->account;
+        if ((int) $source->family_account_id !== (int) $account->family_account_id
+            || $source->currency !== $account->currency
+            || (int) $allocation->care_hour_account_id !== (int) $source->id) {
+            throw ValidationException::withMessages(['care_hours' => 'These care hours cannot fund this visit.']);
+        }
         $originalStatus = $allocation->status;
         $start = $allocation->start_minute + $allocation->minutes - $minutes;
         if ($minutes === $allocation->minutes) {
@@ -302,13 +312,13 @@ class CareHourLedgerService
         } else {
             $allocation->update(['minutes' => $allocation->minutes - $minutes]);
             CareHourAllocation::create([
-                'care_hour_account_id' => $account->id, 'care_hour_lot_id' => $allocation->care_hour_lot_id,
+                'care_hour_account_id' => $source->id, 'care_hour_lot_id' => $allocation->care_hour_lot_id,
                 'care_booking_id' => $allocation->care_booking_id, 'start_minute' => $start,
                 'minutes' => $minutes, 'status' => 'released',
             ]);
         }
         $held = $allocation->lot->status === 'held';
-        $this->entry($account, $originalStatus === 'used' ? 'usage_correction' : 'release', $minutes, 'Care hours returned', [
+        $this->entry($source, $originalStatus === 'used' ? 'usage_correction' : 'release', $minutes, 'Care hours returned', [
             'care_hour_lot_id' => $allocation->care_hour_lot_id, 'care_booking_id' => $allocation->care_booking_id,
             'care_hour_purchase_id' => $allocation->lot->care_hour_purchase_id,
             $originalStatus === 'used' ? 'used_delta' : 'reserved_delta' => -$minutes,
@@ -349,15 +359,25 @@ class CareHourLedgerService
 
     private function lockAccount(int $id): CareHourAccount
     {
-        return CareHourAccount::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+        $source = CareHourAccount::query()->findOrFail($id);
+        FamilyAccount::query()->whereKey($source->family_account_id)->lockForUpdate()->firstOrFail();
+        // Serialize all operations in one wallet before locking lots. Sorting
+        // source IDs gives legacy-account callers the same lock order.
+        $sources = CareHourAccount::query()->where('family_account_id', $source->family_account_id)
+            ->where('currency', $source->currency)->orderBy('id')->lockForUpdate()->get();
+
+        return $sources->firstWhere('id', $id) ?? throw new \LogicException('The care-hour source changed while locking its wallet.');
     }
 
     private function accountForBooking(CareBooking $booking): ?CareHourAccount
     {
-        $accountId = CareHourAllocation::query()->where('care_booking_id', $booking->id)->value('care_hour_account_id');
-        if (! $accountId && Schema::hasTable('care_hour_booking_fundings')) {
-            $accountId = DB::table('care_hour_booking_fundings')->where('care_booking_id', $booking->id)->value('care_hour_account_id');
+        $accountId = null;
+        if (Schema::hasTable('care_hour_booking_fundings')) {
+            $accountId = DB::table('care_hour_booking_fundings')->where('care_booking_id', $booking->id)
+                ->whereNotNull('committed_at')->value('care_hour_account_id');
         }
+        $accountId ??= CareHourAllocation::query()->where('care_booking_id', $booking->id)
+            ->whereIn('status', ['reserved', 'used'])->orderBy('id')->value('care_hour_account_id');
 
         return $accountId ? CareHourAccount::find($accountId) : app(CareHourIdentityService::class)->forBooking($booking);
     }
@@ -367,9 +387,12 @@ class CareHourLedgerService
         $sameFamily = $booking->family_account_id
             ? (int) $booking->family_account_id === (int) $account->family_account_id
             : (int) $booking->family_user_id === (int) $account->familyAccount->owner_user_id;
-        $other = CareHourAllocation::query()->where('care_booking_id', $booking->id)
-            ->where('care_hour_account_id', '!=', $account->id)->whereIn('status', ['reserved', 'used'])->exists();
-        if (! $sameFamily || $other) {
+        $sourceIds = $account->familySourceIds();
+        $other = CareHourAllocation::query()->where('care_booking_id', $booking->id)->whereIn('status', ['reserved', 'used'])
+            ->where(fn ($query) => $query->whereNotIn('care_hour_account_id', $sourceIds)
+                ->orWhereHas('lot', fn ($lots) => $lots->whereNotIn('care_hour_account_id', $sourceIds)
+                    ->orWhereColumn('care_hour_lots.care_hour_account_id', '!=', 'care_hour_allocations.care_hour_account_id')))->exists();
+        if (! $sameFamily || $account->currency !== config('care_hours.currency', 'usd') || $other) {
             throw ValidationException::withMessages(['care_hours' => 'These care hours cannot fund this visit.']);
         }
     }

@@ -68,16 +68,62 @@ class PrepaidRequestDefaultTest extends TestCase
         $this->assertDatabaseCount('care_booking_payments', 0);
     }
 
-    public function test_switching_recipients_recomputes_default_without_using_someone_elses_hours(): void
+    public function test_switching_recipients_preserves_explicit_card_choice_with_shared_family_hours(): void
     {
         [$owner, $mum, $mumAccount] = $this->recipient();
         [, $dad, $dadAccount] = $this->recipient($owner, 'Robert');
         $this->composer($owner)->call('selectCareRecipientProfile', $mum->id)
             ->set('careHourAccountId', null)->call('selectCareRecipientProfile', $dad->id)
-            ->assertSet('careHourAccountId', $dadAccount->id)->call('publish')->assertHasNoErrors();
-        $this->assertSame($dadAccount->id, CareHourRequestPreference::sole()->care_hour_account_id);
+            ->assertSet('careHourAccountId', null)->call('publish')->assertHasNoErrors();
+        $this->assertSame($mumAccount->id, $dadAccount->id);
+        $this->assertFalse(CareHourRequestPreference::sole()->enabled);
+        $this->assertNull(CareHourRequestPreference::sole()->care_hour_account_id);
         $this->assertSame($dad->id, CareRequest::sole()->recipient->care_recipient_profile_id);
-        $this->assertSame(300, $mumAccount->balance()['available_minutes']);
+        $this->assertSame(600, $mumAccount->balance()['available_minutes']);
+    }
+
+    public static function olderComposerKeys(): array
+    {
+        return [
+            'saved profile' => ['profile:1', true],
+            'copied request' => ['request:1', true],
+            'self' => ['self:1', true],
+            'new recipient' => ['new-recipient', true],
+            'different family' => ['family:999999', false],
+        ];
+    }
+
+    #[DataProvider('olderComposerKeys')]
+    public function test_old_tab_hydration_preserves_explicit_card_choice_only_for_legacy_recipient_keys(string $oldKey, bool $keepCard): void
+    {
+        [$owner, $profile, $account] = $this->recipient();
+        $composer = $this->composer($owner)->call('selectCareRecipientProfile', $profile->id);
+        // Emit a genuine server-signed snapshot with the pre-deployment state;
+        // these locked properties cannot be changed through client updates.
+        $stop = Livewire::listen('dehydrate', function ($component) use ($oldKey): void {
+            if ($component instanceof CreateCareRequestWizard) {
+                $component->careHoursRecipientKey = $oldKey;
+                $component->careHoursChoiceMade = true;
+                $component->careHourAccountId = null;
+            }
+        });
+        try {
+            $composer->call('$refresh')->assertSet('careHoursRecipientKey', $oldKey);
+        } finally {
+            $stop();
+        }
+
+        $composer->set('is_private', true)
+            ->assertSet('careHoursRecipientKey', 'family:'.$account->family_account_id)
+            ->assertSet('careHoursChoiceMade', $keepCard)
+            ->assertSet('careHourAccountId', $keepCard ? null : $account->id)
+            ->call('publish')->assertHasNoErrors();
+        $preference = CareHourRequestPreference::sole();
+        $this->assertSame(! $keepCard, $preference->enabled);
+        $this->assertSame($keepCard ? null : $account->id, $preference->care_hour_account_id);
+        $this->assertSame(300, $account->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_bookings', 0);
+        $this->assertDatabaseCount('care_booking_payments', 0);
     }
 
     public function test_partial_balance_is_default_and_estimate_shows_uncovered_amount(): void
@@ -122,12 +168,12 @@ class PrepaidRequestDefaultTest extends TestCase
         $this->assertSame(300, $foreign->balance()['available_minutes']);
     }
 
-    public function test_new_person_with_the_same_name_does_not_inherit_another_recipient_balance(): void
+    public function test_new_recipient_uses_family_credit_without_identity_matching(): void
     {
         [$owner, , $account] = $this->recipient();
         $this->composer($owner)->set('recipient_full_name', 'Margaret')->set('recipient_relationship_to_family', 'Mother')
-            ->assertSet('careHourAccountId', null)->assertDontSee('Use care hours first')->call('publish')->assertHasNoErrors();
-        $this->assertDatabaseCount('care_hour_request_preferences', 0);
+            ->assertSet('careHourAccountId', $account->id)->assertSee('Use care hours first')->call('publish')->assertHasNoErrors();
+        $this->assertSame($account->id, CareHourRequestPreference::sole()->care_hour_account_id);
         $this->assertDatabaseCount('care_hour_recipient_links', 0);
         $this->assertSame(300, $account->balance()['available_minutes']);
     }
@@ -142,13 +188,13 @@ class PrepaidRequestDefaultTest extends TestCase
         $this->assertDatabaseCount('care_booking_payments', 0);
     }
 
-    public function test_publication_rechecks_self_identity_before_linking_the_balance(): void
+    public function test_publication_rechecks_family_wallet_is_active_before_saving_funding(): void
     {
         [$owner, $profile, $account] = $this->recipient();
         $profile->update(['recipient_is_requester' => true]);
         $composer = $this->composer($owner)->set('care_for', 'self')->assertSet('careHourAccountId', $account->id);
-        CareRequest::created(function () use ($profile): void {
-            $profile->update(['recipient_is_requester' => false]);
+        CareRequest::created(function () use ($account): void {
+            $account->update(['active' => false]);
         });
         $composer->call('publish')->assertHasErrors('careHourAccountId');
         $this->assertDatabaseCount('care_requests', 0);
@@ -181,24 +227,23 @@ class PrepaidRequestDefaultTest extends TestCase
         $request = CareRequest::where('id', '!=', $source->id)->sole();
         $this->assertSame($account->id, CareHourRequestPreference::sole()->care_hour_account_id);
         $this->assertNull($request->recipient->care_recipient_profile_id);
-        $this->assertDatabaseHas('care_hour_recipient_links', ['care_hour_account_id' => $account->id,
-            'care_recipient_id' => $request->recipient->id]);
-        $this->assertSame(300, $account->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_hour_recipient_links', 0);
+        $this->assertSame(600, $account->balance()['available_minutes']);
         $this->assertDatabaseCount('care_bookings', 0);
         $this->assertDatabaseCount('care_booking_payments', 0);
     }
 
-    public function test_editing_a_copied_recipient_drops_the_copied_balance(): void
+    public function test_editing_a_copied_recipient_keeps_the_shared_family_balance(): void
     {
         [$owner, $source, $account] = $this->legacyRecipient();
         $this->composer($owner)->call('prefillFromLastRequest')->assertSet('careHourAccountId', $account->id)
-            ->set('recipient_full_name', 'Robert')->assertSet('careHourAccountId', null)
-            ->assertSet('careHoursCopiedRequestId', null)->assertDontSee('Use care hours first')
+            ->set('recipient_full_name', 'Robert')->assertSet('careHourAccountId', $account->id)
+            ->assertSet('careHoursCopiedRequestId', null)->assertSee('Use care hours first')
             ->set('requested_start_date', now()->addDays(2)->toDateString())->set('requested_start_time', '10:00')
             ->call('publish')->assertHasNoErrors();
         $request = CareRequest::where('id', '!=', $source->id)->sole();
         $this->assertDatabaseMissing('care_hour_recipient_links', ['care_recipient_id' => $request->recipient->id]);
-        $this->assertDatabaseCount('care_hour_request_preferences', 0);
+        $this->assertSame($account->id, CareHourRequestPreference::sole()->care_hour_account_id);
         $this->assertSame(300, $account->balance()['available_minutes']);
     }
 

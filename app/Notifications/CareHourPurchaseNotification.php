@@ -18,7 +18,8 @@ class CareHourPurchaseNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $purchase = $this->purchase;
-        $recipientName = $purchase->care_hour_contribution_link_id ? $purchase->contributionLink->display_name : $purchase->account->display_name;
+        $recipientName = $purchase->care_hour_contribution_link_id ? $purchase->contributionLink->display_name : ($purchase->familyAccount?->owner?->name ?? 'your family');
+        $balanceLabel = $recipientName === 'Family care balance' ? 'the family balance' : 'the family balance for '.$recipientName;
         $receiptUrl = $purchase->buyer_user_id ? url('/family/care-hours/purchases/'.$purchase->public_id) : url('/care-hours/receipts/'.$purchase->public_id);
         if ($this->kind === 'correction') {
             return (new MailMessage)->subject('Your LoLo purchase was corrected')
@@ -35,9 +36,9 @@ class CareHourPurchaseNotification extends Notification
 
         return (new MailMessage)->subject('Your LoLo care-hours receipt')
             ->greeting('Thank you, '.$purchase->buyer_name.'.')
-            ->line(($purchase->total_minutes / 60).' care hours were added for '.$recipientName.'.')
+            ->line(($purchase->total_minutes / 60).' care hours were added to '.$balanceLabel.'.')
             ->line('Paid: $'.number_format($purchase->amount_cents / 100, 2).' USD. Includes the hourly family fee.')
-            ->line($purchase->bonus_minutes ? 'Includes '.($purchase->bonus_minutes / 60).' free welcome hours.' : 'The care hours stay with the selected recipient.')
+            ->line($purchase->bonus_minutes ? 'Includes '.($purchase->bonus_minutes / 60).' free welcome hours.' : 'The care hours are available for eligible visits in the family account.')
             ->line('Non-refundable. No expiry. Each hour covers an hour of eligible care, even if standard prices rise.')
             ->action('View receipt', $receiptUrl);
     }
@@ -47,8 +48,8 @@ class CareHourPurchaseNotification extends Notification
         return [
             'event_key' => $this->kind === 'hold' ? 'care_hours_on_hold' : 'care_hours_added',
             'title' => $this->kind === 'hold' ? 'Care hours need review' : 'Care hours added',
-            'body' => $this->kind === 'hold' ? 'Some care hours for '.$this->purchase->account->display_name.' are on hold. Contact LoLo for help with affected visits.'
-                : ($this->purchase->total_minutes / 60).' hours were added for '.$this->purchase->account->display_name.'.',
+            'body' => $this->kind === 'hold' ? 'Some hours in your family balance are on hold. Contact LoLo for help with affected visits.'
+                : ($this->purchase->total_minutes / 60).' hours were added to your family balance.',
             'url' => url('/family/care-hours/'.$this->purchase->care_hour_account_id),
             'care_hour_purchase_id' => $this->purchase->public_id,
         ];

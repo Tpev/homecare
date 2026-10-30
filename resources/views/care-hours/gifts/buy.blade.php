@@ -33,10 +33,10 @@
                 @endforeach
             </div>
         </fieldset>
-        <p id="gift-package-note" class="text-sm text-[#485E53]">@if(collect($packages)->contains(fn ($package) => ($package['conditional_bonus_minutes'] ?? 0) > 0))The welcome bonus applies once per recipient, on their first 10-, 20- or 40-hour package. Confirmed when they claim. A 5-hour gift has no bonus and keeps them eligible.@else Paid hours never expire.@endif</p>
+        <p id="gift-package-note" class="text-sm text-[#485E53]">@if(collect($packages)->contains(fn ($package) => ($package['conditional_bonus_minutes'] ?? 0) > 0))The welcome bonus applies once per family account, on its first 10-, 20- or 40-hour package. Confirmed when the gift is claimed. A 5-hour gift has no bonus and keeps the family eligible.@else Paid hours never expire.@endif</p>
         @if($buyer)
             <p class="text-sm text-[#485E53]">Receipt for {{ $buyer['email'] }}</p>
-            <label class="flex items-start gap-3 text-sm"><input type="checkbox" name="terms" value="1" required class="mt-1 rounded border-[#D8E1D7]"><span>I agree this gift is non-refundable, has no expiry and can be claimed once for one person.</span></label>
+            <label class="flex items-start gap-3 text-sm"><input type="checkbox" name="terms" value="1" required class="mt-1 rounded border-[#D8E1D7]"><span>I agree this gift is non-refundable, has no expiry and can be claimed once for one family account.</span></label>
             <button class="hc-primary-button w-full sm:w-auto" type="submit">Continue to payment</button>
         @elseif($verificationPending)
             <section class="hc-surface space-y-4 p-5">
@@ -59,6 +59,6 @@
             @if($verificationPending)</div></details>@else</section>@endif
         @endunless
     </form>
-    <p class="text-sm text-[#485E53]">No expiry. No extra hourly platform fee. Care hours cover standard individual visits. Share your code privately: whoever claims it first chooses the recipient.</p>
+    <p class="text-sm text-[#485E53]">No expiry. No extra hourly platform fee. Care hours cover standard individual visits. Share your code privately: whoever claims it first adds the hours to their family account.</p>
     <a href="{{ route('care-hours.claim') }}" class="inline-flex min-h-11 items-center text-sm font-semibold underline">Already have a gift code?</a>
 @endsection

@@ -1,14 +1,22 @@
 # Prepaid care hours implementation plan
 
-Status updated October 28, 2026: implemented, including private contributions and gifts claimed by code for oneself or an existing recipient. Gift recipients may join after purchase. The current reviewed rollout enables only Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`, through the usual `./deploy.sh`, with no manual environment edit. `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` is the persistent pause; legacy master/gift and pilot-list environment settings do not control this private release. The user reports running the preceding deployment, but its server outcome has not been independently verified. The assistant has not accessed the production server or run production migrations. Section 13 contains current deployment guidance followed by dated historical test evidence; earlier design and evidence must not override the current [deployment runbook](../deployment/zero-downtime-deployments.md#restricted-prepaid-pilot).
+Status updated October 30, 2026: the shared family-wallet change is prepared locally and has not been deployed or verified in production. It uses one owner-managed wallet per stable family account, with no purchase/claim recipient chooser. The current pilot remains only Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`; ordinary card behavior is unchanged. Safe delivery requires a v1 bridge release followed by the v2 wallet release, with the usual `./deploy.sh` for each and no manual environment edit to enable the approved pilot. Do not describe v2 as deployable in one invocation of the currently installed v1-only driver.
 
-Date: October 16, 2026
+`CARE_HOURS_PRIVATE_PILOT_ENABLED=false` remains the persistent pause. The assistant has not accessed the production server, deployed or run production migrations, and is prohibited from SSH/server access. The [deployment runbook](../deployment/zero-downtime-deployments.md#family-wallet-contract-v2) defines packaging, floor and cache checks. Current terms version: `2026-10-30-family-wallet`.
 
-Product contract: [Prepaid care hours specification](/C:/Users/Epicpp/homecare/docs/product/prepaid-care-hours-spec.md)
+Earlier test counts and recipient/self-profile behavior in the dated evidence at the end describe historical revisions, not proof of this family-wallet release.
+
+### October 30 family-wallet validation
+
+Local validation covers 399 current prepaid tests and 493 existing card, booking and regular-care regression tests. Final reruns supersede the earlier failing recipient-specific expectations. Coverage includes preserved historical purchase/allocation IDs, pooled balances, once-per-family welcome offers, ownership transfer, foreign-family rejection, pilot access, and explicit card choices retained across recipient changes and old open-page hydration.
+
+The MySQL rehearsal preserves existing card rows and verifies concurrent purchases, pooled reservations, duplicate gift claims and cancellation versus failed-payment callbacks. Both forced callback orders restored the original source ranges once with no deadlock. Browser checks verified desktop/mobile purchase and new-account gift claim journeys without JavaScript errors or external payment/email calls. The local screenshots and consolidated evidence are in `output/prepaid-family-wallet/`.
+
+Deployment checks passed the actual old-driver bridge scenario, permanent v2 rollback floor, atomic deployment smoke, 207 cached-configuration checks and final v2 manifest verification. The manifest generator rejects a family-wallet tree labelled as v1. These are local tests; they neither deploy the bridge nor authorize production access. Real email delivery remains deferred as requested.
 
 ## 1 Outcome and compatibility requirement
 
-Implement prepaid care hours as an additive funding option. As confirmed on October 26, eligible available hours are selected by default for the chosen recipient on a new request, hire or recurring offer. The family may choose card instead, and that choice persists through posting and reloads. Families can buy hours for an existing recipient, outside contributors can use a private link, and confirmed bookings can redeem those hours. Existing credit-card booking and payment behavior must remain unchanged.
+Implement prepaid care hours as an additive funding option. As confirmed on October 26, eligible available hours are selected by default for any eligible recipient in the family on a new request, hire or recurring offer, including a newly added person. The family may choose card instead, and that choice persists through recipient changes, posting and reloads. Families can buy into their shared wallet without choosing a recipient, outside contributors can use a family link, and confirmed bookings can redeem those hours. Existing credit-card booking and payment behavior must remain unchanged.
 
 The implementation preserves the current card path when the family chooses card or has no eligible hours. Buying a package must not change a saved card, convert a booking, release an authorization, refund a visit, change an existing recurring plan, or provide an automatic fallback for a failed card payment. A new request saves its selection in `care_hour_request_preferences` without reserving minutes or preparing payment. The family reviews funding at booking; prepared card visits retain their original funding.
 
@@ -21,7 +29,7 @@ Do not bundle a rewrite of the card-payment state machine, a global Stripe SDK/A
 | Situation | Required behavior |
 | --- | --- |
 | No eligible balance | Existing card screens, validation, processor calls, amounts, buffers, timing, statuses and notifications behave as before |
-| Eligible positive balance on a new request | Preselect hours for the identified recipient; show any uncovered estimate; no reservation at posting |
+| Eligible positive balance on a new request | Preselect family hours for any eligible care recipient; show any uncovered estimate; no reservation at posting |
 | Family has a positive balance but selects card | Charge through the existing card path; no minute reservation or usage |
 | Package purchased while card bookings or plans exist | Do not alter their payment methods, authorizations, charges or prepared visits |
 | Existing card payment fails | Use existing recovery; do not silently spend hours |
@@ -39,9 +47,9 @@ Do not bundle a rewrite of the card-payment state machine, a global Stripe SDK/A
 | 20 | $620 | 2 hours | 1,320 |
 | 40 | $1,240 | 4 hours | 2,640 |
 
-The welcome bonus is automatic, needs no code, and is the only launch promotion. Eligibility belongs to the recipient and is consumed once by the first successful 10-, 20-, or 40-hour purchase, regardless of payer. Five-hour purchases neither award a bonus nor consume eligibility. Separate five-hour purchases do not combine into a qualifying package.
+The welcome bonus is automatic, needs no code, and is the only launch promotion. Eligibility belongs to the stable family account and is consumed once by the first successful 10-, 20-, or 40-hour purchase, regardless of payer. Five-hour purchases neither award a bonus nor consume eligibility. Separate five-hour purchases do not combine into a qualifying package.
 
-Paid and bonus hours share booking rules, no expiry, included hourly family fees, and protection against later standard price increases. Valid package purchases are non-refundable. Undelivered cancellations and no-shows return all reserved minutes, with no fee. Existing recipients only; balances are not transferable between recipients.
+Paid and bonus hours share booking rules, no expiry, included hourly family fees, and protection against later standard price increases. Valid package purchases are non-refundable. Undelivered cancellations and no-shows return all reserved minutes, with no fee. One owner-managed family wallet covers eligible care for all family recipients. Buy and claim require no recipient profile; transfers between family accounts are unsupported. Previously awarded hours and accepted quotes remain intact. A prior family award prevents another welcome award.
 
 Within explicitly selected prepaid mode, reserve planned minutes without an extra buffer. Full coverage requires no saved card. Shortfalls use a separately authorized one-off payment or an optional saved family card, or the family can buy another package. Never save a card without consent or reuse a donor's card. Approved unavoidable overruns preserve actual time and create a separate amount due; they do not stop care automatically or make the hour balance negative.
 
@@ -53,7 +61,7 @@ The repository uses Laravel 12, Livewire 3, PHP 8.2 or later, PHPUnit and Playwr
 
 | Area | Existing integration point | Plan |
 | --- | --- | --- |
-| Recipient identity | [CareRecipient](/C:/Users/Epicpp/homecare/app/Models/CareRecipient.php:13), [profile attachment](/C:/Users/Epicpp/homecare/app/Services/CareRecipientProfiles/CareRecipientProfileAttachmentService.php:28) | Add an explicit stable identity for care-hours enrollment without changing ordinary request/profile requirements |
+| Family wallet ownership | [CareHourAccount](/C:/Users/Epicpp/homecare/app/Models/CareHourAccount.php), [family wallet mapping](/C:/Users/Epicpp/homecare/database/migrations/2026_10_30_000100_create_care_hour_family_wallets.php) | Use stable family ownership for credit; retain existing recipient/profile behavior only for normal care setup |
 | Family access | [FamilyAccountContext](/C:/Users/Epicpp/homecare/app/Services/FamilyAccounts/FamilyAccountContext.php:16), [account model concern](/C:/Users/Epicpp/homecare/app/Models/Concerns/BelongsToFamilyAccount.php:33) | Preserve existing membership; validate contribution targets separately from the payer's account |
 | Family card setup | [FamilyBillingService](/C:/Users/Epicpp/homecare/app/Services/Payments/FamilyBillingService.php:22) | Keep setup and saved-card behavior; add a distinct package purchase checkout |
 | One-time hiring | [ManageCareRequest](/C:/Users/Epicpp/homecare/app/Livewire/Family/ManageCareRequest.php:535), [CareRequestHiringService](/C:/Users/Epicpp/homecare/app/Services/Marketplace/CareRequestHiringService.php:66) | Add a guarded dispatch only after explicit prepaid selection |
@@ -77,7 +85,7 @@ flowchart TD
     B -->|No| C[Existing card services and state machine]
     B -->|Yes| D[Care hour funding coordinator]
     P[Separate package checkout] --> Q[Verified payment and issuance]
-    Q --> L[Recipient minute ledger and purchase lots]
+    Q --> L[Family wallet and original source lots]
     D --> L
     D --> S[Prepaid-only shortfall payment]
     D --> E[Approved-time settlement]
@@ -88,12 +96,12 @@ flowchart TD
 
 ### Service boundaries
 
-- **CareRecipientIdentityService:** enroll an existing recipient, validate same-account mappings, freeze the target used by a purchase or funding record.
+- **CareHourIdentityService:** create/reuse the canonical wallet under the family lock, group same-family source accounts, preserve historical associations and enforce family ownership without creating care profiles.
 - **CareHourCatalogService:** version prices and terms; generate server-priced quotes and the automatic welcome eligibility result.
 - **CareHourPurchaseService:** accept the quote, own payment attempts, fulfill once, and recover uncertain outcomes.
 - **CareHourLedgerService:** issue, reserve, consume, restore and hold integer minutes with immutable history and conservation checks.
 - **CareHourContributionService:** owner-managed private links, guest email verification and buyer-only receipt access.
-- **CareHourGiftService:** verified guest purchase without a selected recipient, private code recovery, recipient-scoped review and atomic claim of the original paid purchase.
+- **CareHourGiftService:** verified guest purchase without a selected recipient, private code recovery, family-scoped review and atomic claim of the original paid purchase.
 - **PrepaidBookingFundingService:** prepare opted-in visits, determine coverage, manage provisional reservations and shortfall payment operations.
 - **PrepaidBookingSettlementService:** settle approved care, allocated purchase fees, gross/net earnings and uncovered amounts due.
 - **PrepaidTransferPlanner:** calculate and execute remaining transfers across purchase/card/platform sources without duplicating payouts.
@@ -105,29 +113,29 @@ Keep new reconciliation/notification workloads from delaying existing card jobs:
 
 ### Logical data records
 
-Use additive tables and optional sidecar associations. Do not make existing booking/request/profile columns mandatory or backfill all families to launch. Final migration names and exact table consolidation belong to the first design phase.
+Use additive tables and optional sidecar associations. Do not make existing booking/request/profile columns mandatory or backfill all families to launch. The additive `2026_10_30_000100_create_care_hour_family_wallets.php` migration maps stable family IDs to canonical accounts. Existing financial foreign keys and source history are not rewritten.
 
 | Record | Essential data | Integrity requirement |
 | --- | --- | --- |
-| Care recipient identity | Stable ID, family account, minimal display name, active/archive state | One explicit real recipient mapping; no medical profile required |
-| Recipient identity association | Existing request-recipient/profile/plan reference and stable identity | Same-account validation; no automatic financial merging by name |
-| Care hour account | Recipient identity, currency, balance projection version | One per recipient and currency; projections reconcile to ledger |
+| Family wallet mapping | Stable `family_account_id`, canonical `care_hour_account_id` | One mapping per family; owner/member changes preserve ownership |
+| Historical source association | Existing care-hour accounts and their family/currency | Retain original recipient/profile references and all audit rows; group only same-family/currency sources |
+| Care hour account | Family, currency, source state, balance projection version | One logical family wallet with retained source accounts; projections reconcile to the original ledger |
 | Catalog and offer version | Package hours, price cents, bonus minutes, terms version, activation state | Existing quotes and purchases keep immutable snapshots |
-| Purchase | Buyer attribution, target recipient/account, paid/bonus minutes, total issued, exact cents, terms and quote | Immutable target after payment; payment and issuance states tracked separately |
+| Purchase | Buyer attribution, target family/source account, paid/bonus minutes, total issued, exact cents, terms and quote | Immutable target after payment; payment and issuance states tracked separately |
 | Purchase attempt | Accepted quote revision, provider IDs, idempotency identity, status, timestamps | At most one economic charge per accepted attempt; unknown is not failed |
-| Welcome claim | Recipient, lifetime welcome-offer key, owning attempt/purchase, reservation/consumption state | Unique per recipient; campaign edits or payer changes cannot reset it |
+| Welcome claim | Family scope across all historical sources, lifetime offer key, owning attempt/purchase, state | Serialize under family lock; any prior valid award or accepted pending claim blocks a competing award; never remove past awarded hours |
 | Purchase lot and minute ledger | Original minute ranges, category, issue/reserve/use/restore/hold/reverse entries | Integer-minute conservation and immutable audit history |
-| Booking prepaid funding | Booking, stable recipient, committed selection, funding revision, readiness and shortfall | Unique active booking association; no committed prepaid mode means existing card flow; drafts remain separate |
+| Booking prepaid funding | Booking, family/source account, committed selection, funding revision, readiness and shortfall | Unique active booking association; no committed prepaid mode means existing card flow; drafts remain separate |
 | Plan prepaid preference | Plan, explicit actor/consent, effective future selection | Applies only to unfunded future visits; no rewrite of prepared visits |
 | Reservation allocation | Booking funding revision, purchase lot, exact original minute ranges, lifecycle state | No minute reserved twice; original allocations retained for restoration |
 | Financial operations and fee revisions | Purchase/shortfall charge, balance transaction, actual fee, refund/dispute/adjustment IDs | Provider object ownership unique; no duplication into visit card ledgers |
 | Settlement and transfer operations | Approved-time revision, allocation references, gross, fee shares, net, source links, transfer/reversal states | Idempotent revision; partial success cannot be shown as fully paid |
-| Contribution link and verification | Target recipient, hashed tokens, approved display name, revocation, verified buyer session | Link grants purchasing only; separate receipt access, no family membership |
+| Contribution link and verification | Target family, hashed tokens, fixed **Family care balance** label (historical links retain their approved label snapshot), revocation, verified buyer session | Link grants purchasing only; separate receipt access, no family membership |
 | Outbox and recovery case | Domain operation, notification/recovery payload, delivery status | After-commit side effects; safe replay and no duplicate receipts |
 
 Keep immutable `buyer_user_id` or verified buyer email separate from family ownership fields. The existing family-account model concern derives account ownership from the authenticated actor; using it unmodified for a donor signed into another family can assign the wrong target account. Ownership-transfer code also rewrites some legacy owner IDs. New purchase attribution must remain historically accurate through either operation.
 
-Do not cascade-delete financial records when a user leaves, a link is revoked, or a recipient/profile is archived. Public views must use explicit allowlisted data, not serialize an entire recipient model.
+Do not cascade-delete financial records when a user leaves, a link is revoked, or a recipient/profile is archived. Public views must use explicit allowlisted data, not serialize a family, member or recipient model.
 
 ### Minute and fee accounting
 
@@ -145,7 +153,7 @@ Example: 10 paid hours + 1 free hour gives 660 minutes. With a hypothetical actu
 
 ### Package purchase
 
-1. Resolve the existing recipient and buyer permissions; generate a price/terms snapshot on the server.
+1. Resolve the stable family wallet and buyer permissions; generate a price/terms snapshot on the server.
 2. Reserve welcome eligibility only for an eligible 10-, 20-, or 40-hour quote. Five-hour attempts do not touch that claim.
 3. Accept the quote and persist an attempt with a stable operation identity before a provider request.
 4. Create the package payment checkout outside the database transaction. Reuse the attempt identity on network retry; a timeout leaves the result unknown.
@@ -172,7 +180,7 @@ Persist mixed-funding reservations provisionally while the shortfall payment res
 ### Concurrency and idempotency
 
 - Use database uniqueness for purchase economic operations, welcome claims, booking funding associations and settlement revisions, in addition to webhook event deduplication.
-- Publish one lock order for new prepaid operations: affected recipient accounts in stable order, then funding records, then purchase lots/ranges. Avoid entering the legacy booking-payment lock path and then acquiring wallet locks in the opposite order.
+- Publish one lock order for new prepaid operations: family row, same-family source accounts in stable order, then funding records, then purchase lots/ranges. Avoid entering the legacy booking-payment lock path and then acquiring wallet locks in the opposite order.
 - Hold locks only for local validation and state changes. Persist provider work, commit, call the provider, then record/reconcile the result.
 - Every issuance, reservation, settlement, correction and transfer has a stable operation key independent of its amount. Changed quotes create explicit revisions.
 - Require a reconciled result before creating a replacement provider operation. Distinct success events for the same payment must still issue only once.
@@ -216,7 +224,7 @@ Do not send package refunds/disputes through booking handlers, or package purcha
 
 ## 7 Delivery phases and completion criteria
 
-Each phase is a reviewable change set when implementation is later authorized. UI and contribution work can run in parallel after the underlying purchase/identity contracts stabilize. Live purchases remain disabled until the complete redemption, cancellation, payout and recovery path is ready.
+The phases below describe review boundaries for the locally prepared implementation. The existing private pilot audience remains unchanged. Family-wallet production delivery is separate and requires the bridge sequence in section 13; local implementation and testing do not establish production readiness.
 
 ### Phase 0 Compatibility baseline and design decisions
 
@@ -230,25 +238,26 @@ Each phase is a reviewable change set when implementation is later authorized. U
 
 **Complete when:** the compatibility matrix has executable test cases planned, all money-flow assumptions have a supported route, and there is no hidden requirement to rewrite existing card payments. No provider or production setting is changed by planning.
 
-### Phase 1 Additive identity and data foundation
+### Phase 1 Additive family-wallet foundation
 
 **Depends on:** Phase 0 contracts.
 
-- Add new identities, mappings, purchase/claim/ledger/funding records and necessary indexes, all additive.
-- Enroll an existing recipient only when care hours are used. Link known stable references explicitly; require family selection for ambiguity. Do not auto-merge people by matching names.
-- Do not create a draft medical profile merely to obtain an ID: current profile attachment requires a ready profile/version pair. Keep ordinary profile/request creation untouched.
-- Add owner/member policies, immutable buyer attribution and cross-account contribution target checks.
-- Create an idempotent dry-run verifier for enrolled identities and ledger associations. An optional later backfill must not be a prerequisite for card users.
-- Version the approved package catalog and terms. Keep the lifetime welcome key independent of editable offer versions.
+- Add the canonical family-wallet mapping and indexes through the October 30 additive migration.
+- Use the stable family ID, not the current owner's user ID or a care recipient/profile. Create/reuse one wallet under the family lock.
+- Retain historical source accounts and all purchases, lots, allocations, committed funding, ledgers and Stripe references; no bulk financial foreign-key rewrite.
+- Group only matching family/currency sources; preserve inactive and held restrictions.
+- Buying and claiming create no medical/self profile or care request. Normal request setup remains unchanged.
+- Preserve owner/member policies and immutable buyer attribution. New private links use the fixed **Family care balance** label and a frozen family target; historical display-label snapshots remain intact.
+- Keep historical terms and quote snapshots; new acceptances use `2026-10-30-family-wallet`.
 
-**Complete when:** unenrolled families pass their existing tests without new fields or steps; two recipients cannot share balances accidentally; ownership/member changes preserve correct balance ownership and payer history.
+**Complete when:** multiple recipients use one family balance without cross-family access; existing source history, owner transfers and prepared funding remain valid; ordinary card users need no new fields or steps.
 
 ### Phase 2 Ledger and automatic welcome entitlement
 
 **Depends on:** Phase 1.
 
 - Implement issue/reserve/consume/restore/hold operations and exact original minute-range tracking.
-- Implement 5-hour exclusion and one lifetime claim across self, family and guest purchases.
+- Implement 5-hour exclusion and one lifetime family claim across direct purchases, contributions and gifts, including all historical source awards and accepted pending attempts.
 - Lock competing quotes and issuance; persist payment-unknown states and release only definitive failures.
 - Implement conservation checks and balance/history read models.
 - Implement deterministic actual-fee allocation/revision calculations independently of provider calls.
@@ -260,7 +269,7 @@ Each phase is a reviewable change set when implementation is later authorized. U
 **Depends on:** Phases 0–2.
 
 - Add package-specific checkout and provider operations; retain family setup checkout unchanged.
-- Validate server-side amount, currency, recipient, accepted terms and offer before creating the payment.
+- Validate server-side amount, currency, family target, accepted terms and offer before creating the payment.
 - Add owned-object webhook dispatch and payment/issuance/fee reconciliation.
 - Deliver purchase receipts and family notifications after issuance commits.
 - Add billing-error recovery, package dispute holds and audited welcome-claim restoration rules.
@@ -272,7 +281,7 @@ Each phase is a reviewable change set when implementation is later authorized. U
 
 **Depends on:** Phase 2 and supported shortfall payment flow; integrate with Phase 3 for top-ups.
 
-- Show a funding choice for eligible new bookings. Preselect the recipient's available care hours unless the family has chosen card; preserve prepared card funding and existing plan preferences.
+- Show a funding choice for eligible new bookings. Preselect the family's available care hours for any eligible family recipient unless the family has chosen card; preserve prepared card funding and existing plan preferences.
 - Integrate both UI hiring and the shared hiring service using a prepaid-only dispatch; preserve existing card readiness and quotes.
 - Add separate shortfall checkout without mandatory card saving. Only its uncovered amount participates in new authorization/capture logic.
 - Add prepaid plan preferences and funding records for future unprepared visits. Do not convert an existing authorization or failure into hours.
@@ -318,7 +327,7 @@ Each phase is a reviewable change set when implementation is later authorized. U
 - Add family care-hours overview, purchase selection, pending/success/failure screens, receipts, available/reserved/used/held history and owner link management.
 - Build public private-link checkout with email verification that does not create membership or change the payer's account.
 - Use hashed high-entropy link tokens and short-lived verified buyer sessions; rate-limit verification. A reusable contribution link does not grant receipt access.
-- Expose only approved recipient display name, package information, eligibility outcome and terms publicly. Do not expose care data, address, balance, other purchases or family membership.
+- Expose only the fixed **Family care balance** label (historical links retain their approved label snapshot), package information, eligibility outcome and terms publicly. Do not expose care data, address, balance, other purchases or family membership.
 - Add separate prepaid summaries for selected bookings/plans and optional backup-card presentation. Leave ordinary card dashboard/billing readiness intact.
 - Add package-specific admin reconciliation, audited correction actions and provider operation views. No voluntary unused-package refund button or arbitrary balance overwrite.
 - Update only prepaid-specific support/AI guidance and payment disclosures; do not revise legacy payment promises as an incidental feature change.
@@ -333,7 +342,7 @@ Each phase is a reviewable change set when implementation is later authorized. U
 - Verify existing card behavior first, then exercise the complete prepaid lifecycle in a non-live environment.
 - Enable a controlled cohort only after reservations, settlement, cancellation, fee retrieval and transfers have passed together.
 - Reconcile every pilot purchase and approved visit to both minute and money records; review operational failures before expanding.
-- Activate contribution links after the same purchase/settlement path is proven, with recipient access checks verified.
+- Activate contribution links after the same purchase/settlement path is proven, with family ownership and receipt privacy checks verified.
 - Set production offer timing/budget and monitoring as launch configuration. Do not change account-wide payment methods, default API versions or payout scheduling incidentally.
 
 **Complete when:** existing card parity is demonstrated, issued hours remain serviceable under disable/recovery scenarios, and all acceptance cases have evidence. Any necessary provider configuration change is documented separately with its compatibility impact before launch.
@@ -344,7 +353,7 @@ Every row needs both a prepaid-path test and confirmation that card mode takes t
 
 | Trigger | Files or services to inspect and hook | Prepaid behavior |
 | --- | --- | --- |
-| UI hire | [ManageCareRequest](/C:/Users/Epicpp/homecare/app/Livewire/Family/ManageCareRequest.php) | Explicit selection, stable recipient and preparation |
+| UI hire | [ManageCareRequest](/C:/Users/Epicpp/homecare/app/Livewire/Family/ManageCareRequest.php) | Explicit selection, stable family scope and preparation |
 | Service or AI hire | [CareRequestHiringService](/C:/Users/Epicpp/homecare/app/Services/Marketplace/CareRequestHiringService.php), [FamilyCareOperationsActionService](/C:/Users/Epicpp/homecare/app/Services/AiSupport/FamilyCareOperationsActionService.php) | Same funding operation and quote revision |
 | Plan offer/counter acceptance | [CarePlanService](/C:/Users/Epicpp/homecare/app/Services/RegularCare/CarePlanService.php) | Optional prepaid preference; conditional cardless acceptance only in that mode |
 | Due recurring visit | [CarePlanPaymentWindowService](/C:/Users/Epicpp/homecare/app/Services/RegularCare/CarePlanPaymentWindowService.php), [PrepareRegularCarePayments](/C:/Users/Epicpp/homecare/app/Console/Commands/PrepareRegularCarePayments.php) | Prepaid-only due selection and deterministic reservation order; retain card scheduling |
@@ -386,7 +395,7 @@ Use these existing regression anchors:
 
 | Area | Required cases |
 | --- | --- |
-| Catalog and eligibility | All four exact prices; 5-hour preservation; different payers; two recipients; no promo entry; failed purchase does not consume offer |
+| Catalog and eligibility | All four exact prices; 5-hour preservation; different payers; multiple recipients share one family; separate families; historical awards and pending quotes; no promo entry; failed purchase does not consume offer |
 | Purchase fulfillment | Webhook before response, browser never returns, duplicate/distinct success events, wrong amount/currency, unknown result, delayed outcome, expired/revoked checkout boundaries |
 | Recipient and access | No medical profile required, ambiguous mapping, forged IDs, guest donor, donor from another account, removed member, ownership transfer, buyer-only receipts |
 | Reservation | Fully covered without card calls, mixed shortfall, no saved card, failure versus unknown state, simultaneous bookings, recipient-change rollback, abandoned draft, card preparation versus prepaid commitment |
@@ -410,7 +419,7 @@ Use these existing regression anchors:
 
 Use separate controls for new enrollment/purchases, outside contribution checkout, welcome awards and rollout enrollment into prepaid funding. Turning off new enrollment or sales must still allow holders of existing unused entitlements to select care-hour funding and redeem them. Existing funded bookings continue to settle and recover. If an emergency requires pausing self-service reservations, provide a support-assisted route through the same audited ledger; never require a fresh purchase or full card payment to preserve access to paid-for care. Accepted payment attempts retain their quoted terms even if sales or awards pause.
 
-The code-defined private pilot is enabled by normal deployment without editing `.env`. Set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` and use the normal deployment procedure to pause new pilot exposure and purchases; subsequent deployments preserve that pause. Malformed values also fail closed. Existing enrollment, sales, contribution and welcome-award pauses remain effective. Expanding the fixed single-family audience requires a reviewed code change.
+The code-defined pilot still needs no manual `.env` enablement. First ship/deploy the v1 bridge from old financial sources, then ship/deploy the v2 family wallet. Both use normal `./deploy.sh`; the first must be installed before publishing the v2 tip. Set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` and use the normal deployment procedure to pause new pilot exposure and purchases; subsequent deployments preserve that pause. Malformed values also fail closed. Existing enrollment, sales, contribution and welcome-award pauses remain effective. Expanding the fixed single-family audience requires a reviewed code change.
 
 Rollback means stopping new exposure while keeping the new ledger, handlers, settlement and recovery code available for existing obligations. Before the first prepaid activation, the driver pins a permanent compatibility floor, even when sales are disabled and no purchases exist. Do not drop the new tables, remove webhook handlers, revert to code that cannot read funding records, or redirect prepaid visits into full-price card capture. A rollback build must remain compatible with recorded prepaid operations and preserve effective exposure settings. Restore service through a forward-compatible fix and reconciliation rather than deleting financial history.
 
@@ -434,7 +443,7 @@ Operational reconciliation must distinguish cash received, remaining care obliga
 | Change set | Deliverable | Dependency |
 | --- | --- | --- |
 | 1 | Compatibility characterization and provider feasibility record | None |
-| 2 | Additive identity, policies and schema | 1 |
+| 2 | Additive family-wallet mapping, policies and schema | 1 |
 | 3 | Ledger, welcome claim and fee-range arithmetic | 2 |
 | 4 | Package checkout, owned-event dispatch and fulfillment | 1–3 |
 | 5 | Explicit funding selection and one-time prepaid preparation | 3–4 |
@@ -445,14 +454,14 @@ Operational reconciliation must distinguish cash received, remaining care obliga
 | 10 | Caregiver/admin reporting, copy and notifications | 7–9 |
 | 11 | Regression evidence, pilot controls and launch runbook | All previous |
 
-The critical path is identity and ledger → authoritative purchase issuance → explicit booking preparation → settlement/transfers → recovery → controlled sales activation. Do not ship a purchasable balance ahead of the ability to redeem and settle it correctly.
+The critical path is bridge delivery → family wallet and ledger → authoritative purchase issuance → explicit booking preparation → settlement/transfers → recovery → controlled sales activation. Do not ship a purchasable balance ahead of the ability to redeem and settle it correctly.
 
 ## 12 Implementation readiness checklist
 
 - [x] Existing card behavior is characterized and protected in all three compatibility modes.
 - [x] Funding mode is explicit, persisted, and independent of balance and sales switches.
 - [x] Provider feasibility is demonstrated without silently upgrading or reconfiguring existing payments.
-- [x] Recipient identity, account isolation and immutable buyer attribution are defined.
+- [x] Stable family ownership, source-account isolation and immutable buyer attribution are defined.
 - [x] Minute conservation, fee rounding, lock order and idempotency have executable invariants.
 - [x] The section 8 integration points preserve explicit funding mode; prepaid writer tests and existing card-parity suites cover the delegated services and critical UI/AI actions listed in section 13.
 - [x] All-credit and mixed settlement, cancellation and correction are verified in automated tests and the isolated provider sandbox.
@@ -470,12 +479,12 @@ The implementation uses additive `care_hour_*` tables and services in `app/Servi
 
 The private release exposes new prepaid screens and purchases only to the signed-in family account `peverelli.t@gmail.com`. Ordinary users keep the current card flow. Gift and contribution checkout also require that pilot login and its matching verified buyer email; private links alone do not open guest sales. Administrators retain operational screens, and existing paid gift claims, balances and recovery remain supported. The capabilities below describe the full implemented journeys once access is granted.
 
-- **Families:** a discreet Prepaid care hours entry in Care and Billing opens `/family/care-hours`. The dashboard shows available credit and Buy prepaid care immediately, without an enrollment selector. Buying resolves a single canonical profile/balance on POST or requests an explicit choice when ambiguous. Recipient balances remain separate, with activity and receipts available below the total. The owner can enable or revoke a private contribution link. Existing request recipients can enroll without completing an optional care profile.
+- **Families:** a discreet Prepaid care hours entry in Care and Billing opens `/family/care-hours`. One available-credit balance, Buy prepaid care, activity and receipts serve the family. Buying opens packages directly, with no recipient choice or profile requirement. The owner manages private contribution links. Historical source-account links resolve into this same authorized family wallet.
 - **Booking:** Eligible available care hours are selected by default for a new visit, with a remembered **Use card instead** choice. The booked visit shows reserved time and any separate payment needed; completed care shows actual usage. New recurring offers use the same default without changing already prepared visits or existing plan preferences.
 - **Schedule changes:** a longer proposed visit can use available hours or a separate authorization for extra time. The original schedule and its funding stay protected until acceptance. Rejected, withdrawn, or unused proposals release only their extra payment; they do not release the original visit's reserved hours.
-- **Contributors:** `/care-hours/give/{token}` exposes the owner-approved recipient name and package choices. Email verification precedes checkout. The buyer has access to their receipt, never the family balance, other purchases, bookings, or care details.
-- **Gift buyers and recipients:** `/care-hours/gifts` sells an unassigned gift after buyer email verification. `/care-hours/gifts/receipts/{public_id}` reveals its code only to the verified buyer. `/care-hours/claim` validates a paid code and carries an encrypted, one-hour server-session intent through focused signup or sign-in. `/family/care-hours/claim` offers **For myself**, or an existing recipient within the family, then confirmation of exact hours. The ready page shows the credited hours and an optional **Find care** link. Gift entry links live inside Care hours, keeping the main screens unchanged. The code is not placed in URLs, authentication HTML, notifications or flashed form data. Receipt recovery tokens cannot start another purchase.
-- **Admins:** `/admin/care-hours` provides recipient/account/owner search, available balances, and an attention filter. The filter includes stalled unissued purchases, affected settlements, and cancelled visits awaiting payment release or refund. Resolved attempts do not remain flagged merely because they retain historical errors. Account details include purchases, allocations, visit funding, settlement issues, and immutable history. Provider rechecks require a recorded reason. Correction is restricted to an invalid paid purchase that never issued hours; it is not a refund facility for valid packages.
+- **Contributors:** `/care-hours/give/{token}` exposes the fixed **Family care balance** label (historical links retain their approved label snapshot) and package choices. Email verification precedes checkout. The buyer has access to their receipt, never the family balance, other purchases, bookings, or care details.
+- **Gift buyers and recipients:** `/care-hours/gifts` sells an unassigned gift after buyer email verification. `/care-hours/gifts/receipts/{public_id}` reveals its code only to the verified buyer. `/care-hours/claim` validates a paid code and carries an encrypted, one-hour server-session intent through focused signup or sign-in. `/family/care-hours/claim` reviews exact hours and claims directly into the signed-in family wallet, with no recipient chooser or self-profile creation. The ready page shows the credited hours and an optional **Find care** link to normal request setup. Gift entry links live inside Care hours, keeping the main screens unchanged. The code is not placed in URLs, authentication HTML, notifications or flashed form data. Receipt recovery tokens cannot start another purchase.
+- **Admins:** `/admin/care-hours` provides family/account/owner search, available balances, and an attention filter. The filter includes stalled unissued purchases, affected settlements, and cancelled visits awaiting payment release or refund. Resolved attempts do not remain flagged merely because they retain historical errors. Account details include purchases, allocations, visit funding, settlement issues, and immutable history. Provider rechecks require a recorded reason. Correction is restricted to an invalid paid purchase that never issued hours; it is not a refund facility for valid packages.
 
 ### Notifications
 
@@ -486,12 +495,15 @@ The private release exposes new prepaid screens and purchases only to the signed
 
 ### Deployment sequence
 
-1. Commit the complete reviewed release and matching compatibility manifest, then run the usual `./deploy.sh`. No manual `.env` change is needed to enable this exact private pilot. The driver runs all six additive care-hours migrations before routing traffic to the new code: booking dispatch reads the additive tables even while sales are paused. The three October 16 migrations add tables without converting existing card visits; the two October 21 migrations add gift verification/claim records and audited admin checks and allow an unassigned gift; the request-funding preference migration preserves recipient/payment choices. Keep this work inside the normal atomic release procedure; never use `migrate:fresh` on an application database.
+1. Prepare two separate reviewed releases. The **v1 bridge** contains old committed financial/application sources plus the updated driver/checker and a regenerated v1 manifest. Confirm that an operator has deployed it through the usual `./deploy.sh` before publishing the **v2 family-wallet** tip. The v2 release includes all family-wallet code, terms, the October 30 mapping migration and matching v2 manifest. Its warmed cache must declare `care_hours.wallet_scope=family`. It pins permanent floor 2 before activation; v1 rollback is then blocked, including automatic failure recovery. Have a compatible v2 forward repair ready. The old v1-only driver safely rejects direct v2 before activation. Both releases preserve the fixed pilot audience and pauses. No commit, push or production action is implied by this local plan.
+
+   The ordinary atomic procedure runs all seven additive care-hours migrations before traffic activation. Existing card visits are not converted. The mapping groups historical financial sources without moving their rows. Never reverse prepaid migrations or use `migrate:fresh` on an application database.
+
 2. Keep the existing Stripe API/SDK and webhook endpoint. In the provider test environment, verify package Checkout, authenticated cards, shortfall authorization/capture, actual processing fees, connected-account transfers, refunds, disputes, and webhook retries. Package payment methods must not become the family's default card.
 3. Confirm the existing webhook subscription delivers the new domain's relevant events: Checkout completion/expiration/async outcomes, PaymentIntent success/failure/cancellation, charge refunds/disputes, refund status changes, and transfer creation/update/reversal. Retain all existing subscriptions and handlers. Signature and endpoint environment checks remain required.
-4. Run production-engine concurrency checks for recipient welcome claims, competing reservations, approval/cancellation, and provider reconciliation. Use a shared Laravel cache backend with atomic locks across all web and scheduler hosts; process-local `array` cache is for tests only.
+4. Run production-engine concurrency checks for family welcome claims across historical sources, competing reservations, approval/cancellation, and provider reconciliation. Use a shared Laravel cache backend with atomic locks across all web and scheduler hosts; process-local `array` cache is for tests only.
 5. Keep the Laravel scheduler running. Purchase recovery runs every five minutes and booking recovery every ten minutes, bounded to 100 records and in separate background processes. Verify mail delivery and existing notification dispatch. Recovery must keep running while new sales are paused.
-6. The warmed configuration must be either paused or restricted to the exact approved family account. The code-defined pilot enables both direct and gift purchases by default, even with stale legacy master/gift disabled values. `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` pauses new exposure and gift sales across redeployments. `CARE_HOURS_ENROLLMENT_ENABLED`, `CARE_HOURS_SALES_ENABLED`, `CARE_HOURS_CONTRIBUTIONS_ENABLED`, and `CARE_HOURS_WELCOME_BONUS_ENABLED` still control their individual actions. Refresh configuration only through the normal deployment process. Previously paid gift claims remain available during a pause; public launch requires a separate reviewed change.
+6. The warmed configuration must be either paused or restricted to the exact approved family account, and wallet scope must match the v1/v2 manifest contract. A rollback target must preserve scope as well as exposure, pauses and pilot settings. The code-defined pilot enables both direct and gift purchases by default, even with stale legacy master/gift disabled values. `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` pauses new exposure and gift sales across redeployments. `CARE_HOURS_ENROLLMENT_ENABLED`, `CARE_HOURS_SALES_ENABLED`, `CARE_HOURS_CONTRIBUTIONS_ENABLED`, and `CARE_HOURS_WELCOME_BONUS_ENABLED` still control their individual actions. Refresh configuration only through the normal deployment process. Previously paid gift claims remain available during a pause; public launch requires a separate reviewed change.
 
 No production environment file, provider setting, or live feature flag was changed during implementation. Provider setup for the October 21 journey was confined to the authorized Stripe sandbox.
 
@@ -520,6 +532,10 @@ node node_modules/@playwright/test/cli.js test --config=playwright.care-hours.co
 ```
 
 The dedicated browser configuration uses `database/care-hours-e2e.sqlite`, fake mail, and Stripe bypass. Its fixture refuses any other database/environment. Browser tests reset only that disposable database. They do not prove live Stripe behavior.
+
+## Historical verification evidence
+
+The dated records below are retained as evidence for their original revisions. Their recipient wallets, **For myself** profile creation, default-off flags, migration counts and test totals are historical and do not define the October 30 family-wallet behavior or certify its deployment. Use the current sections above and deployment runbook for release instructions. Actual inbox delivery remains deferred; no production-server access has been performed.
 
 Local validation completed on October 16, 2026:
 

@@ -133,6 +133,8 @@ class CareHourContributionTest extends TestCase
     public function test_guest_receipt_uses_owner_approved_link_name_not_private_current_account_name(): void
     {
         [$account, , , $link, $token] = $this->verifiedLink();
+        // Preserve the public label on links created before the family-wallet update.
+        $link->update(['display_name' => 'Margaret']);
         $service = app(CareHourPurchaseService::class);
         $purchase = $service->startContribution($link, $token, 5, $service->quote($account, 5)['quote_key'], (string) Str::uuid(), url('/ok'), url('/cancel'));
         $account->update(['display_name' => 'Private full recipient name']);
@@ -148,6 +150,7 @@ class CareHourContributionTest extends TestCase
         $service = app(CareHourContributionService::class);
         $created = $service->createLink($account, $owner);
         $this->assertNotSame($created['token'], $created['link']->token_hash);
+        $this->assertSame('Family care balance', $created['link']->display_name);
         $verification = $service->requestVerification($created['link'], 'contributor@example.test', 'Alex');
         $token = $service->verify($created['link'], $verification->id, $this->sentCode());
 

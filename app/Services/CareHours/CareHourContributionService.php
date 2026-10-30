@@ -30,10 +30,14 @@ class CareHourContributionService
         if (! app(CareHourAccess::class)->canContribute($actor) || ! $account->active) {
             throw ValidationException::withMessages(['care_hours' => 'New contribution links are currently unavailable.']);
         }
+        $account = app(CareHourIdentityService::class)->walletFor($actor) ?? $account;
+        if (! $account->active) {
+            throw ValidationException::withMessages(['care_hours' => 'New contribution links are currently unavailable.']);
+        }
         $token = Str::random(64);
         $link = CareHourContributionLink::query()->create([
             'care_hour_account_id' => $account->id, 'created_by_user_id' => $actor->id,
-            'token_hash' => hash('sha256', $token), 'display_name' => $account->display_name,
+            'token_hash' => hash('sha256', $token), 'display_name' => 'Family care balance',
         ]);
 
         return ['link' => $link, 'token' => $token];
@@ -56,7 +60,7 @@ class CareHourContributionService
     public function assertAvailable(CareHourContributionLink $link): void
     {
         if (app(CareHourEligibilityService::class)->reasonFor($link->account)) {
-            throw ValidationException::withMessages(['care_hours' => 'This recipient is not currently accepting care-hour contributions. Please contact the family.']);
+            throw ValidationException::withMessages(['care_hours' => 'This family is not currently accepting care-hour contributions. Please contact the family.']);
         }
         if (! app(CareHourAccess::class)->canContribute(auth()->user())
             || $link->fresh()->revoked_at || ! $link->account->fresh()->active) {

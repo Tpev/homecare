@@ -2352,7 +2352,7 @@ class ManageCareRequest extends Component
         $account = app(\App\Services\CareHours\CareHourRequestFundingService::class)
             ->accountForRequest($this->requestItem, auth()->user(), $application ?? $this->fundingApplication());
         if ((int) ($account?->id ?? 0) !== $this->careHourAccountId) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose the care-hours balance linked to this recipient.']);
+            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
         }
 
         return $account;
@@ -2366,7 +2366,7 @@ class ManageCareRequest extends Component
             return [];
         }
 
-        return [['id' => $account->id, 'display_name' => $account->display_name,
+        return [['id' => $account->id, 'display_name' => 'Your family balance',
             'available_minutes' => $account->balance()['available_minutes']]];
     }
 

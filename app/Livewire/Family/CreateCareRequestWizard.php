@@ -816,7 +816,7 @@ class CreateCareRequestWizard extends Component
         $this->syncScheduleFields();
         $hoursAccount = $this->syncCareHoursDefault();
         if ($this->careHourAccountId !== null && (int) ($hoursAccount?->id ?? 0) !== $this->careHourAccountId) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose the care hours belonging to this recipient.']);
+            throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
         }
 
         $careRequest = DB::transaction(function () use ($hoursAccount) {
@@ -824,9 +824,6 @@ class CreateCareRequestWizard extends Component
             if ($hoursAccount) {
                 \App\Models\FamilyAccount::whereKey($ownership['family_account_id'])->lockForUpdate()->firstOrFail();
                 $lockedHours = \App\Models\CareHourAccount::whereKey($hoursAccount->id)->lockForUpdate()->firstOrFail();
-                if ($lockedHours->care_recipient_profile_id) {
-                    CareRecipientProfile::whereKey($lockedHours->care_recipient_profile_id)->lockForUpdate()->firstOrFail();
-                }
             }
             $profile = $this->resolveProfileForPublication();
             $careRequest = CareRequest::query()->create([
@@ -879,8 +876,8 @@ class CreateCareRequestWizard extends Component
                 if ($this->syncCareHoursDefault()?->id !== $hoursAccount->id) {
                     throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'The care balance changed. Review your payment choice and try again.']);
                 }
-                // A verified self identity can carry its balance without publishing
-                // the optional clinical profile or consuming any prepaid minutes.
+                // Record the family funding preference without publishing a care
+                // profile or reserving any prepaid minutes.
                 app(\App\Services\CareHours\CareHourIdentityService::class)->linkRecipient($hoursAccount, $recipient, auth()->user());
                 $careRequest->unsetRelation('recipient');
                 app(CareHourRequestFundingService::class)->remember($careRequest, auth()->user(), $this->careHourAccountId);
@@ -1795,19 +1792,19 @@ class CreateCareRequestWizard extends Component
 
     private function syncCareHoursDefault(): ?\App\Models\CareHourAccount
     {
-        $profileId = $this->selected_care_recipient_profile_id ?: $this->careHoursHandoffProfileId;
-        $copiedRequest = $this->copiedCareHoursRequest();
-        $key = $profileId ? 'profile:'.$profileId : ($copiedRequest ? 'request:'.$copiedRequest->id
-            : ($this->recipientIsRequester ? 'self:'.auth()->id() : 'new-recipient'));
+        $this->copiedCareHoursRequest();
+        $key = 'family:'.app(FamilyAccountContext::class)->account(auth()->user())->id;
         if ($key !== $this->careHoursRecipientKey) {
+            // A signed snapshot from an older open tab uses a recipient key.
+            // Keep its explicit card choice while upgrading to the family key.
+            $keepLegacyCardChoice = $this->careHoursChoiceMade && $this->careHourAccountId === null
+                && preg_match('/^(?:(?:profile|request|self):[1-9][0-9]*|new-recipient)$/', $this->careHoursRecipientKey) === 1;
             $this->careHoursRecipientKey = $key;
             $this->careHourAccountId = null;
-            $this->careHoursChoiceMade = false;
+            $this->careHoursChoiceMade = $keepLegacyCardChoice;
         }
         $service = app(CareHourRequestFundingService::class);
-        $account = $profileId ? $service->accountForProfile($profileId, auth()->user())
-            : ($copiedRequest ? $service->accountForRequest($copiedRequest, auth()->user())
-                : ($this->recipientIsRequester ? $service->accountForSelf(auth()->user()) : null));
+        $account = $service->accountForFamily(auth()->user());
         if (! $account || $account->balance()['available_minutes'] <= 0) {
             if (! $this->careHoursChoiceMade) {
                 $this->careHourAccountId = null;
