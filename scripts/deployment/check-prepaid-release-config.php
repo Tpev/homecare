@@ -7,13 +7,29 @@ $fail = static function (string $message): never {
     exit(1);
 };
 
-if (! ($argc === 2 || ($argc === 3 && $argv[2] === '--require-disabled')
-    || ($argc === 4 && $argv[2] === '--match-sales-state'))) {
-    $fail('Usage: php check-prepaid-release-config.php CONFIG_PATH [--require-disabled | --match-sales-state OTHER_CONFIG_PATH]');
+$usage = 'Usage: php check-prepaid-release-config.php CONFIG_PATH [--require-disabled | --match-sales-state OTHER_CONFIG_PATH] [--contract-version 1|2]';
+if ($argc < 2) {
+    $fail($usage);
 }
-
-$requireDisabled = ($argv[2] ?? null) === '--require-disabled';
-$referencePath = ($argv[2] ?? null) === '--match-sales-state' ? $argv[3] : null;
+$requireDisabled = false;
+$referencePath = null;
+$contractVersion = '1';
+$hasMode = false;
+$hasContract = false;
+for ($index = 2; $index < $argc; $index++) {
+    $argument = $argv[$index];
+    if ($argument === '--require-disabled' && ! $hasMode) {
+        $requireDisabled = $hasMode = true;
+    } elseif ($argument === '--match-sales-state' && ! $hasMode && isset($argv[$index + 1]) && ! str_starts_with($argv[$index + 1], '--')) {
+        $referencePath = $argv[++$index];
+        $hasMode = true;
+    } elseif ($argument === '--contract-version' && ! $hasContract && in_array($argv[$index + 1] ?? null, ['1', '2'], true)) {
+        $contractVersion = $argv[++$index];
+        $hasContract = true;
+    } else {
+        $fail($usage);
+    }
+}
 $requiredKeys = $referencePath === null ? ['enabled', 'gifts_enabled', 'pilot_only'] : [
     'enabled', 'gifts_enabled', 'sales_enabled', 'enrollment_enabled', 'contributions_enabled', 'welcome_enabled', 'pilot_only',
 ];
@@ -71,13 +87,25 @@ $readFlags = static function (string $cachePath) use ($fail, $requiredKeys): arr
     sort($emails, SORT_STRING);
     $result['pilot_emails'] = $emails;
 
+    // Older v1 caches predate this setting and remain recipient-scoped. The
+    // wallet release must explicitly declare family ownership in its cache.
+    $scope = array_key_exists('wallet_scope', $flags) ? $flags['wallet_scope'] : 'recipient';
+    if (! in_array($scope, ['recipient', 'family'], true)) {
+        $fail('The cached care_hours.wallet_scope setting must be recipient or family.');
+    }
+    $result['wallet_scope'] = $scope;
+
     return $result;
 };
 
 $flags = $readFlags($argv[1]);
+$expectedScope = $contractVersion === '2' ? 'family' : 'recipient';
+if ($flags['wallet_scope'] !== $expectedScope) {
+    $fail('The cached wallet ownership scope does not match the verified prepaid contract.');
+}
 if ($referencePath !== null) {
     if ($flags !== $readFlags($referencePath)) {
-        $fail('Rollback must preserve all cached prepaid exposure flags and pilot access. Use a forward deployment for an intentional change.');
+        $fail('Rollback must preserve all cached prepaid exposure flags and pilot access, including wallet ownership scope. Use a forward deployment for an intentional change.');
     }
 }
 

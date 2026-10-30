@@ -64,7 +64,7 @@ Usage:
   ./deploy.sh --status    Show the current and previous releases without changing anything.
   ./deploy.sh --check-prepaid-release PATH
                          Verify a release's prepaid compatibility contract, without booting it.
-  ./deploy.sh --prepaid-manifest PATH
+  ./deploy.sh --prepaid-manifest PATH [1|2]
                          Print reviewed source fingerprints for an explicit manifest refresh.
   ./deploy.sh --screening-check REV
                          Stage runtime files from Git REV and inspect server setup only.
@@ -205,7 +205,8 @@ is_screening_release() {
   [[ -f "$1/app/Console/Commands/ScreeningRollout.php" ]]
 }
 
-# Version 1 is a reviewed compatibility contract, not an application feature flag.
+# Versions are reviewed financial compatibility contracts, not feature flags.
+# Keep v1 stable so the bridge driver can verify retained recipient releases.
 # Keep the inventory explicit: a partial checkout cannot certify its own omissions.
 prepaid_compatibility_files() {
   cat <<'EOF'
@@ -341,6 +342,33 @@ resources/views/livewire/pages/auth/register.blade.php
 EOF
 }
 
+prepaid_wallet_compatibility_files() {
+  cat <<'EOF'
+database/migrations/2026_10_30_000100_create_care_hour_family_wallets.php
+EOF
+}
+
+prepaid_compatibility_files_for_version() {
+  local version="$1"
+  [[ "$version" == 1 || "$version" == 2 ]] || return 1
+  prepaid_compatibility_files
+  if [[ "$version" == 2 ]]; then prepaid_wallet_compatibility_files; fi
+}
+
+# The source hashes are verified separately. This narrow read is also used to
+# recover a permanent floor from broken active code without booting that code.
+prepaid_manifest_contract() {
+  local release="$1" header
+  [[ -f "$release/$PREPAID_MANIFEST" && -r "$release/$PREPAID_MANIFEST" && ! -L "$release/$PREPAID_MANIFEST" \
+    && "$(resolved_path "$release/$PREPAID_MANIFEST")" == "$(resolved_path "$release")/$PREPAID_MANIFEST" ]] || return 1
+  IFS= read -r header < "$release/$PREPAID_MANIFEST" || return 1
+  case "${header%$'\r'}" in
+    homecare-prepaid-care-hours-v1) printf '1\n' ;;
+    homecare-prepaid-care-hours-v2) printf '2\n' ;;
+    *) log "Prepaid compatibility: manifest version or inventory is unknown." >&2; return 1 ;;
+  esac
+}
+
 prepaid_source_hash() {
   local release="$1" path="$2" resolved digest
   [[ -f "$release/$path" && -r "$release/$path" && ! -L "$release/$path" ]] || return 1
@@ -353,19 +381,35 @@ prepaid_source_hash() {
 }
 
 print_prepaid_manifest() {
-  local release="$1" path digest
-  printf 'homecare-prepaid-care-hours-v1\n'
+  local release="$1" version="${2:-1}" path digest
+  [[ "$version" == 1 || "$version" == 2 ]] || return 1
+  if [[ "$version" == 1 ]]; then
+    # A bridge uses the old committed application sources. Do not let old
+    # regeneration instructions label a family-wallet tree as the v1 contract.
+    while IFS= read -r path; do
+      if [[ -e "$release/$path" || -L "$release/$path" ]]; then
+        log "Prepaid compatibility: family-wallet sources require manifest v2; generate v1 only from old-source bridge code." >&2
+        return 1
+      fi
+    done < <(prepaid_wallet_compatibility_files)
+    if [[ -r "$release/config/care_hours.php" ]] \
+      && grep -Eq "[\"']wallet_scope[\"'][[:space:]]*=>[[:space:]]*[\"']family[\"']" "$release/config/care_hours.php"; then
+      log "Prepaid compatibility: family-wallet configuration requires manifest v2." >&2
+      return 1
+    fi
+  fi
+  printf 'homecare-prepaid-care-hours-v%s\n' "$version"
   while IFS= read -r path; do
     digest="$(prepaid_source_hash "$release" "$path")" || {
       log "Prepaid compatibility: missing, unreadable or unsafe required source: $path" >&2
       return 1
     }
     printf '%s  %s\n' "$digest" "$path"
-  done < <(prepaid_compatibility_files)
+  done < <(prepaid_compatibility_files_for_version "$version")
 }
 
 prepaid_release_version() {
-  local release="$1" path digest line i
+  local release="$1" path digest line i version
   local -a lines=() paths=()
   [[ -d "$release" && -r "$release" && -x "$release" ]] || {
     log "Prepaid compatibility: release directory is unavailable." >&2; return 1;
@@ -377,9 +421,10 @@ prepaid_release_version() {
     [[ "$(resolved_path "$release/$PREPAID_MANIFEST")" == "$(resolved_path "$release")/$PREPAID_MANIFEST" ]] || {
       log "Prepaid compatibility: manifest path traverses a symlink." >&2; return 1;
     }
+    version="$(prepaid_manifest_contract "$release")" || return 1
     mapfile -t lines < <(sed 's/\r$//' "$release/$PREPAID_MANIFEST")
-    mapfile -t paths < <(prepaid_compatibility_files)
-    [[ "${lines[0]:-}" == homecare-prepaid-care-hours-v1 && "${#lines[@]}" -eq "$((${#paths[@]} + 1))" ]] || {
+    mapfile -t paths < <(prepaid_compatibility_files_for_version "$version")
+    [[ "${#lines[@]}" -eq "$((${#paths[@]} + 1))" ]] || {
       log "Prepaid compatibility: manifest version or inventory is unknown." >&2; return 1;
     }
     for i in "${!paths[@]}"; do
@@ -393,7 +438,7 @@ prepaid_release_version() {
         log "Prepaid compatibility: required source is missing or changed: $path" >&2; return 1;
       }
     done
-    printf '1\n'
+    printf '%s\n' "$version"
     return 0
   fi
   for path in config/care_hours.php routes/care-hours.php app/Services/CareHours app/Models/CareHourPurchase.php app/Http/Controllers/CareHours app/Console/Commands/ReconcileCareHourPurchases.php; do
@@ -416,20 +461,21 @@ prepaid_floor_version() {
   if [[ -e "$PREPAID_FLOOR_FILE" || -L "$PREPAID_FLOOR_FILE" ]]; then
     [[ -f "$PREPAID_FLOOR_FILE" && -r "$PREPAID_FLOOR_FILE" && ! -L "$PREPAID_FLOOR_FILE" ]] \
       && mapfile -t floor_lines < "$PREPAID_FLOOR_FILE" \
-      && [[ "${#floor_lines[@]}" -eq 1 && "${floor_lines[0]:-}" == homecare-prepaid-care-hours-v1 ]] || {
+      && [[ "${#floor_lines[@]}" -eq 1 && ( "${floor_lines[0]:-}" == homecare-prepaid-care-hours-v1 || "${floor_lines[0]:-}" == homecare-prepaid-care-hours-v2 ) ]] || {
         log "Prepaid compatibility: persistent floor is unreadable, unsafe or unknown; refusing to switch releases." >&2
         return 1
       }
-    printf '1\n'
+    printf '%s\n' "${floor_lines[0]##*-v}"
   else
     printf '0\n'
   fi
 }
 
 persist_prepaid_floor() {
-  local floor temporary
+  local minimum="${1:-1}" floor temporary
+  [[ "$minimum" == 1 || "$minimum" == 2 ]] || return 1
   floor="$(prepaid_floor_version)" || return 1
-  if [[ "$floor" == 0 ]]; then
+  if (( floor < minimum )); then
     [[ -d "$DEPLOY_ROOT" && -w "$DEPLOY_ROOT" ]] || {
       log "Prepaid compatibility: deployment state cannot persist the permanent floor." >&2; return 1;
     }
@@ -439,12 +485,12 @@ persist_prepaid_floor() {
     sudo chown "$DEPLOY_USER:$WEB_GROUP" "$COMPATIBILITY_DIR" || return 1
     sudo chmod 750 "$COMPATIBILITY_DIR" || return 1
     temporary="$(mktemp "$COMPATIBILITY_DIR/.prepaid-care-hours.floor.XXXXXX")" || return 1
-    if ! { printf 'homecare-prepaid-care-hours-v1\n' > "$temporary" && chmod 644 "$temporary" && mv -T -- "$temporary" "$PREPAID_FLOOR_FILE"; }; then
+    if ! { printf 'homecare-prepaid-care-hours-v%s\n' "$minimum" > "$temporary" && chmod 644 "$temporary" && mv -T -- "$temporary" "$PREPAID_FLOOR_FILE"; }; then
       rm -f -- "$temporary"
       log "Prepaid compatibility: failed to persist the permanent floor." >&2
       return 1
     fi
-    log "Pinned permanent prepaid compatibility floor v1; pre-prepaid releases cannot be selected."
+    log "Pinned permanent prepaid compatibility floor v$minimum; older financial handlers cannot be selected."
   fi
   # Flush the rename before exposing code that can create financial obligations.
   sync -f "$COMPATIBILITY_DIR" || {
@@ -454,36 +500,36 @@ persist_prepaid_floor() {
 
 require_prepaid_compatibility() {
   local current="$1" target="$2" pin="${3:-check}" current_version target_version floor
-  local -a current_manifest=()
   floor="$(prepaid_floor_version)" || return 1
   target_version="$(prepaid_release_version "$target")" || return 1
-  if [[ "$floor" == 1 ]]; then
+  if (( floor > 0 )); then
     # A broken active handler must not prevent a verified compatible repair.
     # The durable floor is authoritative, but a newer/unknown declared contract
-    # still requires a matching newer driver instead of a blind v1 downgrade.
+    # still requires a matching newer driver instead of a blind downgrade.
+    current_version="$floor"
     if [[ -e "$current/$PREPAID_MANIFEST" || -L "$current/$PREPAID_MANIFEST" ]]; then
-      [[ -f "$current/$PREPAID_MANIFEST" && -r "$current/$PREPAID_MANIFEST" && ! -L "$current/$PREPAID_MANIFEST" \
-        && "$(resolved_path "$current/$PREPAID_MANIFEST")" == "$(resolved_path "$current")/$PREPAID_MANIFEST" ]] || return 1
-      mapfile -t current_manifest < <(sed 's/\r$//' "$current/$PREPAID_MANIFEST")
-      [[ "${current_manifest[0]:-}" == homecare-prepaid-care-hours-v1 ]] || {
+      current_version="$(prepaid_manifest_contract "$current")" || {
         log "Prepaid compatibility: active release declares an unknown contract; refusing downgrade." >&2; return 1;
       }
     fi
-    current_version=1
   else
     current_version="$(prepaid_release_version "$current")" || return 1
   fi
   # Recover a missing floor from already active code, including before rollback.
-  if [[ "$current_version" == 1 && "$floor" == 0 ]]; then
-    persist_prepaid_floor || return 1
-    floor=1
+  if (( current_version > floor )); then
+    persist_prepaid_floor "$current_version" || return 1
+    floor="$current_version"
   fi
-  if [[ ( "$floor" == 1 || "$current_version" == 1 ) && "$target_version" != 1 ]]; then
-    log "Refusing a pre-prepaid release: durable prepaid compatibility requires a verified v1 release." >&2
+  if (( target_version < floor || target_version < current_version )); then
+    if [[ "$target_version" == 0 ]]; then
+      log "Refusing a pre-prepaid release: durable prepaid compatibility requires a verified v$floor or later release." >&2
+    else
+      log "Refusing an older prepaid release: durable prepaid compatibility requires a verified v$floor or later release." >&2
+    fi
     return 1
   fi
-  if [[ "$pin" == activate && "$target_version" == 1 ]]; then
-    persist_prepaid_floor || return 1
+  if [[ "$pin" == activate && "$target_version" != 0 ]]; then
+    persist_prepaid_floor "$target_version" || return 1
   fi
 }
 
@@ -508,7 +554,7 @@ validate_screening_queue_config() {
 }
 
 validate_prepaid_release_config() {
-  local current="$1" release="$2"
+  local current="$1" release="$2" version
   local -a arguments=()
   [[ -f "$release/$PREPAID_MANIFEST" ]] || return 0
   # The source contract was already verified before preparing this candidate.
@@ -517,18 +563,23 @@ validate_prepaid_release_config() {
   if [[ ! -f "$current/$PREPAID_MANIFEST" ]]; then
     arguments+=(--require-disabled)
   fi
+  version="$(prepaid_manifest_contract "$release")" || die "Prepaid configuration contract cannot be read."
+  if [[ "$version" == 2 ]]; then arguments+=(--contract-version 2); fi
   "$PHP_BIN" "$release/scripts/deployment/check-prepaid-release-config.php" \
     "$release/bootstrap/cache/config.php" "${arguments[@]}" \
     || die "Prepaid cached configuration is unsafe; the release was not activated."
 }
 
 validate_prepaid_rollback_config() {
-  local current="$1" target="$2"
+  local current="$1" target="$2" version
+  local -a arguments=()
   [[ -f "$target/$PREPAID_MANIFEST" ]] || return 0
   # Retained releases keep their own config caches. A rollback must not reopen
   # sales or undo another prepaid switch changed since that release was active.
+  version="$(prepaid_manifest_contract "$target")" || return 1
+  if [[ "$version" == 2 ]]; then arguments+=(--contract-version 2); fi
   "$PHP_BIN" "$target/scripts/deployment/check-prepaid-release-config.php" \
-    "$target/bootstrap/cache/config.php" --match-sales-state "$current/bootstrap/cache/config.php" || {
+    "$target/bootstrap/cache/config.php" --match-sales-state "$current/bootstrap/cache/config.php" "${arguments[@]}" || {
       log "Prepaid rollback configuration differs or cannot be verified; use a reviewed forward release." >&2
       return 1
     }
@@ -1160,14 +1211,14 @@ perform_rollback() {
 
 case "$MODE" in
   --check-prepaid-release|--prepaid-manifest)
-    [[ "$#" -eq 2 && -d "$2" ]] || die "Usage: deploy.sh $MODE RELEASE_DIRECTORY"
+    [[ ( "$#" -eq 2 || ( "$MODE" == --prepaid-manifest && "$#" -eq 3 && ( "$3" == 1 || "$3" == 2 ) ) ) && -d "$2" ]] || die "Usage: deploy.sh $MODE RELEASE_DIRECTORY [1|2 for manifest generation]"
     for command_name in sha256sum sed readlink; do require_command "$command_name"; done
     if [[ "$MODE" == --prepaid-manifest ]]; then
-      print_prepaid_manifest "$2"
+      print_prepaid_manifest "$2" "${3:-1}"
     else
       version="$(prepaid_release_version "$2")" || die "Prepaid release verification failed."
-      [[ "$version" == 1 ]] || die "The release has no prepaid compatibility contract."
-      log "Prepaid release compatibility v1 verified."
+      [[ "$version" == 1 || "$version" == 2 ]] || die "The release has no prepaid compatibility contract."
+      log "Prepaid release compatibility v$version verified."
     fi
     exit 0
     ;;

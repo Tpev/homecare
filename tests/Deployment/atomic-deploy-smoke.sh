@@ -50,7 +50,10 @@ if [[ "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == private-pilot-forward ]]; then
   done
   git -C "$PROJECT_DIR" -c safe.directory="$(cygpath -am "$PROJECT_DIR" 2>/dev/null || printf '%s' "$PROJECT_DIR")" \
     show 27a5307cab710c589eb1c2e91f5fba1edf3ba902:config/care_hours.php > "$current/config/care_hours.php"
-  cp -- "$PROJECT_DIR/config/care_hours.php" "$candidate/config/care_hours.php"
+  # This historical v1-to-private-pilot rehearsal must not substitute the later
+  # family-wallet v2 configuration into a v1-labelled synthetic candidate.
+  git -C "$PROJECT_DIR" -c safe.directory="$(cygpath -am "$PROJECT_DIR" 2>/dev/null || printf '%s' "$PROJECT_DIR")" \
+    show f030f0a2:config/care_hours.php > "$candidate/config/care_hours.php"
   cp -- "$PROJECT_DIR/scripts/deployment/check-prepaid-release-config.php" "$candidate/scripts/deployment/check-prepaid-release-config.php"
   cat > "$SANDBOX/build-configs.php" <<'EOF'
 <?php
@@ -449,7 +452,12 @@ if [[ "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == plain-prepaid || "${HOMECARE_DEPLOY_
     [[ -n "$path" && "$path" != /* && "$path" != *..* ]] || exit 1
     if [[ "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == private-pilot ]]; then
       mkdir -p "$(dirname "$AUTHOR_DIR/$path")"
-      cp -- "$PROJECT_DIR/$path" "$AUTHOR_DIR/$path"
+      if [[ "$path" == config/care_hours.php ]]; then
+        git -C "$PROJECT_DIR" -c safe.directory="$(cygpath -am "$PROJECT_DIR" 2>/dev/null || printf '%s' "$PROJECT_DIR")" \
+          show f030f0a2:config/care_hours.php > "$AUTHOR_DIR/$path"
+      else
+        cp -- "$PROJECT_DIR/$path" "$AUTHOR_DIR/$path"
+      fi
     elif [[ ! -f "$AUTHOR_DIR/$path" ]]; then
       mkdir -p "$(dirname "$AUTHOR_DIR/$path")"
       printf 'synthetic prepaid source: %s\n' "$path" > "$AUTHOR_DIR/$path"

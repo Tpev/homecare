@@ -4,7 +4,7 @@ Status: Current production deployment procedure
 
 Owner: Engineering
 
-Last updated: October 22, 2026
+Last updated: October 30, 2026
 
 ## Outcome
 
@@ -182,6 +182,19 @@ The checked-in `docs/deployment/prepaid-care-hours-v1.sha256` contains the fixed
 
 A missing floor can be reconstructed from an independently verified active prepaid release. With an intact v1 floor, a damaged active source file does not prevent switching to an independently verified v1 repair. Unknown floor contents, unsafe state paths, or a newer/unknown declared contract fail closed; the v1 driver does not guess compatibility. There is no bypass or floor-reset flag. The driver never reverses database migrations, deletes ledger history, clears holds, or changes feature switches.
 
+#### Family wallet contract v2
+
+The family wallet release uses `homecare-prepaid-care-hours-v2`. The manifest remains at `docs/deployment/prepaid-care-hours-v1.sha256` so older installed drivers see the unfamiliar header and reject the release before preparation. The v2 inventory includes the unchanged v1 inventory plus `2026_10_30_000100_create_care_hour_family_wallets.php`. The warmed configuration must explicitly contain `care_hours.wallet_scope=family`; a v1 release uses `recipient` (including older caches where the setting is absent).
+
+Before activating v2, the reviewed driver atomically upgrades and flushes the permanent floor to v2. It never lowers that floor. Every later target, including automatic rollback after a health failure, must be a verified v2 release with matching cached exposure and ownership scope. A v1 repair cannot safely handle pooled family obligations. If first v2 activation fails, repair forward with a verified v2 release. No rollback reverses the additive migration or alters old financial rows.
+
+The currently installed v1-only driver cannot deploy v2 in one invocation: fetching a new script does not replace the script already running. Deliver the transition as two reviewed releases, each using the ordinary `./deploy.sh` command:
+
+1. Publish and deploy a **bridge** containing the new deployment driver/checker, their tests, and a regenerated **v1** manifest. All financial/application sources and configuration must remain at the last recipient-based release. Do not publish the wallet changes to the deployment branch until the operator confirms this bridge is installed.
+2. Publish and deploy the **wallet release**, with the additive wallet mapping migration, reviewed family-wallet code, `wallet_scope=family`, and a **v2** manifest. The now-installed bridge driver understands v2 and pins its floor before switching.
+
+Both use the existing pilot restriction and shared environment without manual `.env` edits. Do not label wallet code v1 to avoid the bridge, remove the floor, or change the manifest header without the matching reviewed behavior. When preparing these releases from concurrent local work, construct the bridge from the last committed application sources plus only the deployment changes; regenerating a v1 manifest over the full uncommitted wallet working tree would be unsafe. `tests/Deployment/prepaid-wallet-bridge-smoke.sh` checks the format transition using the actual prior v1 driver and isolated copies.
+
 These checks protect the supported deployment path, not arbitrary root or operator actions. Do not invoke an older deployment driver, manually retarget the application symlink, restore only an old code tree while discarding the floor, or edit a manifest merely to make an incompatible target pass. Those actions bypass the safety boundary. A future contract version requires an explicitly reviewed driver and migration/recovery plan. Source hashes establish reviewed package integrity, not a proof of business semantics; changes still need their normal tests and review.
 
 #### Local manifest maintenance
@@ -191,13 +204,13 @@ The current validation work is local only. The user has explicitly prohibited as
 After intentionally changing a listed source, review its prepaid compatibility and tests, then refresh the manifest explicitly in the **local source checkout**. The deployment never generates or repairs a candidate's manifest automatically. This command does not contact any server, boot the application, query a database or change feature switches:
 
 ```bash
-bash deploy.sh --prepaid-manifest "$PWD" > docs/deployment/prepaid-care-hours-v1.sha256.next &&
+bash deploy.sh --prepaid-manifest "$PWD" 2 > docs/deployment/prepaid-care-hours-v1.sha256.next &&
   mv docs/deployment/prepaid-care-hours-v1.sha256.next docs/deployment/prepaid-care-hours-v1.sha256
 bash deploy.sh --check-prepaid-release "$PWD"
 git diff -- docs/deployment/prepaid-care-hours-v1.sha256
 ```
 
-Commit the reviewed manifest with the matching code and driver. Text fingerprints normalize CRLF to LF for Windows/Linux checkouts. If adding a required dependency, extend the explicit inventory in `prepaid_compatibility_files`, refresh the manifest, and run the deployment smoke tests. A deployment-root filesystem must support atomic rename and `sync -f`; failure aborts activation. The offline Windows harness mocks that durability call and does not establish Linux filesystem or permission behavior.
+Use version `1` for the old-source bridge and version `2` for the family wallet release. The generator rejects default or explicit v1 before printing a header when the family-wallet migration or literal family-scope config is present; it does not downgrade that code automatically. The warmed-cache scope check also rejects a family cache under v1. Commit the reviewed manifest with the matching code and driver. Text fingerprints normalize CRLF to LF for Windows/Linux checkouts. Keep `prepaid_compatibility_files` stable for retained v1 packages; add v2-only dependencies to `prepaid_wallet_compatibility_files`, refresh the manifest, and run the deployment smoke tests. A deployment-root filesystem must support atomic rename and `sync -f`; failure aborts activation. The offline Windows harness mocks that durability call and does not establish Linux filesystem or permission behavior.
 
 ## Required migration rule
 

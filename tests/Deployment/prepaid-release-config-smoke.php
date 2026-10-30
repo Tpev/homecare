@@ -138,6 +138,22 @@ try {
     }
     $baseFlags = array_fill_keys($exposureKeys, true) + ['pilot_emails' => $pilotDefaults['pilot_emails']];
     $base = $fixture('rollback-current', ['care_hours' => $baseFlags]);
+    $familyWallet = $fixture('family-wallet', ['care_hours' => $baseFlags + ['wallet_scope' => 'family']]);
+    $run([$familyWallet], 1, 'wallet ownership scope does not match');
+    $run([$familyWallet, '--contract-version', '1'], 1, 'wallet ownership scope does not match');
+    $run([$base, '--contract-version', '2'], 1, 'wallet ownership scope does not match');
+    $run([$familyWallet, '--contract-version', '2'], 0, 'cached flags are valid booleans');
+    $run([$familyWallet, '--require-disabled', '--contract-version', '2'], 0, 'first-adoption exposure is the approved private pilot');
+    $run([$familyWallet, '--match-sales-state', $familyWallet, '--contract-version', '2'], 0, 'rollback exposure flags match');
+    $run([$familyWallet, '--match-sales-state', $base, '--contract-version', '2'], 1, 'wallet ownership scope');
+    $run([$base, '--match-sales-state', $familyWallet], 1, 'wallet ownership scope');
+    foreach ([null, false, true, 1, [], 'owner', ''] as $index => $invalidScope) {
+        $path = $fixture('invalid-wallet-scope-'.$index, ['care_hours' => $baseFlags + ['wallet_scope' => $invalidScope]]);
+        $run([$path, '--contract-version', '2'], 1, 'wallet_scope setting must be recipient or family');
+    }
+    foreach ([[], ['0'], ['3'], ['family'], ['2', '--contract-version', '2']] as $arguments) {
+        $run([$familyWallet, '--contract-version', ...$arguments], 1, 'Usage:');
+    }
     foreach ($exposureKeys as $key) {
         $changedFlags = $baseFlags;
         $changedFlags[$key] = false;
