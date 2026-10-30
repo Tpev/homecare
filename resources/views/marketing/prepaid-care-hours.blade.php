@@ -13,7 +13,6 @@
 <style>
     .chm .prepaid-hero-photo { object-position: 50% 24%; }
     .chm .prepaid-balance-label { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #596e62; font-size: 12px; }
-    .chm .prepaid-balance-label span:last-child { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
     .chm .prepaid-balance-value { margin: 12px 0 8px; font-family: ChmSerif, Georgia, serif; font-size: 38px; line-height: 1; color: #23483f; }
     .chm .prepaid-balance-value span { font-family: ChmInter, sans-serif; font-size: 14px; }
     .chm .prepaid-balance-note { display: flex; gap: 8px; align-items: center; font-size: 12px; color: #596e62; }
@@ -27,7 +26,6 @@
     .chm .prepaid-pool-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 23px; border-bottom: 1px solid #e5e5d9; }
     .chm .prepaid-pool-heading h3 { font-size: 25px; margin: 4px 0 0; }
     .chm .prepaid-pool-heading small { color: #66746d; font-size: 11px; }
-    .chm .prepaid-pool-illustration { margin-top: 4px; padding: 5px 8px; background: #edf0e6; border-radius: 5px; color: #66746d; font-size: 10px; }
     .chm .prepaid-pool-person { display: flex; align-items: center; gap: 12px; margin-top: 22px; font-size: 14px; }
     .chm .prepaid-pool-person > span:first-child { display: grid; place-items: center; flex: 0 0 37px; height: 37px; border-radius: 50%; background: #f2e3d9; color: #8d594a; font-size: 12px; }
     .chm .prepaid-pool-person:nth-child(3) > span:first-child { background: #e6ebdf; color: #526a4d; }
@@ -90,7 +88,7 @@
                  sizes="(max-width: 607px) calc(100vw - 48px), (max-width: 800px) 560px, (max-width: 1100px) calc((100vw - 108px) / 2), (max-width: 1320px) calc((100vw - 185px) / 2), 560px"
                  alt="A woman wearing glasses smiling while using her smartphone." width="960" height="1440" fetchpriority="high">
             <div class="chm-balance-card">
-                <div class="prepaid-balance-label"><span>Your family’s care</span><span>Illustration</span></div>
+                <div class="prepaid-balance-label"><span>Your family’s care</span></div>
                 <p class="prepaid-balance-value">{{ $examplePackage['total_hours'] }} <span>hours ready</span></p>
                 <p class="prepaid-balance-note"><i aria-hidden="true"></i> For the days you need a hand</p>
             </div>
@@ -129,7 +127,7 @@
             </div>
             <div class="chm-story-visual">
                 <div class="prepaid-pool">
-                    <div class="prepaid-pool-heading"><div><small>THE BENNETT FAMILY</small><h3>A little help for Dad</h3></div><span class="prepaid-pool-illustration">Illustration</span></div>
+                    <div class="prepaid-pool-heading"><div><small>THE BENNETT FAMILY</small><h3>A little help for Dad</h3></div></div>
                     <div class="prepaid-pool-person"><span aria-hidden="true">EB</span><span>Emma contributed</span><strong>5 hours</strong></div>
                     <div class="prepaid-pool-person"><span aria-hidden="true">JB</span><span>James contributed</span><strong>5 hours</strong></div>
                     <div class="prepaid-pool-person"><span aria-hidden="true">SB</span><span>Sophie contributed</span><strong>10 hours</strong></div>

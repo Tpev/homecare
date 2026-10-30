@@ -35,14 +35,6 @@
             </details>
         </header>
         <main id="main" tabindex="-1">@yield('page_content')</main>
-        <footer class="chm-footer">
-            <div class="chm-wrap">
-                <div class="chm-footer-top">
-                    <div><a href="{{ route('landing') }}" aria-label="LoLo Care home"><img src="{{ asset('images/marketing/lolo/lolo-wordmark-ivory.svg') }}" width="102" height="35" alt="LoLo"></a><p>A little help. More life at home.</p><span>Non-medical care, made personal.</span></div>
-                    <nav aria-label="Footer navigation"><a href="{{ route('prepaid-care-hours') }}">Prepaid care hours</a><a href="{{ route('care-gift-cards') }}">Gift cards</a><a href="{{ route('care-hours.claim') }}">Claim a gift</a><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('landing.get-care') }}">Talk to us</a></nav>
-                </div>
-                <div class="chm-footer-bottom"><p>© {{ now()->year }} LoLo Care Inc.</p><nav aria-label="Legal"><a href="{{ route('legal.show', ['slug' => 'platform-terms-of-service']) }}">Terms</a><a href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}">Privacy</a><a href="{{ route('legal.show', ['slug' => 'payment-terms-and-cancellation-policy']) }}">Payments & cancellation</a></nav></div>
-            </div>
-        </footer>
+        <x-public-footer />
     </div>
 @endsection

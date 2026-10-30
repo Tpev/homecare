@@ -3,8 +3,11 @@
 @section('title', $pageTitle)
 @section('meta_description', $pageDescription)
 @section('canonical', $pageUrl)
-@section('og_image', asset('images/marketing/homepage/families.jpg'))
-@section('og_image_alt', 'A younger woman and an older woman enjoying a walk together.')
+@section('og_image', asset('images/marketing/care-gifts/care-gifts-social.jpg'))
+@section('og_image_alt', 'An older woman and a girl sharing tea and conversation at a table.')
+@section('og_image_width', '1200')
+@section('og_image_height', '800')
+@section('og_image_type', 'image/jpeg')
 
 @push('head')
     <style>
@@ -33,7 +36,7 @@
         .gift-benefit-symbol { display: block; font: 500 28px/1 ChmSerif, Georgia, serif; color: #b7634d; margin-bottom: 11px; }
         .gift-story-wrap { background: #f1ecdf; }
         .gift-story-photo { position: relative; max-width: 500px; }
-        .chm .gift-story-photo img { display: block; width: 100%; height: 460px; object-fit: cover; object-position: 50% 42%; border-radius: 150px 150px 12px 12px; }
+        .chm .gift-story-photo img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; object-position: center; border-radius: 100px 100px 12px 12px; }
         .chm .gift-story-caption { position: absolute; bottom: 24px; left: 24px; right: 24px; padding: 17px 22px; border-radius: 8px; background: #fffaf0ed; font: 500 23px/1.3 ChmSerif, Georgia, serif; text-align: center; color: #23483f; }
         .gift-occasions { display: flex; flex-wrap: wrap; gap: 9px; margin: 25px 0; }
         .gift-occasions span { border: 1px solid #d7cfbd; border-radius: 100px; padding: 7px 13px; font-size: 12px; color: #4b5e53; }
@@ -83,8 +86,8 @@
             .gift-note small { margin-top: 7px; font-size: 9px; }
             .gift-stage-caption { bottom: -27px; right: 0; font-size: 9px; }
             .chm .chm-step .gift-step-number { width: 28px; height: 28px; font-size: 17px; }
-            .chm .gift-story-photo img { height: 360px; border-radius: 120px 120px 12px 12px; }
-            .chm .gift-story-caption { left: 16px; right: 16px; bottom: 16px; font-size: 20px; }
+            .chm .gift-story-photo img { border-radius: 70px 70px 12px 12px; }
+            .chm .gift-story-caption { left: 12px; right: 12px; bottom: 12px; padding: 12px 16px; font-size: 16px; }
             .chm .gift-pricing-note { text-align: left; }
             .chm .gift-early-access { border-radius: 10px; line-height: 1.6; }
         }
@@ -103,7 +106,7 @@
             </div>
             <p class="chm-microcopy">From $155 · No expiry · They can create an account later</p>
         </div>
-        <div class="chm-hero-visual gift-stage" role="img" aria-label="Illustration of a LoLo gift for Mum from Jane, with ten hours of care and a note saying a little help, whenever you need it.">
+        <div class="chm-hero-visual gift-stage" role="img" aria-label="A LoLo gift for Mum from Jane, with ten hours of care and a note saying a little help, whenever you need it.">
             <div class="gift-envelope"></div>
             <div class="gift-card">
                 <img class="gift-card-brand" src="{{ asset('images/marketing/lolo/lolo-wordmark-ivory.svg') }}" alt="" width="80" height="35">
@@ -113,7 +116,7 @@
                 <span class="gift-card-ribbon" aria-hidden="true"></span>
             </div>
             <div class="gift-note"><p>A little help,<br>whenever you need it.</p><small>To Mum. With love, Jane.</small></div>
-            <span class="gift-stage-caption">Illustration · gifts are shared with a private code</span>
+            <span class="gift-stage-caption">Gifts are shared with a private code</span>
         </div>
     </section>
 
@@ -126,7 +129,10 @@
     <section class="chm-section gift-story-wrap">
         <div class="chm-wrap chm-split gift-story">
             <div class="chm-story-visual gift-story-photo">
-                <img src="{{ asset('images/marketing/homepage/families.jpg') }}" alt="Two women from different generations sharing a walk outdoors." width="1000" height="1200" loading="lazy" decoding="async">
+                <img src="{{ asset('images/marketing/care-gifts/care-gifts-960.webp') }}"
+                     srcset="{{ asset('images/marketing/care-gifts/care-gifts-640.webp') }} 640w, {{ asset('images/marketing/care-gifts/care-gifts-960.webp') }} 960w, {{ asset('images/marketing/care-gifts/care-gifts-1440.webp') }} 1440w"
+                     sizes="(max-width: 548px) calc(100vw - 48px), (max-width: 800px) 500px, (max-width: 1100px) calc((100vw - 117px) / 2), 500px"
+                     alt="An older woman and a girl sharing tea and conversation at a table." width="960" height="640" loading="lazy" decoding="async">
                 <p class="gift-story-caption">More support for the everyday.</p>
             </div>
             <div>

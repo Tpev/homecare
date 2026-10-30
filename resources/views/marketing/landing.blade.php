@@ -146,7 +146,7 @@
         }
         .lolo-home .brand { display: inline-flex; align-items: center; flex: 0 0 auto; }
         .lolo-home .brand img { width: 78px; height: auto; }
-        .lolo-home .nav-links { display: flex; gap: 34px; margin: auto; font-size: .96rem; }
+        .lolo-home .nav-links { display: flex; gap: clamp(16px, 1.8vw, 28px); margin: auto; font-size: .9rem; white-space: nowrap; }
         .lolo-home .nav-links a:hover { color: var(--coral); }
         .lolo-home .nav-actions { display: flex; align-items: center; gap: 20px; font-size: .95rem; }
         .lolo-home .caregiver-join {
@@ -392,14 +392,20 @@
         .lolo-home .button.coral { background: var(--coral); }
         .lolo-home .final-cta small { color: #9eb0a9; }
 
-        .lolo-home .landing-footer { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 50px; border-top: 1px solid var(--line); padding: 70px max(5vw, 36px) 30px; }
-        .lolo-home .landing-footer > div { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; font-size: .92rem; }
-        .lolo-home .footer-brand .brand img { width: 84px; }
-        .lolo-home .footer-brand p { max-width: 300px; color: var(--muted); line-height: 1.6; }
-        .lolo-home .copyright { grid-column: 1 / -1; margin-top: 20px; border-top: 1px solid var(--line); color: var(--muted); padding-top: 25px; font-size: .76rem; }
+        .lolo-home .care-options { padding-top: 30px; padding-bottom: 80px; scroll-margin-top: 110px; }
+        .lolo-home .care-options-heading { max-width: 780px; margin-bottom: 32px; }
+        .lolo-home .care-options-heading h2 { font-size: clamp(2.2rem, 3.1vw, 3.4rem); }
+        .lolo-home .care-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+        .lolo-home .care-option { display: flex; flex-direction: column; align-items: flex-start; border: 1px solid var(--line); border-radius: 20px; padding: 32px 34px; background: #f0f1e8; }
+        .lolo-home .care-option.gift { background: #f5e8da; }
+        .lolo-home .care-option-label { color: #65705f; font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 18px; }
+        .lolo-home .care-option.gift .care-option-label { color: #925c49; }
+        .lolo-home .care-option h3 { font-size: clamp(1.8rem, 2.2vw, 2.45rem); font-weight: 500; letter-spacing: -.035em; }
+        .lolo-home .care-option p { color: #56645a; max-width: 450px; line-height: 1.7; margin: 16px 0 25px; }
+        .lolo-home .care-option a { display: inline-flex; gap: 18px; align-items: center; margin-top: auto; min-height: 44px; border-bottom: 1px solid currentColor; font-weight: 600; font-size: .92rem; }
+        .lolo-home .care-option a:hover { color: var(--coral); }
 
-        @media (max-width: 900px) {
-            .lolo-home h1 { font-size: clamp(3.15rem, 8vw, 4.4rem); }
+        @media (max-width: 1200px) {
             .lolo-home .desktop-nav { display: none; }
             .lolo-home .mobile-menu { display: block; }
             .lolo-home .mobile-menu nav {
@@ -413,11 +419,17 @@
                 border-bottom: 1px solid var(--line);
                 background: var(--cream);
                 padding: 24px;
+                max-height: calc(100dvh - 88px);
+                overflow-y: auto;
                 box-shadow: 0 20px 30px rgba(35, 48, 45, .08);
             }
             .lolo-home .nav-actions { margin-left: 18px; }
             .lolo-home .nav-actions .caregiver-join,
             .lolo-home .nav-actions .sign-in { display: none; }
+        }
+
+        @media (max-width: 900px) {
+            .lolo-home h1 { font-size: clamp(3.15rem, 8vw, 4.4rem); }
             .lolo-home .hero { grid-template-columns: 1fr; padding-top: 55px; }
             .lolo-home .hero-visual { height: 480px; }
             .lolo-home .booking-card { grid-template-columns: 1fr 1fr; }
@@ -435,15 +447,15 @@
             .lolo-home .comparison { overflow-x: auto; }
             .lolo-home .comparison .row { min-width: 760px; }
             .lolo-home .family-board { margin-top: 20px; }
-            .lolo-home .landing-footer { grid-template-columns: 1fr 1fr; }
-            .lolo-home .footer-brand { grid-column: 1 / -1; }
+            .lolo-home .care-options-grid { gap: 18px; }
+            .lolo-home .care-option { padding: 28px; }
         }
 
         @media (max-width: 560px) {
             .lolo-home h1 { font-size: 2.85rem; line-height: .98; }
             .lolo-home .nav-shell { height: 72px; }
             .lolo-home .nav-actions .button { padding: 9px 14px; }
-            .lolo-home .mobile-menu nav { top: 72px; }
+            .lolo-home .mobile-menu nav { top: 72px; max-height: calc(100dvh - 72px); }
             .lolo-home .hero { padding: 48px 22px 100px; }
             .lolo-home .hero-actions { flex-direction: column; align-items: flex-start; gap: 18px; }
             .lolo-home .reassurance { gap: 16px 18px; font-size: .82rem; }
@@ -475,8 +487,9 @@
             .lolo-home .trust-grid { grid-template-columns: 1fr; }
             .lolo-home .final-cta { margin: 0 12px 60px; padding: 70px 22px; }
             .lolo-home .final-cta div { flex-direction: column; }
-            .lolo-home .landing-footer { grid-template-columns: 1fr 1fr; padding: 60px 22px; }
-            .lolo-home .copyright { grid-column: 1 / -1; }
+            .lolo-home .care-options { padding-top: 0; padding-bottom: 30px; scroll-margin-top: 90px; }
+            .lolo-home .care-options-grid { grid-template-columns: 1fr; }
+            .lolo-home .care-option { padding: 27px 25px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -496,6 +509,7 @@
                 <a href="#how">How it works</a>
                 <a href="#caregivers">Caregivers</a>
                 <a href="#families">For families</a>
+                <a href="#plan-and-give">Plan & give care</a>
                 <a href="#safety">Safety</a>
                 <a href="{{ route('about') }}">About</a>
                 <a href="{{ route('faq') }}">FAQs</a>
@@ -507,6 +521,8 @@
                     <a href="#how">How it works</a>
                     <a href="#caregivers">Caregivers</a>
                     <a href="#families">For families</a>
+                    <a href="{{ route('prepaid-care-hours') }}">Prepaid care hours</a>
+                    <a href="{{ route('care-gift-cards') }}">Gift cards</a>
                     <a href="#safety">Safety</a>
                     <a href="{{ route('about') }}">About</a>
                     <a href="{{ route('faq') }}">FAQs</a>
@@ -767,6 +783,27 @@
             </div>
         </section>
 
+        <section class="section care-options" id="plan-and-give" aria-labelledby="care-options-title">
+            <div class="care-options-heading">
+                <p class="eyebrow">Plan ahead. Give a little help.</p>
+                <h2 id="care-options-title">More ways to care for someone you love.</h2>
+            </div>
+            <div class="care-options-grid">
+                <article class="care-option">
+                    <span class="care-option-label">For your family</span>
+                    <h3>Care hours, ready for later.</h3>
+                    <p>Set aside prepaid hours in one shared family balance. Loved ones can contribute, and the hours never expire.</p>
+                    <a href="{{ route('prepaid-care-hours') }}">Explore prepaid care hours <span aria-hidden="true">↗</span></a>
+                </article>
+                <article class="care-option gift">
+                    <span class="care-option-label">For someone you love</span>
+                    <h3>A thoughtful gift of care.</h3>
+                    <p>Give hours of help at home with a private gift code. They can create an account and claim their hours when they’re ready.</p>
+                    <a href="{{ route('care-gift-cards') }}">Explore gift cards <span aria-hidden="true">↗</span></a>
+                </article>
+            </div>
+        </section>
+
         <section class="section compare">
             <div class="section-head">
                 <div>
@@ -862,18 +899,7 @@
             <small>Starting at $30 per hour. Book from one hour.</small>
         </section>
 
-        <footer class="landing-footer">
-            <div class="footer-brand">
-                <a class="brand" href="#top" aria-label="Back to the top">
-                    <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222">
-                </a>
-                <p>LoLo Care helps families in Raleigh, Durham, and Chapel Hill find trusted, non-medical help at home. Book companionship, errands, and everyday support by the hour, with no long-term contract.</p>
-            </div>
-            <div><strong>Families</strong><a href="{{ route('register') }}">Find care</a><a href="{{ route('care-assistance.index') }}">Care assistance</a><a href="{{ route('prepaid-care-hours') }}">Prepaid care hours</a><a href="{{ route('care-gift-cards') }}">Gift cards</a><a href="#how">How it works</a><a href="#safety">Safety</a></div>
-            <div><strong>Caregivers</strong><a href="{{ route('caregiver.register') }}">Become a caregiver</a><a href="{{ route('login') }}">Caregiver login</a></div>
-            <div><strong>Company</strong><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('faq') }}">FAQs</a><a href="{{ route('blog.index') }}">Resources</a><a href="mailto:hello@carelolo.com">Contact</a><a href="{{ route('legal.index') }}">Legal & privacy</a></div>
-            <p class="copyright">© {{ now()->year }} LoLo Care Inc. Non-medical home support.</p>
-        </footer>
+        <x-public-footer />
     </main>
 
     <script>
