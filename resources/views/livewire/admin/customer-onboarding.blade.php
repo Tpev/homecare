@@ -20,10 +20,13 @@
                 <span class="co-avatar co-avatar--large" aria-hidden="true">{{ mb_strtoupper(mb_substr($selected['name'], 0, 1)) }}</span>
                 <div><p class="co-eyebrow">CUSTOMER ONBOARDING</p><h1>{{ $selected['name'] }}</h1><p class="co-subtitle">{{ $selected['email'] ?: 'Email not provided' }}</p></div>
             </div>
-            @if($account)
+            @if($account && auth()->user()->isAdministrator())
                 <a class="co-button" href="{{ route('admin.users.show', $account->owner_user_id) }}" wire:navigate>View account ↗</a>
-            @else
+            @elseif(! $account)
                 <button type="button" class="co-button co-button--primary" wire:click="startCreate">Create family account</button>
+            @endif
+            @if($lead)
+                <a class="co-button" href="{{ route('admin.crm.index', ['lead' => $lead->id]) }}" wire:navigate>Open family CRM ↗</a>
             @endif
         </header>
     @endif
@@ -140,7 +143,7 @@
                 @endif
                 <section class="co-panel co-panel-body">
                     <div class="co-section-heading"><h2>Moving toward care</h2></div>
-                    <div class="co-care-row"><span class="co-step-dot {{ $selected['request_posted'] ? 'is-complete' : '' }}" aria-hidden="true">{{ $selected['request_posted'] ? '✓' : '3' }}</span><div><h3>Care request</h3><p class="co-muted">{{ $selected['request_posted'] ? 'A care request has been published.' : 'Help the family describe their care needs and publish a request.' }}</p></div>@if($selected['latest_request_id'])<a class="co-text-button" href="{{ route('admin.requests.show', $selected['latest_request_id']) }}" wire:navigate>View request ↗</a>@endif</div>
+                    <div class="co-care-row"><span class="co-step-dot {{ $selected['request_posted'] ? 'is-complete' : '' }}" aria-hidden="true">{{ $selected['request_posted'] ? '✓' : '3' }}</span><div><h3>Care request</h3><p class="co-muted">{{ $selected['request_posted'] ? 'A care request has been published.' : 'Help the family describe their care needs and publish a request.' }}</p></div>@if($selected['latest_request_id'] && auth()->user()->isAdministrator())<a class="co-text-button" href="{{ route('admin.requests.show', $selected['latest_request_id']) }}" wire:navigate>View request ↗</a>@endif</div>
                     <div class="co-care-row"><span class="co-step-dot {{ $selected['hired'] ? 'is-complete' : '' }}" aria-hidden="true">{{ $selected['hired'] ? '✓' : '4' }}</span><div><h3>First caregiver hired</h3><p class="co-muted">{{ $selected['hired'] ? 'First hire confirmed'.($selected['first_hire_at'] ? ' on '.\Illuminate\Support\Carbon::parse($selected['first_hire_at'])->format('M j, Y').'.' : '.') : 'Once a hire is confirmed, this milestone will update automatically.' }}</p></div></div>
                 </section>
                 <section class="co-panel co-panel-body">

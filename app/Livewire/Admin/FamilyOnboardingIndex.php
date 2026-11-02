@@ -23,6 +23,12 @@ class FamilyOnboardingIndex extends Component
     #[Url]
     public string $search = '';
 
+    public function boot(): void
+    {
+        $user = auth()->user();
+        abort_unless($user?->canAccessCustomerOnboarding() && $user->fresh()?->canAccessCustomerOnboarding(), 403);
+    }
+
     public function updatedFilter(): void
     {
         $this->resetPage();
@@ -35,7 +41,6 @@ class FamilyOnboardingIndex extends Component
 
     public function render()
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
         // Start from accounts so a family who registered while enrollment was off
         // is visible as not enrolled, without inventing a completion or enrolling them.
         $query = FamilyAccount::query()

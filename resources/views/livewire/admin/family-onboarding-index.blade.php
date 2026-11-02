@@ -27,7 +27,7 @@
                 <tr class="border-t">
                     <td class="p-4">
                         @if($row || $family->owner)
-                            <a class="font-semibold underline" href="{{ $row ? route('admin.family-onboarding.show', $row) : route('admin.users.show', $family->owner) }}">{{ $row?->initiatedBy?->name ?? $family->owner?->name ?? 'Deleted user' }} · #{{ $family->id }}</a>
+                            <a class="font-semibold underline" href="{{ $row ? route('admin.family-onboarding.show', $row) : (auth()->user()->isAdministrator() ? route('admin.users.show', $family->owner) : route('admin.customer-onboarding.index', ['family' => 'account:'.$family->id])) }}">{{ $row?->initiatedBy?->name ?? $family->owner?->name ?? 'Deleted user' }} · #{{ $family->id }}</a>
                         @else
                             <span>Deleted user · #{{ $family->id }}</span>
                         @endif
@@ -39,7 +39,7 @@
                         @if($row?->status === 'in_progress') · Step {{ $row->current_step }}@endif
                         @if($row?->completed_at)<p class="text-xs text-slate-500">{{ $row->completed_at->format('M j, Y g:i A T') }}</p>@endif
                     </td>
-                    <td class="p-4">@if($family->latest_request_id)<a class="underline" href="{{ route('admin.requests.show', $family->latest_request_id) }}">Request #{{ $family->latest_request_id }}</a>@else — @endif</td>
+                    <td class="p-4">@if($family->latest_request_id)@if(auth()->user()->isAdministrator())<a class="underline" href="{{ route('admin.requests.show', $family->latest_request_id) }}">Request #{{ $family->latest_request_id }}</a>@else Request #{{ $family->latest_request_id }} @endif @else — @endif</td>
                     <td class="p-4">{{ $row?->welcomeVisit?->status ?? ($row?->completed_at ? 'Declined' : '—') }}</td>
                     <td class="p-4">{{ $row?->deliveries->where('status', '!=', 'superseded')->pluck('status')->unique()->implode(', ') ?: '—' }}</td>
                 </tr>

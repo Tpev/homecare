@@ -98,6 +98,13 @@ User::withoutEvents(function (): void {
         'role' => 'admin',
         'email_verified_at' => now(),
     ]);
+    User::factory()->create([
+        'name' => 'Customer Onboarding SDR',
+        'email' => 'onboarding.sdr@example.test',
+        'password' => 'CustomerOnboardingQA!2026',
+        'role' => 'sdr',
+        'email_verified_at' => now(),
+    ]);
 });
 
 foreach (['desktop', 'mobile'] as $variant) {

@@ -174,7 +174,8 @@ class CustomerOnboardingDirectoryTest extends TestCase
 
         $this->assertSame(2, $page->total());
         $this->assertCount(1, $page->items());
-        $this->assertCount(2, $queries);
+        // One persisted staff-permission check plus the count and paginated directory query.
+        $this->assertCount(3, $queries);
         $this->assertSame(1, $directory->paginate('Searchable', 'no_account')->total());
         $this->assertSame([
             'total' => 7, 'accounts' => 6, 'no_account' => 1, 'payment_missing' => 6,

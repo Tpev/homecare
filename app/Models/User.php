@@ -94,6 +94,11 @@ class User extends Authenticatable
         return $this->access_revoked_at === null && in_array($this->role, ['admin', 'sdr'], true);
     }
 
+    public function canAccessCustomerOnboarding(): bool
+    {
+        return $this->access_revoked_at === null && in_array($this->role, ['admin', 'sdr'], true);
+    }
+
     public function canViewAiSupportPilot(): bool
     {
         return $this->isAdministrator();

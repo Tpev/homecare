@@ -29,7 +29,7 @@ class FamilyPaymentSetupLinkTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_link_is_encrypted_admin_only_and_scoped_to_payment_setup(): void
+    public function test_link_is_encrypted_staff_only_and_scoped_to_payment_setup(): void
     {
         [$admin, $account, $service, $link] = $this->setupLink();
         $this->assertSame(64, strlen($link->token));

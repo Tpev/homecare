@@ -45,7 +45,8 @@ class CustomerOnboarding extends Component
 
     public function boot(): void
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $user = auth()->user();
+        abort_unless($user?->canAccessCustomerOnboarding() && $user->fresh()?->canAccessCustomerOnboarding(), 403);
     }
 
     public function updatedSearch(): void

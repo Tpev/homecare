@@ -61,13 +61,13 @@ class CustomerOnboardingPageTest extends TestCase
         Livewire::test(CustomerOnboarding::class)->assertForbidden();
     }
 
-    public static function nonAdminRoles(): array
+    public static function excludedRoles(): array
     {
-        return [['family'], ['sales'], ['sdr']];
+        return [['family'], ['caregiver'], ['sales'], ['offboarded']];
     }
 
-    #[DataProvider('nonAdminRoles')]
-    public function test_non_admin_cannot_open_page_or_mutate_an_existing_livewire_component(string $role): void
+    #[DataProvider('excludedRoles')]
+    public function test_excluded_roles_cannot_open_page_or_mutate_an_existing_livewire_component(string $role): void
     {
         $account = $this->account('Protected Family');
         $other = User::factory()->create(['role' => $role]);

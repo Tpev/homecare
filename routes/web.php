@@ -5,10 +5,10 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCoverController;
 use App\Http\Controllers\BlogEventController;
 use App\Http\Controllers\BlogFeedController;
+use App\Http\Controllers\CareAssistanceController;
 use App\Http\Controllers\CaregiverCertificationDocumentController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
-use App\Http\Controllers\CareAssistanceController;
 use App\Http\Controllers\CareHoursMarketingController;
 use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\DiditWebhookController;
@@ -35,9 +35,9 @@ use App\Livewire\Admin\AiSupport\KnowledgeIndex as AiSupportKnowledgeIndex;
 use App\Livewire\Admin\AiSupport\Overview as AiSupportOverview;
 use App\Livewire\Admin\AiSupport\PilotsIndex as AiSupportPilotsIndex;
 use App\Livewire\Admin\AiSupport\Settings as AiSupportSettings;
-use App\Livewire\Admin\CareCoverageCalendar;
-use App\Livewire\Admin\CareAssistanceApplicationsIndex;
 use App\Livewire\Admin\CareAssistanceApplicationShow;
+use App\Livewire\Admin\CareAssistanceApplicationsIndex;
+use App\Livewire\Admin\CareCoverageCalendar;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CarePlanShow;
@@ -130,6 +130,18 @@ Route::get('/admin/family-leads', FamilyLeadsIndex::class)
     ->middleware(['web', 'auth', 'sdr.access'])
     ->name('admin.family-acquisition.leads');
 
+Route::middleware(['web', 'auth', 'customer-onboarding.access'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/customer-onboarding', \App\Livewire\Admin\CustomerOnboarding::class)
+            ->middleware(\App\Http\Middleware\CustomerOnboardingPrivacyHeaders::class)
+            ->name('customer-onboarding.index');
+        Route::get('/family-onboarding', \App\Livewire\Admin\FamilyOnboardingIndex::class)->name('family-onboarding.index');
+        Route::get('/family-onboarding/{onboarding}', \App\Livewire\Admin\FamilyOnboardingShow::class)
+            ->whereNumber('onboarding')->name('family-onboarding.show');
+    });
+
 Route::middleware(['web', 'auth', 'sdr.access'])
     ->prefix('sdr')
     ->name('sdr.')
@@ -190,12 +202,6 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
         Route::get('/analytics/care-coverage-calendar', CareCoverageCalendar::class)->name('analytics.care-coverage-calendar');
         Route::get('/users', UsersIndex::class)->name('users.index');
-        Route::get('/customer-onboarding', \App\Livewire\Admin\CustomerOnboarding::class)
-            ->middleware(\App\Http\Middleware\CustomerOnboardingPrivacyHeaders::class)
-            ->name('customer-onboarding.index');
-        Route::get('/family-onboarding', \App\Livewire\Admin\FamilyOnboardingIndex::class)->name('family-onboarding.index');
-        Route::get('/family-onboarding/{onboarding}', \App\Livewire\Admin\FamilyOnboardingShow::class)
-            ->whereNumber('onboarding')->name('family-onboarding.show');
         Route::get('/users/{user}', UserShow::class)->name('users.show');
         Route::get('/requests', CareRequestsIndex::class)->name('requests.index');
         Route::get('/requests/{careRequest}', AdminCareRequestShow::class)->name('requests.show');

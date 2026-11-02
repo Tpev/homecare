@@ -145,6 +145,11 @@ new class extends Component
         $sdrNavLinks = [
             $adminCrmLink,
             [
+                'label' => 'Customer onboarding',
+                'href' => route('admin.customer-onboarding.index'),
+                'active' => request()->routeIs('admin.customer-onboarding.*') || request()->routeIs('admin.family-onboarding.*'),
+            ],
+            [
                 'label' => 'Family calling console',
                 'href' => route('sdr.family-calling'),
                 'active' => request()->routeIs('sdr.family-calling'),
@@ -952,6 +957,7 @@ new class extends Component
                             <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">SDR account</p>
                         </div>
                         <a href="{{ route('admin.crm.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">CRM</a>
+                        <a href="{{ route('admin.customer-onboarding.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Customer onboarding</a>
                         <a href="{{ route('sdr.family-calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Family calling console</a>
                         <a href="{{ route('admin.family-acquisition.leads') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Family leads CRM</a>
                         <a href="{{ route('sdr.calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Referral outreach</a>
@@ -1087,6 +1093,7 @@ new class extends Component
                 <div class="mt-3 space-y-1 px-2">
                     @if ($isSdr)
                         <x-responsive-nav-link :href="route('admin.crm.index')" wire:navigate>{{ __('CRM') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.customer-onboarding.index')" wire:navigate>{{ __('Customer onboarding') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.family-calling')" wire:navigate>{{ __('Family calling console') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.family-acquisition.leads')" wire:navigate>{{ __('Family leads CRM') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.calling')" wire:navigate>{{ __('Referral outreach') }}</x-responsive-nav-link>

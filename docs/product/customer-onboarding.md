@@ -1,6 +1,10 @@
 # Customer onboarding
 
-Admin workspace: `/admin/customer-onboarding`, under **Acquire families → Customer onboarding**.
+Staff workspace: `/admin/customer-onboarding`. Administrators find it under **Acquire families → Customer onboarding**; SDRs have **Customer onboarding** in desktop/mobile navigation and account menus.
+
+Active administrators and SDRs can use the directory, create/link family accounts, send account-access emails, generate/regenerate/revoke payment links, refresh payment status, and add notes. The linked family-onboarding directory, care intake, welcome-visit follow-up, and onboarding-email reconciliation are included. Route, Livewire, and service authorization rechecks the persisted role and revoked-access state. Sales and nonstaff roles remain excluded.
+
+Global user administration, request administration, payment operations, and the admin SMS inbox remain administrator-only. SDRs use the linked family CRM for SMS; onboarding pages do not expose administrator-only account/request links.
 
 ## Staff flow
 

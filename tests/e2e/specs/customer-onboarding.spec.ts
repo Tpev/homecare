@@ -20,10 +20,10 @@ async function localOnly(page: Page): Promise<void> {
     });
 }
 
-async function login(page: Page): Promise<void> {
+async function login(page: Page, role = 'admin'): Promise<void> {
     await localOnly(page);
     await page.goto('/login');
-    await page.getByLabel('Email', { exact: true }).fill('onboarding.admin@example.test');
+    await page.getByLabel('Email', { exact: true }).fill(`onboarding.${role}@example.test`);
     await page.getByLabel('Password', { exact: true }).fill('CustomerOnboardingQA!2026');
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
     await expect(page).not.toHaveURL(/\/login$/);
@@ -35,6 +35,40 @@ async function noHorizontalOverflow(page: Page): Promise<void> {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(1);
 }
+
+test('SDRs can use onboarding and its payment tools from desktop and mobile navigation', async ({ page }, testInfo) => {
+    await login(page, 'sdr');
+    await page.goto('/admin/crm');
+    if (testInfo.project.name === 'mobile') {
+        await page.getByRole('button', { name: 'Toggle navigation' }).click();
+    }
+    const onboardingLink = page.getByRole('link', { name: 'Customer onboarding', exact: true }).filter({ visible: true }).first();
+    await expect(onboardingLink).toBeVisible();
+    await onboardingLink.click();
+    await expect(page.getByRole('heading', { name: 'Customer onboarding', exact: true })).toBeVisible();
+    await noHorizontalOverflow(page);
+    await page.screenshot({ path: testInfo.outputPath('sdr-onboarding-navigation.png'), fullPage: true });
+
+    await page.getByRole('button', { name: /Add family/ }).click();
+    await page.getByLabel('Contact name', { exact: true }).fill(`SDR Family ${testInfo.project.name}`);
+    await page.getByLabel('Email', { exact: true }).fill(`sdr.family.${testInfo.project.name}@example.test`);
+    await page.getByRole('button', { name: 'Create family account', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Generate payment link', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: /View account/ })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Generate payment link', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Copy link', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Show QR code', exact: true }).click();
+    await expect(page.getByRole('img', { name: "Scan to open this family's payment setup link", exact: true })).toBeVisible();
+    await page.getByLabel('Internal note', { exact: true }).fill('Discussed schedule and payment setup.');
+    await page.getByRole('button', { name: 'Add note', exact: true }).click();
+    await expect(page.getByText('Discussed schedule and payment setup.', { exact: true })).toBeVisible();
+    await noHorizontalOverflow(page);
+    await page.screenshot({ path: testInfo.outputPath('sdr-onboarding-workspace.png'), fullPage: true });
+    await page.getByRole('link', { name: /Open care intake & visit/ }).click();
+    await expect(page.getByRole('link', { name: /Family onboarding/ })).toBeVisible();
+    await page.getByRole('link', { name: /Family onboarding/ }).click();
+    await expect(page.getByRole('heading', { name: 'Family onboarding', exact: true })).toBeVisible();
+});
 
 test('families are searchable, progress is visible, and the workspace fits the screen', async ({ page }, testInfo) => {
     await login(page);

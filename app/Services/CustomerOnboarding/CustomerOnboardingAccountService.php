@@ -24,7 +24,7 @@ class CustomerOnboardingAccountService
 {
     public function create(User $admin, array $input, ?int $leadId = null): FamilyAccount
     {
-        abort_unless($admin->isAdministrator(), 403);
+        abort_unless($admin->canAccessCustomerOnboarding() && $admin->fresh()?->canAccessCustomerOnboarding(), 403);
         $input = [
             'name' => trim((string) ($input['name'] ?? '')),
             'email' => mb_strtolower(trim((string) ($input['email'] ?? ''))),
@@ -108,7 +108,7 @@ class CustomerOnboardingAccountService
 
     public function sendAccessEmail(User $admin, FamilyAccount $account): string
     {
-        abort_unless($admin->isAdministrator(), 403);
+        abort_unless($admin->canAccessCustomerOnboarding() && $admin->fresh()?->canAccessCustomerOnboarding(), 403);
         $account = $account->fresh(['owner']);
         abort_unless($account && $account->status === FamilyAccount::STATUS_ACTIVE, 403);
         $owner = $account->owner;

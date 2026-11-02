@@ -6,6 +6,7 @@ use App\Models\FamilyAccountActivityLog;
 use App\Models\FamilyOnboarding;
 use App\Models\FamilyOnboardingDelivery;
 use App\Models\FamilyWelcomeVisit;
+use App\Models\Lead;
 use App\Services\Family\FamilyOnboardingDeliveryService;
 use App\Services\FamilyAcquisition\FamilyCrmSyncService;
 use Carbon\CarbonImmutable;
@@ -37,7 +38,6 @@ class FamilyOnboardingShow extends Component
 
     public function mount(FamilyOnboarding $onboarding): void
     {
-        $this->authorizeAdmin();
         $this->onboardingId = $onboarding->id;
         if ($visit = $onboarding->welcomeVisit) {
             $this->visitStatus = $visit->status;
@@ -47,14 +47,14 @@ class FamilyOnboardingShow extends Component
         }
     }
 
-    private function authorizeAdmin(): void
+    public function boot(): void
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $user = auth()->user();
+        abort_unless($user?->canAccessCustomerOnboarding() && $user->fresh()?->canAccessCustomerOnboarding(), 403);
     }
 
     public function saveVisit(): void
     {
-        $this->authorizeAdmin();
         $this->validate([
             'visitStatus' => ['required', Rule::in(['requested', 'contacted', 'confirmed', 'completed', 'cancelled', 'unavailable'])],
             'confirmedStart' => [Rule::requiredIf(in_array($this->visitStatus, ['confirmed', 'completed'], true)), 'nullable', 'date_format:Y-m-d\TH:i'],
@@ -84,7 +84,6 @@ class FamilyOnboardingShow extends Component
 
     public function resolveDelivery(int $deliveryId, string $resolution): void
     {
-        $this->authorizeAdmin();
         $this->validate(['deliveryReason' => ['required', 'string', 'min:10', 'max:500']]);
         abort_unless(in_array($resolution, ['retry', 'accepted'], true), 422);
         DB::transaction(function () use ($deliveryId, $resolution) {
@@ -115,10 +114,12 @@ class FamilyOnboardingShow extends Component
 
     public function render()
     {
-        $this->authorizeAdmin();
+        $onboarding = FamilyOnboarding::query()->with(['initiatedBy', 'welcomeVisit', 'deliveries'])->findOrFail($this->onboardingId);
 
         return view('livewire.admin.family-onboarding-show', [
-            'onboarding' => FamilyOnboarding::query()->with(['initiatedBy', 'welcomeVisit', 'deliveries'])->findOrFail($this->onboardingId),
+            'onboarding' => $onboarding,
+            'crmLeadId' => Lead::query()->where('family_account_id', $onboarding->family_account_id)
+                ->where('lead_type', Lead::TYPE_FAMILY)->value('id'),
         ]);
     }
 }

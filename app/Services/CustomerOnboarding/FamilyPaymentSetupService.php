@@ -18,7 +18,7 @@ class FamilyPaymentSetupService
 
     public function generate(User $admin, FamilyAccount $account): FamilyPaymentSetupLink
     {
-        abort_unless($admin->isAdministrator(), 403);
+        abort_unless($admin->canAccessCustomerOnboarding() && $admin->fresh()?->canAccessCustomerOnboarding(), 403);
         $sessions = [];
         $link = DB::transaction(function () use ($admin, $account, &$sessions): FamilyPaymentSetupLink {
             $lockedAccount = FamilyAccount::query()->lockForUpdate()->findOrFail($account->id);
@@ -55,7 +55,7 @@ class FamilyPaymentSetupService
 
     public function revoke(User $admin, FamilyPaymentSetupLink $link): void
     {
-        abort_unless($admin->isAdministrator(), 403);
+        abort_unless($admin->canAccessCustomerOnboarding() && $admin->fresh()?->canAccessCustomerOnboarding(), 403);
         $sessionId = DB::transaction(function () use ($admin, $link): ?string {
             FamilyAccount::query()->whereKey($link->family_account_id)->lockForUpdate()->firstOrFail();
             $locked = FamilyPaymentSetupLink::query()->lockForUpdate()->findOrFail($link->id);

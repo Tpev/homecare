@@ -42,13 +42,14 @@ class SdrCrmAccessTest extends TestCase
 
     public function test_sdr_navigation_adds_main_crm_without_losing_existing_tools(): void
     {
-        foreach (['sdr.family-calling', 'sdr.calling', 'admin.family-acquisition.leads', 'admin.crm.index'] as $route) {
+        foreach (['sdr.family-calling', 'sdr.calling', 'admin.family-acquisition.leads', 'admin.crm.index', 'admin.customer-onboarding.index'] as $route) {
             $response = $this->actingAs($this->sdr)->get(route($route))->assertOk();
             $document = new \DOMDocument;
             @$document->loadHTML($response->getContent());
             $xpath = new \DOMXPath($document);
             foreach ([
                 'admin.crm.index' => 'CRM',
+                'admin.customer-onboarding.index' => 'Customer onboarding',
                 'admin.family-acquisition.leads' => 'Family leads CRM',
                 'sdr.family-calling' => 'Family calling console',
                 'sdr.calling' => 'Referral outreach',
@@ -135,7 +136,7 @@ class SdrCrmAccessTest extends TestCase
     public function test_crm_access_does_not_grant_global_administrator_permissions(): void
     {
         $this->assertFalse($this->sdr->isAdministrator());
-        foreach (['admin.users.index', 'admin.requests.index', 'admin.payments.ops', 'admin.customer-onboarding.index'] as $route) {
+        foreach (['admin.users.index', 'admin.requests.index', 'admin.payments.ops', 'admin.sms.index'] as $route) {
             $this->actingAs($this->sdr)->get(route($route))->assertForbidden();
         }
     }

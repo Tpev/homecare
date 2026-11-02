@@ -71,7 +71,8 @@ class CustomerOnboardingDirectory
 
     private function query(): Builder
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $user = auth()->user();
+        abort_unless($user?->canAccessCustomerOnboarding() && $user->fresh()?->canAccessCustomerOnboarding(), 403);
 
         // One row per household, regardless of how many people or CRM records belong to it.
         $linkedLeads = DB::table('leads')->where('lead_type', Lead::TYPE_FAMILY)
