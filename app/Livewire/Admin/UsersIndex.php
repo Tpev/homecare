@@ -80,7 +80,7 @@ class UsersIndex extends Component
             return;
         }
 
-        if ($this->isAdminUser($target)) {
+        if ($target->access_revoked_at !== null || $this->isAdminUser($target)) {
             $this->addError('loginAs', 'Login as is only available for caregiver/family accounts.');
 
             return;
@@ -102,6 +102,8 @@ class UsersIndex extends Component
 
         if ($this->role !== 'all') {
             $query->where('role', $this->role);
+        } else {
+            $query->whereNull('access_revoked_at');
         }
 
         if ($this->q !== '') {
@@ -128,6 +130,7 @@ class UsersIndex extends Component
                 ['label' => 'Sales', 'value' => 'sales'],
                 ['label' => 'SDR', 'value' => 'sdr'],
                 ['label' => 'Admins', 'value' => 'admin'],
+                ['label' => 'Offboarded (no access)', 'value' => 'offboarded'],
             ],
         ]);
     }

@@ -45,6 +45,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'access_revoked_at' => 'datetime',
             'sms_opt_in' => 'boolean',
             'sms_opted_in_at' => 'datetime',
             'password' => 'hashed',
@@ -80,17 +81,17 @@ class User extends Authenticatable
 
     public function isAdministrator(): bool
     {
-        return $this->role === 'admin';
+        return $this->access_revoked_at === null && $this->role === 'admin';
     }
 
     public function canAccessCrm(): bool
     {
-        return in_array($this->role, ['admin', 'sales', 'sdr'], true);
+        return $this->access_revoked_at === null && in_array($this->role, ['admin', 'sales', 'sdr'], true);
     }
 
     public function canAccessCaregiverCrm(): bool
     {
-        return in_array($this->role, ['admin', 'sdr'], true);
+        return $this->access_revoked_at === null && in_array($this->role, ['admin', 'sdr'], true);
     }
 
     public function canViewAiSupportPilot(): bool
@@ -115,19 +116,19 @@ class User extends Authenticatable
 
     public function isContentTeamMember(): bool
     {
-        return $this->isAdministrator()
-            || in_array($this->content_role, ['author', 'editor', 'publisher'], true);
+        return $this->access_revoked_at === null && ($this->isAdministrator()
+            || in_array($this->content_role, ['author', 'editor', 'publisher'], true));
     }
 
     public function canReviewContent(): bool
     {
-        return $this->isAdministrator()
-            || in_array($this->content_role, ['editor', 'publisher'], true);
+        return $this->access_revoked_at === null && ($this->isAdministrator()
+            || in_array($this->content_role, ['editor', 'publisher'], true));
     }
 
     public function canPublishContent(): bool
     {
-        return $this->isAdministrator() || $this->content_role === 'publisher';
+        return $this->access_revoked_at === null && ($this->isAdministrator() || $this->content_role === 'publisher');
     }
 
     public function caregiverProfile(): HasOne

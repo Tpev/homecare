@@ -37,9 +37,10 @@ class SendIncomingSmsAlert implements ShouldQueue
             return;
         }
 
-        $recipients = User::query()->whereIn('role', ['admin', 'sdr'])->pluck('email')
+        $recipients = \App\Support\StaffAccess::allowed(User::query())->whereIn('role', ['admin', 'sdr'])->pluck('email')
             ->push('peverelli.t@gmail.com')
             ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->reject(fn ($email) => \App\Support\StaffAccess::blocksEmail($email))
             ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->unique()->values()->all();
         if ($recipients === []) {
             return;

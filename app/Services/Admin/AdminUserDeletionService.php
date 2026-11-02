@@ -18,7 +18,7 @@ class AdminUserDeletionService
             if ($user->is($admin)) {
                 $this->blocked('You cannot delete your own admin account.');
             }
-            if (in_array($user->role, ['admin', 'sales', 'sdr'], true)) {
+            if ($user->access_revoked_at !== null || in_array($user->role, ['admin', 'sales', 'sdr', 'offboarded'], true)) {
                 $this->blocked('Staff users cannot be deleted from this screen.');
             }
 

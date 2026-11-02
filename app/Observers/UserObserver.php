@@ -8,6 +8,17 @@ use Throwable;
 
 class UserObserver
 {
+    public function saving(User $user): void
+    {
+        if ((! $user->exists || $user->isDirty('email')) && \App\Support\StaffAccess::blocksEmail((string) $user->email)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['email' => 'This email address cannot be used for an account.']);
+        }
+        if ($user->exists && $user->getRawOriginal('access_revoked_at') !== null
+            && ($user->access_revoked_at === null || $user->role !== 'offboarded' || $user->content_role !== null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['user' => 'This staff account has been permanently offboarded.']);
+        }
+    }
+
     public function created(User $user): void
     {
         if ($user->role === 'caregiver') {

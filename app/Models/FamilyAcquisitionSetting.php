@@ -36,13 +36,15 @@ class FamilyAcquisitionSetting extends Model
     /** @return list<string> */
     public function newLeadRecipients(): array
     {
-        return self::parseEmails($this->new_lead_alert_emails);
+        return array_values(array_filter(self::parseEmails($this->new_lead_alert_emails),
+            fn ($email) => ! \App\Support\StaffAccess::blocksEmail($email)));
     }
 
     /** @return list<string> */
     public function escalationRecipients(): array
     {
-        $configured = self::parseEmails($this->escalation_alert_emails);
+        $configured = array_values(array_filter(self::parseEmails($this->escalation_alert_emails),
+            fn ($email) => ! \App\Support\StaffAccess::blocksEmail($email)));
 
         return $configured !== [] ? $configured : $this->newLeadRecipients();
     }

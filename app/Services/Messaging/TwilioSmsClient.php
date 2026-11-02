@@ -21,6 +21,9 @@ class TwilioSmsClient
     public function sendMessage(string $to, string $body, ?string $from = null, ?string $statusCallbackUrl = null): array
     {
         $to = self::normalizePhone($to);
+        if (\App\Support\StaffAccess::blocksPhone($to)) {
+            throw new TwilioSmsRejectedException('This recipient has been removed from staff communications.');
+        }
         $from = self::normalizePhone($from ?: (string) config('services.twilio.sms_from'));
         $body = trim($body);
 
