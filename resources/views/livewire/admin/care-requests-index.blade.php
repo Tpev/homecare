@@ -18,7 +18,10 @@
                     <h1 class="text-xl font-semibold">Request Operations</h1>
                     <p class="mt-1 text-sm text-slate-600">Service dates, times and duration at a glance. Each schedule shows its time zone.</p>
                 </div>
-                <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">Showing {{ $requests->total() }} request(s)</div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">Showing {{ $requests->total() }} request(s)</div>
+                    <a href="{{ route('admin.requests.record-past') }}" wire:navigate class="rounded-lg bg-cyan-700 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-800">Record past visit</a>
+                </div>
             </div>
         </x-slot:header>
 

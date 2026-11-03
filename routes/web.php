@@ -204,6 +204,9 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/users', UsersIndex::class)->name('users.index');
         Route::get('/users/{user}', UserShow::class)->name('users.show');
         Route::get('/requests', CareRequestsIndex::class)->name('requests.index');
+        Route::get('/requests/record-past', \App\Livewire\Admin\RecordPastVisit::class)->name('requests.record-past');
+        Route::get('/requests/recorded-visits/{recordedVisit}', \App\Livewire\Admin\RecordPastVisit::class)
+            ->whereNumber('recordedVisit')->name('requests.recorded-visit');
         Route::get('/requests/{careRequest}', AdminCareRequestShow::class)->name('requests.show');
         Route::get('/care-plans', CarePlansIndex::class)->name('care-plans.index');
         Route::get('/care-plans/{carePlan}', CarePlanShow::class)->name('care-plans.show');
