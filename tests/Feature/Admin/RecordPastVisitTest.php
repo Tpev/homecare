@@ -146,6 +146,58 @@ class RecordPastVisitTest extends TestCase
         $this->assertDatabaseCount('care_bookings', 1);
     }
 
+    public function test_overlapping_unbooked_requests_do_not_block_recording_and_payment(): void
+    {
+        $data = $this->service()->normalize($this->input);
+        $requests = [];
+        foreach ([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING] as $type) {
+            foreach (['draft', 'open', 'filled', 'cancelled', 'expired'] as $status) {
+                $request = $this->sourceRequest($this->family);
+                $request->forceFill(['request_type' => $type, 'status' => $status,
+                    'requested_start_at' => $data['started_at'], 'requested_end_at' => $data['completed_at']])->saveQuietly();
+                $requests[] = $request->fresh();
+            }
+        }
+        $this->input['source_request_id'] = $requests[2]->id;
+        $visit = $this->createVisit();
+        $this->service()->processPayment($this->admin, $visit);
+
+        $this->assertNull($visit->fresh()->last_error);
+        $this->assertSame('completed', $visit->booking->status);
+        $this->assertDatabaseCount('care_requests', 11);
+        $this->assertDatabaseCount('care_bookings', 1);
+        $this->assertSame('transferred', CareBookingPayment::sole()->status);
+        $this->assertSame(3875, CareBookingPayment::sole()->amount_captured_cents);
+        foreach ($requests as $request) {
+            $this->assertSame($request->getRawOriginal(), $request->fresh()->getRawOriginal());
+        }
+        $this->assertValidation(fn () => $this->createVisit(), 'overlapping booking');
+        $this->assertSame(1, CareBookingPaymentOperation::where('type', 'charge')->count());
+    }
+
+    public function test_recurring_request_envelope_does_not_block_an_unbooked_day(): void
+    {
+        $this->input['date'] = '2026-10-19';
+        $previous = $this->createVisit();
+        $request = $previous->booking->careRequest;
+        $request->forceFill(['request_type' => CareRequest::TYPE_RECURRING,
+            'requested_start_at' => '2026-10-01 00:00:00', 'requested_end_at' => '2026-11-01 00:00:00'])->saveQuietly();
+        $originalBooking = $previous->booking->getRawOriginal();
+        $originalRequest = $request->getRawOriginal();
+        $this->input['date'] = '2026-10-20';
+        $this->input['source_request_id'] = $request->id;
+
+        $visit = $this->createVisit();
+        $this->service()->processPayment($this->admin, $visit);
+        $this->assertNull($visit->fresh()->last_error);
+        $this->assertNotSame($request->id, $visit->booking->care_request_id);
+        $this->assertDatabaseCount('care_bookings', 2);
+        $this->assertSame($originalBooking, $previous->booking->fresh()->getRawOriginal());
+        $this->assertSame($originalRequest, $request->fresh()->getRawOriginal());
+        $this->assertSame('transferred', CareBookingPayment::sole()->status);
+        $this->assertSame(1, CareBookingPaymentOperation::where('type', 'charge')->count());
+    }
+
     public function test_changed_price_or_details_invalidates_review_before_any_write(): void
     {
         $preview = $this->service()->preview($this->admin, $this->input);

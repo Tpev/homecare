@@ -26,7 +26,7 @@ async function fillVisit(page: Page, date: string) {
     await page.evaluate(() => window.scrollTo(0, 0));
 }
 
-test('admin records, reviews, pays, reopens, and detects a duplicate visit', async ({ page }, testInfo) => {
+test('admin records an unbooked day inside an existing request, pays, reopens, and detects a duplicate visit', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await login(page);
     await fillVisit(page, '2026-10-20');

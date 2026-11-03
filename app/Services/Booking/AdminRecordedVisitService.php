@@ -280,9 +280,8 @@ class AdminRecordedVisitService
                 ->orWhere(fn ($w) => $w->where('started_at', '<', $end)->where(fn ($t) => $t->whereNull('completed_at')->orWhere('completed_at', '>', $start))))
             ->when($lock, fn ($q) => $q->lockForUpdate())->first();
         $this->ensure(! $booking, 'An overlapping booking already exists'.($booking ? ' on request #'.$booking->care_request_id : '').'. Open that request to correct it instead of creating another.');
-        $request = CareRequest::where('family_account_id', $data['family_account_id'])->where('requested_start_at', '<', $end)->where('requested_end_at', '>', $start)
-            ->when($lock, fn ($q) => $q->lockForUpdate())->first();
-        $this->ensure(! $request, 'An overlapping request already exists'.($request ? ' (#'.$request->id.')' : '').'. Review that request first.');
+        // Request dates describe requested availability, including broad recurring ranges.
+        // Only booked or reported visits establish that these hours are already recorded.
         $extra = CompletedExtraVisitRequest::where(fn ($q) => $q->where('family_account_id', $data['family_account_id'])->orWhere('caregiver_user_id', $data['caregiver_user_id']))
             ->whereNotIn('status', ['withdrawn', 'superseded'])->where('proposed_started_at', '<', $end)->where('proposed_completed_at', '>', $start)
             ->when($lock, fn ($q) => $q->lockForUpdate())->first();

@@ -18,7 +18,8 @@ $caregiver = App\Models\User::factory()->create(['name' => 'Charles Example', 'e
 App\Models\CaregiverProfile::create(['user_id' => $caregiver->id, 'status' => 'active', 'platform_hourly_rate' => 30,
     'stripe_connect_account_id' => 'acct_recorded_browser', 'stripe_charges_enabled' => true, 'stripe_payouts_enabled' => true]);
 $request = new App\Models\CareRequest(['family_user_id' => $owner->id, 'family_account_id' => $family->id,
-    'title' => 'Transportation and companionship', 'request_type' => 'one_time', 'status' => 'filled',
+    'title' => 'Transportation and companionship', 'request_type' => 'recurring', 'status' => 'filled',
+    'requested_start_at' => '2026-10-01 00:00:00', 'requested_end_at' => '2026-11-01 00:00:00',
     'address_line1' => '123 Example Street', 'city' => 'Raleigh', 'state' => 'NC', 'zip' => '27609']);
 $request->saveQuietly();
 App\Models\CareRecipient::create(['care_request_id' => $request->id, 'full_name' => 'John Example', 'recipient_is_requester' => true, 'relationship_to_family' => 'Self']);
