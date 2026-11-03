@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-6">
+<div class="hc-page py-8 space-y-6" x-data x-on:past-visit-reviewed.window="$nextTick(() => window.scrollTo({ top: 0, behavior: 'auto' }))">
     @php
         $fieldClass = 'mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-cyan-600 focus:ring-cyan-600';
         $labelClass = 'block text-sm font-semibold text-slate-700';
@@ -50,6 +50,11 @@
                     <div class="flex justify-between gap-4"><dt class="text-slate-500">Recorded by</dt><dd>{{ $visit->creator->name }}</dd></div>
                 </dl>
                 <p class="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">{{ $visit->input['reason'] }}</p>
+                @if($visit->input['overlaps_acknowledged'] ?? false)
+                    <p class="mt-3 text-sm text-slate-600">Recorded as a separate visit after reviewing
+                        @foreach($visit->input['reviewed_overlaps'] as $overlap)<a href="{{ route('admin.requests.show', $overlap['request_id']) }}" class="font-semibold text-cyan-700 hover:underline">booking #{{ $overlap['booking_id'] }}</a>{{ $loop->last ? '.' : ', ' }}@endforeach
+                    </p>
+                @endif
             </x-card>
             <x-card>
                 <h2 class="font-bold text-slate-900">Payment summary</h2>
@@ -66,12 +71,47 @@
             </x-card>
         </div>
     @elseif($review)
+        @php($hasDuplicate = collect($review['overlaps'] ?? [])->contains('is_duplicate', true))
         <div class="flex items-center gap-2 text-sm"><span class="text-slate-500">1. Visit details</span><span aria-hidden="true" class="text-slate-300">/</span><span class="font-bold text-cyan-800">2. Review & charge</span></div>
         @if($review['payment_mode'] !== 'live')
             <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">{{ $review['payment_mode'] === 'simulated' ? 'Simulation mode' : 'Stripe test mode' }} — this environment will not charge real money.</div>
         @endif
         <form wire:submit="createVisit" class="grid items-start gap-5 lg:grid-cols-3">
             <div class="space-y-5 lg:col-span-2">
+                @if($review['overlaps'] ?? [])
+                    <section class="rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5" aria-labelledby="overlap-heading">
+                        <h2 id="overlap-heading" class="text-lg font-bold text-slate-900">Review overlapping bookings</h2>
+                        @if($hasDuplicate)
+                            <p role="alert" class="mt-2 text-sm font-semibold text-red-800">An overlapping booking already records this exact visit. Open the existing request to finish or correct it; this visit cannot be charged again here.</p>
+                        @else
+                            <p class="mt-2 text-sm text-slate-700">These bookings share hours with the family or caregiver. Review the recorded care and payments before adding a separate visit.</p>
+                        @endif
+                        <div class="mt-4 space-y-4">
+                            @foreach($review['overlaps'] as $overlap)
+                                <div class="rounded-lg border border-amber-200 bg-white p-4 text-sm">
+                                    <div class="flex flex-wrap items-start justify-between gap-2">
+                                        <p class="font-bold text-slate-900">Booking #{{ $overlap['booking_id'] }} · {{ str_replace('_', ' ', $overlap['status']) }}</p>
+                                        <a href="{{ route('admin.requests.show', $overlap['request_id']) }}" target="_blank" rel="noopener" class="font-semibold text-cyan-700 hover:underline">Open request #{{ $overlap['request_id'] }} ↗</a>
+                                    </div>
+                                    <p class="mt-1 text-slate-700">{{ $overlap['family'] }} with {{ $overlap['caregiver'] }}</p>
+                                    <dl class="mt-3 grid gap-3 sm:grid-cols-2">
+                                        <div><dt class="font-semibold text-slate-700">Scheduled</dt><dd class="mt-1 text-slate-600">{{ $overlap['scheduled_start'] ?? 'No scheduled start' }}<br>{{ $overlap['scheduled_end'] ?? 'No scheduled end' }}</dd></div>
+                                        <div><dt class="font-semibold text-slate-700">Recorded care · {{ $overlap['worked_minutes'] }} minutes</dt><dd class="mt-1 text-slate-600">{{ $overlap['actual_start'] ?? 'No check-in recorded' }}<br>{{ $overlap['actual_end'] ?? 'No checkout recorded' }}</dd></div>
+                                        <div><dt class="font-semibold text-slate-700">Payment · {{ str_replace('_', ' ', $overlap['payment_status'] ?? 'no payment record') }}</dt><dd class="mt-1 text-slate-600">Captured: {{ number_format($overlap['amount_captured_cents'] / 100, 2) }} {{ $overlap['currency'] }}
+                                            @if($overlap['amount_refunded_cents'])<br>Refunded: {{ number_format($overlap['amount_refunded_cents'] / 100, 2) }} {{ $overlap['currency'] }}@endif
+                                            @if($overlap['amount_authorized_cents'])<br>Authorized: {{ number_format($overlap['amount_authorized_cents'] / 100, 2) }} {{ $overlap['currency'] }}@endif
+                                        </dd></div>
+                                        @if($overlap['care_hours_status'])<div><dt class="font-semibold text-slate-700">Care hours · {{ str_replace('_', ' ', $overlap['care_hours_status']) }}</dt><dd class="mt-1 text-slate-600">{{ $overlap['care_hours_reserved_minutes'] }} minutes reserved</dd></div>@endif
+                                    </dl>
+                                </div>
+                            @endforeach
+                        </div>
+                        @unless($hasDuplicate)
+                            <label class="mt-4 flex items-start gap-3 text-sm text-slate-800"><input type="checkbox" wire:model="overlapsAcknowledged" class="mt-0.5 rounded border-slate-300 text-cyan-700 focus:ring-cyan-600"><span>I reviewed the overlapping bookings and confirm this is a separate visit requiring its own charge.</span></label>
+                            <p class="mt-2 text-xs text-slate-600">Existing bookings and payments stay unchanged. This confirmation and your reason for recording the visit are saved in the audit trail.</p>
+                        @endunless
+                    </section>
+                @endif
                 <x-card>
                     <h2 class="text-lg font-bold text-slate-900">Check the completed visit</h2>
                     <dl class="mt-5 grid gap-5 text-sm sm:grid-cols-2">
@@ -98,8 +138,12 @@
                 <p class="mt-4 text-xs text-slate-500">Caregiver gross: {{ $money($review['quote']['caregiver_gross_amount_cents']) }}. Net earnings use the saved fee agreement and actual processing fees.</p>
                 <p class="mt-3 text-xs text-slate-500">Uses the family’s saved pricing agreement, or current marketplace rates.</p>
                 <p class="mt-3 text-xs text-slate-500">Payment uses the family’s saved payment method. If it needs attention, the completed visit stays saved here for retry.</p>
-                <label class="mt-6 flex items-start gap-3 text-sm text-slate-700"><input type="checkbox" wire:model="acknowledged" class="mt-0.5 rounded border-slate-300 text-cyan-700 focus:ring-cyan-600"><span>I verified that this care happened and approve the hours and {{ $money($review['quote']['total_charge_cents']) }} family charge.</span></label>
-                <button type="submit" wire:loading.attr="disabled" class="mt-5 w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-bold text-white hover:bg-cyan-800 disabled:opacity-50"><span wire:loading.remove wire:target="createVisit">Create visit & charge {{ $money($review['quote']['total_charge_cents']) }}</span><span wire:loading wire:target="createVisit">Saving & processing…</span></button>
+                @if($hasDuplicate)
+                    <p class="mt-6 text-sm font-semibold text-red-800">Use the existing request linked above to manage this visit and its payment.</p>
+                @else
+                    <label class="mt-6 flex items-start gap-3 text-sm text-slate-700"><input type="checkbox" wire:model="acknowledged" class="mt-0.5 rounded border-slate-300 text-cyan-700 focus:ring-cyan-600"><span>I verified that this care happened and approve the hours and {{ $money($review['quote']['total_charge_cents']) }} family charge.</span></label>
+                    <button type="submit" wire:loading.attr="disabled" class="mt-5 w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-bold text-white hover:bg-cyan-800 disabled:opacity-50"><span wire:loading.remove wire:target="createVisit">Create visit & charge {{ $money($review['quote']['total_charge_cents']) }}</span><span wire:loading wire:target="createVisit">Saving & processing…</span></button>
+                @endif
             </x-card>
         </form>
     @else

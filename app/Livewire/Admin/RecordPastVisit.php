@@ -25,6 +25,8 @@ class RecordPastVisit extends Component
 
     public bool $acknowledged = false;
 
+    public bool $overlapsAcknowledged = false;
+
     #[Locked]
     public string $requestToken;
 
@@ -113,6 +115,7 @@ class RecordPastVisit extends Component
         $this->authorizeAdmin();
         $this->clearReview();
         $this->review = $service->preview(auth()->user(), $this->form);
+        $this->dispatch('past-visit-reviewed');
     }
 
     public function editVisit(): void
@@ -135,7 +138,7 @@ class RecordPastVisit extends Component
 
             return;
         }
-        $visit = $service->create(auth()->user(), $this->form, $this->requestToken, $this->review['fingerprint']);
+        $visit = $service->create(auth()->user(), $this->form, $this->requestToken, $this->review['fingerprint'], $this->overlapsAcknowledged);
         $this->visitId = $visit->id;
         $service->processPayment(auth()->user(), $visit);
         $this->openSavedVisit();
@@ -189,6 +192,7 @@ class RecordPastVisit extends Component
     {
         $this->review = [];
         $this->acknowledged = false;
+        $this->overlapsAcknowledged = false;
         $this->resetValidation();
     }
 

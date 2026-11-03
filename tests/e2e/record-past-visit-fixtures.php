@@ -25,4 +25,12 @@ $request->saveQuietly();
 App\Models\CareRecipient::create(['care_request_id' => $request->id, 'full_name' => 'John Example', 'recipient_is_requester' => true, 'relationship_to_family' => 'Self']);
 $task = App\Models\CareTask::firstOrCreate(['name' => 'Transportation']);
 $request->tasks()->sync([$task->id]);
+
+// A forgotten checkout used to block every subsequent backfill for this pair.
+$application = new App\Models\CareRequestApplication(['care_request_id' => $request->id, 'caregiver_user_id' => $caregiver->id, 'status' => 'hired']);
+$application->saveQuietly();
+App\Models\CareBooking::create(['care_request_id' => $request->id, 'care_request_application_id' => $application->id,
+    'family_user_id' => $owner->id, 'family_account_id' => $family->id, 'caregiver_user_id' => $caregiver->id,
+    'status' => 'in_progress', 'scheduled_start_at' => '2026-10-01 09:00:00', 'scheduled_end_at' => '2026-10-01 10:00:00',
+    'started_at' => '2026-10-01 09:00:00', 'expected_minutes' => 60]);
 echo "Recorded-visit browser fixtures ready.\n";

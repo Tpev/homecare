@@ -208,6 +208,148 @@ class RecordPastVisitTest extends TestCase
         $this->assertDatabaseCount('care_requests', 0);
     }
 
+    public function test_scheduled_overlap_can_be_recorded_after_explicit_review_without_changing_the_old_booking(): void
+    {
+        $existing = $this->overlappingBooking();
+        $original = $existing->getRawOriginal();
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $this->assertCount(1, $preview['overlaps']);
+        $this->assertSame($existing->id, $preview['overlaps'][0]['booking_id']);
+        $this->assertFalse($preview['overlaps'][0]['is_duplicate']);
+        $this->assertNull($preview['overlaps'][0]['actual_start']);
+        $this->assertSame(0, $preview['overlaps'][0]['amount_captured_cents']);
+        $token = (string) Str::uuid();
+        $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, $token, $preview['fingerprint']), 'Confirm that the overlapping');
+        $this->assertDatabaseCount('admin_recorded_visits', 0);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+
+        $visit = $this->service()->create($this->admin, $this->input, $token, $preview['fingerprint'], true);
+        $this->service()->processPayment($this->admin, $visit);
+        $this->assertNull($visit->fresh()->last_error);
+        $this->assertSame($original, $existing->fresh()->getRawOriginal());
+        $this->assertSame($preview['overlaps'], $visit->input['reviewed_overlaps']);
+        $this->assertTrue($visit->input['overlaps_acknowledged']);
+        $event = $visit->booking->events()->where('event_type', 'historical_visit_created_by_admin')->sole();
+        $this->assertTrue($event->payload['overlaps_acknowledged']);
+        $this->assertSame($existing->id, $event->payload['reviewed_overlaps'][0]['booking_id']);
+        $this->assertSame(1, CareBookingPaymentOperation::where('type', 'charge')->count());
+        $this->get(route('admin.requests.recorded-visit', $visit->id))->assertOk()->assertSee('Recorded as a separate visit');
+    }
+
+    public function test_old_unclosed_and_cancelled_bookings_are_reviewable_overlaps(): void
+    {
+        $this->overlappingBooking(['status' => 'in_progress', 'started_at' => '2026-10-01 09:00:00',
+            'scheduled_start_at' => '2026-10-01 09:00:00', 'scheduled_end_at' => '2026-10-01 10:00:00']);
+        $this->overlappingBooking(['status' => 'cancelled', 'cancelled_at' => now()]);
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $this->assertCount(2, $preview['overlaps']);
+        $this->assertSame([false, false], array_column($preview['overlaps'], 'is_duplicate'));
+        $visit = $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true);
+        $this->service()->processPayment($this->admin, $visit);
+        $this->assertNull($visit->fresh()->last_error);
+        $this->assertDatabaseCount('care_bookings', 3);
+    }
+
+    public function test_review_displays_captured_payment_and_uses_actual_times_when_schedule_is_stale(): void
+    {
+        $this->input['date'] = '2026-10-19';
+        $existing = $this->createVisit();
+        $this->service()->processPayment($this->admin, $existing);
+        $originalPayment = CareBookingPayment::sole()->getRawOriginal();
+        $this->input['date'] = '2026-10-20';
+        $data = $this->service()->normalize($this->input);
+        $existing->booking->forceFill(['scheduled_start_at' => $data['started_at'], 'scheduled_end_at' => $data['completed_at']])->saveQuietly();
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $this->assertFalse($preview['overlaps'][0]['is_duplicate']);
+        $this->assertSame('transferred', $preview['overlaps'][0]['payment_status']);
+        $this->assertSame(3875, $preview['overlaps'][0]['amount_captured_cents']);
+        $this->assertStringContainsString('Oct 19', $preview['overlaps'][0]['actual_start']);
+        $this->assertStringContainsString('Oct 20', $preview['overlaps'][0]['scheduled_start']);
+        $visit = $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true);
+        $this->service()->processPayment($this->admin, $visit);
+        $this->assertNull($visit->fresh()->last_error);
+        $this->assertSame($originalPayment, $existing->booking->payment()->sole()->getRawOriginal());
+        $this->assertSame(2, CareBookingPaymentOperation::where('type', 'charge')->count());
+    }
+
+    public function test_overlap_confirmation_cannot_override_an_exact_recorded_visit_even_after_refund(): void
+    {
+        $existing = $this->createVisit();
+        $this->service()->processPayment($this->admin, $existing);
+        foreach ([false, true] as $refunded) {
+            if ($refunded) {
+                CareBookingPayment::sole()->update(['status' => 'refunded', 'amount_refunded_cents' => 3875]);
+            }
+            $preview = $this->service()->preview($this->admin, $this->input);
+            $this->assertTrue($preview['overlaps'][0]['is_duplicate']);
+            $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true), 'already records this exact visit');
+        }
+        $this->assertDatabaseCount('care_bookings', 1);
+        $this->assertSame(1, CareBookingPaymentOperation::where('type', 'charge')->count());
+        Livewire::actingAs($this->admin)->test(RecordPastVisit::class)->set('form', $this->input)
+            ->call('reviewVisit')->assertSee('already records this exact visit')->assertSee('Open request #'.$existing->booking->care_request_id)
+            ->assertDontSee('Create visit &amp; charge', false)->set('acknowledged', true)->set('overlapsAcknowledged', true)
+            ->call('createVisit')->assertHasErrors('visit');
+    }
+
+    public function test_new_or_changed_overlap_requires_a_fresh_review_before_any_write(): void
+    {
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $booking = $this->overlappingBooking();
+        $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true), 'changed');
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $booking->forceFill(['scheduled_end_at' => '2026-10-20 18:00:00'])->saveQuietly();
+        $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true), 'changed');
+        $preview = $this->service()->preview($this->admin, $this->input);
+        CareBookingPayment::create(['care_booking_id' => $booking->id, 'family_user_id' => $booking->family_user_id,
+            'caregiver_user_id' => $booking->caregiver_user_id, 'status' => 'captured', 'currency' => 'usd', 'amount_captured_cents' => 3100]);
+        $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true), 'changed');
+        $this->assertDatabaseCount('admin_recorded_visits', 0);
+        $this->assertDatabaseCount('care_booking_payments', 1);
+        $this->assertDatabaseCount('care_booking_payment_operations', 0);
+    }
+
+    public function test_prepaid_visit_with_matching_schedule_cannot_be_recorded_as_a_new_card_charge(): void
+    {
+        $booking = $this->overlappingBooking();
+        $account = \App\Models\CareHourAccount::create(['family_account_id' => $this->family->id, 'display_name' => 'Test family wallet']);
+        \App\Models\CareHourBookingFunding::create(['care_booking_id' => $booking->id, 'care_hour_account_id' => $account->id,
+            'status' => 'reserved', 'committed_at' => now(), 'planned_minutes' => 75, 'reserved_minutes' => 75]);
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $this->assertTrue($preview['overlaps'][0]['is_duplicate']);
+        $this->assertSame('reserved', $preview['overlaps'][0]['care_hours_status']);
+        $this->assertSame(75, $preview['overlaps'][0]['care_hours_reserved_minutes']);
+        $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true), 'already records this exact visit');
+        $this->assertDatabaseCount('admin_recorded_visits', 0);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+    }
+
+    public function test_paid_visit_with_missing_clock_times_cannot_be_charged_again_for_its_schedule(): void
+    {
+        $booking = $this->overlappingBooking();
+        CareBookingPayment::create(['care_booking_id' => $booking->id, 'family_user_id' => $booking->family_user_id,
+            'caregiver_user_id' => $booking->caregiver_user_id, 'status' => 'captured', 'currency' => 'usd', 'amount_captured_cents' => 3875]);
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $this->assertTrue($preview['overlaps'][0]['is_duplicate']);
+        $this->assertValidation(fn () => $this->service()->create($this->admin, $this->input, (string) Str::uuid(), $preview['fingerprint'], true), 'already records this exact visit');
+        $this->assertDatabaseCount('admin_recorded_visits', 0);
+        $this->assertDatabaseCount('care_booking_payments', 1);
+    }
+
+    public function test_livewire_requires_overlap_confirmation_and_clears_it_when_details_change(): void
+    {
+        $booking = $this->overlappingBooking();
+        $component = Livewire::actingAs($this->admin)->test(RecordPastVisit::class)->set('form', $this->input)
+            ->call('reviewVisit')->assertHasNoErrors()->assertSee('Review overlapping bookings')->assertSee('Open request #'.$booking->care_request_id)
+            ->set('acknowledged', true)->call('createVisit')->assertHasErrors('overlapsAcknowledged');
+        $this->assertDatabaseCount('admin_recorded_visits', 0);
+        $component->set('overlapsAcknowledged', true)->call('editVisit')->assertSet('overlapsAcknowledged', false)
+            ->call('reviewVisit')->set('overlapsAcknowledged', true)->set('form.duration_minutes', 120)->assertSet('overlapsAcknowledged', false)
+            ->call('reviewVisit')->set('acknowledged', true)->set('overlapsAcknowledged', true)->call('createVisit')->assertHasNoErrors();
+        $this->assertDatabaseCount('admin_recorded_visits', 1);
+        $this->assertSame('transferred', CareBookingPayment::sole()->status);
+    }
+
     public function test_missing_card_saves_visit_and_retry_uses_that_booking(): void
     {
         $visit = $this->createVisit();
@@ -408,5 +550,22 @@ class RecordPastVisitTest extends TestCase
         return CareRequest::withoutEvents(fn () => CareRequest::create(['family_user_id' => $family->owner_user_id,
             'family_account_id' => $family->id, 'title' => 'Previous care', 'status' => 'filled', 'request_type' => 'one_time',
             'address_line1' => '456 Previous Street', 'city' => 'Raleigh', 'state' => 'NC', 'zip' => '27609']));
+    }
+
+    private function overlappingBooking(array $attributes = []): CareBooking
+    {
+        $request = $this->sourceRequest($this->family);
+        $application = \App\Models\CareRequestApplication::withoutEvents(fn () => \App\Models\CareRequestApplication::create([
+            'care_request_id' => $request->id, 'caregiver_user_id' => $this->caregiver->id, 'status' => 'hired',
+        ]));
+        $data = $this->service()->normalize($this->input);
+
+        return CareBooking::create(array_replace([
+            'care_request_id' => $request->id, 'care_request_application_id' => $application->id,
+            'family_account_id' => $this->family->id, 'family_user_id' => $this->family->owner_user_id,
+            'caregiver_user_id' => $this->caregiver->id, 'status' => 'scheduled',
+            'scheduled_start_at' => $data['started_at'], 'scheduled_end_at' => $data['completed_at'],
+            'expected_minutes' => $data['worked_minutes'],
+        ], $attributes))->fresh();
     }
 }

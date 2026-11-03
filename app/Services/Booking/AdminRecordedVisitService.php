@@ -7,6 +7,7 @@ use App\Models\AdminRecordedVisit;
 use App\Models\CareBooking;
 use App\Models\CareBookingCorrection;
 use App\Models\CareBookingTimeCorrection;
+use App\Models\CareHourBookingFunding;
 use App\Models\CareRecipient;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -40,7 +41,7 @@ class AdminRecordedVisitService
         $this->authorize($admin);
         $data = $this->normalize($input);
         [$family, $caregiver] = $this->participants($data);
-        $this->assertNoOverlap($data, $lock);
+        $overlaps = $this->reviewOverlaps($data, $lock);
         $quote = $this->pricing->quoteForPair($family->id, $caregiver->id, $data['worked_minutes']);
         $this->ensure($this->pricing->currentPricingEnabled(), 'Current marketplace pricing must be enabled.');
         $this->ensure($quote['total_charge_cents'] >= 100, 'The family charge must be at least $1.00.');
@@ -48,22 +49,22 @@ class AdminRecordedVisitService
         $context = ['owner_id' => $family->owner_user_id, 'family' => $family->owner->name,
             'family_email' => $family->owner->email, 'caregiver' => $caregiver->name, 'payment_mode' => $mode];
 
-        return ['input' => $data, 'quote' => $quote, ...$context,
-            'fingerprint' => $this->fingerprint([$data, $quote, $context]),
+        return ['input' => $data, 'quote' => $quote, 'overlaps' => $overlaps, ...$context,
+            'fingerprint' => $this->fingerprint([$data, $quote, $context, $overlaps]),
             'start_label' => CarbonImmutable::parse($data['started_at'], config('app.timezone'))->setTimezone($data['timezone'])->format('D, M j, Y · g:i A T (P)'),
             'end_label' => CarbonImmutable::parse($data['completed_at'], config('app.timezone'))->setTimezone($data['timezone'])->format('D, M j, Y · g:i A T (P)'),
         ];
     }
 
     /** Persist the visit before contacting Stripe so any failure can resume the same booking. */
-    public function create(User $admin, array $input, string $token, string $expectedFingerprint): AdminRecordedVisit
+    public function create(User $admin, array $input, string $token, string $expectedFingerprint, bool $overlapsAcknowledged = false): AdminRecordedVisit
     {
         $this->authorize($admin);
         Validator::make(['token' => $token], ['token' => ['required', 'uuid']])->validate();
         $data = $this->normalize($input);
         $hash = $this->fingerprint($data);
 
-        return DB::transaction(function () use ($admin, $input, $data, $hash, $token, $expectedFingerprint): AdminRecordedVisit {
+        return DB::transaction(function () use ($admin, $input, $data, $hash, $token, $expectedFingerprint, $overlapsAcknowledged): AdminRecordedVisit {
             [$family] = $this->participants($data, lock: true);
             $existing = AdminRecordedVisit::where('request_token', $token)->lockForUpdate()->first();
             if ($existing) {
@@ -72,7 +73,11 @@ class AdminRecordedVisitService
                 return $existing;
             }
             $preview = $this->preview($admin, $input, lock: true);
-            $this->ensure(hash_equals($preview['fingerprint'], $expectedFingerprint), 'The visit or pricing changed. Review the charge again before creating it.');
+            $duplicate = collect($preview['overlaps'])->firstWhere('is_duplicate', true);
+            $this->ensure(! $duplicate, 'An overlapping booking already records this exact visit'.($duplicate ? ' (booking #'.$duplicate['booking_id'].', request #'.$duplicate['request_id'].')' : '').'. Open the existing request to finish or correct it.');
+            $this->ensure(hash_equals($preview['fingerprint'], $expectedFingerprint), 'The visit, overlapping bookings or pricing changed. Review the charge again before creating it.');
+            $this->ensure(! $preview['overlaps'] || $overlapsAcknowledged,
+                'Confirm that the overlapping bookings are separate from this visit before creating a new charge.', 'overlapsAcknowledged');
 
             $request = new CareRequest;
             $request->forceFill([
@@ -108,13 +113,15 @@ class AdminRecordedVisitService
             $this->ensure($this->fingerprint($quote) === $this->fingerprint($preview['quote']), 'The saved booking has different pricing. Review the charge again; no visit was saved.');
             $this->trust->seedTaskChecks($booking, $request);
             $visit = AdminRecordedVisit::create(['request_token' => $token, 'input_hash' => $hash, 'created_by_user_id' => $admin->id,
-                'care_booking_id' => $booking->id, 'input' => $data + ['owner_user_id' => (int) $family->owner_user_id, 'care_request_id' => $request->id],
+                'care_booking_id' => $booking->id, 'input' => $data + ['owner_user_id' => (int) $family->owner_user_id, 'care_request_id' => $request->id,
+                    'reviewed_overlaps' => $preview['overlaps'], 'overlaps_acknowledged' => (bool) $preview['overlaps'] && $overlapsAcknowledged],
                 'quote' => $quote, 'payment_mode' => $preview['payment_mode']]);
             $this->trust->recordEvent($booking, $admin->id, 'admin', 'historical_visit_created_by_admin', [
                 'recorded_visit_id' => $visit->id, 'source' => 'admin_record_past_visit', 'reason' => $data['reason'],
                 'timezone' => $data['timezone'], 'source_request_id' => $data['source_request_id'],
                 'worked_minutes' => $data['worked_minutes'], 'break_minutes' => $data['break_minutes'],
                 'approval_basis' => 'administrator_instruction', 'reviewed_charge_cents' => $quote['total_charge_cents'],
+                'reviewed_overlaps' => $preview['overlaps'], 'overlaps_acknowledged' => (bool) $preview['overlaps'] && $overlapsAcknowledged,
             ]);
 
             return $visit;
@@ -271,15 +278,15 @@ class AdminRecordedVisitService
         return [$family, $caregiver];
     }
 
-    private function assertNoOverlap(array $data, bool $lock = false): void
+    private function reviewOverlaps(array $data, bool $lock = false): array
     {
         $start = $data['started_at'];
         $end = $data['completed_at'];
-        $booking = CareBooking::where(fn ($q) => $q->where('family_account_id', $data['family_account_id'])->orWhere('caregiver_user_id', $data['caregiver_user_id']))
+        $bookings = CareBooking::with(['family:id,name', 'caregiver:id,name', 'payment' => fn ($q) => $q->when($lock, fn ($q) => $q->lockForUpdate())])
+            ->where(fn ($q) => $q->where('family_account_id', $data['family_account_id'])->orWhere('caregiver_user_id', $data['caregiver_user_id']))
             ->where(fn ($q) => $q->where(fn ($w) => $w->where('scheduled_start_at', '<', $end)->where('scheduled_end_at', '>', $start))
                 ->orWhere(fn ($w) => $w->where('started_at', '<', $end)->where(fn ($t) => $t->whereNull('completed_at')->orWhere('completed_at', '>', $start))))
-            ->when($lock, fn ($q) => $q->lockForUpdate())->first();
-        $this->ensure(! $booking, 'An overlapping booking already exists'.($booking ? ' on request #'.$booking->care_request_id : '').'. Open that request to correct it instead of creating another.');
+            ->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
         // Request dates describe requested availability, including broad recurring ranges.
         // Only booked or reported visits establish that these hours are already recorded.
         $extra = CompletedExtraVisitRequest::where(fn ($q) => $q->where('family_account_id', $data['family_account_id'])->orWhere('caregiver_user_id', $data['caregiver_user_id']))
@@ -289,6 +296,40 @@ class AdminRecordedVisitService
             ->where('proposed_started_at', '<', $end)->where('proposed_completed_at', '>', $start)
             ->when($lock, fn ($q) => $q->lockForUpdate())->first();
         $this->ensure(! $extra && ! $correction, 'An extra-visit report or time correction already covers these hours. Review it first.');
+
+        $fundings = CareHourBookingFunding::whereIn('care_booking_id', $bookings->modelKeys())->whereNotNull('committed_at')
+            ->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('care_booking_id');
+        $local = fn ($time) => $time?->copy()->setTimezone($data['timezone'])->format('D, M j, Y · g:i A T (P)');
+
+        return $bookings->map(function (CareBooking $booking) use ($data, $start, $end, $fundings, $local): array {
+            $payment = $booking->payment;
+            $funding = $fundings->get($booking->id);
+            $samePair = (int) $booking->family_account_id === $data['family_account_id'] && (int) $booking->caregiver_user_id === $data['caregiver_user_id'];
+            $sameActualTimes = $booking->started_at?->format('Y-m-d H:i:s') === $start && $booking->completed_at?->format('Y-m-d H:i:s') === $end;
+            $sameScheduledTimes = $booking->scheduled_start_at?->format('Y-m-d H:i:s') === $start && $booking->scheduled_end_at?->format('Y-m-d H:i:s') === $end;
+            $recordedOrFunded = in_array($booking->status, ['completed', 'reviewed', 'disputed'], true)
+                || $booking->worked_minutes > 0 || $payment?->amount_captured_cents > 0 || $funding;
+
+            return [
+                'booking_id' => $booking->id, 'request_id' => $booking->care_request_id,
+                'family_account_id' => $booking->family_account_id, 'family_user_id' => $booking->family_user_id, 'caregiver_user_id' => $booking->caregiver_user_id,
+                'family' => $booking->family?->name, 'caregiver' => $booking->caregiver?->name,
+                'scheduled_start_at' => $booking->getRawOriginal('scheduled_start_at'), 'scheduled_end_at' => $booking->getRawOriginal('scheduled_end_at'),
+                'started_at' => $booking->getRawOriginal('started_at'), 'completed_at' => $booking->getRawOriginal('completed_at'),
+                'status' => $booking->status, 'scheduled_start' => $local($booking->scheduled_start_at), 'scheduled_end' => $local($booking->scheduled_end_at),
+                'actual_start' => $local($booking->started_at), 'actual_end' => $local($booking->completed_at),
+                'worked_minutes' => (int) $booking->worked_minutes, 'updated_at' => $booking->getRawOriginal('updated_at'),
+                'payment_status' => $payment?->status, 'currency' => strtoupper($payment?->currency ?? 'usd'),
+                'amount_authorized_cents' => (int) $payment?->amount_authorized_cents,
+                'amount_captured_cents' => (int) $payment?->amount_captured_cents, 'amount_refunded_cents' => (int) $payment?->amount_refunded_cents,
+                'payment_updated_at' => $payment?->getRawOriginal('updated_at'),
+                'care_hours_status' => $funding?->status, 'care_hours_reserved_minutes' => (int) $funding?->reserved_minutes,
+                'care_hours_updated_at' => $funding?->getRawOriginal('updated_at'),
+                // A matching completed visit (including refunded or prepaid care) is not a new visit.
+                // A schedule alone can be stale; require the administrator to review it instead.
+                'is_duplicate' => $samePair && ($sameActualTimes || ($sameScheduledTimes && $recordedOrFunded && (! $booking->started_at || ! $booking->completed_at))),
+            ];
+        })->all();
     }
 
     public function paymentMode(): string

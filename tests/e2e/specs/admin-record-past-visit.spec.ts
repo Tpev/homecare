@@ -35,12 +35,21 @@ test('admin records an unbooked day inside an existing request, pays, reopens, a
     await expect(page.getByRole('heading', { name: 'Check the completed visit' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create visit & charge $38.75' })).toBeVisible();
     await expect(page.getByText(/11:30 AM EDT/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Review overlapping bookings' })).toBeVisible();
+    await expect(page.getByText('No checkout recorded')).toBeVisible();
+    await expect(page.getByText('Captured: 0.00 USD')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await page.screenshot({ path: testInfo.outputPath('desktop-review.png'), fullPage: true });
     await page.getByRole('checkbox', { name: /I verified that this care happened/ }).check();
+    await page.getByRole('button', { name: 'Create visit & charge $38.75' }).click();
+    await expect(page.getByRole('alert')).toContainText('Confirm that the overlapping bookings');
+    await expect(page).toHaveURL(/\/admin\/requests\/record-past$/);
+    await page.getByRole('checkbox', { name: /I reviewed the overlapping bookings/ }).check();
     await page.getByRole('button', { name: 'Create visit & charge $38.75' }).click();
     await expect(page).toHaveURL(/\/admin\/requests\/recorded-visits\/\d+$/);
     await expect(page.getByRole('heading', { name: 'Visit completed and payment settled' })).toBeVisible();
     await expect(page.getByText('Simulated payment — no real money moved.')).toBeVisible();
+    await expect(page.getByText(/Recorded as a separate visit after reviewing/)).toBeVisible();
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Visit completed and payment settled' })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath('desktop-receipt.png'), fullPage: true });
@@ -48,6 +57,7 @@ test('admin records an unbooked day inside an existing request, pays, reopens, a
     await fillVisit(page, '2026-10-20');
     await page.getByRole('button', { name: 'Review visit & charge' }).click();
     await expect(page.getByRole('alert')).toContainText('overlapping booking');
+    await expect(page.getByRole('button', { name: 'Create visit & charge $38.75' })).toHaveCount(0);
 });
 
 test('mobile layout supports entry and review without horizontal overflow', async ({ page }, testInfo) => {
@@ -58,6 +68,7 @@ test('mobile layout supports entry and review without horizontal overflow', asyn
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
     await page.getByRole('button', { name: 'Review visit & charge' }).click();
     await expect(page.getByRole('button', { name: 'Create visit & charge $38.75' })).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: /I reviewed the overlapping bookings/ })).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: testInfo.outputPath('mobile-review.png'), fullPage: true });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
