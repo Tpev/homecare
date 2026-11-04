@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\CareHours\CareHourAccess;
+use App\Services\CareHours\CareHourIdentityService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -37,7 +39,9 @@ class CareHoursMarketingController extends Controller
         // Marketing remains readable during the pilot or a sales pause. The CTA
         // uses existing purchase authorization; this page never enrolls a family.
         $canPurchase = $gift ? $access->canBuyGift($request->user())
-            : $request->user()?->role === 'family' && $access->canBuy($request->user());
+            : $this->canBuyPrepaid($request, $access);
+        // The protected buy route remembers this destination through sign-in.
+        // New families finish the existing onboarding before returning to buy.
         $purchaseUrl = $canPurchase
             ? route($gift ? 'care-hours.gifts.index' : 'family.care-hours.buy')
             : route('landing.get-care');
@@ -80,6 +84,22 @@ class CareHoursMarketingController extends Controller
         return view($gift ? 'marketing.care-gift-cards' : 'marketing.prepaid-care-hours', compact(
             'packages', 'purchaseUrl', 'canPurchase', 'pageUrl', 'pageTitle', 'pageDescription', 'faqs', 'schema', 'welcomeEnabled',
         ));
+    }
+
+    private function canBuyPrepaid(Request $request, CareHourAccess $access): bool
+    {
+        $user = $request->user();
+        if (($user && $user->role !== 'family') || ! $access->canBuy($user)) {
+            return false;
+        }
+        if (config('care_hours.enrollment_enabled', false)) {
+            return true;
+        }
+        // A pause on new wallets does not stop existing families buying hours.
+        $membership = $user ? app(FamilyAccountContext::class)->membershipFor($user, false) : null;
+
+        return $membership && app(CareHourIdentityService::class)
+            ->walletForFamily((int) $membership->family_account_id)?->active === true;
     }
 
     /** @return list<array{question: string, answer: string}> */

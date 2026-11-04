@@ -45,7 +45,7 @@
                 <div class="welcome-visit"><div><div class="visit-title"><h3>Meet a member of the LoLo team</h3></div><p>We'll answer your questions and guide you through getting started.</p><div class="visit-meta"><span>1 hour</span><span>At your care address</span></div></div></div>
                 <fieldset class="visit-choices"><legend>Would you like a welcome visit?</legend>
                     <label class="inline-choice"><input type="radio" wire:model.live="form.welcome_visit" name="welcome_visit" value="yes"><span class="radio-mark" aria-hidden="true"></span><span><strong>Yes, I'd like a visit</strong><small>Choose a date and time range below</small></span></label>
-                    <label class="inline-choice"><input type="radio" wire:model.live="form.welcome_visit" name="welcome_visit" value="no"><span class="radio-mark" aria-hidden="true"></span><span><strong>No thanks</strong><small>Continue to your first request</small></span></label>
+                    <label class="inline-choice"><input type="radio" wire:model.live="form.welcome_visit" name="welcome_visit" value="no"><span class="radio-mark" aria-hidden="true"></span><span><strong>No thanks</strong><small>{{ $prepaidPurchasePending ? 'Continue to prepaid care' : 'Continue to your first request' }}</small></span></label>
                 </fieldset>
                 @if(($form['welcome_visit'] ?? '') === 'yes')
                     <div id="visit-scheduling" class="conditional-fields">
@@ -63,12 +63,14 @@
                     </div>
                 @endif
             @else
-                <div class="step-heading"><h1 tabindex="-1">Let's post your first request</h1></div>
+                <div class="step-heading"><h1 tabindex="-1">{{ $prepaidPurchasePending ? 'Your family account is ready' : "Let's post your first request" }}</h1>@if($prepaidPurchasePending)<p>Next, choose your prepaid care package. You can book care whenever you’re ready.</p>@endif</div>
+                @unless($prepaidPurchasePending)
                 <ol class="care-journey" aria-label="How finding care works">
                     @foreach([['Post a request', 'Choose the help you need and when.'], ['Review caregivers', 'Compare profiles and applications.'], ['Hire your caregiver', "Choose who you'd like to work with."], ['Your first care visit', 'Your caregiver arrives at the agreed time.']] as [$title, $description])
                         <li><span class="journey-icon" aria-hidden="true">{{ $loop->iteration }}</span><div><h3>{{ $title }}</h3><p>{{ $description }}</p></div>@if($loop->first)<span class="next-badge">UP NEXT</span>@endif</li>
                     @endforeach
                 </ol>
+                @endunless
                 @if(($form['welcome_visit'] ?? '') === 'yes')
                     <div class="visit-summary"><div><strong>Your preferred welcome visit</strong><p>{{ $form['visit_date'] }} · {{ $ranges[$form['visit_time']]['label'] ?? '' }} ({{ $ranges[$form['visit_time']]['hours'] ?? '' }}) · {{ $timezone === 'America/New_York' ? 'ET' : $timezone }} · 1 hour · Free</p><p>Our team will confirm the final time by text.</p></div><button type="button" wire:click="back" wire:loading.attr="disabled">Edit</button></div>
                 @endif
@@ -76,7 +78,7 @@
         </div>
         <footer class="wizard-footer">
             @if($step > 1)<button class="back-button" type="button" wire:click="back" wire:loading.attr="disabled">← Back</button>@endif
-            <button class="continue-button" type="submit" wire:loading.attr="disabled"><span>{{ $step === 5 ? 'Create my first request' : 'Continue' }}</span><span aria-hidden="true">→</span></button>
+            <button class="continue-button" type="submit" wire:loading.attr="disabled"><span>{{ $step === 5 ? ($prepaidPurchasePending ? 'Choose prepaid hours' : 'Create my first request') : 'Continue' }}</span><span aria-hidden="true">→</span></button>
         </footer>
     </form>
 </section>

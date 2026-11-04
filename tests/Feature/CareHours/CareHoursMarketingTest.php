@@ -3,6 +3,7 @@
 namespace Tests\Feature\CareHours;
 
 use App\Models\User;
+use App\Services\CareHours\CareHourIdentityService;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,6 +21,7 @@ class CareHoursMarketingTest extends TestCase
         config([
             'care_hours.enabled' => true, 'care_hours.gifts_enabled' => true,
             'care_hours.sales_enabled' => true, 'care_hours.welcome_enabled' => true,
+            'care_hours.enrollment_enabled' => true,
             'care_hours.pilot_only' => true, 'care_hours.pilot_emails' => ['peverelli.t@gmail.com'],
         ]);
         Notification::fake();
@@ -108,6 +110,48 @@ class CareHoursMarketingTest extends TestCase
             $response->assertSee('Welcome bonuses are not currently available.');
         }
         $this->assertNoFinancialChanges();
+    }
+
+    public function test_public_launch_exposes_guest_gift_purchase_and_remembers_prepaid_sign_in_destination(): void
+    {
+        config(['care_hours.pilot_only' => false, 'care_hours.pilot_emails' => []]);
+        $this->get(route('care-gift-cards'))->assertOk()->assertViewHas('canPurchase', true)
+            ->assertViewHas('purchaseUrl', route('care-hours.gifts.index'))->assertSee('Buy a gift card');
+        $this->get(route('care-hours.gifts.index'))->assertOk();
+        $this->get(route('prepaid-care-hours'))->assertOk()->assertViewHas('canPurchase', true)
+            ->assertViewHas('purchaseUrl', route('family.care-hours.buy'))->assertSee('Buy prepaid care');
+        $this->get(route('family.care-hours.buy'))->assertRedirect(route('login'));
+        $this->assertSame(route('family.care-hours.buy'), session('url.intended'));
+        $this->assertNoFinancialChanges();
+    }
+
+    public function test_public_purchase_calls_to_action_respect_account_roles_and_pauses(): void
+    {
+        config(['care_hours.pilot_only' => false, 'care_hours.pilot_emails' => []]);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $this->actingAs($caregiver)->get(route('prepaid-care-hours'))->assertOk()
+            ->assertViewHas('canPurchase', false)->assertViewHas('purchaseUrl', route('landing.get-care'));
+        $this->get(route('care-gift-cards'))->assertOk()->assertViewHas('canPurchase', true);
+
+        $family = User::factory()->create(['role' => 'family']);
+        $this->actingAs($family)->get(route('prepaid-care-hours'))->assertOk()->assertViewHas('canPurchase', true);
+        config(['care_hours.enrollment_enabled' => false]);
+        $this->get(route('prepaid-care-hours'))->assertOk()->assertViewHas('canPurchase', false);
+        $this->assertNoFinancialChanges();
+
+        config(['care_hours.enrollment_enabled' => true]);
+        $wallet = app(CareHourIdentityService::class)->ensureFamilyWallet($family);
+        config(['care_hours.enrollment_enabled' => false]);
+        $this->get(route('prepaid-care-hours'))->assertOk()->assertViewHas('canPurchase', true);
+        $wallet->update(['active' => false]);
+        $this->get(route('prepaid-care-hours'))->assertOk()->assertViewHas('canPurchase', false);
+
+        config(['care_hours.sales_enabled' => false]);
+        foreach (['prepaid-care-hours', 'care-gift-cards'] as $name) {
+            $this->get(route($name))->assertOk()->assertViewHas('canPurchase', false)
+                ->assertViewHas('purchaseUrl', route('landing.get-care'));
+        }
+        $this->get(route('care-gift-cards'))->assertSee(route('care-hours.claim'), false);
     }
 
     public function test_marketing_pages_are_in_sitemap_but_private_checkout_is_not(): void

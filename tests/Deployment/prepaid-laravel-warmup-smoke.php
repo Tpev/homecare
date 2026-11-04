@@ -40,13 +40,13 @@ $env += [
     'AWS_EC2_METADATA_DISABLED' => 'true',
 ];
 // Intentionally omit prepaid variables first: normal deployment must activate
-// the reviewed single-family pilot without any shared .env edit.
-$pilotDefaults = [
-    'enabled' => true, 'gifts_enabled' => true, 'pilot_only' => true,
-    'pilot_emails' => ['peverelli.t@gmail.com'], 'enrollment_enabled' => true,
+// the reviewed public release without any shared .env edit.
+$publicDefaults = [
+    'enabled' => true, 'gifts_enabled' => true, 'pilot_only' => false,
+    'pilot_emails' => [], 'wallet_scope' => 'family', 'enrollment_enabled' => true,
     'sales_enabled' => true, 'contributions_enabled' => true, 'welcome_enabled' => true,
 ];
-file_put_contents($run.'/expected-prepaid.json', json_encode($pilotDefaults, JSON_THROW_ON_ERROR));
+file_put_contents($run.'/expected-prepaid.json', json_encode($publicDefaults, JSON_THROW_ON_ERROR));
 $bootstrap = <<<'PHP'
 <?php
 $app = require __ROOT__.'/bootstrap/app.php';
@@ -71,17 +71,16 @@ $app->afterBootstrapping(\Illuminate\Foundation\Bootstrap\LoadConfiguration::cla
         $assertions['effective prepaid '.$key] = $app['config']->get('care_hours.'.$key) === $value;
     }
     $access = new \App\Services\CareHours\CareHourAccess;
-    $pilot = new \App\Models\User(['role' => 'family', 'email' => 'peverelli.t@gmail.com']);
-    $assertions['pilot discovers iff enabled'] = $access->canDiscover($pilot) === $expected['enabled'];
-    $assertions['pilot buys iff enabled and sales open'] = $access->canBuy($pilot) === ($expected['enabled'] && $expected['sales_enabled']);
-    $assertions['pilot gifts respect sales pause'] = $access->canBuyGift($pilot) === ($expected['enabled'] && $expected['sales_enabled'] && $expected['gifts_enabled']);
-    $assertions['pilot enrollment respects pause'] = $access->canEnroll($pilot) === ($expected['enabled'] && $expected['enrollment_enabled']);
-    $assertions['pilot contributions respect pause'] = $access->canContribute($pilot) === ($expected['enabled'] && $expected['sales_enabled'] && $expected['contributions_enabled']);
-    foreach ([null, new \App\Models\User(['role' => 'family', 'email' => 'outsider@example.test']),
+    foreach ([null, new \App\Models\User(['role' => 'family', 'email' => 'peverelli.t@gmail.com']),
+        new \App\Models\User(['role' => 'family', 'email' => 'outsider@example.test']),
         new \App\Models\User(['role' => 'family', 'email' => 'peverelli.t+pilot@gmail.com']),
-        new \App\Models\User(['role' => 'caregiver', 'email' => 'peverelli.t@gmail.com'])] as $index => $other) {
-        $assertions['nonpilot '.$index.' cannot discover or buy'] = ! $access->canDiscover($other)
-            && ! $access->canBuy($other) && ! $access->canBuyGift($other) && ! $access->canContribute($other);
+        new \App\Models\User(['role' => 'caregiver', 'email' => 'peverelli.t@gmail.com'])] as $index => $user) {
+        $family = $user?->role === 'family';
+        $assertions['public buyer '.$index.' family-only discovery'] = $access->canDiscover($user) === ($family && $expected['enabled']);
+        $assertions['public buyer '.$index.' family-only enrollment'] = $access->canEnroll($user) === ($family && $expected['enabled'] && $expected['enrollment_enabled']);
+        $assertions['public buyer '.$index.' sales permission'] = $access->canBuy($user) === ($expected['enabled'] && $expected['sales_enabled']);
+        $assertions['public buyer '.$index.' gift permission'] = $access->canBuyGift($user) === ($expected['enabled'] && $expected['sales_enabled'] && $expected['gifts_enabled']);
+        $assertions['public buyer '.$index.' contribution permission'] = $access->canContribute($user) === ($expected['enabled'] && $expected['sales_enabled'] && $expected['contributions_enabled']);
     }
     foreach ($assertions as $label => $passed) {
         if (! $passed) {
@@ -152,8 +151,9 @@ if (! $failed) {
     $evidence['assertions'] = [
         'care_hours_default_enabled_after_config_cache' => ($config['care_hours']['enabled'] ?? null) === true,
         'gift_sales_default_enabled_after_config_cache' => ($config['care_hours']['gifts_enabled'] ?? null) === true,
-        'restricted_pilot_after_config_cache' => ($config['care_hours']['pilot_only'] ?? null) === true,
-        'single_pilot_family_after_config_cache' => ($config['care_hours']['pilot_emails'] ?? null) === ['peverelli.t@gmail.com'],
+        'public_access_after_config_cache' => ($config['care_hours']['pilot_only'] ?? null) === false,
+        'no_pilot_allowlist_after_config_cache' => ($config['care_hours']['pilot_emails'] ?? null) === [],
+        'family_wallet_after_config_cache' => ($config['care_hours']['wallet_scope'] ?? null) === 'family',
         'required_routes_registered_after_route_cache' => array_diff($requiredRoutes, $routeNames) === [],
         'required_commands_discovered' => array_diff($requiredCommands, $commandNames) === [],
         'purchase_reconciliation_scheduled' => str_contains($schedule, 'homecare:reconcile-care-hour-purchases'),
@@ -173,34 +173,60 @@ if (! $failed) {
     $scenarios = [
         'legacy-disabled-flags' => [
             'env' => ['CARE_HOURS_ENABLED' => 'false', 'CARE_HOURS_GIFTS_ENABLED' => 'false'],
-            'expected' => $pilotDefaults,
+            'expected' => $publicDefaults,
         ],
         'legacy-broad-access' => [
             'env' => ['CARE_HOURS_ENABLED' => 'true', 'CARE_HOURS_GIFTS_ENABLED' => 'true',
                 'CARE_HOURS_PILOT_ONLY' => 'false', 'CARE_HOURS_PILOT_EMAILS' => 'outsider@example.test,peverelli.t@gmail.com'],
-            'expected' => $pilotDefaults,
+            'expected' => $publicDefaults,
+        ],
+        'legacy-pilot-restriction' => [
+            'env' => ['CARE_HOURS_PILOT_ONLY' => 'true', 'CARE_HOURS_PILOT_EMAILS' => 'peverelli.t@gmail.com'],
+            'expected' => $publicDefaults,
+        ],
+        'explicit-public-pause' => [
+            'env' => ['CARE_HOURS_PUBLIC_ENABLED' => 'false'],
+            'expected' => array_replace($publicDefaults, ['enabled' => false, 'gifts_enabled' => false]),
+            'repeat_cache' => true,
+        ],
+        'malformed-public-switch' => [
+            'env' => ['CARE_HOURS_PUBLIC_ENABLED' => 'not-a-boolean'],
+            'expected' => array_replace($publicDefaults, ['enabled' => false, 'gifts_enabled' => false]),
+        ],
+        'empty-public-switch' => [
+            'env' => ['CARE_HOURS_PUBLIC_ENABLED' => ''],
+            'expected' => array_replace($publicDefaults, ['enabled' => false, 'gifts_enabled' => false]),
         ],
         'explicit-private-pilot-pause' => [
-            'env' => ['CARE_HOURS_PRIVATE_PILOT_ENABLED' => 'false', 'CARE_HOURS_ENABLED' => 'true',
+            'env' => ['CARE_HOURS_PUBLIC_ENABLED' => 'true', 'CARE_HOURS_PRIVATE_PILOT_ENABLED' => 'false', 'CARE_HOURS_ENABLED' => 'true',
                 'CARE_HOURS_GIFTS_ENABLED' => 'true', 'CARE_HOURS_PILOT_ONLY' => 'false'],
-            'expected' => array_replace($pilotDefaults, ['enabled' => false, 'gifts_enabled' => false]),
+            'expected' => array_replace($publicDefaults, ['enabled' => false, 'gifts_enabled' => false]),
             'repeat_cache' => true,
         ],
         'malformed-private-pilot-switch' => [
             'env' => ['CARE_HOURS_PRIVATE_PILOT_ENABLED' => 'not-a-boolean'],
-            'expected' => array_replace($pilotDefaults, ['enabled' => false, 'gifts_enabled' => false]),
+            'expected' => array_replace($publicDefaults, ['enabled' => false, 'gifts_enabled' => false]),
         ],
         'empty-private-pilot-switch' => [
             'env' => ['CARE_HOURS_PRIVATE_PILOT_ENABLED' => ''],
-            'expected' => array_replace($pilotDefaults, ['enabled' => false, 'gifts_enabled' => false]),
+            'expected' => array_replace($publicDefaults, ['enabled' => false, 'gifts_enabled' => false]),
         ],
         'existing-action-pauses' => [
             'env' => ['CARE_HOURS_ENROLLMENT_ENABLED' => 'false', 'CARE_HOURS_SALES_ENABLED' => 'false',
                 'CARE_HOURS_CONTRIBUTIONS_ENABLED' => 'false', 'CARE_HOURS_WELCOME_BONUS_ENABLED' => 'false'],
-            'expected' => array_replace($pilotDefaults, ['enrollment_enabled' => false, 'sales_enabled' => false,
+            'expected' => array_replace($publicDefaults, ['enrollment_enabled' => false, 'sales_enabled' => false,
                 'contributions_enabled' => false, 'welcome_enabled' => false]),
         ],
     ];
+    foreach (['CARE_HOURS_ENROLLMENT_ENABLED' => 'enrollment_enabled', 'CARE_HOURS_SALES_ENABLED' => 'sales_enabled',
+        'CARE_HOURS_CONTRIBUTIONS_ENABLED' => 'contributions_enabled', 'CARE_HOURS_WELCOME_BONUS_ENABLED' => 'welcome_enabled'] as $variable => $flag) {
+        foreach (['false', 'not-a-boolean', ''] as $index => $value) {
+            $scenarios[$flag.'-pause-'.$index] = [
+                'env' => [$variable => $value],
+                'expected' => array_replace($publicDefaults, [$flag => false]),
+            ];
+        }
+    }
     foreach ($scenarios as $name => $scenario) {
         // This exact owned path is the cache produced above, never a shared one.
         if (is_file($run.'/bootstrap/cache/config.php')) {

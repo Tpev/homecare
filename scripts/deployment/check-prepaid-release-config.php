@@ -112,13 +112,17 @@ if ($referencePath !== null) {
 $hasExposure = $flags['enabled'] || $flags['gifts_enabled'];
 $approvedPrivatePilot = $flags['pilot_only'] === true
     && $flags['pilot_emails'] === ['peverelli.t@gmail.com'];
+$approvedPublicRelease = $contractVersion === '2'
+    && $flags['wallet_scope'] === 'family'
+    && $flags['pilot_only'] === false
+    && $flags['pilot_emails'] === [];
 // Keep the original CLI option compatible with an already-installed deploy.sh.
-// The authorized introduction is now either disabled or this one-family pilot;
-// no enabled public or broader pilot cache can pass any forward deployment.
-if ($hasExposure && ! $approvedPrivatePilot) {
+// Public exposure belongs only to the reviewed family-wallet contract. Retained
+// private-pilot releases remain valid, but a different pilot list is not approved.
+if ($hasExposure && ! $approvedPrivatePilot && ! $approvedPublicRelease) {
     $fail($requireDisabled
-        ? 'First prepaid adoption requires disabled exposure or the approved private pilot.'
-        : 'Enabled prepaid exposure must be restricted to the approved private pilot.');
+        ? 'First prepaid adoption requires disabled exposure, the approved private pilot, or the approved public family-wallet release.'
+        : 'Enabled prepaid exposure requires the approved private pilot or public family-wallet release.');
 }
 if ($referencePath !== null) {
     fwrite(STDOUT, 'Prepaid release configuration check passed: rollback exposure flags match.'.PHP_EOL);
@@ -127,6 +131,6 @@ if ($referencePath !== null) {
 
 fwrite(STDOUT, $requireDisabled
     ? ($hasExposure
-        ? 'Prepaid release configuration check passed: first-adoption exposure is the approved private pilot.'.PHP_EOL
+        ? 'Prepaid release configuration check passed: first-adoption exposure is the approved '.($approvedPublicRelease ? 'public family-wallet release' : 'private pilot').'.'.PHP_EOL
         : 'Prepaid release configuration check passed: first-adoption exposure is disabled.'.PHP_EOL)
     : 'Prepaid release configuration check passed: cached flags are valid booleans and pilot access is valid.'.PHP_EOL);

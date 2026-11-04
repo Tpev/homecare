@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Family;
 
+use App\Services\CareHours\CareHourAccess;
 use App\Services\Family\FamilyOnboardingService;
+use App\Support\CareHourGiftClaimIntent;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -30,7 +32,7 @@ class OnboardingWizard extends Component
     {
         $record = app(FamilyOnboardingService::class)->forOwner(auth()->user());
         if (! $record || $record->status !== 'in_progress') {
-            $this->redirectRoute('family.requests.index');
+            $this->finishNavigation('family.requests.index');
 
             return;
         }
@@ -57,7 +59,7 @@ class OnboardingWizard extends Component
         try {
             if ($this->step === 5 && ! $back) {
                 $service->complete(auth()->user(), $this->revision);
-                $this->redirectRoute('family.requests.create');
+                $this->finishNavigation('family.requests.create');
 
                 return;
             }
@@ -83,6 +85,28 @@ class OnboardingWizard extends Component
         }
     }
 
+    private function prepaidPurchasePending(): bool
+    {
+        // Only this server-owned destination is eligible. General signup,
+        // request drafts, and paid gift claims keep their existing behavior.
+        return ! CareHourGiftClaimIntent::active()
+            && session('url.intended') === route('family.care-hours.buy')
+            && auth()->user()?->role === 'family'
+            && app(CareHourAccess::class)->canBuy(auth()->user())
+            && config('care_hours.enrollment_enabled', false);
+    }
+
+    private function finishNavigation(string $defaultRoute): void
+    {
+        if ($this->prepaidPurchasePending()) {
+            session()->forget('url.intended');
+            $this->redirectRoute('family.care-hours.buy');
+
+            return;
+        }
+        $this->redirectRoute($defaultRoute);
+    }
+
     public function render()
     {
         return view('livewire.family.onboarding-wizard', [
@@ -90,6 +114,7 @@ class OnboardingWizard extends Component
             'relationships' => FamilyOnboardingService::RELATIONSHIPS,
             'timezone' => app(FamilyOnboardingService::class)->timezone(),
             'minimumDate' => now()->addSeconds(86400)->setTimezone(app(FamilyOnboardingService::class)->timezone())->toDateString(),
+            'prepaidPurchasePending' => $this->prepaidPurchasePending(),
         ]);
     }
 }

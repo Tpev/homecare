@@ -1,22 +1,23 @@
 <?php
 
-// This reviewed release enables only the named private pilot. A dedicated pause
-// survives deployments; malformed values fail closed instead of becoming truthy.
-$privatePilotEnabled = env('CARE_HOURS_PRIVATE_PILOT_ENABLED', true) === true;
+// Public by default in this reviewed release. Keep an existing pilot pause in
+// force during the transition; malformed switches fail closed.
+$publicEnabled = env('CARE_HOURS_PUBLIC_ENABLED', true) === true
+    && env('CARE_HOURS_PRIVATE_PILOT_ENABLED', true) === true;
 
 return [
     // Rollout switches affect discovery/new sales, never existing entitlements.
-    // Legacy master/gift and pilot-list environment settings intentionally cannot
-    // disable the approved default or expand this release to other purchasers.
-    'enabled' => $privatePilotEnabled,
-    'pilot_only' => true,
-    'pilot_emails' => ['peverelli.t@gmail.com'],
+    // Legacy master/gift and pilot-list environment settings are superseded by
+    // this reviewed public rollout. Dedicated pauses remain effective.
+    'enabled' => $publicEnabled,
+    'pilot_only' => false,
+    'pilot_emails' => [],
     'wallet_scope' => 'family',
-    'enrollment_enabled' => (bool) env('CARE_HOURS_ENROLLMENT_ENABLED', true),
-    'sales_enabled' => (bool) env('CARE_HOURS_SALES_ENABLED', true),
-    'contributions_enabled' => (bool) env('CARE_HOURS_CONTRIBUTIONS_ENABLED', true),
-    'gifts_enabled' => $privatePilotEnabled,
-    'welcome_enabled' => (bool) env('CARE_HOURS_WELCOME_BONUS_ENABLED', true),
+    'enrollment_enabled' => env('CARE_HOURS_ENROLLMENT_ENABLED', true) === true,
+    'sales_enabled' => env('CARE_HOURS_SALES_ENABLED', true) === true,
+    'contributions_enabled' => env('CARE_HOURS_CONTRIBUTIONS_ENABLED', true) === true,
+    'gifts_enabled' => $publicEnabled,
+    'welcome_enabled' => env('CARE_HOURS_WELCOME_BONUS_ENABLED', true) === true,
     'currency' => 'usd',
     'terms_version' => '2026-10-30-family-wallet',
     'packages' => [

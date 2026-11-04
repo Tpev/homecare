@@ -11,9 +11,9 @@ abstract class TestCase extends BaseTestCase
         $app = parent::createApplication();
 
         // General behavior suites explicitly simulate a disabled/public rollout.
-        // Production's code-owned private pilot cannot be widened with env vars.
-        // Pilot tests opt in below this baseline; the standalone Laravel warmup
-        // tests the real shipped configuration, both uncached and cached.
+        // Focused rollout tests opt in below this baseline; the standalone
+        // Laravel warmup tests the actual public defaults and preserved pauses,
+        // both uncached and cached.
         $app['config']->set([
             'care_hours.enabled' => false,
             'care_hours.gifts_enabled' => false,

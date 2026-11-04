@@ -1,8 +1,8 @@
 # LoLo prepaid care hours user guide
 
-Prepared October 30, 2026. Describes the shared family-wallet release prepared locally. It is not yet verified or deployed in production. Delivery requires the bridge release followed by the family-wallet release, using the normal deployment process for each; see the [deployment runbook](../deployment/zero-downtime-deployments.md#family-wallet-contract-v2).
+Updated November 4, 2026. Describes the public rollout of the shared family wallet. The public release takes effect after the deployment owner runs the normal deployment process; see the [deployment runbook](../deployment/zero-downtime-deployments.md).
 
-Initial pilot: new prepaid screens and purchases are restricted to Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. No manual environment change is needed to start this pilot. Other family accounts keep the ordinary card-payment experience, and public gift and contribution sales stay unavailable. The full journeys below describe the capability after access is granted. Already-paid gifts and existing balances retain their claim, receipt and care-payment rights.
+After public rollout, all family accounts can buy prepaid hours. Guests can buy gifts or contribute through a family's private link after verifying their email. Start at `/prepaid-care-hours`, `/care-gift-cards`, or `/care-hours/claim` to redeem a gift. Ordinary card payments remain available, and existing card bookings keep their original payment method. Already-paid gifts and balances retain their rights if new sales are paused.
 
 Care hours let you pay for future care for yourself or someone you love. Several relatives can add hours to one family balance, managed by the account owner and usable for eligible care for anyone in that family. A gift code also lets you buy before the recipient has a LoLo account.
 

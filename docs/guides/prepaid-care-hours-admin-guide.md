@@ -1,8 +1,8 @@
 # Prepaid care hours administration guide
 
-Updated October 30, 2026. For LoLo administrators, support and payment operations.
+Updated November 4, 2026. For LoLo administrators, support and payment operations.
 
-Use this guide to trace money into a shared family balance, follow the hours into visits, and resolve payment or caregiver settlement issues through the recorded transaction. The family-wallet release is prepared locally, not deployed or verified in production. Delivery requires a bridge release before the wallet release; see section 11. Public availability requires a separate reviewed change.
+Use this guide to trace money into a shared family balance, follow the hours into visits, and resolve payment or caregiver settlement issues through the recorded transaction. This public-rollout release is prepared for the usual deployment on top of the existing family-wallet release. Local validation does not establish the current production state; see sections 11 and 12.
 
 ## 1 Start with the right record
 
@@ -279,31 +279,34 @@ Healthy does not verify provider connectivity, actual email delivery, scheduler 
 
 | Configuration switch | Controls |
 | --- | --- |
-| `CARE_HOURS_PRIVATE_PILOT_ENABLED` | Defaults to true for the code-defined private pilot. Explicit false pauses new discovery and purchases; malformed values also deny access. The setting survives ordinary redeployments. |
+| `CARE_HOURS_PUBLIC_ENABLED` | Defaults to true. Explicit false pauses new discovery and purchases across deployments; malformed or empty values also deny access. |
+| `CARE_HOURS_PRIVATE_PILOT_ENABLED` | Compatibility pause: a pre-existing false, malformed or empty value continues to pause public discovery and purchases. It no longer selects an audience. |
 | `CARE_HOURS_ENROLLMENT_ENABLED` | New direct family-wallet enrollment |
 | `CARE_HOURS_SALES_ENABLED` | New sales |
 | `CARE_HOURS_CONTRIBUTIONS_ENABLED` | New outside contributions |
 | `CARE_HOURS_WELCOME_BONUS_ENABLED` | New welcome-offer quoting |
 
-The release fixes the pilot restriction to the signed-in family account `peverelli.t@gmail.com`. The legacy `CARE_HOURS_ENABLED`, `CARE_HOURS_GIFTS_ENABLED`, `CARE_HOURS_PILOT_ONLY` and `CARE_HOURS_PILOT_EMAILS` environment values no longer control this private release: stale disabled flags cannot prevent the approved pilot, and stale broad settings cannot admit anyone else. Gift sales follow the private-pilot and sales switches. Enrollment, sales, contribution and welcome-offer pauses above remain effective. Expanding access requires a reviewed code change.
+The release opens prepaid purchases to all family accounts and gifts/contributions to email-verified guest buyers. Its configuration fixes `pilot_only=false` and an empty pilot list. Legacy `CARE_HOURS_ENABLED`, `CARE_HOURS_GIFTS_ENABLED`, `CARE_HOURS_PILOT_ONLY` and `CARE_HOURS_PILOT_EMAILS` values remain ignored. The dedicated exposure and per-action pauses above stay effective. All switches require valid true values; malformed values fail closed.
 
-No manual environment edit is needed for the approved pilot. The family-wallet change requires two separately reviewed releases: first deploy the v1 bridge, then deploy the v2 family-wallet release, using the usual `./deploy.sh` for each. The currently installed v1-only driver rejects a direct v2 upgrade before activation. Do not present the locally prepared v2 as ready for a single invocation of that old driver. If an operator later needs to pause it, set `CARE_HOURS_PRIVATE_PILOT_ENABLED=false` in the protected shared environment and run the usual deployment to rebuild the candidate cache safely. Leave that setting in place to keep subsequent deployments paused. Do not clear or rebuild the active release's configuration cache outside the deployment procedure.
+Once this reviewed release is committed and pushed, run the usual `./deploy.sh` from the installed family-wallet deployment. No manual environment edit or extra launch command is needed. A deliberately configured pause remains paused. If an operator later needs to pause new sales, set `CARE_HOURS_PUBLIC_ENABLED=false` in the protected shared environment and run the usual deployment to rebuild the candidate cache safely. Leave the setting in place to keep subsequent deployments paused. Do not clear or rebuild the active release's configuration cache outside deployment. The older v1-to-v2 bridge requirement still applies to installations that have not yet upgraded to family wallets.
 
 Pausing exposure or sales does not erase existing balances, cancel prepared care, invalidate accepted purchases or remove previously paid gifts' claim rights. Paid gift claims retain their accepted offer rules. Keep reconciliation, webhooks and necessary notification processing running for existing obligations.
 
-The deployment driver validates a complete, fingerprinted prepaid source package. The usual `./deploy.sh` command captures the fetched commit once and uses it throughout deployment; an explicit commit constraint is optional. Its first prepaid introduction accepts disabled exposure or the exact approved private pilot and rejects broader exposure. It applies additive migrations and records a permanent prepaid compatibility floor before activation.
+The deployment driver validates a complete, fingerprinted prepaid source package. The usual `./deploy.sh` command captures the fetched commit once and uses it throughout deployment; an explicit commit constraint is optional. The configuration checker accepts paused access, the earlier exact pilot, or the reviewed public configuration under the v2 family-wallet contract. Public access under v1 or with a nonempty pilot list is rejected. Additive migrations and the permanent compatibility floor remain enforced.
 
 The bridge supports the existing v1 recipient contract and the new v2 family-wallet contract. Before v2 activation, the driver durably pins floor 2. Manual rollback, automatic failure recovery and forward deployment then require v2-compatible code; v1 is no longer a recovery target. A failed first v2 activation needs a v2 repair release. This restriction applies even before the first sale. Do not delete the floor, reverse prepaid migrations, delete ledger data, clear holds, or start old incompatible workers to escape a failed deployment. Prepare a reviewed compatible recovery release or forward repair before introduction.
 
 A retained rollback target must also preserve all six current cached prepaid switches, the pilot restriction, effective pilot email list and wallet scope. The v2 cache must declare `care_hours.wallet_scope=family`; v1 requires recipient scope. Source manifest and cache scope must agree. If its settings differ, use an approved forward release with the intended configuration. The driver does not silently rewrite the shared environment or reopen paused sales. Follow the [deployment runbook](../deployment/zero-downtime-deployments.md) for the exact engineering procedure.
 
-The initial pilot is Thibaud Peverelli's signed-in family account, `peverelli.t@gmail.com`. It does not grant access to other users merely because they have the same display name, join the family, or enter that email into a guest checkout. New gift and contribution purchases also require the pilot login and its matching buyer email. Guest receipt recovery and already-paid gift claims remain available; issued hours and committed care continue working. Administrators retain their operational views. The dedicated private-pilot pause hides new controls even from the pilot user.
+The first public deployment cannot roll back automatically or manually to a retained pilot configuration: its exposure settings differ. A failure after activation requires a compatible forward repair with the intended public or paused configuration. After successful public releases, rollback between matching public configurations remains available. Never bypass the configuration comparison to recover.
+
+Guest gift and contribution purchases require a working verification email before checkout. Buying hours does not grant access to care information or family membership. Receipt recovery and already-paid gift claims remain available during pauses; issued hours and committed care continue working. Administrators retain their operational views.
 
 The older support-specific documents named **prepaid visit recovery** and **prepaid visit adjustment** concern already captured card-funded visits. Their case-specific commands are not generic prepaid care-hour balance tools and must not be used for these accounts.
 
 ## 12 Before production activation
 
-Review the latest validation report together with the proposed release. Local automated tests do not establish the current production runtime. The authorized deployment owner must verify the complete committed feature and matching manifest; all seven additive care-hours migrations, including `2026_10_30_000100_create_care_hour_family_wallets`; warmed exact private-pilot or paused settings; confirmed bridge installation and a compatible v2 recovery release; production database/shared-lock behavior; current webhook delivery; scheduler and queue operation; actual email transport; caregiver payout configuration; and monitoring/support ownership.
+Review the latest validation report together with the proposed release. Local automated tests do not establish the current production runtime. The deployment owner verifies the committed release and matching manifest, existing family-wallet migration, warmed public or intentionally paused settings, and a compatible v2 forward-repair procedure. Production checks also cover shared locks, webhook delivery, scheduler/queues, caregiver payouts, and operational monitoring. Actual email delivery was previously skipped and remains unverified; test a guest verification code and receipt in a controlled inbox before announcing public gift sales. Local notification capture is not evidence of delivery.
 
 The deployment owner runs the production deployment. This work must never access the production server through SSH. Nothing in this guide changes that boundary.
 

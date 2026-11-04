@@ -68,8 +68,8 @@ try {
         $run([$path, '--require-disabled'], 0, 'first-adoption exposure is the approved private pilot');
     }
     // The old deployed driver still supplies --require-disabled. Its candidate
-    // checker may accept only the reviewed single-family pilot, never a public
-    // or wider enabled introduction. Later forward deployments enforce the same cap.
+    // checker preserves legacy pilot support. Public exposure requires the v2
+    // family-wallet contract and an empty pilot list; wider pilots remain invalid.
     foreach ([
         ['pilot_only' => false, 'pilot_emails' => ['peverelli.t@gmail.com']],
         ['pilot_only' => true, 'pilot_emails' => []],
@@ -80,7 +80,7 @@ try {
             $path = $fixture('unapproved-enabled-'.$index.'-'.$flagsIndex, [
                 'care_hours' => ['enabled' => $enabled, 'gifts_enabled' => $gifts] + $access,
             ]);
-            $run([$path], 1, 'Enabled prepaid exposure must be restricted to the approved private pilot');
+            $run([$path], 1, 'Enabled prepaid exposure requires the approved private pilot or public family-wallet release');
             $run([$path, '--require-disabled'], 1, 'First prepaid adoption requires');
         }
     }
@@ -147,6 +147,33 @@ try {
     $run([$familyWallet, '--match-sales-state', $familyWallet, '--contract-version', '2'], 0, 'rollback exposure flags match');
     $run([$familyWallet, '--match-sales-state', $base, '--contract-version', '2'], 1, 'wallet ownership scope');
     $run([$base, '--match-sales-state', $familyWallet], 1, 'wallet ownership scope');
+    $publicFlags = array_replace($baseFlags, ['pilot_only' => false, 'pilot_emails' => [], 'wallet_scope' => 'family']);
+    $public = $fixture('public-family-wallet', ['care_hours' => $publicFlags]);
+    $run([$public, '--contract-version', '2'], 0, 'cached flags are valid booleans');
+    // The already-installed v2 driver invokes this candidate-owned checker with
+    // these arguments. No driver replacement or shared .env mutation is needed.
+    $run([$public, '--require-disabled', '--contract-version', '2'], 0, 'first-adoption exposure is the approved public family-wallet release');
+    $run([$public, '--match-sales-state', $public, '--contract-version', '2'], 0, 'rollback exposure flags match');
+    $run([$public], 1, 'wallet ownership scope does not match');
+    $publicRecipient = $fixture('public-recipient', ['care_hours' => array_replace($publicFlags, ['wallet_scope' => 'recipient'])]);
+    $run([$publicRecipient], 1, 'Enabled prepaid exposure requires');
+    $run([$publicRecipient, '--require-disabled'], 1, 'First prepaid adoption requires');
+    $run([$publicRecipient, '--contract-version', '2'], 1, 'wallet ownership scope does not match');
+    foreach ([['peverelli.t@gmail.com'], ['other@example.test']] as $index => $emails) {
+        $publicWithList = $fixture('public-with-pilot-list-'.$index, ['care_hours' => array_replace($publicFlags, ['pilot_emails' => $emails])]);
+        $run([$publicWithList, '--contract-version', '2'], 1, 'Enabled prepaid exposure requires');
+    }
+    // Both manual rollback and post-switch failure recovery must retain exactly
+    // the same exposure. The first public cutover therefore needs forward repair.
+    $run([$familyWallet, '--match-sales-state', $public, '--contract-version', '2'], 1, 'must preserve all cached prepaid exposure flags');
+    $run([$public, '--match-sales-state', $familyWallet, '--contract-version', '2'], 1, 'must preserve all cached prepaid exposure flags');
+    foreach (['enabled', 'gifts_enabled', 'sales_enabled', 'enrollment_enabled', 'contributions_enabled', 'welcome_enabled'] as $flag) {
+        $paused = $fixture('public-paused-'.$flag, ['care_hours' => array_replace($publicFlags, [$flag => false])]);
+        $run([$paused, '--contract-version', '2'], 0, 'cached flags are valid booleans');
+        $run([$paused, '--match-sales-state', $paused, '--contract-version', '2'], 0, 'rollback exposure flags match');
+        $run([$paused, '--match-sales-state', $public, '--contract-version', '2'], 1, 'must preserve all cached prepaid exposure flags');
+        $run([$public, '--match-sales-state', $paused, '--contract-version', '2'], 1, 'must preserve all cached prepaid exposure flags');
+    }
     foreach ([null, false, true, 1, [], 'owner', ''] as $index => $invalidScope) {
         $path = $fixture('invalid-wallet-scope-'.$index, ['care_hours' => $baseFlags + ['wallet_scope' => $invalidScope]]);
         $run([$path, '--contract-version', '2'], 1, 'wallet_scope setting must be recipient or family');
@@ -179,7 +206,7 @@ try {
     $broadRollback = $fixture('broad-matching-rollback', ['care_hours' => array_replace($baseFlags, [
         'pilot_emails' => ['peverelli.t@gmail.com', 'other@example.test'],
     ])]);
-    $run([$broadRollback, '--match-sales-state', $broadRollback], 1, 'Enabled prepaid exposure must be restricted to the approved private pilot');
+    $run([$broadRollback, '--match-sales-state', $broadRollback], 1, 'Enabled prepaid exposure requires the approved private pilot or public family-wallet release');
     foreach ([[], ['other@example.test'], ['peverelli.t@gmail.com', 'other@example.test']] as $index => $emails) {
         $changed = $fixture('changed-pilot-emails-'.$index, ['care_hours' => array_replace($baseFlags, ['pilot_emails' => $emails])]);
         $run([$changed, '--match-sales-state', $base], 1, 'must preserve all cached prepaid exposure flags and pilot access');
