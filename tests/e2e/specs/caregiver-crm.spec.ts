@@ -36,6 +36,30 @@ async function noOverflow(page: Page): Promise<void> {
     }
 }
 
+test('caregiver SMS sends from the panel and shows incoming replies while it stays open', async ({ page }, testInfo) => {
+    await login(page, 'sdr');
+    await caregivers(page);
+    await page.getByRole('button', { name: 'Open Morgan New', exact: true }).click();
+    const panel = page.getByRole('dialog');
+    await panel.getByRole('link', { name: 'Text messages', exact: true }).click();
+    await panel.getByRole('button', { name: 'Send SMS', exact: true }).click();
+    const outgoing = `Can you cover Friday? (${testInfo.project.name})`;
+    await panel.getByLabel('Message', { exact: true }).fill(outgoing);
+    await panel.getByRole('button', { name: 'Send text', exact: true }).click();
+    await expect(panel.getByText(outgoing, { exact: true })).toBeVisible();
+
+    const reply = `Friday works for me. (${testInfo.project.name})`;
+    const response = await page.request.post('/webhooks/twilio/sms', { form: {
+        MessageSid: `SM_caregiver_${testInfo.project.name}`, From: '+19195550123', To: '+19195550000',
+        Body: reply, NumMedia: '0', SmsStatus: 'received',
+    } });
+    expect(response.ok()).toBeTruthy();
+    await panel.getByRole('heading', { name: 'Activity timeline' }).scrollIntoViewIfNeeded();
+    await expect(panel.getByText(reply, { exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(panel.getByText('Status: Received', { exact: true }).first()).toBeVisible();
+    await noOverflow(page);
+});
+
 test('approved caregiver board reflects activity, filters, and fits the screen', async ({ page }, testInfo) => {
     await login(page);
     await caregivers(page);

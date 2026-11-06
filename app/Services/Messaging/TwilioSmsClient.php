@@ -268,6 +268,13 @@ class TwilioSmsClient
         return hash_equals($expected, $provided);
     }
 
+    public static function validPhone(?string $phone): ?string
+    {
+        $normalized = self::normalizePhone($phone);
+
+        return preg_match('/^\+[1-9][0-9]{7,14}$/', $normalized) ? $normalized : null;
+    }
+
     public static function normalizePhone(?string $phone): string
     {
         $phone = trim((string) $phone);

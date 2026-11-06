@@ -14,6 +14,13 @@ class SendIncomingSmsAlert implements ShouldQueue
 {
     use Queueable;
 
+    private const EXCLUDED_EMAILS = [
+        'test@test.com',
+        'charlespp42@gmail.com',
+        'caller@example.com',
+        'sdr1@carelolo.com',
+    ];
+
     public int $tries = 5;
 
     public int $timeout = 60;
@@ -32,7 +39,7 @@ class SendIncomingSmsAlert implements ShouldQueue
 
     public function handle(): void
     {
-        $message = SmsMessage::with('lead.assignedAdmin')->find($this->smsMessageId);
+        $message = SmsMessage::with('lead.assignedAdmin', 'caregiver')->find($this->smsMessageId);
         if (! $message || $message->direction !== SmsMessage::DIRECTION_INCOMING || $message->inbound_notified_at) {
             return;
         }
@@ -40,6 +47,7 @@ class SendIncomingSmsAlert implements ShouldQueue
         $recipients = \App\Support\StaffAccess::allowed(User::query())->whereIn('role', ['admin', 'sdr'])->pluck('email')
             ->push('peverelli.t@gmail.com')
             ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->diff(self::EXCLUDED_EMAILS)
             ->reject(fn ($email) => \App\Support\StaffAccess::blocksEmail($email))
             ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->unique()->values()->all();
         if ($recipients === []) {

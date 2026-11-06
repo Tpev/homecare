@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Notifications\Auth\LoLoCareResetPasswordNotification;
 use App\Notifications\Auth\LoLoCareVerifyEmailNotification;
 use App\Notifications\MarketplaceEventNotification;
+use App\Services\Messaging\TwilioSmsClient;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -56,6 +57,12 @@ class User extends Authenticatable
             'family_cancellation_count' => 'integer',
             'family_dispute_count' => 'integer',
         ];
+    }
+
+    public function setPhoneAttribute(?string $phone): void
+    {
+        $this->attributes['phone'] = $phone;
+        $this->attributes['sms_phone'] = TwilioSmsClient::validPhone($phone);
     }
 
     public function sendPasswordResetNotification($token): void

@@ -29,6 +29,7 @@ class SmsMessage extends Model
 
     protected $fillable = [
         'lead_id',
+        'caregiver_user_id',
         'request_key',
         'inbound_notified_at',
         'direction',
@@ -80,5 +81,10 @@ class SmsMessage extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    public function caregiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'caregiver_user_id');
     }
 }

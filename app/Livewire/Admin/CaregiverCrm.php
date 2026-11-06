@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -148,6 +149,12 @@ class CaregiverCrm extends Component
         $this->notice = 'Activity added to the timeline.';
     }
 
+    #[On('caregiver-sms-updated')]
+    public function showLatestActivity(): void
+    {
+        $this->activityOffset = 0;
+    }
+
     public function loadMoreActivity(): void
     {
         $this->activityOffset = max(0, $this->activityOffset) + 20;
@@ -176,7 +183,7 @@ class CaregiverCrm extends Component
         $selected = $this->selectedCaregiverId ? $directory->find($this->selectedCaregiverId) : null;
         $activities = $selected ? CaregiverCrmActivity::query()
             ->where('caregiver_user_id', $selected['user_id'])
-            ->with('actor:id,name')
+            ->with('actor:id,name', 'smsMessage')
             ->orderByDesc('occurred_at')->orderByDesc('id')
             ->offset(max(0, $this->activityOffset))->limit(21)->get() : collect();
 

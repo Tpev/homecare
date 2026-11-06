@@ -3,10 +3,12 @@
 namespace Tests\Feature\Admin;
 
 use App\Jobs\SendIncomingSmsAlert;
+use App\Livewire\Admin\CaregiverCrm;
 use App\Livewire\Admin\FamilyLeadsIndex;
 use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\LeadSmsComposer;
 use App\Mail\Ops\IncomingSmsMail;
+use App\Models\CaregiverProfile;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\SmsMessage;
@@ -241,6 +243,109 @@ class CrmSmsMessagingTest extends TestCase
         $this->assertSame(2, SmsMessage::whereNotNull('inbound_notified_at')->count());
     }
 
+    public function test_excluded_incoming_sms_recipients_are_filtered_for_matched_and_unmatched_numbers(): void
+    {
+        foreach ([' Test@Test.com ', 'CharlesPP42@gmail.com', 'caller@example.com', 'sdr1@carelolo.com'] as $email) {
+            User::factory()->create(['role' => 'sdr', 'email' => $email]);
+        }
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->caregiver();
+        $this->signedPost('webhooks.twilio.sms', $this->incoming())->assertOk();
+        $this->signedPost('webhooks.twilio.sms', $this->incoming(['MessageSid' => 'SM_other', 'From' => '+19195559998']))->assertOk();
+        Mail::assertSent(IncomingSmsMail::class, 2);
+        foreach (Mail::sent(IncomingSmsMail::class) as $mail) {
+            $this->assertEqualsCanonicalizing([$admin->email, 'peverelli.t@gmail.com'], array_column($mail->to, 'address'));
+        }
+    }
+
+    public function test_caregiver_can_text_first_and_staff_can_reply_without_opt_in_on_the_same_timeline(): void
+    {
+        $actor = User::factory()->create(['role' => 'sdr']);
+        $caregiver = $this->caregiver();
+        $caregiver->update(['phone' => 'invalid']);
+        $composer = Livewire::actingAs($actor)->test(LeadSmsComposer::class, ['caregiverUserId' => $caregiver->id]);
+        $composer->call('startMessage')->set('smsBody', 'Can you work Friday?')->call('sendMessage')->assertHasErrors('phone');
+        $caregiver->update(['phone' => ' (919) 555-1234 ']);
+
+        $inbound = $this->incoming(['Body' => 'Is the Friday shift available?']);
+        $this->signedPost('webhooks.twilio.sms', $inbound)->assertOk();
+        $this->signedPost('webhooks.twilio.sms', $inbound)->assertOk();
+        $this->assertSame($caregiver->id, SmsMessage::sole()->caregiver_user_id);
+        $this->assertDatabaseCount('caregiver_crm_activities', 1);
+        Mail::assertSent(IncomingSmsMail::class, function ($mail) use ($caregiver) {
+            return str_contains($mail->render(), 'caregiver='.$caregiver->id)
+                && str_contains($mail->envelope()->subject, $caregiver->name);
+        });
+        $this->fakeSend();
+        $composer->call('sendMessage')->assertHasNoErrors()->assertDispatched('caregiver-sms-updated');
+        $sent = SmsMessage::where('direction', 'outgoing')->sole();
+        app(LeadSmsService::class)->send($caregiver, $actor, $sent->body, $sent->request_key);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request['To'] === '+19195551234' && $request['From'] === '+19195550000');
+        $this->signedPost('webhooks.twilio.sms.status', ['MessageSid' => $sent->twilio_sid, 'MessageStatus' => 'delivered'])->assertOk();
+
+        Livewire::actingAs($actor)->test(CaregiverCrm::class)->call('openCaregiver', $caregiver->id)
+            ->assertSee('Send SMS')->assertSee('Is the Friday shift available?')->assertSee('Status: Received')
+            ->assertSee('Can you work Friday?')->assertSee('Delivery: Delivered');
+        $this->assertDatabaseCount('leads', 0);
+        $this->assertDatabaseCount('lead_activities', 0);
+        $this->assertDatabaseCount('caregiver_crm_activities', 2);
+    }
+
+    public function test_shared_caregiver_and_family_phone_follows_only_the_last_confirmed_conversation(): void
+    {
+        $actor = User::factory()->create(['role' => 'admin']);
+        $family = $this->lead();
+        $caregiver = $this->caregiver();
+        $this->signedPost('webhooks.twilio.sms', $this->incoming())->assertOk();
+        $this->assertNull(SmsMessage::sole()->lead_id);
+        $this->assertNull(SmsMessage::sole()->caregiver_user_id);
+
+        Http::fakeSequence()->push(['sid' => 'SM_cg', 'status' => 'queued'], 201)
+            ->push(['sid' => 'SM_family', 'status' => 'queued'], 201);
+        app(LeadSmsService::class)->send($caregiver, $actor, 'Caregiver question', (string) Str::uuid());
+        $this->signedPost('webhooks.twilio.sms', $this->incoming(['MessageSid' => 'SM_cg_reply']))->assertOk();
+        $this->assertDatabaseHas('sms_messages', ['twilio_sid' => 'SM_cg_reply', 'lead_id' => null, 'caregiver_user_id' => $caregiver->id]);
+        app(LeadSmsService::class)->send($family, $actor, 'Family question', (string) Str::uuid());
+        $this->signedPost('webhooks.twilio.sms', $this->incoming(['MessageSid' => 'SM_family_reply']))->assertOk();
+        $this->assertDatabaseHas('sms_messages', ['twilio_sid' => 'SM_family_reply', 'lead_id' => $family->id, 'caregiver_user_id' => null]);
+        Mail::assertSent(IncomingSmsMail::class, function ($mail) {
+            return $mail->sms->twilio_sid === 'SM_family_reply' && ! str_contains($mail->render(), 'Caregiver question');
+        });
+    }
+
+    public function test_caregiver_composer_rechecks_staff_access_and_current_caregiver_eligibility(): void
+    {
+        $actor = User::factory()->create(['role' => 'sdr']);
+        $caregiver = $this->caregiver();
+        $params = ['caregiverUserId' => $caregiver->id];
+        $composer = Livewire::actingAs($actor)->test(LeadSmsComposer::class, $params)->set('smsBody', 'Hello');
+        $actor->update(['role' => 'sales']);
+        $composer->call('sendMessage')->assertForbidden();
+        Livewire::actingAs($actor)->test(LeadSmsComposer::class, $params)->assertForbidden();
+        $actor->update(['role' => 'admin']);
+        $composer = Livewire::actingAs($actor)->test(LeadSmsComposer::class, $params)->set('smsBody', 'Hello');
+        $caregiver->caregiverProfile->update(['screening_suspended_at' => now()]);
+        $composer->call('sendMessage')->assertStatus(404);
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('sms_messages', 0);
+    }
+
+    public function test_migration_links_existing_caregiver_inbox_history_without_sending_alerts(): void
+    {
+        $caregiver = $this->caregiver();
+        $migration = require database_path('migrations/2026_11_06_120000_link_caregiver_crm_sms.php');
+        $migration->down();
+        $message = SmsMessage::create(['direction' => 'incoming', 'from_phone' => '+19195551234',
+            'to_phone' => '+19195550000', 'body' => 'Previous text', 'received_at' => now()]);
+        $migration->up();
+        $this->assertSame('+19195551234', $caregiver->fresh()->sms_phone);
+        $this->assertSame($caregiver->id, $message->fresh()->caregiver_user_id);
+        $this->assertDatabaseHas('caregiver_crm_activities', ['sms_message_id' => $message->id, 'body' => $message->body]);
+        Mail::assertNothingSent();
+        Http::assertNothingSent();
+    }
+
     public function test_incoming_email_contains_conversation_and_attachment_details(): void
     {
         $actor = User::factory()->create(['role' => 'admin']);
@@ -388,6 +493,14 @@ class CrmSmsMessagingTest extends TestCase
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('leads', 'sms_phone'));
         $migration->up();
         $this->assertSame('+19195551234', $lead->fresh()->sms_phone);
+    }
+
+    private function caregiver(): User
+    {
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'phone' => '(919) 555-1234', 'sms_opt_in' => false]);
+        CaregiverProfile::create(['user_id' => $caregiver->id, 'status' => 'active', 'screening_initial_approved_at' => now()]);
+
+        return $caregiver;
     }
 
     private function lead(array $attributes = []): Lead

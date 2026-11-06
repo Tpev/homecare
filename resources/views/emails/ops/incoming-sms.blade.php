@@ -1,11 +1,12 @@
+@php($contact = $caregiver ?? $lead)
 <x-emails.lolo-layout
     preheader="A new text message needs your attention."
     eyebrow="Incoming SMS"
-    :title="'Text from '.($lead?->name ?: $sms->from_phone)"
+    :title="'Text from '.($contact?->name ?: $sms->from_phone)"
     intro="A text message has arrived on the LoLo Care number."
     :cta-url="$url"
     :raw-url="$url"
-    :cta-label="$lead ? 'Open lead in CRM' : 'Open CRM'"
+    :cta-label="$caregiver ? 'Open caregiver in CRM' : ($lead ? 'Open lead in CRM' : 'Open CRM')"
     :home-url="route('dashboard')"
     :logo-url="asset(\App\Support\MarketplaceNotificationPresentation::LOGO_PATH)"
     :year="now()->year"
@@ -13,12 +14,12 @@
     <div style="white-space:pre-wrap;padding:16px;background:#FFF7EA;border-radius:12px;color:#23483F;">{{ $sms->body ?: '(Media message)' }}</div>
     <table role="presentation" width="100%" style="margin-top:16px;font-size:14px;">
         @foreach ([
-            'Lead' => $lead ? '#'.$lead->id.' — '.$lead->name : 'No unique lead match; message is available in the admin SMS inbox.',
+            ($caregiver ? 'Caregiver' : 'Lead') => $contact ? '#'.$contact->id.' — '.$contact->name : 'No unique lead match; message is available in the admin SMS inbox.',
             'From' => $sms->from_phone,
             'To' => $sms->to_phone,
             'Received' => $sms->received_at?->format('M j, Y g:i:s A T'),
             'Status' => $sms->status,
-            'Lead email' => $lead?->email,
+            ($caregiver ? 'Caregiver email' : 'Lead email') => $contact?->email,
             'Owner' => $lead?->assignedAdmin?->name,
             'Stage' => $lead?->stageLabel(),
             'Source' => $lead?->sourceLabel(),

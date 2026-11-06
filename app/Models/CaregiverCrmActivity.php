@@ -15,6 +15,7 @@ class CaregiverCrmActivity extends Model
     public const CALL_OUTCOMES = ['connected', 'no_answer', 'voicemail'];
 
     protected $fillable = [
+        'sms_message_id',
         'caregiver_user_id',
         'actor_user_id',
         'type',
@@ -43,6 +44,11 @@ class CaregiverCrmActivity extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_user_id');
+    }
+
+    public function smsMessage(): BelongsTo
+    {
+        return $this->belongsTo(SmsMessage::class);
     }
 
     public function isConnectedCall(): bool

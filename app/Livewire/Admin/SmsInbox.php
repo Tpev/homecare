@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin;
 
 use App\Models\SmsMessage;
+use App\Services\Messaging\CrmSmsHistory;
 use App\Services\Messaging\TwilioSmsClient;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -82,14 +84,19 @@ class SmsInbox extends Component
             return;
         }
 
-        $message = SmsMessage::query()->create([
-            'direction' => SmsMessage::DIRECTION_OUTGOING,
-            'status' => SmsMessage::STATUS_SENDING,
-            'from_phone' => $from,
-            'to_phone' => $to,
-            'body' => $body,
-            'sent_by_user_id' => auth()->id(),
-        ]);
+        $message = DB::transaction(function () use ($from, $to, $body) {
+            $message = SmsMessage::query()->create([
+                'direction' => SmsMessage::DIRECTION_OUTGOING,
+                'status' => SmsMessage::STATUS_SENDING,
+                'from_phone' => $from,
+                'to_phone' => $to,
+                'body' => $body,
+                'sent_by_user_id' => auth()->id(),
+            ]);
+            app(CrmSmsHistory::class)->linkByPhone($message, caregiverOnly: true);
+
+            return $message;
+        });
 
         try {
             $payload = app(TwilioSmsClient::class)->sendMessage($to, $body, $from);

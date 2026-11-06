@@ -5,9 +5,9 @@ namespace App\Services\Messaging;
 use App\Exceptions\Messaging\TwilioSmsRejectedException;
 use App\Jobs\SendIncomingSmsAlert;
 use App\Models\Lead;
-use App\Models\LeadActivity;
 use App\Models\SmsMessage;
 use App\Models\User;
+use App\Services\Screening\CaregiverWorkEligibility;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -16,12 +16,22 @@ use Throwable;
 
 class LeadSmsService
 {
-    public function send(Lead $lead, User $actor, string $body, string $requestKey): SmsMessage
+    public function __construct(private CrmSmsHistory $history) {}
+
+    public function send(Lead|User $recipient, User $actor, string $body, string $requestKey): SmsMessage
     {
-        abort_unless($actor->fresh()?->canAccessCrm(), 403);
-        $lead->refresh();
+        $actor = $actor->fresh();
+        if ($recipient instanceof User) {
+            abort_unless($actor?->canAccessCaregiverCrm(), 403);
+            $recipient = app(CaregiverWorkEligibility::class)->caregivers()->findOrFail($recipient->id);
+            $ownerKey = 'caregiver_user_id';
+        } else {
+            abort_unless($actor?->canAccessCrm(), 403);
+            $recipient->refresh();
+            $ownerKey = 'lead_id';
+        }
         $body = trim($body);
-        $to = TwilioSmsClient::normalizePhone($lead->phone);
+        $to = TwilioSmsClient::normalizePhone($recipient->phone);
         $from = TwilioSmsClient::normalizePhone((string) config('services.twilio.sms_from'));
 
         Validator::make(['smsBody' => $body, 'phone' => $to, 'requestKey' => $requestKey], [
@@ -30,7 +40,7 @@ class LeadSmsService
             'requestKey' => ['required', 'uuid'],
         ], ['phone.*' => 'Save a valid phone number on this lead before sending a text.'])->validate();
 
-        if ($lead->do_not_contact_at) {
+        if ($recipient instanceof Lead && $recipient->do_not_contact_at) {
             throw ValidationException::withMessages(['send' => 'This lead is marked do not contact.']);
         }
         if (! preg_match('/^\+[1-9][0-9]{7,14}$/', $from)) {
@@ -40,10 +50,10 @@ class LeadSmsService
         // Preserve the original attempt even after a reload creates a new request key.
         // The payload lock covers concurrent CRM users and duplicate lead records.
         $payloadKey = hash('sha256', $from."\0".$to."\0".$body);
-        $message = Cache::lock('crm-sms:send:'.$payloadKey, 30)->block(5, fn () => DB::transaction(function () use ($lead, $actor, $body, $to, $from, $requestKey): SmsMessage {
+        $message = Cache::lock('crm-sms:send:'.$payloadKey, 30)->block(5, fn () => DB::transaction(function () use ($recipient, $ownerKey, $actor, $body, $to, $from, $requestKey): SmsMessage {
             $existing = SmsMessage::query()->where('request_key', $requestKey)->first();
             if ($existing) {
-                abort_unless($existing->lead_id === $lead->id && $existing->sent_by_user_id === $actor->id, 403);
+                abort_unless($existing->{$ownerKey} === $recipient->id && $existing->sent_by_user_id === $actor->id, 403);
                 if ($existing->body !== $body || $existing->to_phone !== $to || $existing->from_phone !== $from) {
                     throw ValidationException::withMessages(['send' => 'This attempt is already recorded. Start a new message to change its text or recipient.']);
                 }
@@ -55,14 +65,14 @@ class LeadSmsService
                 ->whereNotNull('request_key')->whereIn('status', [SmsMessage::STATUS_SENDING, SmsMessage::STATUS_CONFIRMATION_PENDING])
                 ->get()->first(fn (SmsMessage $candidate) => $candidate->body === $body);
             if ($pending) {
-                if ($pending->lead_id !== $lead->id || $pending->sent_by_user_id !== $actor->id) {
+                if ($pending->{$ownerKey} !== $recipient->id || $pending->sent_by_user_id !== $actor->id) {
                     throw ValidationException::withMessages(['send' => 'This text is awaiting confirmation. Check its delivery status before sending it again.']);
                 }
 
                 return $pending;
             }
             $message = SmsMessage::query()->firstOrCreate(['request_key' => $requestKey], [
-                'lead_id' => $lead->id,
+                $ownerKey => $recipient->id,
                 'sent_by_user_id' => $actor->id,
                 'direction' => SmsMessage::DIRECTION_OUTGOING,
                 'status' => SmsMessage::STATUS_SENDING,
@@ -70,11 +80,11 @@ class LeadSmsService
                 'to_phone' => $to,
                 'body' => $body,
             ]);
-            abort_unless($message->lead_id === $lead->id && $message->sent_by_user_id === $actor->id, 403);
+            abort_unless($message->{$ownerKey} === $recipient->id && $message->sent_by_user_id === $actor->id, 403);
             if ($message->body !== $body || $message->to_phone !== $to || $message->from_phone !== $from) {
                 throw ValidationException::withMessages(['send' => 'This attempt is already recorded. Start a new message to change its text or recipient.']);
             }
-            $this->recordActivity($message);
+            $this->history->recordActivity($message);
 
             return $message;
         }));
@@ -105,7 +115,7 @@ class LeadSmsService
             return $message->refresh();
         }
 
-        DB::transaction(function () use ($message, $payload, $lead): void {
+        DB::transaction(function () use ($message, $payload, $recipient): void {
             $locked = SmsMessage::query()->lockForUpdate()->findOrFail($message->id);
             $raw = $locked->raw_payload ?? [];
             $locked->fill([
@@ -121,7 +131,9 @@ class LeadSmsService
                 $locked->error_message = $payload['error_message'] ?? null;
             }
             $locked->save();
-            $lead->update(['last_contacted_at' => now()]);
+            if ($recipient instanceof Lead) {
+                $recipient->update(['last_contacted_at' => now()]);
+            }
         });
 
         return $message->refresh();
@@ -129,64 +141,11 @@ class LeadSmsService
 
     public function receive(SmsMessage $message, bool $notify = true): void
     {
-        DB::transaction(function () use ($message): void {
-            $message = SmsMessage::query()->lockForUpdate()->findOrFail($message->id);
-            if (! $message->lead_id) {
-                $message->lead_id = $this->matchingLead($message)?->id;
-                $message->save();
-            }
-            $this->recordActivity($message);
-        });
+        $this->history->linkByPhone($message);
 
         if ($notify && ! $message->fresh()->inbound_notified_at) {
             SendIncomingSmsAlert::dispatch($message->id)->afterCommit();
         }
-    }
-
-    private function matchingLead(SmsMessage $message): ?Lead
-    {
-        $phone = TwilioSmsClient::normalizePhone($message->from_phone);
-        $ourPhone = TwilioSmsClient::normalizePhone($message->to_phone);
-        if ($phone === '' || $ourPhone !== TwilioSmsClient::normalizePhone((string) config('services.twilio.sms_from'))) {
-            return null;
-        }
-
-        $candidates = Lead::query()->where('sms_phone', $phone)->pluck('id');
-        if ($candidates->count() === 1) {
-            return Lead::find($candidates->first());
-        }
-
-        // Shared phone numbers are associated with the most recently contacted CRM lead.
-        // Without an existing conversation, leave an ambiguous message in the admin inbox.
-        $outgoing = SmsMessage::query()->where('direction', SmsMessage::DIRECTION_OUTGOING)
-            ->where('to_phone', $phone)->where('from_phone', $ourPhone)
-            ->whereNotNull('lead_id')->whereNotNull('twilio_sid')
-            ->when($message->received_at, fn ($query) => $query->where('created_at', '<=', $message->received_at))
-            ->when($candidates->isNotEmpty(), fn ($query) => $query->whereIn('lead_id', $candidates))
-            ->latest('id')->first();
-
-        return $outgoing?->lead;
-    }
-
-    private function recordActivity(SmsMessage $message): void
-    {
-        if (! $message->lead_id) {
-            return;
-        }
-
-        LeadActivity::query()->firstOrCreate(['sms_message_id' => $message->id], [
-            'lead_id' => $message->lead_id,
-            'actor_user_id' => $message->sent_by_user_id,
-            'type' => LeadActivity::TYPE_SMS,
-            'summary' => $message->direction === SmsMessage::DIRECTION_INCOMING ? 'SMS received' : 'Outgoing SMS',
-            'body' => $message->body,
-            'occurred_at' => $message->received_at ?: $message->created_at,
-            'metadata' => [
-                'direction' => $message->direction,
-                'from_phone' => $message->from_phone,
-                'to_phone' => $message->to_phone,
-            ],
-        ]);
     }
 
     public function updateDelivery(SmsMessage $message, array $payload): void

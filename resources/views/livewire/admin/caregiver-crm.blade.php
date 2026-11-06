@@ -179,6 +179,7 @@
                             <div class="cg-contact-details">
                                 @if ($selected['email'])<a href="mailto:{{ $selected['email'] }}">{{ $selected['email'] }}</a>@endif
                                 @if ($selected['phone'])<a href="tel:{{ preg_replace('/[^0-9+]/', '', $selected['phone']) }}">{{ $selected['phone'] }}</a>@endif
+                                <a href="#caregiver-text-messages">Text messages</a>
                             </div>
                             <p class="cg-muted mt-3">{{ $selected['applications_count'] }} applications · {{ $selected['hires_count'] }} hires @if($selected['zip']) · ZIP {{ $selected['zip'] }} @endif</p>
                             @if ($selected['phone_spoken_at'])
@@ -251,18 +252,26 @@
                             </div>
                         </form>
 
-                        <section class="cg-section" aria-label="Caregiver activity timeline">
+                        <div id="caregiver-text-messages" tabindex="-1" class="scroll-mt-24">
+                            <livewire:admin.lead-sms-composer :caregiver-user-id="$selected['user_id']" :key="'caregiver-sms-'.$selected['user_id']" />
+                        </div>
+                        <section class="cg-section" aria-label="Caregiver activity timeline" wire:poll.visible.15s>
                             <h3>Activity timeline</h3>
                             <ol class="cg-timeline">
                                 @forelse ($activities as $activity)
                                     <li wire:key="caregiver-activity-{{ $activity->id }}">
                                         <div class="cg-timeline-title">
-                                            <span>{{ $activity->type === 'system' ? (data_get($activity->metadata, 'action') === 'next_action_completed' ? 'Next action completed' : 'Details updated') : ($activityLabels[$activity->type] ?? 'Activity') }}</span>
+                                            @if ($activity->smsMessage)
+                                                <span>{{ $activity->smsMessage->direction === 'incoming' ? 'SMS received' : 'Outgoing SMS' }}</span>
+                                            @else
+                                                <span>{{ $activity->type === 'system' ? (data_get($activity->metadata, 'action') === 'next_action_completed' ? 'Next action completed' : 'Details updated') : ($activityLabels[$activity->type] ?? 'Activity') }}</span>
+                                            @endif
                                             <time datetime="{{ $activity->occurred_at->toIso8601String() }}">{{ $formatDate($activity->occurred_at) }}</time>
                                         </div>
                                         @if ($activity->call_outcome)<span class="cg-tag mt-2">{{ $callLabels[$activity->call_outcome] ?? '' }}</span>@endif
                                         @if ($activity->body)<p>{{ $activity->body }}</p>@endif
-                                        <small>{{ $activity->actor?->name ?? 'Former team member' }}</small>
+                                        <x-lead-sms-status :activity="$activity" />
+                                        <small>{{ $activity->smsMessage?->direction === 'incoming' ? $selected['name'] : ($activity->actor?->name ?? 'Former team member') }}</small>
                                     </li>
                                 @empty
                                     <li><p class="cg-muted">No interactions recorded yet. Add a note or log your first conversation above.</p></li>

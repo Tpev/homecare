@@ -5,7 +5,9 @@ namespace App\Livewire\Admin;
 use App\Models\Lead;
 use App\Models\SmsMessage;
 use App\Models\SmsTemplate;
+use App\Models\User;
 use App\Services\Messaging\LeadSmsService;
+use App\Services\Screening\CaregiverWorkEligibility;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
@@ -14,7 +16,12 @@ use Livewire\Component;
 class LeadSmsComposer extends Component
 {
     #[Locked]
-    public int $leadId;
+    public ?int $leadId = null;
+
+    #[Locked]
+    public ?int $caregiverUserId = null;
+
+    private Lead|User $recipient;
 
     #[Locked]
     public string $requestKey;
@@ -41,15 +48,26 @@ class LeadSmsComposer extends Component
 
     public string $notice = '';
 
-    public function boot(): void
+    public function mount(?int $leadId = null, ?int $caregiverUserId = null): void
     {
-        abort_unless(auth()->user()?->fresh()?->canAccessCrm(), 403);
+        abort_if(($leadId === null) === ($caregiverUserId === null), 404);
+        $this->leadId = $leadId;
+        $this->caregiverUserId = $caregiverUserId;
+        $this->requestKey = (string) Str::uuid();
     }
 
-    public function mount(int $leadId): void
+    public function booted(): void
     {
-        $this->leadId = Lead::findOrFail($leadId)->id;
-        $this->requestKey = (string) Str::uuid();
+        $actor = auth()->user()?->fresh();
+        if ($this->caregiverUserId !== null) {
+            abort_unless($actor?->canAccessCaregiverCrm(), 403);
+            $caregiver = app(CaregiverWorkEligibility::class)->caregivers()->find($this->caregiverUserId);
+            abort_unless($caregiver, 404, 'This caregiver is no longer available in the CRM.');
+            $this->recipient = $caregiver;
+        } else {
+            abort_unless($actor?->canAccessCrm(), 403);
+            $this->recipient = Lead::findOrFail($this->leadId);
+        }
     }
 
     public function startMessage(): void
@@ -93,8 +111,8 @@ class LeadSmsComposer extends Component
     public function sendMessage(LeadSmsService $service): void
     {
         $this->resetValidation();
-        $message = $service->send(Lead::findOrFail($this->leadId), auth()->user(), $this->smsBody, $this->requestKey);
-        $this->dispatch('lead-sms-updated');
+        $message = $service->send($this->recipient, auth()->user(), $this->smsBody, $this->requestKey);
+        $this->dispatch($this->caregiverUserId ? 'caregiver-sms-updated' : 'lead-sms-updated');
 
         $this->showSendResult($message);
     }
@@ -104,12 +122,12 @@ class LeadSmsComposer extends Component
         if (! $this->pendingMessageId) {
             return;
         }
-        $message = SmsMessage::query()->where('lead_id', $this->leadId)
+        $message = SmsMessage::query()->where($this->caregiverUserId ? 'caregiver_user_id' : 'lead_id', $this->recipient->id)
             ->where('sent_by_user_id', auth()->id())->findOrFail($this->pendingMessageId);
         if (! $message->awaitingProviderConfirmation()) {
             $this->resetValidation('send');
             $this->showSendResult($message);
-            $this->dispatch('lead-sms-updated');
+            $this->dispatch($this->caregiverUserId ? 'caregiver-sms-updated' : 'lead-sms-updated');
         }
     }
 
@@ -188,7 +206,8 @@ class LeadSmsComposer extends Component
     public function render(): View
     {
         return view('livewire.admin.lead-sms-composer', [
-            'lead' => Lead::findOrFail($this->leadId),
+            'phone' => $this->recipient->phone,
+            'doNotContact' => $this->recipient instanceof Lead && $this->recipient->do_not_contact_at,
             'senderPhone' => config('services.twilio.sms_from'),
             'templates' => SmsTemplate::orderBy('name')->orderBy('id')->get(),
         ]);

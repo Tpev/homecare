@@ -60,6 +60,7 @@ config([
     'services.stripe.secret' => null,
     'services.stripe.publishable_key' => null,
     'services.twilio.bypass' => true,
+    'services.twilio.sms_from' => '+19195550000',
     'services.slack.ops.enabled' => false,
     'marketplace.ops_alert_recipients' => [],
 ]);

@@ -5,6 +5,7 @@ namespace App\Services\Screening;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
 use App\Models\CaregiverProfile;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\ValidationException;
 
@@ -17,6 +18,12 @@ class CaregiverWorkEligibility
         return $profile->status === 'active'
             && ! $profile->screening_suspended_at
             && ((bool) $profile->screening_legacy_access || (bool) $profile->screening_initial_approved_at);
+    }
+
+    public function caregivers(): Builder
+    {
+        return User::query()->where('role', 'caregiver')
+            ->whereHas('caregiverProfile', fn (Builder $profiles) => $this->constrain($profiles));
     }
 
     public function constrain(Builder $query): Builder

@@ -11,8 +11,7 @@ class Lead extends Model
     public function setPhoneAttribute(?string $phone): void
     {
         $this->attributes['phone'] = $phone;
-        $normalized = \App\Services\Messaging\TwilioSmsClient::normalizePhone($phone);
-        $this->attributes['sms_phone'] = preg_match('/^\+[1-9][0-9]{7,14}$/', $normalized) ? $normalized : null;
+        $this->attributes['sms_phone'] = \App\Services\Messaging\TwilioSmsClient::validPhone($phone);
     }
 
     public const TYPE_FAMILY = 'family';

@@ -2,16 +2,16 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h3 class="text-base font-bold text-slate-950">Text messages</h3>
-            <p class="mt-1 text-xs text-slate-600">Send to {{ $lead->phone ?: 'No phone saved' }}</p>
+            <p class="mt-1 text-xs text-slate-600">Send to {{ $phone ?: 'No phone saved' }}</p>
         </div>
-        <button type="button" wire:click="startMessage" @disabled($showComposer || $pendingMessageId || !$lead->phone || $lead->do_not_contact_at) class="min-h-10 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">Send SMS</button>
+        <button type="button" wire:click="startMessage" @disabled($showComposer || $pendingMessageId || !$phone || $doNotContact) class="min-h-10 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">Send SMS</button>
     </div>
-    @if($lead->do_not_contact_at)<p class="mt-2 text-sm text-rose-700">This lead is marked do not contact.</p>@endif
+    @if($doNotContact)<p class="mt-2 text-sm text-rose-700">This lead is marked do not contact.</p>@endif
     @if($notice)<p role="status" @if($pendingMessageId) wire:poll.5s="refreshPendingMessage" @endif class="mt-3 text-sm text-emerald-800">{{ $notice }}</p>@endif
 
     @if($showComposer)
         <form wire:submit="sendMessage" class="mt-4 space-y-3">
-            <p class="text-xs text-slate-600">From {{ $senderPhone ?: 'Sending number not configured' }} · To {{ $lead->phone }}</p>
+            <p class="text-xs text-slate-600">From {{ $senderPhone ?: 'Sending number not configured' }} · To {{ $phone }}</p>
             <fieldset>
                 <legend class="text-sm font-semibold text-slate-700">Write your message</legend>
                 <div class="mt-2 flex flex-wrap gap-3">
