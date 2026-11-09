@@ -57,8 +57,7 @@ class ZapierFacebookLeadWebhookController extends Controller
 
         $result = DB::transaction(function () use ($mapped): array {
             $lead = Lead::query()
-                ->where('external_source', $mapped['external_source'])
-                ->where('external_id', $mapped['external_id'])
+                ->externalIdentity($mapped['external_source'], $mapped['external_id'])
                 ->first();
             $created = ! $lead;
 
@@ -80,6 +79,7 @@ class ZapierFacebookLeadWebhookController extends Controller
                 $mapped['data'],
             );
             $lead->save();
+            $created = $lead->wasRecentlyCreated;
 
             LeadActivity::query()->create([
                 'lead_id' => $lead->id,

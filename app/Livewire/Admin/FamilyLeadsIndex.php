@@ -181,7 +181,7 @@ class FamilyLeadsIndex extends Component
         $lead->activities()->create([
             'actor_user_id' => auth()->id(),
             'type' => LeadActivity::TYPE_NOTE,
-            'summary' => 'Lead entered manually',
+            'summary' => $lead->wasRecentlyCreated ? 'Lead entered manually' : 'Details added to existing lead',
             'body' => filled($validated['details'] ?? null) ? trim($validated['details']) : null,
             'occurred_at' => now(),
             'metadata' => ['source' => 'admin_family_crm'],
@@ -194,7 +194,7 @@ class FamilyLeadsIndex extends Component
 
         $this->dispatch('toast', [
             'type' => 'success',
-            'title' => 'Family lead created',
+            'title' => $lead->wasRecentlyCreated ? 'Family lead created' : 'Existing lead matched by phone',
             'message' => 'The lead is ready for assignment and calling.',
         ]);
     }

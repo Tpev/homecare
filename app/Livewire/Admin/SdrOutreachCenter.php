@@ -110,6 +110,7 @@ class SdrOutreachCenter extends Component
             ]);
 
             $lead->save();
+            $wasRecentlyCreated = $lead->wasRecentlyCreated;
 
             $lead->activities()->create([
                 'actor_user_id' => auth()->id(),
@@ -268,7 +269,7 @@ class SdrOutreachCenter extends Component
         if (filled($mapped['phone'])) {
             $lead = Lead::query()
                 ->where('lead_type', Lead::TYPE_REFERRAL)
-                ->where('phone', $mapped['phone'])
+                ->matchingPhone($mapped['phone'])
                 ->first();
 
             if ($lead) {

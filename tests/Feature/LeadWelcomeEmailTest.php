@@ -26,6 +26,8 @@ class LeadWelcomeEmailTest extends TestCase
 {
     use RefreshDatabase;
 
+    private int $phoneSequence = 100;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,7 +41,7 @@ class LeadWelcomeEmailTest extends TestCase
     {
         return Lead::create(array_merge([
             'lead_type' => 'family', 'name' => 'Sarah Example', 'email' => 'sarah@example.test',
-            'phone' => '9195550100', 'source' => 'facebook_lead_ad', 'status' => 'new', 'zip' => '27601',
+            'phone' => sprintf('919555%04d', $this->phoneSequence++), 'source' => 'facebook_lead_ad', 'status' => 'new', 'zip' => '27601',
         ], $attributes));
     }
 

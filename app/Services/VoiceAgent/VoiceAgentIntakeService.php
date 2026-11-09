@@ -306,7 +306,7 @@ class VoiceAgentIntakeService
         if ($target['phone'] !== '') {
             $lead = Lead::query()
                 ->where('lead_type', Lead::TYPE_REFERRAL)
-                ->where('phone', $target['phone'])
+                ->matchingPhone($target['phone'])
                 ->first();
 
             if ($lead) {

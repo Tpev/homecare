@@ -311,7 +311,7 @@ class LeadsIndex extends Component
         $lead->activities()->create([
             'actor_user_id' => auth()->id(),
             'type' => LeadActivity::TYPE_NOTE,
-            'summary' => 'Lead created',
+            'summary' => $lead->wasRecentlyCreated ? 'Lead created' : 'Details added to existing lead',
             'body' => $notes !== '' ? $notes : null,
             'occurred_at' => now(),
             'metadata' => ['created_from' => 'admin_crm'],
@@ -324,7 +324,7 @@ class LeadsIndex extends Component
 
         $this->dispatch('toast', [
             'type' => 'success',
-            'title' => 'Lead created',
+            'title' => $lead->wasRecentlyCreated ? 'Lead created' : 'Existing lead matched by phone',
             'message' => 'The CRM record is ready.',
         ]);
     }

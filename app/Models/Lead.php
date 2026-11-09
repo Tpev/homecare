@@ -8,6 +8,33 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
+    public function save(array $options = [])
+    {
+        return app(\App\Services\Crm\LeadDeduplicator::class)->save($this, $options);
+    }
+
+    /** Internal persistence hook; callers should use save() to enforce phone identity. */
+    public function saveWithoutDeduplication(array $options = []): bool
+    {
+        return parent::save($options);
+    }
+
+    public function scopeMatchingPhone(\Illuminate\Database\Eloquent\Builder $query, ?string $phone): void
+    {
+        $key = \App\Support\LeadPhone::key($phone);
+        $key ? $query->where('phone_key', $key) : $query->whereRaw('1 = 0');
+    }
+
+    public function scopeExternalIdentity(\Illuminate\Database\Eloquent\Builder $query, string $source, string $id): void
+    {
+        $query->where(function ($query) use ($source, $id) {
+            $query->where(function ($query) use ($source, $id) {
+                $query->where('external_source', $source)->where('external_id', $id);
+            })->orWhereIn('id', \Illuminate\Support\Facades\DB::table('lead_external_identities')
+                ->select('lead_id')->where('external_source', $source)->where('external_id', $id));
+        });
+    }
+
     public function setPhoneAttribute(?string $phone): void
     {
         $this->attributes['phone'] = $phone;

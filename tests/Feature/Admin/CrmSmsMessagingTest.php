@@ -369,7 +369,7 @@ class CrmSmsMessagingTest extends TestCase
     {
         User::factory()->create(['role' => 'admin']);
         $this->lead();
-        $this->lead();
+        $this->lead(['lead_type' => Lead::TYPE_REFERRAL]);
         $this->signedPost('webhooks.twilio.sms', $this->incoming())->assertOk();
         $this->signedPost('webhooks.twilio.sms', $this->incoming(['MessageSid' => 'SM_unknown', 'From' => '+19195559999']))->assertOk();
         $this->assertSame(0, SmsMessage::whereNotNull('lead_id')->count());
@@ -381,7 +381,7 @@ class CrmSmsMessagingTest extends TestCase
     {
         $actor = User::factory()->create(['role' => 'admin']);
         $first = $this->lead();
-        $second = $this->lead();
+        $second = $this->lead(['lead_type' => Lead::TYPE_REFERRAL]);
         Http::fakeSequence()->push(['sid' => 'SM_first', 'status' => 'queued'], 201)
             ->push(['sid' => 'SM_second', 'status' => 'queued'], 201);
         app(LeadSmsService::class)->send($first, $actor, 'First', (string) Str::uuid());

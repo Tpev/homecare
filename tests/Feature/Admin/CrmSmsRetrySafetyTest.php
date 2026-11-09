@@ -209,13 +209,14 @@ class CrmSmsRetrySafetyTest extends TestCase
         $this->assertDatabaseCount('sms_messages', 1);
     }
 
-    public function test_different_crm_user_or_duplicate_lead_cannot_bypass_an_unknown_attempt(): void
+    public function test_different_crm_user_or_shared_phone_in_another_pipeline_cannot_bypass_an_unknown_attempt(): void
     {
         [$actor, $lead] = $this->fixture();
         Http::fake(['api.twilio.com/*' => Http::response(['message' => 'Server error'], 500)]);
         app(LeadSmsService::class)->send($lead, $actor, 'Hello', (string) Str::uuid());
         $other = User::factory()->create(['role' => 'sdr']);
         $duplicateLead = $lead->replicate();
+        $duplicateLead->lead_type = Lead::TYPE_REFERRAL;
         $duplicateLead->save();
         foreach ([[$other, $lead], [$actor, $duplicateLead]] as [$sender, $target]) {
             try {
@@ -225,6 +226,11 @@ class CrmSmsRetrySafetyTest extends TestCase
                 $this->assertArrayHasKey('send', $error->errors());
             }
         }
+        $mergedLead = $lead->replicate();
+        $mergedLead->save();
+        $this->assertSame($lead->id, $mergedLead->id);
+        $pending = app(LeadSmsService::class)->send($mergedLead, $actor, 'Hello', (string) Str::uuid());
+        $this->assertSame(SmsMessage::sole()->id, $pending->id);
         Http::assertSentCount(1);
         $this->assertDatabaseCount('sms_messages', 1);
     }

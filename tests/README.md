@@ -52,6 +52,21 @@ File: `tests/Feature/Caregiver/CaregiverRegressionTest.php`
 
 ## Notes
 
+- CRM phone matching is covered by `tests/Feature/LeadPhoneDeduplicationTest.php`.
+  The November 9, 2026 migration backfills phone keys and merges existing duplicates
+  within each lead type. It keeps the oldest lead during backfill, moves activities
+  and SMS history, repoints provider calls, and saves original records in the merge
+  activity. Email delivery reservations and external import identities are retained.
+  New submissions reuse the existing record without resetting its stage or owner.
+  Editing a phone to match another record keeps the edited record's ID.
+- Deploy the CRM phone changes together with `php artisan migrate --force`, while
+  CRM writes and queue workers are paused. The migration stops before schema changes
+  if matching phones belong to different linked family accounts; its error names
+  the lead IDs that need review. Blank, incomplete, and extension-bearing phones are
+  excluded from automatic merging. Family and referral lead types remain separate.
+  Rolling back the schema does not split merged histories; original snapshots remain
+  in `lead_activities` for review or recovery.
+
 - Tests use `RefreshDatabase`, so each test runs with a clean database state.
 - Admin-only tests assign the explicit `admin` role; fixture email addresses do not grant permissions.
 - If tests fail after schema updates, run:

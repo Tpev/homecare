@@ -543,7 +543,7 @@ class TwilioVoiceClient
 
         $lead = Lead::query()
             ->where('lead_type', Lead::TYPE_REFERRAL)
-            ->where('phone', $phone)
+            ->matchingPhone($phone)
             ->first();
 
         if ($lead && (bool) data_get($lead->data, 'provider_outreach.do_not_call')) {

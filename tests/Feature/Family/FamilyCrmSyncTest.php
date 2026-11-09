@@ -28,6 +28,8 @@ class FamilyCrmSyncTest extends TestCase
 {
     use RefreshDatabase;
 
+    private int $phoneSequence = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -253,7 +255,8 @@ class FamilyCrmSyncTest extends TestCase
 
     private function enroll(?string $email = null): array
     {
-        $user = User::factory()->create(['role' => 'family', 'email' => $email ?? Str::uuid().'@example.com', 'phone' => '+19845550000']);
+        $user = User::factory()->create(['role' => 'family', 'email' => $email ?? Str::uuid().'@example.com',
+            'phone' => sprintf('+1984555%04d', $this->phoneSequence++)]);
         $onboarding = DB::transaction(fn () => app(FamilyOnboardingService::class)->enrollRegistration($user));
 
         return [$user, $onboarding];
@@ -263,8 +266,10 @@ class FamilyCrmSyncTest extends TestCase
     {
         $service = app(FamilyOnboardingService::class);
         $record = $service->forOwner($user);
+        $answers = $this->answers($visit);
+        $answers['phone'] = sprintf('(984) 555-%04d', 123 + (int) substr($user->phone, -4));
         for ($step = 1; $step <= 4; $step++) {
-            $record = $service->saveStep($user, $this->answers($visit), $step, $record->revision);
+            $record = $service->saveStep($user, $answers, $step, $record->revision);
         }
 
         return $record;

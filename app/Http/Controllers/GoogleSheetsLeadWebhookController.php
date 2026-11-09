@@ -62,6 +62,7 @@ class GoogleSheetsLeadWebhookController extends Controller
                 $mapped['data'],
             );
             $lead->save();
+            $created = $lead->wasRecentlyCreated;
 
             LeadActivity::query()->create([
                 'lead_id' => $lead->id,
@@ -300,8 +301,7 @@ class GoogleSheetsLeadWebhookController extends Controller
     {
         if (filled($mapped['external_source']) && filled($mapped['external_id'])) {
             $lead = Lead::query()
-                ->where('external_source', $mapped['external_source'])
-                ->where('external_id', $mapped['external_id'])
+                ->externalIdentity($mapped['external_source'], $mapped['external_id'])
                 ->first();
 
             if ($lead) {
@@ -323,7 +323,7 @@ class GoogleSheetsLeadWebhookController extends Controller
         if (filled($mapped['phone'])) {
             return Lead::query()
                 ->where('lead_type', $mapped['lead_type'])
-                ->where('phone', $mapped['phone'])
+                ->matchingPhone($mapped['phone'])
                 ->first();
         }
 
