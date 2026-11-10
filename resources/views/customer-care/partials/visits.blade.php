@@ -17,11 +17,22 @@
 <label class="block text-sm font-semibold">Placement agreement / internal note<textarea class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reason" required minlength="5" maxlength="2000">
 </textarea>
 </label>
-<button class="hc-primary-button">Hire and reserve prepaid hours</button>
+<label class="block text-sm font-semibold">Payment for this visit<select name="funding_source" class="mt-2 block w-full rounded-xl border px-3 py-2"><option value="card">Usual card payment</option><option value="prepaid">Use care hours</option></select></label>
+<button class="hc-primary-button">Confirm hire</button>
 </form>
 </details>
 
     </section>
+    @endif
+    @if($sharedPlans->isNotEmpty())
+        <section class="hc-surface p-5 sm:p-6">
+            <h2 class="text-xl font-semibold">Caregiver schedules</h2>
+            <div class="mt-4 flex flex-wrap gap-3">
+                @foreach($sharedPlans as $sharedPlan)
+                    <a class="hc-secondary-button" href="{{ route('customer-care.show', ['careRequest' => $sharedPlan->source_care_request_id, 'panel' => 'visits']) }}">Manage care with {{ $sharedPlan->caregiver->name }}</a>
+                @endforeach
+            </div>
+        </section>
     @endif
     @if($careRequest->carePlan)
         <section class="hc-surface p-5 sm:p-6">
@@ -62,7 +73,7 @@
                     <dl class="mt-5 grid gap-4 border-y border-[#E3D6C5] py-4 sm:grid-cols-3">
                         <div><dt class="hc-care-meta">Actual care</dt><dd class="mt-1 text-sm font-semibold">{{ $booking->worked_minutes !== null ? \App\Models\CareHourAccount::formatMinutes($booking->worked_minutes) : 'Not recorded yet' }}</dd></div>
                         <div><dt class="hc-care-meta">Hours review</dt><dd class="mt-1 text-sm font-semibold">{{ $booking->family_confirmed_at ? 'Approved' : ($booking->status === 'cancelled' ? 'Not required' : 'Awaiting approval') }}</dd></div>
-                        <div><dt class="hc-care-meta">Prepaid coverage</dt><dd class="mt-1 text-sm font-semibold">{{ ucfirst(str_replace('_', ' ', $booking->careHourFunding?->status ?? 'Card billing')) }}</dd></div>
+                        <div><dt class="hc-care-meta">Payment</dt><dd class="mt-1 text-sm font-semibold">{{ ucfirst(str_replace('_', ' ', $booking->careHourFunding?->status ?? 'Card billing')) }}</dd></div>
                     </dl>
                     @if($booking->careHourSettlement && ($booking->careHourSettlement->card_minutes > 0 || in_array($booking->careHourSettlement->status, ['payment_attention', 'funding_on_hold', 'reconciliation_pending'])))
                         <p class="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{{ ucfirst(str_replace('_', ' ', $booking->careHourSettlement->status)) }}. @if($booking->careHourSettlement->card_minutes > 0){{ $booking->careHourSettlement->card_minutes }} minutes need coverage. Add prepaid hours, then approve again.@endif</p>
@@ -75,7 +86,7 @@
                             @csrf<input type="hidden" name="action" value="visit"><input type="hidden" name="booking_id" value="{{ $booking->id }}"><input type="hidden" name="visit_action" :value="visitAction">
                             <h4 class="text-lg font-semibold" x-text="(@js($actions))[visitAction]"></h4>
                             <p x-show="visitAction === 'cancel'" class="hc-care-subtitle">The caregiver will be informed and reserved hours will be released. The customer will not be notified.</p>
-                            <p x-show="visitAction === 'approve'" class="hc-care-subtitle">Confirm that the actual hours are correct. This settles care against the family's prepaid balance.</p>
+                            <p x-show="visitAction === 'approve'" class="hc-care-subtitle">Confirm that the actual hours are correct. Payment uses the card or care hours selected for this visit.</p>
                             <div x-show="['reschedule', 'complete'].includes(visitAction)" class="grid gap-4 sm:grid-cols-2">
                                 <label class="block text-sm font-semibold">Start<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" type="datetime-local" name="start" value="{{ $selectedAction ? old('start') : $booking->scheduled_start_at?->format('Y-m-d\TH:i') }}" :required="['reschedule','complete'].includes(visitAction)" :disabled="!['reschedule','complete'].includes(visitAction)"></label>
                                 <label class="block text-sm font-semibold">End<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" type="datetime-local" name="end" value="{{ $selectedAction ? old('end') : $booking->scheduled_end_at?->format('Y-m-d\TH:i') }}" :required="['reschedule','complete'].includes(visitAction)" :disabled="!['reschedule','complete'].includes(visitAction)"></label>
@@ -88,7 +99,7 @@
                     @include('customer-care.partials.visit-proposals')
                 </article>
             @empty
-                <div class="hc-care-soft p-8 text-center"><h3 class="text-lg font-semibold">Your first visit starts here</h3><p class="hc-care-subtitle">Hire a caregiver to schedule care and reserve prepaid hours.</p><a class="hc-care-text-link mt-2" href="{{ route('customer-care.show', ['careRequest' => $careRequest, 'tab' => 'caregivers']) }}">Find a caregiver</a></div>
+                <div class="hc-care-soft p-8 text-center"><h3 class="text-lg font-semibold">Your first visit starts here</h3><p class="hc-care-subtitle">Hire a caregiver to schedule care.</p><a class="hc-care-text-link mt-2" href="{{ route('customer-care.show', ['careRequest' => $careRequest, 'tab' => 'caregivers']) }}">Find a caregiver</a></div>
             @endforelse
         </div>
         <div class="mt-5">{{ $bookings->links() }}</div>

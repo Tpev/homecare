@@ -37,7 +37,7 @@ class CareRequestHiringService
         $request = $application->careRequest;
         if ($staffActor) {
             \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
-            abort_unless($request->staff_managed && $careHourAccount !== null, 403);
+            abort_unless($request->staff_managed && ! $request->staff_archived_at, 403);
         }
         if ($family->role !== 'family' || ! $this->familyAccounts->canAccessRecord($family, $request)) {
             throw new AuthorizationException('You cannot hire for this care request.');
@@ -79,7 +79,7 @@ class CareRequestHiringService
             }
 
             $lockedApplication->update(['status' => CareRequestApplication::STATUS_HIRED]);
-            CareRequestConversation::findOrCreateForApplication($lockedApplication->loadMissing('careRequest'), $family->id);
+            CareRequestConversation::findOrCreateForApplication($lockedApplication->loadMissing('careRequest'), ($staffActor ?? $family)->id);
             $lockedRequest->applications()->where('id', '!=', $lockedApplication->id)
                 ->whereIn('status', [CareRequestApplication::STATUS_APPLIED, CareRequestApplication::STATUS_SHORTLISTED])
                 ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);

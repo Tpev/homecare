@@ -111,19 +111,22 @@ class ManagedCareService
         });
     }
 
-    public function hire(User $actor, CareRequest $request, int $caregiverId, string $reason): void
+    public function hire(User $actor, CareRequest $request, int $caregiverId, string $reason, string $fundingSource = 'prepaid'): void
     {
         CustomerCareAccess::authorize($actor);
         $this->reason($reason);
-        DB::transaction(function () use ($actor, $request, $caregiverId, $reason): void {
+        $this->require(in_array($fundingSource, ['prepaid', 'card'], true), 'Choose care hours or the family’s saved card.');
+        DB::transaction(function () use ($actor, $request, $caregiverId, $reason, $fundingSource): void {
             $request = $this->locked($actor, $request);
             $this->require($request->status === 'open' && $request->isAcceptingApplications(), 'This request is not open for hiring.');
             $caregiver = User::where('role', 'caregiver')->whereNull('access_revoked_at')->findOrFail($caregiverId);
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork($caregiverId);
             $this->require($caregiver->caregiverProfile?->isMarketplaceReady() === true, 'This caregiver is not ready for marketplace work.');
             $family = $request->family;
-            $wallet = app(CareHourIdentityService::class)->walletForFamily($request->family_account_id);
-            $this->require($wallet !== null && $wallet->active, 'Add prepaid hours to this customer before hiring.');
+            $wallet = $fundingSource === 'prepaid' ? app(CareHourIdentityService::class)->walletForFamily($request->family_account_id) : null;
+            if ($fundingSource === 'prepaid') {
+                $this->require($wallet !== null && $wallet->active, 'Add prepaid hours to this customer or choose the family’s saved card.');
+            }
             $application = $request->applications()->firstOrCreate(['caregiver_user_id' => $caregiverId], [
                 'status' => CareRequestApplication::STATUS_APPLIED,
                 'proposed_rate' => app(\App\Support\MarketplacePricing::class)->caregiverGrossHourlyCents() / 100,
@@ -132,10 +135,12 @@ class ManagedCareService
             // Existing withdrawn/rejected offers must not be silently revived.
             $result = app(CareRequestHiringService::class)->hire($family, $application, $wallet, $actor);
             $booking = $result['booking'];
-            $funding = $booking ? app(PrepaidBookingFundingService::class)->prepare($booking) : null;
-            $this->require($funding?->status === 'ready' && (int) $funding->shortfall_minutes === 0,
-                'There are not enough available prepaid hours for the first visit. Add hours, then hire again.');
-            $this->audit($actor, $request, 'caregiver_hired', $reason, ['caregiver_user_id' => $caregiverId, 'booking_id' => $booking->id, 'care_plan_id' => $result['care_plan_id']]);
+            if ($wallet) {
+                $funding = $booking ? app(PrepaidBookingFundingService::class)->prepare($booking) : null;
+                $this->require($funding?->status === 'ready' && (int) $funding->shortfall_minutes === 0,
+                    'There are not enough available prepaid hours for the first visit. Add hours or choose the family’s saved card.');
+            }
+            $this->audit($actor, $request, 'caregiver_hired', $reason, ['caregiver_user_id' => $caregiverId, 'booking_id' => $booking?->id, 'care_plan_id' => $result['care_plan_id'], 'funding_source' => $fundingSource]);
         }, 3);
     }
 
@@ -171,10 +176,10 @@ class ManagedCareService
             if ($request->staff_archived_at) {
                 return;
             }
-            $this->require(! $request->sourceCarePlans()->whereNotIn('status', ['ended', 'cancelled', 'declined', 'expired'])->exists(),
+            $this->require(! CarePlan::forSourceRequest($request)->whereNotIn('status', ['ended', 'cancelled', 'declined', 'expired'])->exists(),
                 'End recurring care before removing this request.');
             $visits = CareBooking::where(fn ($q) => $q->where('care_request_id', $request->id)
-                ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $request->id)))->lockForUpdate()->get();
+                ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($request)))->lockForUpdate()->get();
             foreach ($visits as $visit) {
                 $this->require(in_array($visit->status, ['cancelled', 'completed', 'reviewed'], true)
                     && ($visit->status === 'cancelled' || $visit->family_confirmed_at !== null)
@@ -218,7 +223,7 @@ class ManagedCareService
             $request = $this->locked($actor, $request);
             $conversation = $conversationId ? CareRequestConversation::where('caregiver_user_id', $caregiverId)
                 ->whereHas('careRequest', fn ($q) => $q->whereKey($request->id)
-                    ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $request->id)))
+                    ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($request)))
                 ->lockForUpdate()->findOrFail($conversationId) : null;
             $messageRequest = $conversation?->careRequest ?? $request;
             $this->require(app(CareRequestChatService::class)->closedReason($messageRequest, $caregiverId) === null, 'This caregiver conversation is closed.');
@@ -242,7 +247,7 @@ class ManagedCareService
         $reason = trim((string) ($input['reason'] ?? ''));
         $this->reason($reason);
         $booking = $this->booking($request, $bookingId);
-        $this->require(app(PrepaidBookingFundingService::class)->isPrepaid($booking), 'This existing card visit needs the payment operations workflow. New managed visits use prepaid hours.');
+        $prepaid = app(PrepaidBookingFundingService::class)->isPrepaid($booking);
         if (in_array($action, ['dispute', 'resolve_dispute'], true)) {
             $opening = $action === 'dispute';
             $attributes = $opening
@@ -268,6 +273,9 @@ class ManagedCareService
                 ...($action === 'no_show' ? ['no_show_flag' => true] : []),
             ], [CareBooking::STATUS_SCHEDULED]);
             $this->require($changed, 'Only a scheduled visit can be cancelled.');
+            if (! $prepaid) {
+                app(\App\Services\Payments\BookingPaymentService::class)->cancelForBooking($booking);
+            }
             $this->audit($actor, $request, $action === 'no_show' ? 'visit_no_show' : 'visit_cancelled', $reason, ['booking_id' => $bookingId]);
             if ($action === 'no_show') {
                 app(BookingTrustService::class)->recomputeReliabilityForBooking($booking->fresh());
@@ -276,12 +284,28 @@ class ManagedCareService
 
             return;
         }
+        if ($action === 'approve' && ! $prepaid) {
+            $this->require(in_array($booking->status, ['completed', 'reviewed'], true) && $booking->worked_minutes !== null && $booking->dispute_status !== 'open', 'Review completed actual hours and resolve any dispute before approval.');
+            if ($booking->family_confirmed_at) {
+                return;
+            }
+            app(\App\Services\Payments\BookingPaymentService::class)->captureForBooking($booking);
+            $booking->update(['family_confirmed_at' => now(), 'family_confirmed_by_user_id' => $actor->id]);
+            app(BookingTrustService::class)->recordEvent($booking, $actor->id, $actor->role, 'timesheet_confirmed_by_staff', ['note' => $reason]);
+            $this->audit($actor, $request, 'visit_approve', $reason, ['booking_id' => $bookingId, 'funding_source' => 'card']);
+
+            return;
+        }
         DB::transaction(function () use ($actor, $request, $bookingId, $action, $input, $reason): void {
             $request = $this->locked($actor, $request);
             $booking = $this->booking($request, $bookingId, true);
             $funding = app(PrepaidBookingFundingService::class);
             if ($action === 'coverage') {
-                $funding->prepare($booking);
+                if ($funding->isPrepaid($booking)) {
+                    $funding->prepare($booking);
+                } else {
+                    app(\App\Services\Payments\BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
+                }
             } elseif ($action === 'reschedule') {
                 $this->require($booking->status === 'scheduled', 'Only a scheduled visit can be rescheduled.');
                 $data = Validator::make($input, ['start' => ['required', 'date', 'after:now'], 'end' => ['required', 'date', 'after:start']])->validate();
@@ -364,9 +388,10 @@ class ManagedCareService
         $service = app(\App\Services\Booking\CareBookingTimeCorrectionService::class);
         if ($decision === 'approve') {
             $funding = app(PrepaidBookingFundingService::class);
-            $this->require($funding->usesStaffPrepaidOnly($booking), 'This correction requires the existing payment operations workflow.');
-            $preview = $funding->approvalPreview($booking, $correction->proposed_worked_minutes);
-            $this->require($preview['card_cents'] === 0, 'Add prepaid hours before approving the corrected care time.');
+            if ($funding->isPrepaid($booking)) {
+                $preview = $funding->approvalPreview($booking, $correction->proposed_worked_minutes);
+                $this->require($preview['card_cents'] === 0, 'Add prepaid hours before approving the corrected care time.');
+            }
             $service->approve($correction, $actor);
         } elseif ($decision === 'changes') {
             $service->requestChanges($correction, $actor, $reason);
@@ -423,7 +448,7 @@ class ManagedCareService
         abort_unless($request->fresh()->staff_managed, 403);
 
         return CareBooking::where(fn ($q) => $q->where('care_request_id', $request->id)
-            ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $request->id)))
+            ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($request)))
             ->when($lock, fn ($q) => $q->lockForUpdate())->findOrFail($id);
     }
 

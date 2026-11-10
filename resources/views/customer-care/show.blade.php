@@ -7,7 +7,7 @@
             <div class="text-sm"><a class="hc-care-text-link" href="{{ route('customer-care.index') }}">Customer Success</a><span class="mx-2">/</span><a class="hc-care-text-link" href="{{ route('customer-care.customer', $careRequest->family) }}">{{ $careRequest->family->name }}</a><p class="mt-1 hc-care-meta">{{ $careRequest->staff_managed ? 'Managing for this family · Customer notifications off' : 'Customer-managed request' }}</p></div>
             @if($careRequest->staff_managed)
             <div class="flex flex-wrap items-center gap-3 text-sm">
-                @if(! $careRequest->staff_archived_at && in_array($careRequest->status, ['open', 'draft']) && ! $careRequest->booking)<a class="hc-secondary-button" href="{{ route('customer-care.edit', $careRequest) }}">Edit request</a>@endif
+                @if(! $careRequest->staff_archived_at && in_array($careRequest->status, ['open', 'draft']) && ! $careRequest->booking)<a x-data="{ hired: false }" @customer-care-request-hired.window="hired = true" x-show="!hired" class="hc-secondary-button" href="{{ route('customer-care.edit', $careRequest) }}">Edit request</a>@endif
                 <a class="hc-care-text-link" href="{{ route('customer-care.show', ['careRequest' => $careRequest, 'panel' => 'messages']) }}">Messages @if($unreadMessages) ({{ $unreadMessages }})@endif</a>
                 <a class="hc-care-text-link" href="{{ route('customer-care.show', ['careRequest' => $careRequest, 'panel' => 'visits']) }}">{{ $careRequest->isRecurring() || $careRequest->care_plan_id ? 'Recurring care' : 'Visit tools' }}</a>
                 <a class="hc-care-text-link" href="{{ route('customer-care.show', ['careRequest' => $careRequest, 'panel' => 'activity']) }}">Internal notes</a>

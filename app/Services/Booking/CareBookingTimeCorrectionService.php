@@ -659,7 +659,7 @@ class CareBookingTimeCorrectionService
         });
 
         $booking = $completed->booking()->firstOrFail();
-        $this->trust->recordEvent($booking, $completed->approved_by_user_id, 'family', 'time_correction_applied', [
+        $this->trust->recordEvent($booking, $completed->approved_by_user_id, $completed->approvedBy?->role ?? 'family', 'time_correction_applied', [
             'time_correction_id' => $completed->id,
             'version' => $completed->version,
             'worked_minutes' => $completed->proposed_worked_minutes,
@@ -949,8 +949,11 @@ class CareBookingTimeCorrectionService
         }
         \App\Services\CustomerCare\CustomerCareAccess::authorize($actor);
 
-        return ($booking->careRequest?->staff_managed || $booking->carePlan?->sourceCareRequest?->staff_managed)
-            && app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking);
+        $request = $booking->careRequest;
+        $source = $booking->carePlan?->sourceCareRequest;
+
+        return ($request?->staff_managed || $source?->staff_managed)
+            && ! $request?->staff_archived_at && ! $source?->staff_archived_at;
     }
 
     private function parseLocalDate(mixed $value, string $timezone, string $field, string $message): Carbon

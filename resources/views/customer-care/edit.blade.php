@@ -78,7 +78,7 @@
 </section>
 </div>
 <div class="hc-surface p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
-<p class="hc-care-subtitle">Your team can hire using the customer's prepaid hours after posting.</p>
+<p class="hc-care-subtitle">After posting, review applicants and hire using this family's saved card or prepaid hours.</p>
 <div class="flex flex-wrap gap-3">
 <a class="hc-care-text-link" href="{{ $careRequest ? route('customer-care.show', $careRequest) : route('customer-care.customer', $customer) }}">Cancel</a>
 <button class="hc-secondary-button" name="status" value="draft">Save draft</button>

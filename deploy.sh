@@ -380,6 +380,8 @@ app/Services/CareRequests/CareRequestLifecycleService.php
 app/Services/Messaging/CareRequestChatService.php
 app/Support/StaffAccess.php
 app/Livewire/CustomerCare/ManageCareRequest.php
+app/Services/RegularCare/SharedCareService.php
+app/Models/CarePlan.php
 app/Services/Marketplace/CareRequestInvitationService.php
 app/Services/Marketplace/CaregiverInvitationDiscoveryService.php
 resources/views/customer-care/partials/remove-request.blade.php

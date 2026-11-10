@@ -335,14 +335,14 @@ class CarePlanService
     ): CarePlan {
         if ($staffActor) {
             \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
-            abort_unless($source->staff_managed && $careHourAccount !== null, 403);
+            abort_unless($source->staff_managed && ! $source->staff_archived_at, 403);
         }
         if (! $source->is_system_generated && ($application->selected_days !== null || $source->care_arrangement_id)) {
             if ($careHourAccount) {
                 throw ValidationException::withMessages(['careHourAccountId' => 'Shared care uses its existing payment flow.']);
             }
 
-            return app(SharedCareService::class)->hire($source, $application, $family);
+            return app(SharedCareService::class)->hire($source, $application, $family, $staffActor);
         }
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source) || ! $source->isRecurring()) {
             throw ValidationException::withMessages([

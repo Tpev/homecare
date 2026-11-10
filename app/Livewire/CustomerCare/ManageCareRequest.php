@@ -3,15 +3,12 @@
 namespace App\Livewire\CustomerCare;
 
 use App\Models\CareBooking;
-use App\Models\CareHourAccount;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\User;
-use App\Services\CareHours\CareHourIdentityService;
 use App\Services\CustomerCare\CustomerCareAccess;
 use App\Services\CustomerCare\ManagedCareService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /** The family screen, with separately authorized and audited staff actions. */
@@ -39,10 +36,13 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
 
     protected function familyContextUser(): User
     {
-        // This is read context only. Authentication and action authors stay staff.
+        // Resolve account ownership without changing authentication or action authors.
         $this->authorizeWorkspace();
 
-        return User::findOrFail($this->requestItem->family_user_id);
+        $family = User::findOrFail($this->requestItem->family_user_id);
+        abort_unless(app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->canAccessRecord($family, $this->requestItem), 403);
+
+        return $family;
     }
 
     protected function isStaffWorkspace(): bool
@@ -85,39 +85,6 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
         };
     }
 
-    protected function selectedCareHourAccount(?CareRequestApplication $application = null): ?CareHourAccount
-    {
-        $wallet = app(CareHourIdentityService::class)->walletForFamily($this->requestItem->family_account_id);
-
-        return $wallet?->active ? $wallet : null;
-    }
-
-    protected function initializeCareHoursChoice(?CareRequestApplication $application = null): void
-    {
-        $this->careHourAccountId = $this->selectedCareHourAccount()?->id;
-    }
-
-    public function updatedCareHourAccountId(): void
-    {
-        // Staff cannot select another family's wallet or fall back to a card.
-        $this->initializeCareHoursChoice();
-    }
-
-    protected function careHourAccountsForRequest(): array
-    {
-        $wallet = $this->selectedCareHourAccount();
-
-        return $wallet ? [['id' => $wallet->id, 'display_name' => 'Family prepaid balance',
-            'available_minutes' => $wallet->balance()['available_minutes']]] : [];
-    }
-
-    protected function paymentReadinessForHire(): array
-    {
-        $wallet = $this->selectedCareHourAccount();
-
-        return ['ready' => $wallet && $wallet->balance()['available_minutes'] > 0, 'unavailable' => false];
-    }
-
     public function shortlist(int $applicationId): void
     {
         $this->care()->application(auth()->user(), $this->requestItem, $applicationId, 'shortlisted');
@@ -140,37 +107,26 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
     public function hire(int $applicationId): void
     {
         $this->authorizeWorkspace();
-        DB::transaction(function () use ($applicationId): void {
-            $application = $this->requestItem->applications()->lockForUpdate()->findOrFail($applicationId);
-            if ($this->reviewingApplicationId !== $applicationId || $this->reviewedOfferVersion !== $application->offer_version) {
-                throw ValidationException::withMessages(['hire' => 'Review the caregiver’s latest offer before confirming.']);
-            }
-            $this->care()->hire(auth()->user(), $this->requestItem, $application->caregiver_user_id, 'Caregiver and care agreement reviewed and confirmed by the care team.');
-        });
-        $this->closeDecisionReview();
-        $this->saved();
-        $this->redirect(route('customer-care.show', ['careRequest' => $this->requestItem->id,
-            ...($this->requestItem->isRecurring() ? ['panel' => 'visits'] : ['tab' => 'shift']),
-        ]), navigate: true);
-    }
-
-    public function startPaymentAuthorization(): void
-    {
-        $this->cardPaymentUnavailable();
-    }
-
-    public function finalizeStripeAuthorization(string $paymentIntentId): void
-    {
-        $this->cardPaymentUnavailable();
-    }
-
-    public function failStripeAuthorization(?string $paymentIntentId = null, string $message = ''): void
-    {
-        $this->cardPaymentUnavailable();
+        $application = $this->findOwnedApplication($applicationId);
+        if ($this->reviewingApplicationId !== $applicationId || $this->reviewedOfferVersion !== $application->offer_version) {
+            throw ValidationException::withMessages(['hire' => 'Review the caregiver’s latest offer before confirming.']);
+        }
+        $fundingSource = $this->careHourAccountId === null ? 'card' : 'prepaid';
+        parent::hire($applicationId);
+        if ($application->fresh()->status === CareRequestApplication::STATUS_HIRED) {
+            $this->care()->audit(auth()->user(), $this->requestItem, 'caregiver_hired', metadata: ['caregiver_user_id' => $application->caregiver_user_id, 'funding_source' => $fundingSource]);
+            $this->dispatch('customer-care-request-hired');
+        }
     }
 
     public function approveTimeCorrection(int $correctionId): void
     {
+        if (! app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($this->booking())) {
+            parent::approveTimeCorrection($correctionId);
+            $this->care()->audit(auth()->user(), $this->requestItem, 'time_correction_approve', metadata: ['time_correction_id' => $correctionId]);
+
+            return;
+        }
         abort_unless($this->confirmingTimeCorrectionId === $correctionId, 403);
         $this->care()->correction(auth()->user(), $this->requestItem, $this->booking()->id, $correctionId, 'approve', 'Corrected hours reviewed and approved by the care team.');
         $this->cancelTimeCorrectionApproval();
@@ -181,11 +137,6 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
     {
         $this->care()->correction(auth()->user(), $this->requestItem, $this->booking()->id, $correctionId, 'changes', $this->timeCorrectionResponseNote);
         $this->saved();
-    }
-
-    public function continueTimeCorrectionPayment(int $correctionId): void
-    {
-        $this->cardPaymentUnavailable();
     }
 
     public function escalateTimeCorrection(int $correctionId): void
@@ -207,6 +158,15 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
     public function completeBooking(): void
     {
         $booking = $this->booking();
+        if (in_array($booking->status, ['completed', 'reviewed'], true) && ! app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking)) {
+            $wasConfirmed = $booking->family_confirmed_at;
+            parent::completeBooking();
+            if (! $wasConfirmed && $booking->fresh()->family_confirmed_at) {
+                $this->care()->audit(auth()->user(), $this->requestItem, 'visit_approve', metadata: ['booking_id' => $booking->id, 'funding_source' => 'card']);
+            }
+
+            return;
+        }
         $action = in_array($booking->status, ['completed', 'reviewed'], true) ? 'approve' : 'complete';
         $this->care()->visit(auth()->user(), $this->requestItem, $booking->id, $action, [
             'reason' => trim($this->confirmationNote) ?: 'Actual visit times reviewed by the care team.',
@@ -297,7 +257,6 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
     public function render()
     {
         $this->authorizeWorkspace();
-        $this->initializeCareHoursChoice();
 
         return parent::render();
     }
@@ -320,11 +279,5 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
     {
         $this->refreshRequestItem();
         session()->flash('status', 'Saved by the care team. No customer notification was sent.');
-    }
-
-    private function cardPaymentUnavailable(): never
-    {
-        $this->authorizeWorkspace();
-        throw ValidationException::withMessages(['customer_care' => 'Use the family’s prepaid hours here. Existing card payments are handled in payment operations.']);
     }
 }

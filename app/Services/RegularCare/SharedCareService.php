@@ -78,11 +78,15 @@ class SharedCareService
         return ['slots' => $slots, 'starts_on' => $start->toDateString(), 'ends_on' => $request->recurring_ends_on?->toDateString(), 'timezone' => $timezone];
     }
 
-    public function hire(CareRequest $request, CareRequestApplication $application, User $family): CarePlan
+    public function hire(CareRequest $request, CareRequestApplication $application, User $family, ?User $staffActor = null): CarePlan
     {
-        return DB::transaction(function () use ($request, $application, $family) {
+        return DB::transaction(function () use ($request, $application, $family, $staffActor) {
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $application->caregiver_user_id);
             $source = CareRequest::lockForUpdate()->findOrFail($request->id);
+            if ($staffActor) {
+                \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+                abort_unless($source->staff_managed && ! $source->staff_archived_at, 403);
+            }
             $applicant = CareRequestApplication::lockForUpdate()->findOrFail($application->id);
             abort_unless(app(FamilyAccountContext::class)->canAccessRecord($family, $source) && $applicant->care_request_id === $source->id, 403);
             if ($source->care_arrangement_id) {
@@ -111,7 +115,7 @@ class SharedCareService
             ]);
             $source->forceFill(['care_arrangement_id' => $arrangement->id])->save();
             // Each caregiver retains the existing isolated agreement/payment lifecycle.
-            $child = $source->replicate(['care_plan_id', 'first_hire_at', 'first_applicant_at', 'first_shortlist_at']);
+            $child = $source->replicate(['care_plan_id', 'first_hire_at', 'first_applicant_at', 'first_shortlist_at', 'staff_request_key']);
             $child->forceFill(['is_system_generated' => true, 'origin' => 'shared_regular_care', 'status' => CareRequest::STATUS_OPEN,
                 'recurring_schedule' => $offer['slots'], 'recurring_days' => WeeklySchedule::days($offer['slots']),
                 'recurring_starts_on' => $offer['starts_on'], 'recurring_ends_on' => $offer['ends_on']])->save();
@@ -123,10 +127,10 @@ class SharedCareService
             $child->tasks()->sync($source->tasks->mapWithKeys(fn ($task) => [$task->id => ['task_note' => $task->pivot->task_note]])->all());
             $childApplication = $applicant->replicate();
             $childApplication->forceFill(['care_request_id' => $child->id, 'selected_days' => null, 'status' => 'applied'])->save();
-            $plan = app(CarePlanService::class)->activateFromRecurringRequest($child, $childApplication, $family);
+            $plan = app(CarePlanService::class)->activateFromRecurringRequest($child, $childApplication, $family, null, $staffActor);
             $plan->forceFill(['metadata' => array_merge($plan->metadata ?? [], ['shared_application_id' => $applicant->id, 'shared_offer_version' => $applicant->offer_version])])->save();
             $applicant->update(['status' => 'hired']);
-            CareRequestConversation::findOrCreateForApplication($applicant->loadMissing('careRequest'), $family->id);
+            CareRequestConversation::findOrCreateForApplication($applicant->loadMissing('careRequest'), ($staffActor ?? $family)->id);
             $source->forceFill(['first_hire_at' => $source->first_hire_at ?: now()])->save();
             $this->refreshRecruitment($arrangement);
             $this->syncNeeds($arrangement, now($arrangement->timezone)->startOfDay(), now($arrangement->timezone)->addWeeks(6));
@@ -259,6 +263,7 @@ class SharedCareService
     public function requestVisit(CareArrangement $arrangement, User $family, int $planId, Carbon $start, Carbon $end, ?int $needId = null, ?string $note = null): CarePlanScheduleChange
     {
         $caregiverUserId = $arrangement->plans()->whereKey($planId)->value('caregiver_user_id');
+
         return DB::transaction(function () use ($arrangement, $family, $planId, $start, $end, $needId, $note, $caregiverUserId) {
             \App\Models\CaregiverProfile::where('user_id', $caregiverUserId)->lockForUpdate()->first();
             $arrangement = CareArrangement::lockForUpdate()->findOrFail($arrangement->id);

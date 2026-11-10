@@ -126,10 +126,10 @@ class CustomerCareController extends Controller
         $tab = in_array($http->query('panel', $http->query('tab')), ['visits', 'messages', 'activity'], true) ? $http->query('panel', $http->query('tab')) : 'overview';
         $careRequest->load(['family', 'recipient', 'tasks', 'applications.caregiver', 'carePlan']);
         $bookings = CareBooking::where(fn ($q) => $q->where('care_request_id', $careRequest->id)
-            ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $careRequest->id)))
+            ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($careRequest)))
             ->with(['caregiver', 'careHourFunding', 'careHourSettlement', 'timeCorrections', 'changeRequests'])->orderBy('scheduled_start_at')->paginate(20)->withQueryString();
         $conversations = \App\Models\CareRequestConversation::whereHas('careRequest', fn ($q) => $q->whereKey($careRequest->id)
-            ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $careRequest->id)))
+            ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($careRequest)))
             ->with(['caregiver', 'messages.sender'])->orderByDesc('last_message_at')->get();
         $unreadMessages = $conversations->filter(fn ($thread) => $thread->last_message_sender_id === $thread->caregiver_user_id
             && $thread->last_message_at && (! $thread->staff_last_read_at || $thread->last_message_at->gt($thread->staff_last_read_at)))->count();
@@ -145,9 +145,10 @@ class CustomerCareController extends Controller
         $caregiverSearch = trim((string) $http->query('caregiver_search', ''));
         $candidates = $recruitment->candidates($careRequest, $caregiverSearch)->limit(30)->get();
         $placements = $recruitment->candidates($careRequest, $caregiverSearch, includeContacted: true)->limit(30)->get();
+        $sharedPlans = \App\Models\CarePlan::forSourceRequest($careRequest)->where('source_care_request_id', '!=', $careRequest->id)->with('caregiver')->get();
         $wallet = app(CareHourIdentityService::class)->walletForFamily((int) $careRequest->family_account_id);
 
-        return view('customer-care.show', compact('careRequest', 'bookings', 'history', 'candidates', 'caregiverSearch', 'wallet', 'conversations', 'placements', 'tab', 'unreadMessages'));
+        return view('customer-care.show', compact('careRequest', 'bookings', 'history', 'candidates', 'caregiverSearch', 'wallet', 'conversations', 'placements', 'tab', 'unreadMessages', 'sharedPlans'));
     }
 
     public function action(Request $http, CareRequest $careRequest, ManagedCareService $care, CareRequestRecruitmentService $recruitment): RedirectResponse
@@ -164,7 +165,7 @@ class CustomerCareController extends Controller
                 match ($action) {
                     'archive' => $care->archive($actor, $careRequest, $reason),
                     'restore' => $care->restore($actor, $careRequest),
-                    'hire' => $care->hire($actor, $careRequest, (int) $http->input('caregiver_id'), $reason),
+                    'hire' => $care->hire($actor, $careRequest, (int) $http->input('caregiver_id'), $reason, (string) $http->input('funding_source', 'prepaid')),
                     'shortlist', 'reject' => $care->application($actor, $careRequest, (int) $http->input('application_id'), $action === 'shortlist' ? 'shortlisted' : 'rejected'),
                     'withdraw' => $care->withdraw($actor, $careRequest, $reason),
                     'note' => $care->note($actor, $careRequest, $reason),

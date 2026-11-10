@@ -15,6 +15,13 @@ class CarePlan extends Model
 {
     use BelongsToFamilyAccount, HasFactory;
 
+    /** Include the separate caregiver agreements created for selected-day offers. */
+    public function scopeForSourceRequest(Builder $query, CareRequest $request): Builder
+    {
+        return $query->where(fn (Builder $plans) => $plans->where('source_care_request_id', $request->id)
+            ->orWhereIn('care_arrangement_id', CareArrangement::select('id')->where('source_care_request_id', $request->id)));
+    }
+
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PENDING_CAREGIVER = 'pending_caregiver';

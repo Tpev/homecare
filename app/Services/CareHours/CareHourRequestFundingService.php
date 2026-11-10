@@ -88,8 +88,12 @@ class CareHourRequestFundingService
         return $account->balance()['available_minutes'] > 0 ? $account->id : null;
     }
 
-    public function remember(CareRequest $request, User $actor, ?int $accountId): void
+    public function remember(CareRequest $request, User $actor, ?int $accountId, ?User $staffActor = null): void
     {
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+            abort_unless($request->staff_managed && ! $request->staff_archived_at, 403);
+        }
         abort_unless(app(FamilyAccountContext::class)->canAccessRecord($actor, $request), 403);
         if (! $this->available()) {
             if ($accountId !== null) {
@@ -98,14 +102,14 @@ class CareHourRequestFundingService
 
             return;
         }
-        DB::transaction(function () use ($request, $actor, $accountId): void {
+        DB::transaction(function () use ($request, $actor, $accountId, $staffActor): void {
             FamilyAccount::query()->whereKey($request->family_account_id ?: app(FamilyAccountContext::class)->account($actor)->id)->lockForUpdate()->firstOrFail();
             $account = $accountId !== null ? $this->accountForRequest($request, $actor) : null;
             if ($accountId !== null && (! $account || ! in_array($accountId, $account->familySourceIds(), true))) {
                 throw ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
             }
             CareHourRequestPreference::updateOrCreate(['care_request_id' => $request->id], [
-                'care_hour_account_id' => $account?->id, 'enabled' => $accountId !== null, 'selected_by_user_id' => $actor->id,
+                'care_hour_account_id' => $account?->id, 'enabled' => $accountId !== null, 'selected_by_user_id' => ($staffActor ?? $actor)->id,
             ]);
         }, 3);
     }

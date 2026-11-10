@@ -520,7 +520,7 @@ class ManageCareRequest extends Component
         if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
             try {
                 $plan = app(\App\Services\RegularCare\CarePlanService::class)
-                    ->activateFromRecurringRequest($this->requestItem, $application, auth()->user(), $selectedCareHourAccount);
+                    ->activateFromRecurringRequest($this->requestItem, $application, $this->familyContextUser(), $selectedCareHourAccount, $this->isStaffWorkspace() ? auth()->user() : null);
             } catch (PaymentException $e) {
                 $this->refreshRequestItem(preferLifecyclePrimary: true);
                 $this->addError('hire', $e->userMessage);
@@ -534,7 +534,7 @@ class ManageCareRequest extends Component
             $this->closeDecisionReview();
             $this->refreshRequestItem(preferLifecyclePrimary: true);
             if ($plan->care_arrangement_id) {
-                $this->redirectRoute('family.shared-care.show', ['arrangement' => $plan->care_arrangement_id], navigate: true);
+                $this->redirect($this->workspaceUrl('family.shared-care.show', ['arrangement' => $plan->care_arrangement_id]), navigate: true);
 
                 return;
             }
@@ -553,7 +553,7 @@ class ManageCareRequest extends Component
 
             // Keep secure card confirmation on the exact first visit when required.
             if ($payment?->status !== CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
-                $this->redirectRoute('family.care.show', ['carePlan' => $plan->id], navigate: true);
+                $this->redirect($this->workspaceUrl('family.care.show', ['carePlan' => $plan->id]), navigate: true);
             }
 
             return;
@@ -598,14 +598,14 @@ class ManageCareRequest extends Component
                 $booking = CareBooking::query()->create(
                     [
                         'care_request_id' => $this->requestItem->id,
-                        ...app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
+                        ...app(FamilyAccountContext::class)->ownershipAttributes($this->familyContextUser()),
                         'care_request_application_id' => $application->id,
                         'caregiver_user_id' => (int) $application->caregiver_user_id,
                         'agreement_snapshot' => app(BookingTrustService::class)->buildAgreementSnapshot(
                             $this->requestItem->fresh(['recipient', 'tasks']),
                             $application
                         ),
-                        'family_terms_accepted_at' => now(),
+                        'family_terms_accepted_at' => $this->isStaffWorkspace() ? null : now(),
                         'status' => CareBooking::STATUS_SCHEDULED,
                         'scheduled_start_at' => $startAt,
                         'scheduled_end_at' => $endAt,
@@ -617,13 +617,13 @@ class ManageCareRequest extends Component
                 app(BookingTrustService::class)->recordEvent(
                     $booking,
                     auth()->id(),
-                    'family',
+                    auth()->user()->role,
                     'booking_hired',
                     ['application_id' => $application->id]
                 );
 
                 if ($selectedCareHourAccount) {
-                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForBooking($booking, $selectedCareHourAccount, auth()->user());
+                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForBooking($booking, $selectedCareHourAccount, $this->familyContextUser(), $this->isStaffWorkspace() ? auth()->user() : null);
                 }
                 $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
                 if ($payment->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
@@ -653,14 +653,14 @@ class ManageCareRequest extends Component
         }
 
         app(MarketplaceNotificationService::class)->notify(
-            recipients: auth()->user(),
+            recipients: $this->familyContextUser(),
             eventKey: MarketplaceEvent::HIRE_CONFIRMED,
             title: 'Hire confirmed',
             body: 'Caregiver hired and visit created for this request.',
             url: route('family.requests.show', $this->requestItem->id),
             payload: ['care_request_id' => $this->requestItem->id],
             subject: $application,
-            dedupeKey: 'hire-confirmed:booking-'.$this->requestItem->booking()->value('id').'-user-'.auth()->id()
+            dedupeKey: 'hire-confirmed:booking-'.$this->requestItem->booking()->value('id').'-user-'.$this->familyContextUser()->id
         );
 
         FunnelTracker::track('caregiver_hired', auth()->user(), $application, [
@@ -957,8 +957,8 @@ class ManageCareRequest extends Component
             app(BookingTrustService::class)->recordEvent(
                 $booking,
                 auth()->id(),
-                'family',
-                'booking_completed_by_family'
+                auth()->user()->role,
+                $this->isStaffWorkspace() ? 'booking_completed_by_staff' : 'booking_completed_by_family'
             );
         } elseif (in_array($booking->status, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at) {
             try {
@@ -977,8 +977,8 @@ class ManageCareRequest extends Component
             app(BookingTrustService::class)->recordEvent(
                 $booking,
                 auth()->id(),
-                'family',
-                'timesheet_confirmed_by_family',
+                auth()->user()->role,
+                $this->isStaffWorkspace() ? 'timesheet_confirmed_by_staff' : 'timesheet_confirmed_by_family',
                 ['note' => trim($this->confirmationNote) ?: null]
             );
 
@@ -2335,7 +2335,7 @@ class ManageCareRequest extends Component
         }
 
         try {
-            $summary = app(FamilyBillingService::class)->summaryFor(auth()->user());
+            $summary = app(FamilyBillingService::class)->summaryFor($this->familyContextUser());
 
             return $this->hirePaymentReadiness = ['ready' => (bool) $summary['ready'], 'unavailable' => false];
         } catch (PaymentException) {
@@ -2350,7 +2350,7 @@ class ManageCareRequest extends Component
         }
         $this->selectedCareHourAccount();
         app(\App\Services\CareHours\CareHourRequestFundingService::class)
-            ->remember($this->requestItem, auth()->user(), $this->careHourAccountId);
+            ->remember($this->requestItem, $this->familyContextUser(), $this->careHourAccountId, $this->isStaffWorkspace() ? auth()->user() : null);
         $this->hirePaymentReadiness = null;
     }
 
@@ -2362,7 +2362,7 @@ class ManageCareRequest extends Component
             return;
         }
         $this->careHourAccountId = app(\App\Services\CareHours\CareHourRequestFundingService::class)
-            ->defaultAccountId($this->requestItem, auth()->user(), $application ?? $this->fundingApplication());
+            ->defaultAccountId($this->requestItem, $this->familyContextUser(), $application ?? $this->fundingApplication());
         $this->hirePaymentReadiness = null;
     }
 
@@ -2379,7 +2379,7 @@ class ManageCareRequest extends Component
             return null;
         }
         $account = app(\App\Services\CareHours\CareHourRequestFundingService::class)
-            ->accountForRequest($this->requestItem, auth()->user(), $application ?? $this->fundingApplication());
+            ->accountForRequest($this->requestItem, $this->familyContextUser(), $application ?? $this->fundingApplication());
         if ((int) ($account?->id ?? 0) !== $this->careHourAccountId) {
             throw \Illuminate\Validation\ValidationException::withMessages(['careHourAccountId' => 'Choose your family account’s prepaid balance.']);
         }
@@ -2390,7 +2390,7 @@ class ManageCareRequest extends Component
     protected function careHourAccountsForRequest(): array
     {
         $account = app(\App\Services\CareHours\CareHourRequestFundingService::class)
-            ->accountForRequest($this->requestItem, auth()->user(), $this->fundingApplication());
+            ->accountForRequest($this->requestItem, $this->familyContextUser(), $this->fundingApplication());
         if (! $account) {
             return [];
         }
