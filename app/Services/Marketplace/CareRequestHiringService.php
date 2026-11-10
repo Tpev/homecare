@@ -31,10 +31,14 @@ class CareRequestHiringService
     ) {}
 
     /** @return array{kind:string,request:CareRequest,application:CareRequestApplication,booking:?CareBooking,payment:?CareBookingPayment,care_plan_id:?int} */
-    public function hire(User $family, CareRequestApplication $application, ?\App\Models\CareHourAccount $careHourAccount = null): array
+    public function hire(User $family, CareRequestApplication $application, ?\App\Models\CareHourAccount $careHourAccount = null, ?User $staffActor = null): array
     {
         $application->loadMissing(['careRequest.recipient', 'careRequest.tasks', 'caregiver:id,email,name']);
         $request = $application->careRequest;
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+            abort_unless($request->staff_managed && $careHourAccount !== null, 403);
+        }
         if ($family->role !== 'family' || ! $this->familyAccounts->canAccessRecord($family, $request)) {
             throw new AuthorizationException('You cannot hire for this care request.');
         }
@@ -47,7 +51,7 @@ class CareRequestHiringService
         }
 
         if ($request->request_type === CareRequest::TYPE_RECURRING) {
-            $plan = $this->plans->activateFromRecurringRequest($request, $application, $family, $careHourAccount);
+            $plan = $this->plans->activateFromRecurringRequest($request, $application, $family, $careHourAccount, $staffActor);
             $request = $request->fresh(['booking.payment']);
             FunnelTracker::track('regular_care_marketplace_hired', $family, $plan, [
                 'care_request_id' => $request->id,
@@ -63,7 +67,7 @@ class CareRequestHiringService
             ];
         }
 
-        $booking = DB::transaction(function () use ($family, $request, $application, $careHourAccount): CareBooking {
+        $booking = DB::transaction(function () use ($family, $request, $application, $careHourAccount, $staffActor): CareBooking {
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $application->caregiver_user_id);
             $lockedRequest = CareRequest::query()->lockForUpdate()->with(['recipient', 'tasks'])->findOrFail($request->id);
             $lockedApplication = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
@@ -92,7 +96,7 @@ class CareRequestHiringService
                     'care_request_application_id' => $lockedApplication->id,
                     'caregiver_user_id' => (int) $lockedApplication->caregiver_user_id,
                     'agreement_snapshot' => $this->trust->buildAgreementSnapshot($lockedRequest, $lockedApplication),
-                    'family_terms_accepted_at' => now(),
+                    'family_terms_accepted_at' => $staffActor ? null : now(),
                     'status' => CareBooking::STATUS_SCHEDULED,
                     'scheduled_start_at' => $start,
                     'scheduled_end_at' => $end,
@@ -100,39 +104,46 @@ class CareRequestHiringService
                 ],
             );
             $this->trust->seedTaskChecks($booking, $lockedRequest);
-            $this->trust->recordEvent($booking, $family->id, 'family', 'booking_hired', [
+            $this->trust->recordEvent($booking, ($staffActor ?? $family)->id, ($staffActor ?? $family)->role, 'booking_hired', [
                 'application_id' => $lockedApplication->id,
-                'source' => 'ai_support_confirmed',
+                'source' => $staffActor ? 'customer_success' : 'ai_support_confirmed',
             ]);
             if ($careHourAccount) {
-                app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForBooking($booking, $careHourAccount, $family);
+                app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForBooking($booking, $careHourAccount, $family, $staffActor);
             }
             $this->payments->prepareOnSessionAuthorization($booking);
 
             return $booking->fresh(['payment', 'caregiver']);
         }, 3);
 
-        if ($booking->caregiver) {
+        $notify = function () use ($booking, $request, $application, $family): void {
+            if ($booking->caregiver) {
+                $this->notifications->notify(
+                    recipients: $booking->caregiver,
+                    eventKey: MarketplaceEvent::CAREGIVER_HIRED,
+                    title: 'You were hired',
+                    body: 'A family selected you for this care request.',
+                    url: route('care-requests.apply', $request->id),
+                    payload: ['care_request_id' => $request->id],
+                    subject: $application,
+                );
+            }
             $this->notifications->notify(
-                recipients: $booking->caregiver,
-                eventKey: MarketplaceEvent::CAREGIVER_HIRED,
-                title: 'You were hired',
-                body: 'A family selected you for this care request.',
-                url: route('care-requests.apply', $request->id),
+                recipients: $family,
+                eventKey: MarketplaceEvent::HIRE_CONFIRMED,
+                title: 'Hire confirmed',
+                body: 'Caregiver hired and visit created for this request.',
+                url: route('family.requests.show', $request->id),
                 payload: ['care_request_id' => $request->id],
                 subject: $application,
+                dedupeKey: 'hire-confirmed:booking-'.$booking->id.'-user-'.$family->id,
             );
+        };
+        if ($staffActor) {
+            DB::afterCommit($notify);
+        } else {
+            $notify();
         }
-        $this->notifications->notify(
-            recipients: $family,
-            eventKey: MarketplaceEvent::HIRE_CONFIRMED,
-            title: 'Hire confirmed',
-            body: 'Caregiver hired and visit created for this request.',
-            url: route('family.requests.show', $request->id),
-            payload: ['care_request_id' => $request->id],
-            subject: $application,
-            dedupeKey: 'hire-confirmed:booking-'.$booking->id.'-user-'.$family->id,
-        );
         FunnelTracker::track('caregiver_hired', $family, $application, [
             'care_request_id' => $request->id,
             'source' => 'ai_support_confirmed',

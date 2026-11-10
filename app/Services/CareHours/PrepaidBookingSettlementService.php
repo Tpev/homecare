@@ -49,7 +49,8 @@ class PrepaidBookingSettlementService
             $current = CareHourSettlement::where('care_booking_id', $booking->id)->lockForUpdate()->first();
             $original = $current ? (int) $current->prepaid_minutes : (int) $record->reserved_minutes;
             // Preserve the initial mixed split. Only an actual overrun can seek more available hours.
-            $prepaidTarget = min($minutes, $original + max(0, $minutes - max((int) $record->planned_minutes, (int) ($current?->worked_minutes ?? 0))));
+            $prepaidTarget = $this->funding->usesStaffPrepaidOnly($booking) ? $minutes
+                : min($minutes, $original + max(0, $minutes - max((int) $record->planned_minutes, (int) ($current?->worked_minutes ?? 0))));
             $usage = $this->ledger->settle($booking, $prepaidTarget);
             $used = (int) $usage['used_minutes'];
             $changed = $current && ((int) $current->worked_minutes !== $minutes || (int) $current->prepaid_minutes !== $used

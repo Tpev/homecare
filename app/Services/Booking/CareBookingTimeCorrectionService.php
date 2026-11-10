@@ -274,7 +274,7 @@ class CareBookingTimeCorrectionService
         });
 
         $booking = $updated->booking()->firstOrFail();
-        $this->trust->recordEvent($booking, $family->id, 'family', 'time_correction_changes_requested_by_family', [
+        $this->trust->recordEvent($booking, $family->id, $family->role, 'time_correction_changes_requested_by_family', [
             'time_correction_id' => $updated->id,
             'version' => $updated->version,
             'note' => $note,
@@ -335,7 +335,7 @@ class CareBookingTimeCorrectionService
         /** @var CareBookingTimeCorrection $approved */
         [$approved, $adminRequired] = $result;
         $booking = $approved->booking()->with(['family', 'caregiver'])->firstOrFail();
-        $this->trust->recordEvent($booking, $family->id, 'family', 'time_correction_approved_by_family', [
+        $this->trust->recordEvent($booking, $family->id, $family->role, 'time_correction_approved_by_family', [
             'time_correction_id' => $approved->id,
             'version' => $approved->version,
             'admin_required' => $adminRequired,
@@ -742,6 +742,7 @@ class CareBookingTimeCorrectionService
             'worked_minutes' => $correction->proposed_worked_minutes,
             'timesheet_submitted_at' => $booking->timesheet_submitted_at ?: $correction->submitted_at,
             'family_confirmed_at' => $correction->approved_at ?: now(),
+            'family_confirmed_by_user_id' => $family->id,
             'check_in_source' => $startedChanged ? 'family_approved_manual' : $booking->check_in_source,
             'check_in_note' => $startedChanged
                 ? $this->appendCorrectionNote($booking->check_in_note, $correction)
@@ -758,7 +759,7 @@ class CareBookingTimeCorrectionService
             'care_booking_id' => $booking->id,
             'support_ticket_id' => null,
             'actor_admin_user_id' => null,
-            'source' => 'family_approved_time',
+            'source' => $family->canManageCustomerCare() ? 'customer_success_approved_time' : 'family_approved_time',
             'time_correction_request_id' => $correction->id,
             'requester_user_id' => $correction->requester_user_id,
             'approved_by_user_id' => $family->id,
@@ -777,7 +778,8 @@ class CareBookingTimeCorrectionService
                 'started_at' => $correction->proposed_started_at->toIso8601String(),
                 'completed_at' => $correction->proposed_completed_at->toIso8601String(),
                 'break_minutes' => $correction->proposed_break_minutes,
-                'family_approved' => true,
+                'family_approved' => $family->role === 'family',
+                'staff_approved' => $family->canManageCustomerCare(),
                 'reason_code' => $correction->reason_code,
                 'version' => $correction->version,
             ],
@@ -921,6 +923,9 @@ class CareBookingTimeCorrectionService
 
     private function assertFamily(CareBookingTimeCorrection $correction, User $family): void
     {
+        if ($this->staffCanManage($family, $correction->booking)) {
+            return;
+        }
         if ($family->role !== 'family' || ! app(FamilyAccountContext::class)->canAccessRecord($family, $correction)) {
             throw new AuthorizationException;
         }
@@ -928,9 +933,23 @@ class CareBookingTimeCorrectionService
 
     private function assertFamilyOwnsBooking(CareBooking $booking, User $family): void
     {
+        if ($this->staffCanManage($family, $booking)) {
+            return;
+        }
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $booking)) {
             throw new AuthorizationException;
         }
+    }
+
+    private function staffCanManage(User $actor, CareBooking $booking): bool
+    {
+        if (! $actor->canManageCustomerCare()) {
+            return false;
+        }
+        \App\Services\CustomerCare\CustomerCareAccess::authorize($actor);
+
+        return ($booking->careRequest?->staff_managed || $booking->carePlan?->sourceCareRequest?->staff_managed)
+            && app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking);
     }
 
     private function parseLocalDate(mixed $value, string $timezone, string $field, string $message): Carbon

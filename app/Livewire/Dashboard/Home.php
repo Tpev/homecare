@@ -37,6 +37,12 @@ class Home extends Component
             return;
         }
 
+        if ($user?->role === 'customer_success' && $user->canManageCustomerCare()) {
+            $this->redirect(route('customer-care.index', absolute: false), navigate: true);
+
+            return;
+        }
+
         if ($user && $user->role === 'sales') {
             $this->redirect(route('admin.crm.index', absolute: false), navigate: true);
 

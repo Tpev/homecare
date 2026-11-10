@@ -41,7 +41,14 @@ class CaregiverCancellationService
                 && app(FamilyAccountContext::class)->canAccessRecord($actor, $request)
                 && $change && $change->type === CareBookingChangeRequest::TYPE_CANCEL
                 && (int) $change->requester_user_id === (int) $booking->caregiver_user_id;
-            abort_unless($isCaregiver || $isFamilyAccepting, 403);
+            $isStaffAccepting = $actor->canManageCustomerCare() && $request->staff_managed
+                && $change && $change->type === CareBookingChangeRequest::TYPE_CANCEL
+                && (int) $change->requester_user_id === (int) $booking->caregiver_user_id
+                && app(\App\Services\CareHours\PrepaidBookingFundingService::class)->isPrepaid($booking);
+            if ($isStaffAccepting) {
+                \App\Services\CustomerCare\CustomerCareAccess::authorize($actor);
+            }
+            abort_unless($isCaregiver || $isFamilyAccepting || $isStaffAccepting, 403);
 
             if ($booking->replacement_released_at) {
                 return $booking; // A retry must never reopen a request that has since been hired again.
@@ -68,7 +75,9 @@ class CaregiverCancellationService
                 && $application->status === CareRequestApplication::STATUS_HIRED, 'The hired caregiver has changed. Refresh this visit.');
 
             $careHours = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
-            if ($careHours->isPrepaid($booking)) { $careHours->release($booking); }
+            if ($careHours->isPrepaid($booking)) {
+                $careHours->release($booking);
+            }
             $payment = $booking->payment()->lockForUpdate()->first();
             if ($payment) {
                 $this->ensure((int) $payment->family_user_id === (int) $booking->family_user_id

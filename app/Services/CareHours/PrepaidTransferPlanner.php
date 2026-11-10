@@ -94,7 +94,7 @@ class PrepaidTransferPlanner
             $pending = $settlement->operations()->where('kind', 'transfer')->whereIn('status', ['pending', 'unknown', 'requested'])->sum('amount_cents');
             $remaining = max(0, $target - $netPaid - $pending);
             if ($remaining > 0) {
-                $groups = $this->ledger->allocationsFor($settlement->booking)->where('status', 'used')->groupBy(fn ($a) => $a->lot->purchase->id)->sortKeys();
+                $groups = $this->ledger->allocationsFor($settlement->booking)->where('status', 'used')->filter(fn ($a) => $a->lot->care_hour_purchase_id !== null)->groupBy(fn ($a) => $a->lot->purchase->id)->sortKeys();
                 foreach ($groups as $purchaseId => $allocations) {
                     $purchase = $allocations->first()->lot->purchase;
                     $purchase = CareHourPurchase::lockForUpdate()->findOrFail($purchase->id);
@@ -135,7 +135,7 @@ class PrepaidTransferPlanner
                         $remaining -= $take;
                     }
                 }
-                // Price protection or exhausted original charge capacity is funded by LoLo, never by another donor.
+                // Offline credits, price protection and exhausted charge capacity use LoLo's balance, never another donor's charge.
                 if ($remaining > 0) {
                     $this->newTransfer($settlement, $profile->stripe_connect_account_id, $remaining);
                 }

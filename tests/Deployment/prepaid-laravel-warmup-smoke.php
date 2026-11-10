@@ -145,8 +145,8 @@ if (! $failed) {
     $commandsList = json_decode(file_get_contents($run.'/list.log'), true, 512, JSON_THROW_ON_ERROR);
     $routeNames = array_column($routes, 'name');
     $commandNames = array_column($commandsList['commands'], 'name');
-    $requiredRoutes = ['care-hours.claim', 'care-hours.claim.start', 'care-hours.gifts.index', 'care-hours.gifts.checkout', 'care-hours.contribute', 'family.care-hours.claim', 'family.care-hours.claim.confirm', 'family.care-hours.claim.ready', 'family.care-hours.index', 'admin.care-hours.index', 'admin.care-hours.gifts.index'];
-    $requiredCommands = ['care-hours:health', 'homecare:reconcile-care-hour-purchases', 'care-hours:reconcile-bookings', 'homecare:dispatch-notifications'];
+    $requiredRoutes = ['care-hours.claim', 'care-hours.claim.start', 'care-hours.gifts.index', 'care-hours.gifts.checkout', 'care-hours.contribute', 'family.care-hours.claim', 'family.care-hours.claim.confirm', 'family.care-hours.claim.ready', 'family.care-hours.index', 'admin.care-hours.index', 'admin.care-hours.gifts.index', 'customer-care.index', 'customer-care.credit', 'customer-care.show', 'customer-care.action', 'customer-care.gifts'];
+    $requiredCommands = ['care-hours:health', 'homecare:reconcile-care-hour-purchases', 'care-hours:reconcile-bookings', 'homecare:dispatch-notifications', 'customer-care:create-user'];
     $schedule = file_get_contents($run.'/schedule-list.log');
     $evidence['assertions'] = [
         'care_hours_default_enabled_after_config_cache' => ($config['care_hours']['enabled'] ?? null) === true,

@@ -148,6 +148,13 @@ class MarketplaceNotificationService
         ?string $dedupeKey,
         array $channelOverrides,
     ): void {
+        if (app(CustomerCareNotificationPolicy::class)->suppresses($user, $subject, $payload)) {
+            return;
+        }
+        if ($subject) {
+            $payload['customer_care_subject_type'] = $subject->getMorphClass();
+            $payload['customer_care_subject_id'] = $subject->getKey();
+        }
         $normalizedUrl = $this->normalizeUrl($url);
         $payload = $this->context->enrich($user, $eventKey, $title, $body, $payload, $subject);
         $preferences = $this->preferences->resolve($user, $eventKey);
@@ -241,6 +248,8 @@ class MarketplaceNotificationService
     public function sendReservedEmail(User $user, MarketplaceNotificationDelivery $delivery): void
     {
         $payload = $delivery->payload ?? [];
+        $payload['customer_care_subject_type'] = $delivery->notifiable_type;
+        $payload['customer_care_subject_id'] = $delivery->notifiable_id;
         $payload['tracking']['delivery_id'] = $delivery->id;
 
         try {

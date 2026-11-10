@@ -20,6 +20,7 @@ class CareRequestConversation extends Model
         'care_request_application_id',
         'started_by_user_id',
         'family_last_read_at',
+        'staff_last_read_at',
         'caregiver_last_read_at',
         'last_message_at',
         'last_message_sender_id',
@@ -29,6 +30,7 @@ class CareRequestConversation extends Model
     {
         return [
             'family_last_read_at' => 'datetime',
+            'staff_last_read_at' => 'datetime',
             'caregiver_last_read_at' => 'datetime',
             'last_message_at' => 'datetime',
         ];

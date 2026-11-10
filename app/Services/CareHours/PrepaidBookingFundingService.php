@@ -46,11 +46,15 @@ class PrepaidBookingFundingService
         return $this->forBooking($booking) !== null;
     }
 
-    public function selectForBooking(CareBooking $booking, CareHourAccount $account, User $actor): CareHourBookingFunding
+    public function selectForBooking(CareBooking $booking, CareHourAccount $account, User $actor, ?User $staffActor = null): CareHourBookingFunding
     {
         $this->identities->assertAccess($account, $actor);
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+            abort_unless($booking->careRequest?->staff_managed || $booking->carePlan?->sourceCareRequest?->staff_managed, 403);
+        }
 
-        return DB::transaction(function () use ($booking, $account, $actor) {
+        return DB::transaction(function () use ($booking, $account, $actor, $staffActor) {
             $locked = CareBooking::lockForUpdate()->findOrFail($booking->id);
             $existing = $this->forBooking($locked);
             if ($existing) {
@@ -66,21 +70,25 @@ class PrepaidBookingFundingService
             $this->assertCanSelect($locked, $account);
             $funding = CareHourBookingFunding::create([
                 'care_booking_id' => $locked->id, 'care_hour_account_id' => $account->id,
-                'selected_by_user_id' => $actor->id, 'committed_at' => now(), 'status' => 'selected',
+                'selected_by_user_id' => ($staffActor ?? $actor)->id, 'committed_at' => now(), 'status' => 'selected',
                 'planned_minutes' => $this->plannedMinutes($locked), 'currency' => 'usd',
             ]);
             // Snapshot only this explicitly selected new visit; never rewrite a card booking.
             if (! $locked->pricing_snapshotted_at) {
                 $locked->forceFill($this->pricing->currentSnapshotAttributes($locked))->saveQuietly();
             }
-            app(BookingTrustService::class)->recordEvent($locked, $actor->id, 'family', 'care_hours_selected', ['care_hour_account_id' => $account->id]);
+            app(BookingTrustService::class)->recordEvent($locked, ($staffActor ?? $actor)->id, ($staffActor ?? $actor)->role, 'care_hours_selected', ['care_hour_account_id' => $account->id]);
 
             return $funding;
         }, 3);
     }
 
-    public function selectForPlan(CarePlan $plan, CareHourAccount $account, User $actor): CareHourPlanPreference
+    public function selectForPlan(CarePlan $plan, CareHourAccount $account, User $actor, ?User $staffActor = null): CareHourPlanPreference
     {
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+            abort_unless($plan->sourceCareRequest?->staff_managed, 403);
+        }
         $this->identities->assertAccess($account, $actor);
         if (! app(CareHourAccess::class)->canUseAccount($account, $actor)) {
             throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this account.']);
@@ -90,10 +98,10 @@ class PrepaidBookingFundingService
             throw ValidationException::withMessages(['careHourAccountId' => 'Care hours are not available for this care arrangement.']);
         }
 
-        return DB::transaction(function () use ($plan, $account, $actor) {
+        return DB::transaction(function () use ($plan, $account, $actor, $staffActor) {
             CarePlan::lockForUpdate()->findOrFail($plan->id);
             $preference = CareHourPlanPreference::updateOrCreate(['care_plan_id' => $plan->id], [
-                'care_hour_account_id' => $account->id, 'selected_by_user_id' => $actor->id,
+                'care_hour_account_id' => $account->id, 'selected_by_user_id' => ($staffActor ?? $actor)->id,
                 'enabled' => true, 'selected_at' => now(),
             ]);
             $this->clearUnpreparedPlanSelections($plan, $account->id);
@@ -503,11 +511,21 @@ class PrepaidBookingFundingService
         $record = $this->forBooking($booking);
         $current = CareHourSettlement::where('care_booking_id', $booking->id)->first();
         $original = (int) ($current?->prepaid_minutes ?? $record->reserved_minutes);
-        $extra = max(0, $minutes - max((int) $record->planned_minutes, (int) ($current?->worked_minutes ?? 0)));
+        $extra = $this->usesStaffPrepaidOnly($booking) ? max(0, $minutes - $original)
+            : max(0, $minutes - max((int) $record->planned_minutes, (int) ($current?->worked_minutes ?? 0)));
         $prepaid = min(max(0, $minutes), $original + min($extra, $this->ledger->balance($record->account)['available_minutes']));
 
         return ['billable_minutes' => max(0, $minutes), 'prepaid_minutes' => $prepaid,
             'card_cents' => $this->amountForMinutes($booking, max(0, $minutes - $prepaid)), 'restore_minutes' => max(0, $original - $prepaid)];
+    }
+
+    public function usesStaffPrepaidOnly(CareBooking $booking): bool
+    {
+        $record = $this->forBooking($booking);
+
+        return $record !== null
+            && ($booking->careRequest?->staff_managed || $booking->carePlan?->sourceCareRequest?->staff_managed)
+            && ! $record->operations()->where('kind', 'shortfall')->exists();
     }
 
     public function plannedMinutes(CareBooking $booking): int

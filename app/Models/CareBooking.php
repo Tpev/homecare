@@ -128,6 +128,16 @@ class CareBooking extends Model
         ];
     }
 
+    public function careHourSettlement(): HasOne
+    {
+        return $this->hasOne(CareHourSettlement::class);
+    }
+
+    public function careHourFunding(): HasOne
+    {
+        return $this->hasOne(CareHourBookingFunding::class)->whereNotNull('committed_at');
+    }
+
     public function careRequest(): BelongsTo
     {
         return $this->belongsTo(CareRequest::class);

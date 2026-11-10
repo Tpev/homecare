@@ -928,7 +928,7 @@ new class extends Component
 
                     <span class="text-left {{ $isAdmin ? 'hidden xl:block' : 'hidden md:block' }}">
                         <span class="block text-sm font-semibold leading-tight text-[#23483F]">{{ $user->name }}</span>
-                        <span class="block text-xs text-[#6E746F] leading-tight">{{ ucfirst((string) $user->role) }}</span>
+                        <span class="block text-xs text-[#6E746F] leading-tight">{{ ucwords(str_replace('_', ' ', (string) $user->role)) }}</span>
                     </span>
 
                     <svg class="h-4 w-4 text-[#6E746F]" viewBox="0 0 20 20" fill="currentColor">
@@ -1087,7 +1087,7 @@ new class extends Component
                 <div class="px-4">
                     <div class="font-medium text-base text-[#23483F]">{{ $user->name }}</div>
                     <div class="font-medium text-sm text-[#6E746F]">{{ $user->email }}</div>
-                    <div class="mt-1 text-xs font-medium text-[#6E746F]">{{ ucfirst((string) $user->role) }}</div>
+                    <div class="mt-1 text-xs font-medium text-[#6E746F]">{{ ucwords(str_replace('_', ' ', (string) $user->role)) }}</div>
                 </div>
 
                 <div class="mt-3 space-y-1 px-2">
@@ -1154,4 +1154,12 @@ new class extends Component
             @endif
         </div>
     </div>
+    @if(auth()->user()?->canManageCustomerCare())
+        <div class="border-t border-[#E3D6C5] bg-[#F8F0E2] px-4 py-2">
+            <div class="mx-auto flex max-w-7xl flex-wrap gap-5 text-sm font-semibold text-[#23483F]">
+                <a href="{{ route('customer-care.index') }}" @if(request()->routeIs('customer-care.*')) aria-current="page" class="underline" @endif>Customer Success</a>
+                <a href="{{ route('customer-care.gifts') }}">Gift card purchases</a>
+            </div>
+        </div>
+    @endif
 </nav>

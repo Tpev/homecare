@@ -56,6 +56,11 @@ cp -- "$PROJECT_DIR/database/migrations/2026_10_26_000100_create_care_hour_reque
 printf 'incompatible replacement\n' > "$fixture/app/Http/Controllers/CareHours/GiftClaimController.php"
 reject 'GiftClaimController.php'
 cp -- "$PROJECT_DIR/app/Http/Controllers/CareHours/GiftClaimController.php" "$fixture/app/Http/Controllers/CareHours/GiftClaimController.php"
+for path in app/Services/Notifications/CustomerCareNotificationPolicy.php app/Services/CareHours/ManualCareHourCreditService.php database/migrations/2026_11_10_000100_add_customer_care_management.php; do
+  rm -- "$fixture/$path"
+  reject "$path"
+  cp -- "$PROJECT_DIR/$path" "$fixture/$path"
+done
 printf 'extra manifest entry\n' >> "$fixture/$PREPAID_MANIFEST"
 reject 'manifest version or inventory is unknown'
 if [[ "$version" == 2 ]]; then
@@ -71,6 +76,7 @@ if [[ "$version" == 2 ]]; then
   done
   rm -- "$fixture/database/migrations/2026_10_30_000100_create_care_hour_family_wallets.php"
   reject '2026_10_30_000100_create_care_hour_family_wallets.php'
+  rm -- "$fixture/database/migrations/2026_11_10_000100_add_customer_care_management.php"
   if print_prepaid_manifest "$fixture" 1 > "$SANDBOX/downgrade-manifest" 2> "$SANDBOX/downgrade.log"; then
     printf 'Family-wallet configuration was mislabeled as v1.\n' >&2; exit 1
   fi

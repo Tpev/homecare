@@ -346,6 +346,29 @@ EOF
 prepaid_wallet_compatibility_files() {
   cat <<'EOF'
 database/migrations/2026_10_30_000100_create_care_hour_family_wallets.php
+database/migrations/2026_11_10_000100_add_customer_care_management.php
+app/Console/Commands/CreateCustomerSuccessUser.php
+app/Models/CareRequestConversation.php
+app/Http/Controllers/CustomerCareController.php
+app/Http/Middleware/EnsureCustomerCareAccess.php
+app/Services/CustomerCare/CustomerCareAccess.php
+app/Services/CustomerCare/ManagedCareService.php
+app/Services/CareHours/ManualCareHourCreditService.php
+app/Services/Notifications/CustomerCareNotificationPolicy.php
+routes/customer-care.php
+resources/views/customer-care/show.blade.php
+resources/views/customer-care/edit.blade.php
+resources/views/customer-care/customer.blade.php
+resources/views/customer-care/gifts.blade.php
+resources/views/customer-care/index.blade.php
+resources/views/customer-care/partials/visit-proposals.blade.php
+resources/views/customer-care/partials/status.blade.php
+resources/views/customer-care/partials/plan-changes.blade.php
+app/Services/CustomerOnboarding/CustomerOnboardingAccountService.php
+app/Services/Marketplace/CareRequestRecruitmentService.php
+app/Services/CareRequests/CareRequestLifecycleService.php
+app/Services/Messaging/CareRequestChatService.php
+app/Support/StaffAccess.php
 EOF
 }
 
@@ -387,12 +410,13 @@ print_prepaid_manifest() {
   if [[ "$version" == 1 ]]; then
     # A bridge uses the old committed application sources. Do not let old
     # regeneration instructions label a family-wallet tree as the v1 contract.
+    # Shared model/service dependencies can also exist in legitimate v1 bridge sources.
     while IFS= read -r path; do
       if [[ -e "$release/$path" || -L "$release/$path" ]]; then
         log "Prepaid compatibility: family-wallet sources require manifest v2; generate v1 only from old-source bridge code." >&2
         return 1
       fi
-    done < <(prepaid_wallet_compatibility_files)
+    done < <(prepaid_wallet_compatibility_files | grep '^database/migrations/')
     if [[ -r "$release/config/care_hours.php" ]] \
       && grep -Eq "[\"']wallet_scope[\"'][[:space:]]*=>[[:space:]]*[\"']family[\"']" "$release/config/care_hours.php"; then
       log "Prepaid compatibility: family-wallet configuration requires manifest v2." >&2

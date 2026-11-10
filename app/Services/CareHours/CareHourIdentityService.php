@@ -51,22 +51,29 @@ class CareHourIdentityService
             ->where('currency', config('care_hours.currency', 'usd'))->orderByDesc('active')->orderBy('id')->first();
     }
 
-    public function ensureFamilyWallet(User $actor, ?CareHourGift $paidGift = null): CareHourAccount
+    public function ensureFamilyWallet(User $actor, ?CareHourGift $paidGift = null, ?User $staffActor = null): CareHourAccount
     {
-        $this->assertPilotEnrollment($actor, $paidGift);
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+            abort_unless($actor->role === 'family' && $actor->access_revoked_at === null, 403);
+        } else {
+            $this->assertPilotEnrollment($actor, $paidGift);
+        }
         $family = $this->families->account($actor);
         if (! Schema::hasTable('care_hour_family_wallets')) {
             throw ValidationException::withMessages(['care_hours' => 'Prepaid care is being updated. Please try again shortly.']);
         }
 
-        return DB::transaction(function () use ($actor, $family, $paidGift): CareHourAccount {
+        return DB::transaction(function () use ($actor, $family, $paidGift, $staffActor): CareHourAccount {
             $lockedFamily = FamilyAccount::query()->whereKey($family->id)->lockForUpdate()->firstOrFail();
             if ($lockedFamily->status !== FamilyAccount::STATUS_ACTIVE) {
                 throw new AuthorizationException('This family account is unavailable.');
             }
             $account = $this->walletForFamily((int) $family->id);
             if (! $account) {
-                $this->assertEnrollmentOpen($actor, $paidGift);
+                if (! $staffActor) {
+                    $this->assertEnrollmentOpen($actor, $paidGift);
+                }
                 $account = CareHourAccount::create([
                     'family_account_id' => $family->id, 'display_name' => 'Family care balance',
                     'currency' => config('care_hours.currency', 'usd'),

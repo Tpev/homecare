@@ -47,21 +47,23 @@ class CareRequestRecruitmentService
     }
 
     /** @return Builder<User> */
-    public function candidates(CareRequest $request, string $search = ''): Builder
+    public function candidates(CareRequest $request, string $search = '', bool $includeContacted = false): Builder
     {
-        $query = $this->eligibleCaregivers($request)
-            ->whereNotExists(fn ($recruitments) => $recruitments->selectRaw('1')
+        $query = $this->eligibleCaregivers($request);
+        if (! $includeContacted) {
+            $query->whereNotExists(fn ($recruitments) => $recruitments->selectRaw('1')
                 ->from('care_request_recruitments')
                 ->whereColumn('caregiver_user_id', 'users.id')
                 ->where('care_request_id', $request->id)
                 ->where('status', '!=', CareRequestRecruitment::STATUS_QUEUE_FAILED))
-            ->whereNotExists(fn ($deliveries) => $deliveries->selectRaw('1')
-                ->from('marketplace_notification_deliveries')
-                ->whereColumn('user_id', 'users.id')
-                ->where('event_key', MarketplaceEvent::CAREGIVER_RECRUITMENT)
-                ->where('channel', NotificationChannels::EMAIL)
-                ->where('notifiable_type', $request->getMorphClass())
-                ->where('notifiable_id', $request->id));
+                ->whereNotExists(fn ($deliveries) => $deliveries->selectRaw('1')
+                    ->from('marketplace_notification_deliveries')
+                    ->whereColumn('user_id', 'users.id')
+                    ->where('event_key', MarketplaceEvent::CAREGIVER_RECRUITMENT)
+                    ->where('channel', NotificationChannels::EMAIL)
+                    ->where('notifiable_type', $request->getMorphClass())
+                    ->where('notifiable_id', $request->id));
+        }
 
         if ($this->unavailableReason($request)) {
             return $query->whereRaw('1 = 0');
@@ -87,7 +89,7 @@ class CareRequestRecruitmentService
      */
     public function enqueue(User $admin, CareRequest $request, array $ids): array
     {
-        $this->authorize($admin);
+        $this->authorize($admin, $request);
         Validator::make(['caregiverIds' => $ids], [
             'caregiverIds' => ['required', 'array', 'min:1', 'max:'.self::BATCH_LIMIT],
             'caregiverIds.*' => ['required', 'integer', 'min:1'],
@@ -95,7 +97,7 @@ class CareRequestRecruitmentService
         $ids = array_values(array_unique(array_map('intval', $ids)));
 
         $recruitments = DB::transaction(function () use ($admin, $request, $ids): array {
-            $this->authorize($admin);
+            $this->authorize($admin, $request);
             $lockedRequest = CareRequest::query()->lockForUpdate()->findOrFail($request->id);
             if ($reason = $this->unavailableReason($lockedRequest)) {
                 throw ValidationException::withMessages(['recruitment' => $reason]);
@@ -178,7 +180,8 @@ class CareRequestRecruitmentService
             }
             $request = CareRequest::query()->find($current->care_request_id);
             $caregiver = $request ? $this->eligibleCaregivers($request)->find($current->caregiver_user_id) : null;
-            $reason = ! $current->inviter?->isAdministrator()
+            $reason = ! ($current->inviter?->canManageCustomerCare() && \App\Support\StaffAccess::allowsUser($current->inviter)
+                && ($current->inviter->isAdministrator() || $request?->staff_managed))
                 ? 'The inviting user no longer has administrator access.'
                 : (! $request ? 'This job is no longer available.' : $this->unavailableReason($request));
             if (! $reason && (! $caregiver || ! $this->canReceiveRecruitment($caregiver))) {
@@ -239,9 +242,10 @@ class CareRequestRecruitmentService
         }
     }
 
-    private function authorize(User $admin): void
+    private function authorize(User $admin, CareRequest $request): void
     {
-        if (! User::query()->whereKey($admin->id)->where('role', 'admin')->exists()) {
+        \App\Services\CustomerCare\CustomerCareAccess::authorize($admin);
+        if (! $admin->fresh()->isAdministrator() && ! $request->fresh()->staff_managed) {
             throw new AuthorizationException('Only administrators can recruit caregivers.');
         }
     }

@@ -422,3 +422,5 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
 require __DIR__.'/auth.php';
 
 require __DIR__.'/care-hours.php';
+
+require __DIR__.'/customer-care.php';

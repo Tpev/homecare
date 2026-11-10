@@ -287,6 +287,7 @@ class CarePlanService
                     app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForPlan(
                         $plan, \App\Models\CareHourAccount::findOrFail($payload['care_hour_account_id']), $family);
                 }
+
                 return [$plan, true];
             });
         } catch (QueryException $exception) {
@@ -329,10 +330,18 @@ class CarePlanService
         CareRequest $source,
         CareRequestApplication $application,
         User $family,
-        ?\App\Models\CareHourAccount $careHourAccount = null
+        ?\App\Models\CareHourAccount $careHourAccount = null,
+        ?User $staffActor = null
     ): CarePlan {
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+            abort_unless($source->staff_managed && $careHourAccount !== null, 403);
+        }
         if (! $source->is_system_generated && ($application->selected_days !== null || $source->care_arrangement_id)) {
-            if ($careHourAccount) { throw ValidationException::withMessages(['careHourAccountId' => 'Shared care uses its existing payment flow.']); }
+            if ($careHourAccount) {
+                throw ValidationException::withMessages(['careHourAccountId' => 'Shared care uses its existing payment flow.']);
+            }
+
             return app(SharedCareService::class)->hire($source, $application, $family);
         }
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source) || ! $source->isRecurring()) {
@@ -379,6 +388,7 @@ class CarePlanService
                 $schedule,
                 $hourlyRate,
                 $careHourAccount,
+                $staffActor,
                 $family
             ): CarePlan {
                 app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork((int) $caregiver->id);
@@ -461,13 +471,14 @@ class CarePlanService
                     'payment_status' => CarePlan::PAYMENT_UNCHECKED,
                     'metadata' => [
                         'home_access_notes' => $source->home_access_notes,
-                        'origin' => 'recurring_marketplace_request',
+                        'origin' => $staffActor ? 'customer_success' : 'recurring_marketplace_request',
+                        'staff_actor_id' => $staffActor?->id,
                         'source_application_id' => $application->id,
                     ],
                 ]);
                 $lockedSource->forceFill(['care_plan_id' => $createdPlan->id])->save();
                 if ($careHourAccount) {
-                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForPlan($createdPlan, $careHourAccount, $family);
+                    app(\App\Services\CareHours\PrepaidBookingFundingService::class)->selectForPlan($createdPlan, $careHourAccount, $family, $staffActor);
                 }
 
                 return $createdPlan;
@@ -492,16 +503,24 @@ class CarePlanService
         $this->paymentWindow->preparePlan($plan->fresh());
         $plan = $this->health->reconcile($plan->fresh());
 
-        $this->notifications->notify(
-            recipients: $caregiver,
-            eventKey: MarketplaceEvent::CAREGIVER_HIRED,
-            title: 'Recurring care confirmed',
-            body: $family->name.' selected you for recurring care. Your confirmed visits are in My Visits.',
-            url: route('caregiver.shifts.index'),
-            payload: ['care_plan_id' => $plan->id, 'care_request_id' => $source->id],
-            subject: $plan,
-            dedupeKey: 'regular-care-marketplace-hired:plan-'.$plan->id.'-user-'.$caregiver->id
-        );
+        $notify = function () use ($caregiver, $family, $plan, $source): void {
+            $this->notifications->notify(
+                recipients: $caregiver,
+                eventKey: MarketplaceEvent::CAREGIVER_HIRED,
+                title: 'Recurring care confirmed',
+                body: $family->name.' selected you for recurring care. Your confirmed visits are in My Visits.',
+                url: route('caregiver.shifts.index'),
+                payload: ['care_plan_id' => $plan->id, 'care_request_id' => $source->id],
+                subject: $plan,
+                dedupeKey: 'regular-care-marketplace-hired:plan-'.$plan->id.'-user-'.$caregiver->id
+            );
+
+        };
+        if ($staffActor) {
+            DB::afterCommit($notify);
+        } else {
+            $notify();
+        }
 
         return $plan->fresh(['nextBooking.payment', 'generatedBookings']);
     }
@@ -1065,9 +1084,7 @@ class CarePlanService
 
     public function endPlan(CarePlan $plan, User $family, bool $cancelNextVisit = false): CarePlan
     {
-        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
-            abort(403);
-        }
+        $this->assertFamilyOwnsPlan($plan, $family);
         $this->assertStandaloneScheduleControls($plan);
 
         [$plan, $changed, $keptNext] = DB::transaction(function () use ($plan, $family, $cancelNextVisit): array {
@@ -1224,6 +1241,11 @@ class CarePlanService
 
     private function assertFamilyOwnsPlan(CarePlan $plan, User $family): void
     {
+        if ($family->canManageCustomerCare() && $plan->sourceCareRequest?->staff_managed) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($family);
+
+            return;
+        }
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
             abort(403);
         }

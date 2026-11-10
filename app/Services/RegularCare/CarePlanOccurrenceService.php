@@ -325,7 +325,7 @@ class CarePlanOccurrenceService
                 'family_user_id' => $plan->family_user_id,
                 'caregiver_user_id' => $plan->caregiver_user_id,
                 'agreement_snapshot' => $this->trust->buildAgreementSnapshot($request->fresh(['recipient', 'tasks']), $application),
-                'family_terms_accepted_at' => now(),
+                'family_terms_accepted_at' => $plan->sourceCareRequest?->staff_managed ? null : now(),
                 'caregiver_terms_accepted_at' => now(),
                 'status' => CareBooking::STATUS_SCHEDULED,
                 'scheduled_start_at' => $occurrence['start'],
@@ -438,6 +438,7 @@ class CarePlanOccurrenceService
                     'family_user_id' => $plan->family_user_id,
                     'care_plan_id' => $plan->id,
                     'is_system_generated' => true,
+                    'staff_managed' => (bool) $plan->sourceCareRequest?->staff_managed,
                     'title' => ($kind === 'extra' ? 'Extra visit: ' : 'Recurring care: ').$plan->recipientName().' with '.$plan->caregiver?->name,
                     'additional_info' => $plan->care_notes,
                     'scope_of_work' => $plan->care_notes,
@@ -500,7 +501,7 @@ class CarePlanOccurrenceService
                     'family_user_id' => $plan->family_user_id,
                     'caregiver_user_id' => $plan->caregiver_user_id,
                     'agreement_snapshot' => $this->trust->buildAgreementSnapshot($request->fresh(['recipient', 'tasks']), $application),
-                    'family_terms_accepted_at' => now(),
+                    'family_terms_accepted_at' => $plan->sourceCareRequest?->staff_managed ? null : now(),
                     'caregiver_terms_accepted_at' => now(),
                     'status' => CareBooking::STATUS_SCHEDULED,
                     'scheduled_start_at' => $occurrence['start'],
@@ -556,7 +557,8 @@ class CarePlanOccurrenceService
             'plan_schedule_version' => $plan->schedule_version,
         ];
 
-        if ($booking->status === CareBooking::STATUS_SCHEDULED) {
+        if ($booking->status === CareBooking::STATUS_SCHEDULED
+            && ! str_starts_with((string) $booking->last_reschedule_reason, 'Customer Success:')) {
             $updates += [
                 'scheduled_start_at' => $occurrence['start'],
                 'scheduled_end_at' => $occurrence['end'],
@@ -601,7 +603,8 @@ class CarePlanOccurrenceService
             || $reason === 'Regular care paused by family.'
             || $reason === 'Regular care ended by family.'
             || str_starts_with($reason, 'Operations paused regular care:')
-            || str_starts_with($reason, 'Operations ended regular care:');
+            || str_starts_with($reason, 'Operations ended regular care:')
+            || str_starts_with($reason, 'Customer Success:');
     }
 
     private function dateIsPaused(CarePlan $plan, Carbon $date): bool

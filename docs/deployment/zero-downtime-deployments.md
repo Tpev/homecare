@@ -4,7 +4,7 @@ Status: Current production deployment procedure
 
 Owner: Engineering
 
-Last updated: October 30, 2026
+Last updated: November 10, 2026
 
 ## Outcome
 
@@ -123,6 +123,10 @@ The deployment checker requires boolean exposure flags, a boolean `pilot_only` a
 On the first public cutover, the preceding pilot cache has different access settings. Manual rollback and automatic failure recovery deliberately refuse that target. If the new release fails after activation, repair forward with the public access settings preserved; do not bypass the check or rewrite the old cache. Once two compatible public releases exist with matching pause and promotion settings, the usual rollback remains available between them. A failure before activation leaves the pilot release selected.
 
 Deploying this code does not create a staging platform or make production accounts use Stripe test mode. Purchases use the payment environment configured on the deployed app. The deployment owner runs the rollout; this runbook does not authorize agent access to the production server or unrequested live purchases. Before inviting the public, verify the normal buyer email-verification/receipt delivery and a paid gift's claim journey using the deployed mail/payment setup; local captured-mail tests do not establish inbox delivery.
+
+### Customer Success and offline prepaid credits
+
+The November 10 release extends the v2 dependency inventory for staff-managed care and offline credit lots. Install its matching driver through the Git-delivery procedure before deploying it. Earlier v2 releases lack the new inventory and are not valid rollback targets after activation. See [Customer Success rollout](customer-success-rollout.md) for deployment, staff access and operating instructions.
 
 ## Normal deployment
 

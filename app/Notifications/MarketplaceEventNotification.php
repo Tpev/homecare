@@ -38,7 +38,8 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
 
     public function shouldSend(object $notifiable, string $channel): bool
     {
-        if ($notifiable instanceof User && ! \App\Support\StaffAccess::allowsUser($notifiable)) {
+        if ($notifiable instanceof User && (! \App\Support\StaffAccess::allowsUser($notifiable)
+            || app(\App\Services\Notifications\CustomerCareNotificationPolicy::class)->suppresses($notifiable, payload: $this->payload))) {
             if ($deliveryId = data_get($this->payload, 'tracking.delivery_id')) {
                 MarketplaceNotificationDelivery::query()->whereKey($deliveryId)->where('user_id', $notifiable->id)
                     ->whereIn('status', ['queued', 'pending', 'sending', 'failed'])
