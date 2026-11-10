@@ -442,6 +442,32 @@ git clone "$ORIGIN_DIR" "$AUTHOR_DIR" >/dev/null
 git -C "$AUTHOR_DIR" config user.name "Deployment Test"
 git -C "$AUTHOR_DIR" config user.email "deployment-test@example.invalid"
 
+if [[ "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == driver-handoff ]]; then
+  live_driver_hash="$(sha256sum "$first_release/deploy.sh")"
+  printf '\n# Future reviewed driver fixture.\n' >> "$AUTHOR_DIR/deploy.sh"
+  git -C "$AUTHOR_DIR" commit -am 'Change the selected deployment driver' >/dev/null
+  git -C "$AUTHOR_DIR" push origin master >/dev/null
+  future="$(git -C "$AUTHOR_DIR" rev-parse HEAD)"
+  # Active releases are clones of the local mirror. Fetching their origin
+  # before the mirror itself fetches upstream retrieves the OLD driver again.
+  git -C "$APP_DIR" fetch origin master >/dev/null 2>&1
+  [[ "$(git -C "$APP_DIR" rev-parse FETCH_HEAD)" == "$(git -C "$first_release" rev-parse HEAD)" ]]
+  [[ "$(git -C "$APP_DIR" rev-parse FETCH_HEAD)" != "$future" ]]
+  if ! deploy > "$SANDBOX/driver-handoff.log" 2>&1; then
+    cat "$SANDBOX/driver-handoff.log" >&2
+    exit 1
+  fi
+  grep -q "Handing deployment to the verified driver from $future" "$SANDBOX/driver-handoff.log"
+  grep -q "Continuing immutable deployment commit $future" "$SANDBOX/driver-handoff.log"
+  [[ "$(grep -c 'Fetching the latest master commit' "$SANDBOX/driver-handoff.log")" == 1 ]]
+  [[ "$(git -C "$APP_DIR" rev-parse HEAD)" == "$future" ]]
+  [[ "$(sha256sum "$first_release/deploy.sh")" == "$live_driver_hash" ]]
+  [[ "$(cat "$APP_DIR/storage/framework/sessions/preserved-session")" == 'durable session' ]]
+  [[ "$(readlink -f "$DEPLOY_ROOT/previous")" == "$first_release" ]]
+  printf 'Atomic driver handoff smoke passed (complete selected-driver continuation, one fetch, activation, unchanged old driver and durable session).\n'
+  exit 0
+fi
+
 if [[ "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == plain-prepaid || "${HOMECARE_DEPLOY_SMOKE_FOCUS:-}" == private-pilot ]]; then
   # Exercise the real normal entrypoint and complete activation with no optional
   # commit pin, without repeating the full failure/recovery matrix below.

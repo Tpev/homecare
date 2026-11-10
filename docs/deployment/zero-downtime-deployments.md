@@ -126,7 +126,30 @@ Deploying this code does not create a staging platform or make production accoun
 
 ### Customer Success and offline prepaid credits
 
-The November 10 release extends the v2 dependency inventory for staff-managed care and offline credit lots. Install its matching driver through the Git-delivery procedure before deploying it. Earlier v2 releases lack the new inventory and are not valid rollback targets after activation. See [Customer Success rollout](customer-success-rollout.md) for deployment, staff access and operating instructions.
+The November 10 release extends the v2 dependency inventory for staff-managed care and offline credit lots. Drivers predating automatic handoff must be bootstrapped once from the deployment mirror’s freshly fetched upstream, as described in the Customer Success rollout. Active release clones point their origin at that local mirror; a fetch inside the active release does not fetch GitHub. Earlier v2 releases lack the new inventory and are not valid rollback targets after activation. See [Customer Success rollout](customer-success-rollout.md) for deployment, staff access and operating instructions.
+
+### Recovering from a stale deployment driver
+
+`Prepaid compatibility: manifest version or inventory is unknown` can mean that the already-running driver knows an older dependency inventory. Fetching new application sources does not replace that process. The compatibility check remains strict: do not edit the manifest or remove the prepaid floor to get past it.
+
+For an existing atomic server still running an older driver, bootstrap the reviewed driver once directly from the deployment mirror’s upstream:
+
+```bash
+(
+  set -eu
+  repo=/var/www/homecare-deploy/repository.git
+  git --git-dir="$repo" fetch --prune origin '+refs/heads/master:refs/heads/master'
+  revision="$(git --git-dir="$repo" rev-parse --verify 'refs/heads/master^{commit}')"
+  driver="$(mktemp /tmp/homecare-deploy.XXXXXX)"
+  trap 'rm -f -- "$driver"' EXIT
+  git --git-dir="$repo" show "$revision:deploy.sh" > "$driver"
+  HOMECARE_EXPECTED_COMMIT="$revision" bash "$driver"
+)
+cd /var/www/homecare
+./deploy.sh --status
+```
+
+This fetch is deliberately run against `repository.git`, not against the active release’s local-mirror origin. Subsequent normal deployments use the automatic handoff. `--deploy-selected` is an internal continuation: it requires the inherited lock descriptor and a script matching the captured Git blob; operators should use the normal entrypoint.
 
 ## Normal deployment
 
@@ -137,12 +160,12 @@ cd /var/www/homecare
 ./deploy.sh
 ```
 
-The optional `HOMECARE_EXPECTED_COMMIT` constraint is available for both prepaid and legacy releases. Normal subsequent prepaid deployments validate the cached exposure flags and reviewed public or private-pilot access shape. They preserve the public pause, legacy private-pilot pause and existing per-action pauses loaded from the shared `.env`; they neither reopen paused access nor require a manual activation edit. Keep the driver current through the reviewed Git-delivery procedure whenever it changes.
+The optional `HOMECARE_EXPECTED_COMMIT` constraint is available for both prepaid and legacy releases. Normal subsequent prepaid deployments validate the cached exposure flags and reviewed public or private-pilot access shape. They preserve the public pause, legacy private-pilot pause and existing per-action pauses loaded from the shared `.env`; they neither reopen paused access nor require a manual activation edit. Normal deployment verifies the selected commit’s driver directly from Git and hands execution to it when needed, retaining the same lock and captured commit. The continuation never performs a second fetch or changes the live driver. The private staged script is kept under the operator-owned deployment root for inspection. Rollback uses the current driver and keeps its existing compatibility restrictions.
 
 The script performs these operations in order:
 
 1. acquires an exclusive deployment lock;
-2. fetches the selected branch (default `master`) into the local mirror and verifies the expected commit;
+2. fetches the selected branch (default `master`) into the local mirror, verifies the expected commit, and hands execution to that commit’s verified driver when the installed driver differs;
 3. creates a new inactive release at the captured commit and verifies its prepaid source contract;
 4. links the protected `.env` and durable storage;
 5. installs production Composer and npm dependencies;

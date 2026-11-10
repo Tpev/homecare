@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+# homecare-deploy-handoff-v1
+DEPLOY_DRIVER_SOURCE="${BASH_SOURCE[0]}"
+CONTINUATION_COMMIT=""
 
 APP_DIR="${HOMECARE_APP_DIR:-/var/www/homecare}"
 DEPLOY_ROOT="${HOMECARE_DEPLOY_ROOT:-/var/www/homecare-deploy}"
@@ -83,6 +86,7 @@ legacy access can be finalized safely. No Laravel maintenance mode is used.
 Once prepaid code is activated, every later release must retain prepaid support,
 even with sales disabled. No deployment mode reverses database migrations.
 The fetched branch tip is captured once and used for the whole deployment.
+Normal deployment uses the driver from that same commit, preserving its lock.
 HOMECARE_EXPECTED_COMMIT is optional; when set, a different fetched commit aborts.
 Prepaid exposure must match a reviewed private pilot or public family-wallet release.
 This release enables public prepaid access by default and preserves existing pauses.
@@ -456,7 +460,7 @@ prepaid_release_version() {
     mapfile -t lines < <(sed 's/\r$//' "$release/$PREPAID_MANIFEST")
     mapfile -t paths < <(prepaid_compatibility_files_for_version "$version")
     [[ "${#lines[@]}" -eq "$((${#paths[@]} + 1))" ]] || {
-      log "Prepaid compatibility: manifest version or inventory is unknown." >&2; return 1;
+      log "Prepaid compatibility: manifest version or inventory is unknown ($release has ${#lines[@]} lines; running driver expects $((${#paths[@]} + 1)) for v$version). Use the deployment driver from the selected commit." >&2; return 1;
     }
     for i in "${!paths[@]}"; do
       path="${paths[$i]}"
@@ -532,7 +536,9 @@ persist_prepaid_floor() {
 require_prepaid_compatibility() {
   local current="$1" target="$2" pin="${3:-check}" current_version target_version floor
   floor="$(prepaid_floor_version)" || return 1
-  target_version="$(prepaid_release_version "$target")" || return 1
+  target_version="$(prepaid_release_version "$target")" || {
+    log "Prepaid compatibility: candidate verification failed: $target" >&2; return 1;
+  }
   if (( floor > 0 )); then
     # A broken active handler must not prevent a verified compatible repair.
     # The durable floor is authoritative, but a newer/unknown declared contract
@@ -544,7 +550,9 @@ require_prepaid_compatibility() {
       }
     fi
   else
-    current_version="$(prepaid_release_version "$current")" || return 1
+    current_version="$(prepaid_release_version "$current")" || {
+      log "Prepaid compatibility: active release cannot recover its missing floor: $current" >&2; return 1;
+    }
   fi
   # Recover a missing floor from already active code, including before rollback.
   if (( current_version > floor )); then
@@ -1004,6 +1012,58 @@ prepare_repository() {
   log "Selected immutable deployment commit $DEPLOY_COMMIT"
 }
 
+selected_deployment_driver_blob() {
+  local entry resolved_commit
+  [[ "$DEPLOY_COMMIT" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] || die "Invalid captured deployment commit." >&2
+  resolved_commit="$(git --git-dir="$REPOSITORY_DIR" rev-parse --verify "$DEPLOY_COMMIT^{commit}")" \
+    || die "Captured deployment commit is unavailable." >&2
+  [[ "$resolved_commit" == "$DEPLOY_COMMIT" ]] || die "Captured deployment commit changed." >&2
+  entry="$(git --git-dir="$REPOSITORY_DIR" ls-tree "$DEPLOY_COMMIT" -- deploy.sh)"
+  [[ "$entry" == '100644 blob '* || "$entry" == '100755 blob '* ]] \
+    || die "Selected commit must contain a regular deployment driver." >&2
+  git --git-dir="$REPOSITORY_DIR" rev-parse --verify "$DEPLOY_COMMIT:deploy.sh"
+}
+
+deployment_driver_blob() {
+  # Match Git's LF text on both the server and local Windows rehearsals.
+  sed 's/\r$//' "$1" | git --git-dir="$REPOSITORY_DIR" hash-object --stdin
+}
+
+verify_deployment_continuation() {
+  local expected actual
+  [[ "$LOCK_FILE" -ef /dev/fd/9 ]] || die "Deployment continuation requires the inherited deployment lock."
+  [[ -z "$EXPECTED_COMMIT" || "$EXPECTED_COMMIT" == "$DEPLOY_COMMIT" ]] \
+    || die "Captured deployment commit differs from HOMECARE_EXPECTED_COMMIT."
+  expected="$(selected_deployment_driver_blob)" || return 1
+  actual="$(deployment_driver_blob "$DEPLOY_DRIVER_SOURCE")" || return 1
+  [[ "$actual" == "$expected" ]] || die "Deployment continuation driver differs from the selected Git commit."
+}
+
+handoff_deployment_driver() {
+  local expected actual stage driver
+  expected="$(selected_deployment_driver_blob)" || return 1
+  actual="$(deployment_driver_blob "$DEPLOY_DRIVER_SOURCE")" || return 1
+  [[ "$actual" != "$expected" ]] || return 0
+  [[ "$LOCK_FILE" -ef /dev/fd/9 ]] || die "Driver handoff requires the inherited deployment lock."
+  [[ -d "$DEPLOY_ROOT" && ! -L "$DEPLOY_ROOT" && ( -O "$DEPLOY_ROOT" || "$EUID" -eq 0 ) ]] \
+    || die "Driver staging requires an operator-owned deployment directory."
+  stage="$(umask 077; mktemp -d "$DEPLOY_ROOT/.driver-$DEPLOY_COMMIT.XXXXXX")"
+  driver="$stage/deploy.sh"
+  # Extract the executable from the captured Git object, never from the live
+  # checkout or an unchecked candidate. Keep it outside web-writable releases.
+  (umask 077; git --git-dir="$REPOSITORY_DIR" show "$DEPLOY_COMMIT:deploy.sh" > "$driver")
+  [[ "$(deployment_driver_blob "$driver")" == "$expected" ]] \
+    || die "Staged deployment driver differs from the selected Git commit."
+  grep -Fxq '# homecare-deploy-handoff-v1' "$driver" \
+    || die "Selected driver predates safe handoff. Use a compatible forward release."
+  bash -n "$driver" || die "Selected deployment driver has invalid shell syntax."
+  log "Handing deployment to the verified driver from $DEPLOY_COMMIT (same lock; no second fetch)."
+  # exec retains descriptor 9 and its flock. The new driver verifies both the
+  # descriptor and its own Git blob, then resumes without reopening the lock,
+  # re-fetching the branch, or running shared-state preparation a second time.
+  exec bash "$driver" --deploy-selected "$DEPLOY_COMMIT"
+}
+
 create_release() {
   local current="$1"
   local release_name
@@ -1283,6 +1343,12 @@ case "$MODE" in
     show_status
     exit 0
     ;;
+  --deploy-selected)
+    [[ "$#" -eq 2 && "$2" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] \
+      || die "Invalid deployment continuation arguments."
+    CONTINUATION_COMMIT="$2"
+    MODE=deploy
+    ;;
   deploy|--rollback)
     ;;
   *)
@@ -1299,7 +1365,12 @@ for command_name in curl flock git grep mktemp python3 readlink sed sha256sum su
   require_command "$command_name"
 done
 
-exec 9>"$LOCK_FILE"
+if [[ -n "$CONTINUATION_COMMIT" ]]; then
+  DEPLOY_COMMIT="$CONTINUATION_COMMIT"
+  verify_deployment_continuation || die "Deployment continuation could not be verified."
+else
+  exec 9>"$LOCK_FILE"
+fi
 flock -n 9 || die "Another deploy is already running."
 trap 'rollback_after_failure "$?"' EXIT
 trap 'exit 130' INT
@@ -1327,8 +1398,15 @@ log "Starting HomeCare atomic deployment..."
 log "The current release stays live during the build; first screening activation includes a brief request drain."
 
 CURRENT_RELEASE="$(current_release)"
-prepare_shared_state
-prepare_repository "$CURRENT_RELEASE"
+if [[ -n "$CONTINUATION_COMMIT" ]]; then
+  [[ -d "$RELEASES_DIR" && -f "$SHARED_ENV" && "$CURRENT_RELEASE/storage" -ef "$SHARED_STORAGE" ]] \
+    || die "Prepared deployment state is unavailable after driver handoff."
+  log "Continuing immutable deployment commit $DEPLOY_COMMIT with its matching driver."
+else
+  prepare_shared_state
+  prepare_repository "$CURRENT_RELEASE"
+  handoff_deployment_driver
+fi
 create_release "$CURRENT_RELEASE"
 prepare_screening_cutover
 activate_release "$CURRENT_RELEASE"

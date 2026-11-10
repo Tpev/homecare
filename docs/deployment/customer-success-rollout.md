@@ -4,17 +4,25 @@ Status: implemented locally; deployment is performed by the owner after the revi
 
 ## Deployment
 
-Do not deploy an uncommitted checkout. This release extends the prepaid compatibility inventory, so obtain the matching driver before the first deployment of this version. From the existing production checkout, after master contains the approved commit:
+Do not deploy an uncommitted checkout. On an existing atomic server whose active driver predates automatic handoff, run this once after the reviewed fix is on master. Fetch the deployment mirror’s upstream directly: active release clones have the local mirror as their origin, so fetching inside the active checkout can retrieve the previous driver again. The bootstrap extracts the selected script to a private temporary file without overwriting the active release.
 
 ```bash
-cd /var/www/homecare
-git fetch origin master
-git restore --source=origin/master -- deploy.sh
-./deploy.sh
+(
+  set -eu
+  repo=/var/www/homecare-deploy/repository.git
+  git --git-dir="$repo" fetch --prune origin '+refs/heads/master:refs/heads/master'
+  revision="$(git --git-dir="$repo" rev-parse --verify 'refs/heads/master^{commit}')"
+  driver="$(mktemp /tmp/homecare-deploy.XXXXXX)"
+  trap 'rm -f -- "$driver"' EXIT
+  git --git-dir="$repo" show "$revision:deploy.sh" > "$driver"
+  HOMECARE_EXPECTED_COMMIT="$revision" bash "$driver"
+)
 cd /var/www/homecare
 ./deploy.sh --status
 php artisan care-hours:health --json
 ```
+
+After this release is active, use `cd /var/www/homecare && ./deploy.sh` normally. The driver captures one fetched commit and hands execution to that commit’s verified driver while keeping the deployment lock. It does not fetch a second time or relax manifest checks.
 
 Use the existing production runtime setup described in [Atomic Production Deployments](zero-downtime-deployments.md). The driver applies the migration and prepares configuration, routes, views, assets and workers. No agent production access is needed.
 
