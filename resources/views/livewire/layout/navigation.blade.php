@@ -24,6 +24,7 @@ new class extends Component
         $isContentTeam = $user?->isContentTeamMember() === true;
         $isSales = $user?->role === 'sales';
         $isSdr = $user?->role === 'sdr';
+        $isCustomerSuccess = $user?->role === 'customer_success';
         $usesAdminOrSalesNavigation = $isAdmin || $isSales;
         $canAccessSdr = $isAdmin || $isSales || $isSdr;
         $continuousCoverageVisible = app(\App\Services\ContinuousCoverage\ContinuousCoverageAccess::class)->visibleInNavigation($user);
@@ -142,6 +143,23 @@ new class extends Component
             'active' => request()->routeIs('admin.crm.*') || request()->routeIs('admin.leads.*'),
         ];
 
+        $customerCareLink = [
+            'label' => 'Customer Success',
+            'href' => route('customer-care.index'),
+            'active' => request()->routeIs('customer-care.*') && ! request()->routeIs('customer-care.gifts'),
+        ];
+        $giftPurchasesLink = [
+            'label' => 'Gift card purchases',
+            'href' => route('customer-care.gifts'),
+            'active' => request()->routeIs('customer-care.gifts'),
+        ];
+        $customerCareNavLinks = [
+            $customerCareLink,
+            ['label' => 'Customer onboarding', 'href' => route('admin.customer-onboarding.index'),
+                'active' => request()->routeIs('admin.customer-onboarding.*', 'admin.family-onboarding.*')],
+            $giftPurchasesLink,
+        ];
+
         $sdrNavLinks = [
             $adminCrmLink,
             [
@@ -209,13 +227,14 @@ new class extends Component
             ],
             'care' => [
                 'label' => 'Care operations',
-                'active' => request()->routeIs('admin.requests.*')
+                'active' => $customerCareLink['active'] || request()->routeIs('admin.requests.*')
                     || request()->routeIs('admin.care-plans.*')
                     || request()->routeIs('admin.care-assistance.*')
                     || request()->routeIs('admin.caregivers.reviews')
                     || request()->routeIs('admin.support.tickets*')
                     || request()->routeIs('admin.notifications.*'),
                 'items' => [
+                    $customerCareLink,
                     [
                         'label' => 'Admin Requests',
                         'href' => route('admin.requests.index'),
@@ -328,7 +347,7 @@ new class extends Component
             'communications' => [
                 'label' => 'Communications & money',
                 'active' => request()->routeIs('admin.sms.*')
-                    || request()->routeIs('admin.payments.ops'),
+                    || request()->routeIs('admin.payments.ops', 'admin.care-hours.*') || $giftPurchasesLink['active'],
                 'items' => [
                     [
                         'label' => 'Admin SMS',
@@ -340,6 +359,8 @@ new class extends Component
                         'href' => route('admin.payments.ops'),
                         'active' => request()->routeIs('admin.payments.ops'),
                     ],
+                    ['label' => 'Prepaid hours', 'href' => route('admin.care-hours.index'), 'active' => request()->routeIs('admin.care-hours.index', 'admin.care-hours.show')],
+                    ['label' => 'Gift card purchases', 'href' => route('admin.care-hours.gifts.index'), 'active' => request()->routeIs('admin.care-hours.gifts.*') || $giftPurchasesLink['active']],
                 ],
             ],
             'analytics' => [
@@ -407,7 +428,7 @@ new class extends Component
             ? array_merge(
                 array_slice($adminNavGroups['acquisition']['items'], 1),
                 $adminNavGroups['care']['items'],
-                [$adminNavGroups['communications']['items'][1]],
+                array_slice($adminNavGroups['communications']['items'], 1),
             )
             : [];
         $adminInsightItems = $isAdmin
@@ -432,7 +453,9 @@ new class extends Component
         if ($usesAdminOrSalesNavigation) {
             $primaryLinks = [$adminCrmLink];
         } elseif ($isSdr) {
-            $primaryLinks = $sdrNavLinks;
+            $primaryLinks = array_merge($sdrNavLinks, [$customerCareLink, $giftPurchasesLink]);
+        } elseif ($isCustomerSuccess) {
+            $primaryLinks = $customerCareNavLinks;
         } else {
             if ($user && ! $caregiverOnboardingMode && ! $isFamily) {
                 $primaryLinks[] = [
@@ -534,7 +557,7 @@ new class extends Component
                     </span>
                     <span class="block">
                         <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $usesAdminOrSalesNavigation ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')))) }}</span>
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $usesAdminOrSalesNavigation ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : ($isCustomerSuccess ? 'Customer care' : 'Care that feels personal.'))))) }}</span>
                     </span>
                 </a>
             </div>
@@ -734,10 +757,16 @@ new class extends Component
                         </x-nav-link>
                     @endif
                 @elseif ($isSdr)
-                    @foreach ($sdrNavLinks as $link)
-                        <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
-                            {{ __($link['label']) }}
-                        </x-nav-link>
+                    <x-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>CRM</x-nav-link>
+                    @foreach (['Customer care' => $customerCareNavLinks, 'Outreach' => array_slice($sdrNavLinks, 2)] as $groupLabel => $links)
+                        <div class="relative" x-data="{ menuOpen: false }" @click.outside="menuOpen = false" @keydown.escape.stop="menuOpen = false; $refs.trigger.focus()">
+                            <button x-ref="trigger" type="button" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-controls="sdr-tools-{{ $loop->index }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold {{ collect($links)->contains(fn ($link) => $link['active']) ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2]' }}">{{ $groupLabel }} <span aria-hidden="true">⌄</span></button>
+                            <div id="sdr-tools-{{ $loop->index }}" x-cloak x-show="menuOpen" class="absolute left-0 z-50 mt-2 w-64 rounded-2xl border border-[#E3D6C5] bg-[#FFFDFA] p-2 shadow-xl">
+                                @foreach ($links as $link)
+                                    <a href="{{ $link['href'] }}" class="block rounded-xl px-3 py-3 text-sm font-medium {{ $link['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}" @if($link['active']) aria-current="page" @endif>{{ $link['label'] }}</a>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
                 @else
                     @foreach ($primaryLinks as $link)
@@ -1058,7 +1087,7 @@ new class extends Component
                     @endforeach
                 @endif
             @elseif ($isSdr)
-                @foreach ($sdrNavLinks as $link)
+                @foreach ($primaryLinks as $link)
                     <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
                         {{ __($link['label']) }}
                     </x-responsive-nav-link>
@@ -1154,12 +1183,4 @@ new class extends Component
             @endif
         </div>
     </div>
-    @if(auth()->user()?->canManageCustomerCare())
-        <div class="border-t border-[#E3D6C5] bg-[#F8F0E2] px-4 py-2">
-            <div class="mx-auto flex max-w-7xl flex-wrap gap-5 text-sm font-semibold text-[#23483F]">
-                <a href="{{ route('customer-care.index') }}" @if(request()->routeIs('customer-care.*')) aria-current="page" class="underline" @endif>Customer Success</a>
-                <a href="{{ route('customer-care.gifts') }}">Gift card purchases</a>
-            </div>
-        </div>
-    @endif
 </nav>

@@ -161,6 +161,49 @@ class ManagedCareService
         });
     }
 
+    public function archive(User $actor, CareRequest $request, string $reason): void
+    {
+        CustomerCareAccess::authorize($actor);
+        $this->reason($reason);
+        DB::transaction(function () use ($actor, $request, $reason): void {
+            $request = CareRequest::whereKey($request->id)->lockForUpdate()->firstOrFail();
+            abort_unless($request->staff_managed, 403);
+            if ($request->staff_archived_at) {
+                return;
+            }
+            $this->require(! $request->sourceCarePlans()->whereNotIn('status', ['ended', 'cancelled', 'declined', 'expired'])->exists(),
+                'End recurring care before removing this request.');
+            $visits = CareBooking::where(fn ($q) => $q->where('care_request_id', $request->id)
+                ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $request->id)))->lockForUpdate()->get();
+            foreach ($visits as $visit) {
+                $this->require(in_array($visit->status, ['cancelled', 'completed', 'reviewed'], true)
+                    && ($visit->status === 'cancelled' || $visit->family_confirmed_at !== null)
+                    && $visit->dispute_status !== 'open'
+                    && ! $visit->changeRequests()->where('status', 'pending')->exists()
+                    && ! $visit->timeCorrections()->whereIn('status', ['pending_family', 'approved_admin_required', 'payment_action_required', 'escalated'])->exists(),
+                    'Finish or cancel all visits and resolve outstanding reviews before removing this request.');
+            }
+            if (in_array($request->status, ['draft', 'open'], true)) {
+                app(CareRequestLifecycleService::class)->withdraw($request->family, $request);
+            }
+            $request->update(['staff_archived_at' => now()]);
+            $this->audit($actor, $request, 'request_archived', $reason);
+        }, 3);
+    }
+
+    public function restore(User $actor, CareRequest $request): void
+    {
+        CustomerCareAccess::authorize($actor);
+        DB::transaction(function () use ($actor, $request): void {
+            $request = CareRequest::whereKey($request->id)->lockForUpdate()->firstOrFail();
+            abort_unless($request->staff_managed, 403);
+            if ($request->staff_archived_at) {
+                $request->update(['staff_archived_at' => null]);
+                $this->audit($actor, $request, 'request_restored');
+            }
+        });
+    }
+
     public function note(User $actor, CareRequest $request, string $note): void
     {
         $this->reason($note);
@@ -362,6 +405,7 @@ class ManagedCareService
         CustomerCareAccess::authorize($actor);
         $request = CareRequest::whereKey($request->id)->lockForUpdate()->firstOrFail();
         abort_unless($request->staff_managed, 403);
+        $this->require($request->staff_archived_at === null, 'Restore this request before making changes.');
 
         return $request;
     }

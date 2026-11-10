@@ -238,6 +238,67 @@ class CustomerCareWorkflowTest extends TestCase
         Notification::assertNotSentTo($customer, \App\Notifications\MarketplaceEventNotification::class);
     }
 
+    public function test_removal_closes_posting_preserves_history_and_can_be_restored_without_republishing(): void
+    {
+        [$actor, $customer, $request] = $this->requestFixture();
+        $application = $request->applications()->create(['caregiver_user_id' => $this->caregiver()->id, 'status' => 'applied', 'proposed_rate' => 28]);
+        $this->actingAs($customer)->post(route('customer-care.action', $request), ['action' => 'archive', 'reason' => 'No longer required.'])->assertForbidden();
+        $this->actingAs($actor)->post(route('customer-care.action', $request), ['action' => 'archive', 'reason' => 'Family no longer needs this request.'])
+            ->assertRedirect(route('customer-care.customer', $customer));
+        $this->assertNotNull($request->fresh()->staff_archived_at);
+        $this->assertSame('cancelled', $request->fresh()->status);
+        $this->assertSame('not_selected', $application->fresh()->status);
+        $this->get(route('customer-care.customer', $customer))->assertOk()->assertDontSee($request->title);
+        $this->get(route('customer-care.customer', ['customer' => $customer, 'view' => 'archived']))->assertOk()->assertSee($request->title);
+        $this->get(route('customer-care.index', ['view' => 'archived']))->assertOk()->assertSee($request->title);
+        $this->post(route('customer-care.action', $request), ['action' => 'archive', 'reason' => 'Duplicate removal retry.'])->assertRedirect();
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('customer_care_actions')->where('care_request_id', $request->id)->where('action', 'request_archived')->count());
+        $this->get(route('customer-care.show', $request))->assertOk()->assertSee('Restore request');
+        $this->post(route('customer-care.action', $request), ['action' => 'restore'])->assertRedirect();
+        $this->assertNull($request->fresh()->staff_archived_at);
+        $this->assertSame('cancelled', $request->fresh()->status);
+        $this->assertTrue($request->fresh()->staff_managed);
+        $this->assertDatabaseHas('customer_care_actions', ['care_request_id' => $request->id, 'actor_user_id' => $actor->id, 'action' => 'request_archived']);
+        Notification::assertNotSentTo($customer, \App\Notifications\MarketplaceEventNotification::class);
+    }
+
+    public function test_removal_blocks_active_visits_and_keeps_cancelled_visit_and_prepaid_history(): void
+    {
+        [$actor, $customer, $request] = $this->requestFixture();
+        $wallet = app(ManualCareHourCreditService::class)->credit($actor, $customer, $this->creditInput());
+        $care = app(ManagedCareService::class);
+        $care->hire($actor, $request, $this->caregiver()->id, 'Placement confirmed by phone.');
+        $booking = $request->fresh()->booking;
+        $this->actingAs($actor)->get(route('customer-care.show', ['careRequest' => $request, 'tab' => 'visits']))->assertOk()->assertSee('Reschedule')->assertSee('Cancel visit');
+        $this->post(route('customer-care.action', $request), ['action' => 'archive', 'reason' => 'Remove a booked request.'])->assertSessionHasErrors('customer_care');
+        $this->assertNull($request->fresh()->staff_archived_at);
+        $care->visit($actor, $request, $booking->id, 'cancel', ['reason' => 'Family no longer needs the visit.']);
+        $balance = $wallet->balance();
+        $ledgerCount = \Illuminate\Support\Facades\DB::table('care_hour_ledger_entries')->count();
+        $care->archive($actor, $request, 'Care cancelled, retaining the records.');
+        $this->assertNotNull($request->fresh()->staff_archived_at);
+        $this->assertSame('cancelled', $booking->fresh()->status);
+        $this->assertSame($balance, $wallet->balance());
+        $this->assertDatabaseCount('care_hour_ledger_entries', $ledgerCount);
+        $this->assertDatabaseCount('care_hour_manual_credits', 1);
+        $this->get(route('customer-care.show', ['careRequest' => $request, 'tab' => 'visits']))->assertOk()->assertSee('Cancelled');
+        Notification::assertNotSentTo($customer, \App\Notifications\MarketplaceEventNotification::class);
+    }
+
+    public function test_recurring_workspace_renders_and_cannot_archive_an_active_plan(): void
+    {
+        [$actor, $customer] = $this->requestFixture();
+        $request = app(ManagedCareService::class)->save($actor, $customer, array_replace($this->requestInput(), [
+            'request_type' => 'recurring', 'recurring_days' => [now()->addDay()->dayOfWeek], 'recurring_start_time' => '10:00',
+            'recurring_end_time' => '12:00', 'recurring_starts_on' => now()->addDay()->toDateString(),
+        ]));
+        app(ManualCareHourCreditService::class)->credit($actor, $customer, $this->creditInput());
+        app(ManagedCareService::class)->hire($actor, $request, $this->caregiver()->id, 'Recurring care agreed with caregiver.');
+        $this->actingAs($actor)->get(route('customer-care.show', ['careRequest' => $request, 'tab' => 'visits']))->assertOk()->assertSee('End recurring care');
+        $this->post(route('customer-care.action', $request), ['action' => 'archive', 'reason' => 'Attempt to remove recurring care.'])->assertSessionHasErrors('customer_care');
+        $this->assertNull($request->fresh()->staff_archived_at);
+    }
+
     private function requestFixture(): array
     {
         $actor = User::factory()->create(['role' => 'sdr']);

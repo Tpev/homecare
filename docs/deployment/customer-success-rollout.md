@@ -24,7 +24,7 @@ The new migration adds durable staff management, internal audit records, manual 
 
 ## Staff access
 
-The workspace is at **/admin/customer-care**, with a Customer Success navigation link. Active admin and SDR accounts already have access. Dedicated Customer Success accounts use the customer_success role and land directly in the workspace.
+The workspace is at **/admin/customer-care**, under **Work queues → Customer Success** or **All tools → Care operations → Customer Success** for admins. Gift purchases and prepaid hours are grouped under **All tools → Communications & money**. SDRs use the **Customer care** menu; dedicated Customer Success staff have their care tools in the main navigation. Active admin and SDR accounts already have access. Dedicated Customer Success accounts use the customer_success role and land directly in the workspace.
 
 To prepare a new staff login, run this interactively after deployment:
 
@@ -36,14 +36,20 @@ The command prompts for the initial password without echoing it and sends no ema
 
 Customer Success has customer search/account preparation, manual prepaid credits, managed requests and read-only gift purchase status. Refunds, claim secrets, payment recovery and broader administrator billing controls remain in the existing admin area.
 
+## Removing a request
+
+Use **Remove request** beside the request title and confirm a reason. Draft/open postings are withdrawn; applicants and invitations are closed using the existing lifecycle. The family receives no notification. Requests with an active recurring plan, unfinished visits, unapproved hours, disputes, or pending reviews must be resolved first.
+
+Removal archives the request from active staff lists. Visit, payment, conversation, and audit records are retained. **Archived requests** is available on the workspace and each family account. **Restore request** returns it to those lists without reopening the posting or notifying the family. The additive `staff_archived_at` migration is applied by the deployment driver.
+
 ## Team workflow
 
 1. Find a customer, or prepare an account without sending an invitation.
 2. Record offline payment hours, amount received in USD, a payment reference and a reason. Credits have an immutable staff audit trail. The same family/payment reference or form submission cannot add hours twice. Credits do not create a Stripe charge or send a receipt. They also do not deposit the offline funds into Stripe; existing caregiver payouts need available platform funds.
 3. Create a request, save a draft or post it immediately. Requests remain owned by the customer's family account and retain the actual staff creator. Staff creation does not record customer acceptance of terms.
 4. Search/invite eligible caregivers, review and shortlist applicants, or record a placement agreed with a caregiver. Hiring requires enough prepaid hours for the first visit. Existing screening and work-eligibility rules apply.
-5. Manage the request from one page: caregiver messages, internal notes, upcoming visits, rescheduling, cancellations, actual times, approvals, disputes, schedule-change responses and time corrections. Recurring plans include pause, resume, end, schedule proposals and extra-visit requests. Caregivers still receive their normal operational communications and respond to proposals.
-6. Use the workspace's caregiver reply inbox and attention queue for follow-up. Opening a thread updates staff read state without marking it read for the customer. Recurring-visit conversations are grouped into the originating request.
+5. Use the family-style request workspace tabs (Overview, Caregivers, Visits, Messages, Activity): caregiver messages, internal notes, upcoming visits, rescheduling, cancellations, actual times, approvals, disputes, schedule-change responses and time corrections. Recurring plans include pause, resume, end, schedule proposals and extra-visit requests. Caregivers still receive their normal operational communications and respond to proposals.
+6. Use the workspace's caregiver reply inbox and attention queue for follow-up. Opening the Messages tab updates staff read state without marking it read for the customer. Recurring-visit conversations are grouped into the originating request.
 
 Managed requests suppress customer email, in-app/database and broadcast notifications at creation and queued delivery. The setting follows future recurring visits. Taking over an existing request suppresses future messages, including queued messages; already delivered communications cannot be recalled. Customer login/security notifications and unrelated requests are unchanged. This is notification suppression, not hiding account records from their owner.
 

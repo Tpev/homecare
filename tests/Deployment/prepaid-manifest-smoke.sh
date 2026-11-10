@@ -77,6 +77,7 @@ if [[ "$version" == 2 ]]; then
   rm -- "$fixture/database/migrations/2026_10_30_000100_create_care_hour_family_wallets.php"
   reject '2026_10_30_000100_create_care_hour_family_wallets.php'
   rm -- "$fixture/database/migrations/2026_11_10_000100_add_customer_care_management.php"
+  rm -- "$fixture/database/migrations/2026_11_10_000200_add_staff_request_archive.php"
   if print_prepaid_manifest "$fixture" 1 > "$SANDBOX/downgrade-manifest" 2> "$SANDBOX/downgrade.log"; then
     printf 'Family-wallet configuration was mislabeled as v1.\n' >&2; exit 1
   fi

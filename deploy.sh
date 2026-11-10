@@ -364,6 +364,12 @@ resources/views/customer-care/index.blade.php
 resources/views/customer-care/partials/visit-proposals.blade.php
 resources/views/customer-care/partials/status.blade.php
 resources/views/customer-care/partials/plan-changes.blade.php
+resources/views/customer-care/partials/overview.blade.php
+resources/views/customer-care/partials/caregivers.blade.php
+resources/views/customer-care/partials/visits.blade.php
+resources/views/customer-care/partials/messages.blade.php
+resources/views/customer-care/partials/activity.blade.php
+database/migrations/2026_11_10_000200_add_staff_request_archive.php
 app/Services/CustomerOnboarding/CustomerOnboardingAccountService.php
 app/Services/Marketplace/CareRequestRecruitmentService.php
 app/Services/CareRequests/CareRequestLifecycleService.php

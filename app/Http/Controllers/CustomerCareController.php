@@ -21,6 +21,7 @@ class CustomerCareController extends Controller
 {
     public function index(Request $http): View
     {
+        $archived = $http->query('view') === 'archived';
         $search = trim((string) $http->query('search', ''));
         $term = '%'.addcslashes(mb_substr($search, 0, 120), '%_\\').'%';
         $customers = User::where('role', 'family')->whereNull('access_revoked_at')
@@ -29,6 +30,7 @@ class CustomerCareController extends Controller
         $requests = CareRequest::with(['family', 'booking'])->where('staff_managed', true)->where('is_system_generated', false)
             ->when($search !== '', fn ($q) => $q->where(fn ($match) => $match->where('title', 'like', $term)
                 ->orWhereHas('family', fn ($family) => $family->where('name', 'like', $term)->orWhere('email', 'like', $term))))
+            ->when($archived, fn ($q) => $q->whereNotNull('staff_archived_at'), fn ($q) => $q->whereNull('staff_archived_at'))
             ->withCount(['applications' => fn ($q) => $q->whereIn('status', ['applied', 'shortlisted'])])
             ->latest('updated_at')->paginate(20, ['*'], 'requests')->withQueryString();
         $attention = CareBooking::whereHas('careRequest', fn ($q) => $q->where('staff_managed', true)
@@ -47,7 +49,7 @@ class CustomerCareController extends Controller
             ->where(fn ($q) => $q->whereNull('staff_last_read_at')->orWhereColumn('last_message_at', '>', 'staff_last_read_at'))
             ->with(['caregiver', 'careRequest.family'])->latest('last_message_at')->limit(30)->get();
 
-        return view('customer-care.index', compact('search', 'customers', 'requests', 'attention', 'inbox'));
+        return view('customer-care.index', compact('search', 'customers', 'requests', 'attention', 'inbox', 'archived'));
     }
 
     public function gifts(Request $http): View
@@ -68,16 +70,19 @@ class CustomerCareController extends Controller
         return redirect()->route('customer-care.customer', $account->owner_user_id)->with('status', 'Customer account prepared. No access email was sent.');
     }
 
-    public function customer(User $customer): View
+    public function customer(Request $http, User $customer): View
     {
         abort_unless($customer->role === 'family' && $customer->access_revoked_at === null, 404);
         $wallet = app(CareHourIdentityService::class)->walletFor($customer);
         $family = app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->account($customer);
-        $requests = CareRequest::where('family_account_id', $family->id)->where('is_system_generated', false)->latest()->paginate(20);
+        $archived = $http->query('view') === 'archived';
+        $requests = CareRequest::where('family_account_id', $family->id)->where('is_system_generated', false)
+            ->when($archived, fn ($q) => $q->whereNotNull('staff_archived_at'), fn ($q) => $q->whereNull('staff_archived_at'))
+            ->latest()->paginate(20)->withQueryString();
         $credits = DB::table('care_hour_manual_credits')->join('users', 'users.id', '=', 'care_hour_manual_credits.actor_user_id')
             ->where('family_account_id', $family->id)->select('care_hour_manual_credits.*', 'users.name as actor_name')->latest('care_hour_manual_credits.id')->limit(30)->get();
 
-        return view('customer-care.customer', compact('customer', 'wallet', 'requests', 'credits'));
+        return view('customer-care.customer', compact('customer', 'wallet', 'requests', 'credits', 'archived'));
     }
 
     public function credit(Request $http, User $customer, ManualCareHourCreditService $credits): RedirectResponse
@@ -97,6 +102,7 @@ class CustomerCareController extends Controller
     public function edit(CareRequest $careRequest): View
     {
         abort_unless($careRequest->staff_managed, 403);
+        abort_unless(! $careRequest->staff_archived_at && in_array($careRequest->status, ['draft', 'open'], true) && ! $careRequest->booking()->exists(), 409);
 
         return view('customer-care.edit', ['customer' => $careRequest->family, 'careRequest' => $careRequest->load('tasks', 'recipient'), 'tasks' => CareTask::orderBy('name')->get()]);
     }
@@ -117,17 +123,20 @@ class CustomerCareController extends Controller
 
     public function show(Request $http, CareRequest $careRequest, CareRequestRecruitmentService $recruitment): View|RedirectResponse
     {
+        $tab = in_array($http->query('tab'), ['overview', 'caregivers', 'visits', 'messages', 'activity'], true) ? $http->query('tab') : 'overview';
         if ($careRequest->is_system_generated && $careRequest->carePlan?->sourceCareRequest?->staff_managed) {
-            return redirect()->route('customer-care.show', $careRequest->carePlan->source_care_request_id);
+            return redirect()->route('customer-care.show', ['careRequest' => $careRequest->carePlan->source_care_request_id, 'tab' => $tab]);
         }
         $careRequest->load(['family', 'recipient', 'tasks', 'applications.caregiver', 'carePlan']);
         $bookings = CareBooking::where(fn ($q) => $q->where('care_request_id', $careRequest->id)
             ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $careRequest->id)))
-            ->with(['caregiver', 'careHourFunding', 'careHourSettlement', 'timeCorrections', 'changeRequests'])->orderBy('scheduled_start_at')->paginate(20);
+            ->with(['caregiver', 'careHourFunding', 'careHourSettlement', 'timeCorrections', 'changeRequests'])->orderBy('scheduled_start_at')->paginate(20)->withQueryString();
         $conversations = \App\Models\CareRequestConversation::whereHas('careRequest', fn ($q) => $q->whereKey($careRequest->id)
             ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $careRequest->id)))
             ->with(['caregiver', 'messages.sender'])->orderByDesc('last_message_at')->get();
-        if ($careRequest->staff_managed) {
+        $unreadMessages = $conversations->filter(fn ($thread) => $thread->last_message_sender_id === $thread->caregiver_user_id
+            && $thread->last_message_at && (! $thread->staff_last_read_at || $thread->last_message_at->gt($thread->staff_last_read_at)))->count();
+        if ($careRequest->staff_managed && $tab === 'messages') {
             foreach ($conversations as $conversation) {
                 if ($readAt = $conversation->messages->max('created_at')) {
                     $conversation->update(['staff_last_read_at' => $readAt]);
@@ -141,7 +150,7 @@ class CustomerCareController extends Controller
         $placements = $recruitment->candidates($careRequest, $caregiverSearch, includeContacted: true)->limit(30)->get();
         $wallet = app(CareHourIdentityService::class)->walletForFamily((int) $careRequest->family_account_id);
 
-        return view('customer-care.show', compact('careRequest', 'bookings', 'history', 'candidates', 'caregiverSearch', 'wallet', 'conversations', 'placements'));
+        return view('customer-care.show', compact('careRequest', 'bookings', 'history', 'candidates', 'caregiverSearch', 'wallet', 'conversations', 'placements', 'tab', 'unreadMessages'));
     }
 
     public function action(Request $http, CareRequest $careRequest, ManagedCareService $care, CareRequestRecruitmentService $recruitment): RedirectResponse
@@ -154,7 +163,10 @@ class CustomerCareController extends Controller
                 $care->takeOver($actor, $careRequest, $reason);
             } else {
                 abort_unless($careRequest->staff_managed, 403);
+                abort_if($careRequest->staff_archived_at && ! in_array($action, ['restore', 'archive'], true), 409);
                 match ($action) {
+                    'archive' => $care->archive($actor, $careRequest, $reason),
+                    'restore' => $care->restore($actor, $careRequest),
                     'hire' => $care->hire($actor, $careRequest, (int) $http->input('caregiver_id'), $reason),
                     'shortlist', 'reject' => $care->application($actor, $careRequest, (int) $http->input('application_id'), $action === 'shortlist' ? 'shortlisted' : 'rejected'),
                     'withdraw' => $care->withdraw($actor, $careRequest, $reason),
@@ -172,6 +184,18 @@ class CustomerCareController extends Controller
             return back()->withErrors(['payment' => $exception->userMessage]);
         }
 
-        return redirect()->route('customer-care.show', $careRequest)->with('status', 'Saved by the care team. No customer notification was sent.');
+        if ($action === 'archive') {
+            return redirect()->route('customer-care.customer', $careRequest->family_user_id)->with('status', 'Request removed from the active list. Its history is available in Archived requests.');
+        }
+        $tab = match ($action) {
+            'hire', 'visit', 'plan', 'change', 'correction' => 'visits',
+            'recruit', 'shortlist', 'reject' => 'caregivers',
+            'message' => 'messages',
+            'note' => 'activity',
+            default => 'overview',
+        };
+
+        return redirect()->route('customer-care.show', ['careRequest' => $careRequest, 'tab' => $tab])
+            ->with('status', $action === 'restore' ? 'Request restored to the active list. Its posting remains closed.' : 'Saved by the care team. No customer notification was sent.');
     }
 }

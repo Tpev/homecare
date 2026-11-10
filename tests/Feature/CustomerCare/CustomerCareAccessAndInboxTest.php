@@ -54,7 +54,9 @@ class CustomerCareAccessAndInboxTest extends TestCase
         CareRequestMessage::create(['care_request_conversation_id' => $conversation->id, 'sender_user_id' => $caregiver->id, 'body' => 'I have a question about arrival.']);
         $conversation->update(['last_message_at' => now(), 'last_message_sender_id' => $caregiver->id]);
         $this->actingAs($staff)->get(route('customer-care.index'))->assertOk()->assertSee($caregiver->name);
-        $this->get(route('customer-care.show', $request))->assertOk()->assertSee('I have a question about arrival.');
+        $this->get(route('customer-care.show', $request))->assertOk();
+        $this->assertNull($conversation->fresh()->staff_last_read_at);
+        $this->get(route('customer-care.show', ['careRequest' => $request, 'tab' => 'messages']))->assertOk()->assertSee('I have a question about arrival.');
         $this->assertNotNull($conversation->fresh()->staff_last_read_at);
         $this->assertNull($conversation->fresh()->family_last_read_at);
         $this->get(route('customer-care.index'))->assertSee('No unread caregiver replies.');
