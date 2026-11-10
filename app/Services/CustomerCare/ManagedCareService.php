@@ -238,6 +238,7 @@ class ManagedCareService
     public function visit(User $actor, CareRequest $request, int $bookingId, string $action, array $input): void
     {
         CustomerCareAccess::authorize($actor);
+        $request = $this->locked($actor, $request);
         $reason = trim((string) ($input['reason'] ?? ''));
         $this->reason($reason);
         $booking = $this->booking($request, $bookingId);
@@ -257,13 +258,20 @@ class ManagedCareService
 
             return;
         }
-        if ($action === 'cancel') {
+        if (in_array($action, ['cancel', 'no_show'], true)) {
+            if ($action === 'no_show') {
+                $this->require($booking->scheduled_start_at?->lte(now()) === true, 'A future visit cannot be marked as a no-show.');
+            }
             $changed = app(PrepaidBookingSettlementService::class)->updateVisitState($booking, [
                 'status' => CareBooking::STATUS_CANCELLED, 'cancelled_at' => now(), 'cancelled_by_user_id' => $actor->id,
                 'cancellation_reason' => 'Customer Success: '.$reason,
+                ...($action === 'no_show' ? ['no_show_flag' => true] : []),
             ], [CareBooking::STATUS_SCHEDULED]);
             $this->require($changed, 'Only a scheduled visit can be cancelled.');
-            $this->audit($actor, $request, 'visit_cancelled', $reason, ['booking_id' => $bookingId]);
+            $this->audit($actor, $request, $action === 'no_show' ? 'visit_no_show' : 'visit_cancelled', $reason, ['booking_id' => $bookingId]);
+            if ($action === 'no_show') {
+                app(BookingTrustService::class)->recomputeReliabilityForBooking($booking->fresh());
+            }
             $this->notifyCaregiver($booking, MarketplaceEvent::SHIFT_CANCELLED, 'Visit cancelled');
 
             return;

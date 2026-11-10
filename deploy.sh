@@ -379,6 +379,16 @@ app/Services/Marketplace/CareRequestRecruitmentService.php
 app/Services/CareRequests/CareRequestLifecycleService.php
 app/Services/Messaging/CareRequestChatService.php
 app/Support/StaffAccess.php
+app/Livewire/CustomerCare/ManageCareRequest.php
+app/Services/Marketplace/CareRequestInvitationService.php
+app/Services/Marketplace/CaregiverInvitationDiscoveryService.php
+resources/views/customer-care/partials/remove-request.blade.php
+resources/views/components/care-workspace-payment-prompt.blade.php
+resources/views/livewire/family/partials/recruitment-header.blade.php
+resources/views/livewire/family/partials/recruitment-discovery.blade.php
+resources/views/livewire/family/partials/caregiver-invite-card.blade.php
+resources/views/livewire/family/partials/caregiver-invite-panel.blade.php
+resources/views/livewire/family/partials/caregiver-discovery-pagination.blade.php
 EOF
 }
 

@@ -504,7 +504,8 @@ class CareBookingTimeCorrectionService
         if ($actor instanceof User
             && ! ($actor->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($actor, $booking))
             && (int) $actor->id !== (int) $booking->caregiver_user_id
-            && ! $actor->isAdministrator()) {
+            && ! $actor->isAdministrator()
+            && ! $this->staffCanManage($actor, $booking)) {
             throw new AuthorizationException;
         }
 

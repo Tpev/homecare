@@ -8,10 +8,10 @@
 @if ($booking)
 <header data-ai-target="family.request.summary" tabindex="-1" class="hc-care-heading">
     <nav aria-label="Care location" class="hc-care-breadcrumb">
-        <a href="{{ route('family.care.index') }}" wire:navigate>My care</a>
+        <a href="{{ $this->workspaceUrl('family.care.index') }}" wire:navigate>My care</a>
         <span aria-hidden="true">/</span>
         @if ($parentPlanId)
-            <a href="{{ route('family.care.show', ['carePlan' => $parentPlanId, 'tab' => $returnTab, 'visit_filter' => $returnFilter, 'visitsPage' => min(1000000, max(1, $returnVisitPage))]).($returnTab === 'visits' ? '#care-visit-'.$booking?->id : '') }}" wire:navigate>Back to recurring care{{ $returnTab === 'visits' ? ' · Visits' : '' }}</a>
+            <a href="{{ $this->workspaceUrl('family.care.show', ['carePlan' => $parentPlanId, 'tab' => $returnTab, 'visit_filter' => $returnFilter, 'visitsPage' => min(1000000, max(1, $returnVisitPage))]).($returnTab === 'visits' ? '#care-visit-'.$booking?->id : '') }}" wire:navigate>Back to recurring care{{ $returnTab === 'visits' ? ' · Visits' : '' }}</a>
             <span aria-hidden="true">/</span><span>Visit #{{ $booking?->id }}</span>
         @else
             <span>{{ $plainRequestType }}</span>
@@ -34,7 +34,7 @@
                 <button type="button" wire:click="startConversation({{ $hiredApplication->id }})" class="hc-secondary-button">Message caregiver</button>
             @endif
             <button type="button" wire:click="setActiveTab('support')" class="hc-secondary-button">Get help</button>
-            <a href="{{ route('family.care.journey', ['resourceType' => $parentPlanId ? 'regular' : 'request', 'resourceId' => $parentPlanId ?: $requestItem->id]) }}" wire:navigate class="hc-care-text-link">Care timeline</a>
+            <a href="{{ $this->workspaceUrl('family.care.journey', ['resourceType' => $parentPlanId ? 'regular' : 'request', 'resourceId' => $parentPlanId ?: $requestItem->id]) }}" wire:navigate class="hc-care-text-link">Care timeline</a>
         </div>
     </div>
 </header>
@@ -57,7 +57,7 @@
     </div>
     <div class="flex flex-col gap-2 sm:items-start">
         @if ($requestDatePassed)
-            <a href="{{ route('family.requests.create', ['type' => 'one_time']) }}" wire:navigate class="hc-primary-button">Choose another date</a>
+            <a href="{{ $this->workspaceUrl('family.requests.create', ['type' => 'one_time']) }}" wire:navigate class="hc-primary-button">Choose another date</a>
         @elseif ($isWaitingForCaregivers)
             <button type="button" wire:click="openCaregiverInvitePanel" class="hc-primary-button">Find matching caregivers</button>
         @elseif ($isReviewingCaregivers)
@@ -77,7 +77,7 @@
         @elseif ($canLeaveFamilyReview)
             <a href="#family-review-form" class="hc-primary-button">Leave a review</a>
         @elseif ($canRebookHiredCaregiver)
-            <a href="{{ route('family.requests.book_again', $requestItem->id) }}" wire:navigate class="hc-primary-button">Book {{ $hiredCaregiverFirstName }} again</a>
+            <a href="{{ $this->workspaceUrl('family.requests.book_again', $requestItem->id) }}" wire:navigate class="hc-primary-button">Book {{ $hiredCaregiverFirstName }} again</a>
         @endif
     </div>
 </section>

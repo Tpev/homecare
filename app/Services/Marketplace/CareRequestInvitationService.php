@@ -52,14 +52,23 @@ class CareRequestInvitationService
         ?string $message = null,
         bool $reinvite = false,
         string $source = 'care_request',
+        ?User $staffActor = null,
     ): CareRequestInvitationResult {
+        if ($staffActor) {
+            \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+        }
         if ($family->role !== 'family' || ! app(FamilyAccountContext::class)->canAccessRecord($family, $careRequest)) {
             throw new AuthorizationException('You cannot manage invitations for this request.');
         }
 
-        $result = DB::transaction(function () use ($family, $careRequest, $caregiver, $message, $reinvite): CareRequestInvitationResult {
+        $result = DB::transaction(function () use ($family, $careRequest, $caregiver, $message, $reinvite, $staffActor): CareRequestInvitationResult {
             $profile = $caregiver->caregiverProfile()->lockForUpdate()->first();
             $lockedRequest = CareRequest::query()->lockForUpdate()->findOrFail($careRequest->id);
+
+            if ($staffActor) {
+                \App\Services\CustomerCare\CustomerCareAccess::authorize($staffActor);
+                abort_unless($lockedRequest->staff_managed && ! $lockedRequest->staff_archived_at, 403);
+            }
 
             if (! app(FamilyAccountContext::class)->canAccessRecord($family, $lockedRequest)) {
                 throw new AuthorizationException('You cannot manage invitations for this request.');
@@ -180,13 +189,17 @@ class CareRequestInvitationService
                 $invitation->forceFill([
                     'family_account_id' => $lockedRequest->family_account_id,
                     'family_user_id' => $lockedRequest->family_user_id,
-                    'invited_by_user_id' => $family->id,
+                    'invited_by_user_id' => $staffActor?->id ?? $family->id,
                     'care_request_application_id' => null,
                     'status' => CareRequestInvitation::STATUS_PENDING,
                     'message' => $cleanMessage,
                     'expires_at' => CareRequestInvitation::expirationFor($lockedRequest),
                     'responded_at' => null,
                 ])->save();
+
+                if ($staffActor) {
+                    app(\App\Services\CustomerCare\ManagedCareService::class)->audit($staffActor, $lockedRequest, 'caregiver_invited', metadata: ['invitation_id' => $invitation->id, 'caregiver_user_id' => $caregiver->id]);
+                }
 
                 return new CareRequestInvitationResult(
                     self::STATE_REINVITED,
@@ -204,7 +217,7 @@ class CareRequestInvitationService
                 [
                     'family_account_id' => $lockedRequest->family_account_id,
                     'family_user_id' => $lockedRequest->family_user_id,
-                    'invited_by_user_id' => $family->id,
+                    'invited_by_user_id' => $staffActor?->id ?? $family->id,
                     'status' => CareRequestInvitation::STATUS_PENDING,
                     'message' => $cleanMessage,
                     'expires_at' => CareRequestInvitation::expirationFor($lockedRequest),
@@ -217,6 +230,10 @@ class CareRequestInvitationService
                     'An invitation has already been sent to '.$caregiver->name.'.',
                     invitation: $invitation,
                 );
+            }
+
+            if ($staffActor) {
+                app(\App\Services\CustomerCare\ManagedCareService::class)->audit($staffActor, $lockedRequest, 'caregiver_invited', metadata: ['invitation_id' => $invitation->id, 'caregiver_user_id' => $caregiver->id]);
             }
 
             return new CareRequestInvitationResult(
@@ -239,7 +256,7 @@ class CareRequestInvitationService
             $this->notifications->notify(
                 recipients: $invitation->caregiver,
                 eventKey: MarketplaceEvent::INVITATION_RECEIVED,
-                title: $family->name.' invited you to a care request',
+                title: ($staffActor ? 'The LoLo Care team' : $family->name).' invited you to a care request',
                 body: 'Review the schedule, approximate location, requested care, and rate before you respond.',
                 url: route('caregiver.invitations.index'),
                 payload: ['care_request_id' => $careRequest->id],
@@ -262,7 +279,7 @@ class CareRequestInvitationService
             dedupeKey: $dedupeBase.'-family',
         );
 
-        FunnelTracker::track('care_request_invitation_sent', $family, $invitation, [
+        FunnelTracker::track('care_request_invitation_sent', $staffActor ?? $family, $invitation, [
             'care_request_id' => $careRequest->id,
             'caregiver_user_id' => $caregiver->id,
             'source' => $source,

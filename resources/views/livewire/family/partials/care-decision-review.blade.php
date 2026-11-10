@@ -38,7 +38,7 @@
                             <div><dt>From care hours</dt><dd>{{ \App\Models\CareHourAccount::formatMinutes($coveredCareMinutes) }}</dd></div>
                             <div class="hc-hire-total"><dt>Remaining payment</dt><dd>${{ number_format($uncoveredCareCents / 100, 2) }}</dd></div>
                         </dl>
-                        <p>{{ $uncoveredCareMinutes > 0 ? \App\Models\CareHourAccount::formatMinutes($uncoveredCareMinutes).' needs a separate payment before the visit is ready.' : 'Nothing to pay for scheduled care.' }}</p>
+                        <p>{{ $staffWorkspace && $uncoveredCareMinutes > 0 ? 'Add prepaid hours before confirming this hire.' : ($uncoveredCareMinutes > 0 ? \App\Models\CareHourAccount::formatMinutes($uncoveredCareMinutes).' needs a separate payment before the visit is ready.' : 'Nothing to pay for scheduled care.') }}</p>
                     </aside>
                     @else
                     <aside class="hc-hire-price" aria-label="Care price estimate">
@@ -63,12 +63,12 @@
                         @foreach($careHourAccounts as $hoursAccount)
                             <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', {{ $hoursAccount['id'] }})" value="{{ $hoursAccount['id'] }}" @checked((int) $careHourAccountId === (int) $hoursAccount['id'])>Use care hours · {{ \App\Models\CareHourAccount::formatMinutes($hoursAccount['available_minutes']) }} in your family balance</label>
                         @endforeach
-                        <label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Usual card payment</label>
+                        @unless($staffWorkspace)<label class="flex items-center gap-2 text-sm"><input type="radio" name="care-hour-funding" wire:click="$set('careHourAccountId', null)" value="card" @checked($careHourAccountId === null)>Usual card payment</label>@endunless
                     @error('careHourAccountId')<p class="text-sm text-rose-800" role="alert">{{ $message }}</p>@enderror</fieldset>
                 @endif
-                <p>Confirming selects this caregiver, saves the care agreement and {{ $careHourAccountId ? 'reserves care hours' : 'prepares card authorization' }}. {{ $decisionApplication?->selected_days !== null ? 'Only their selected days will be assigned. Your request stays open for the remaining days; other applications stay available.' : 'Other open applications will be marked not selected.' }} {{ $requestItem->request_type === 'recurring' ? 'Your care schedule will show booked visits, missing care and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
+                <p>Confirming selects this caregiver, saves the care agreement and {{ ($careHourAccountId || $staffWorkspace) ? 'reserves care hours' : 'prepares card authorization' }}. {{ $decisionApplication?->selected_days !== null ? 'Only their selected days will be assigned. Your request stays open for the remaining days; other applications stay available.' : 'Other open applications will be marked not selected.' }} {{ $requestItem->request_type === 'recurring' ? 'Your care schedule will show booked visits, missing care and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
                 @if(! $hirePayment['ready'] && $decisionApplication)
-                    <x-family-hire-payment-prompt :care-request="$requestItem" :application="$decisionApplication" :unavailable="$hirePayment['unavailable']" id="hire-review-payment" />
+                    <x-care-workspace-payment-prompt :staff-workspace="$staffWorkspace" :care-request="$requestItem" :application="$decisionApplication" :unavailable="$hirePayment['unavailable']" id="hire-review-payment" />
                 @endif
                 <div class="hc-candidate-actions">
                     <button type="button" wire:click="confirmReviewedHire" wire:loading.attr="disabled" @disabled(! $hirePayment['ready'])
@@ -79,6 +79,9 @@
             </div>
         </div>
     @elseif ($reviewingCompletion)
+        @if($staffWorkspace && in_array($booking?->status, ['scheduled', 'in_progress', 'paused'], true))
+            <div class="mb-5 grid gap-4 sm:grid-cols-3"><x-input type="datetime-local" label="Actual start" wire:model="actualStartAt" /><x-input type="datetime-local" label="Actual end" wire:model="actualEndAt" /><x-input type="number" min="0" label="Unpaid break (minutes)" wire:model="actualBreakMinutes" /></div>
+        @endif
         <p class="hc-care-eyebrow">{{ $isLiveVisit ? 'Finish this visit' : 'Review this visit’s hours' }}</p>
         <h2 id="decision-title" class="mt-1 text-2xl font-semibold">{{ $recordHeadline }}</h2>
         <p class="hc-care-subtitle mt-2">{{ $booking?->caregiver?->name ?: $hiredCaregiverName }} · {{ $plainSchedule }}</p>

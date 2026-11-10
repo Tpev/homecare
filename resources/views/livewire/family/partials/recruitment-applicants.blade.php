@@ -84,13 +84,13 @@
                         @endif
                     </div>
                     @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && ! in_array($application->status, ['withdrawn', 'hired'], true) && ! $canReviewHire)
-                        <x-family-hire-payment-prompt :care-request="$requestItem" :application="$application" :unavailable="$hirePayment['unavailable']" :id="'hire-payment-'.$application->id" />
+                        <x-care-workspace-payment-prompt :staff-workspace="$staffWorkspace" :care-request="$requestItem" :application="$application" :unavailable="$hirePayment['unavailable']" :id="'hire-payment-'.$application->id" />
                         <button type="button" wire:click="reviewHire({{ $application->id }})" class="hc-care-text-link">Review care &amp; price</button>
                     @endif
                     @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && in_array($application->status, ['applied', 'shortlisted', 'hired'], true))
                         <button type="button" wire:click="startConversation({{ $application->id }})" class="hc-care-text-link">Message caregiver</button>
                     @elseif($application->conversation)
-                        <a href="{{ route('messages.show', $application->conversation->id) }}" wire:navigate class="hc-care-text-link">Open chat</a>
+                        <a href="{{ $this->workspaceUrl('messages.show', $application->conversation->id) }}" wire:navigate class="hc-care-text-link">Open chat</a>
                     @endif
                 </div>
                 <div class="hc-candidate-detail">

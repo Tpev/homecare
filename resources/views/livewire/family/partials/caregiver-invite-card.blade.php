@@ -29,7 +29,7 @@
             @elseif($caregiver['can_reinvite'] && $inviteAllowedHere)
                 <button type="button" data-invite-trigger wire:click="beginCaregiverInvitation({{ $caregiver['user_id'] }}, true)" class="hc-primary-button">Invite again</button>
             @elseif($caregiver['reply_url'])
-                <a href="{{ $caregiver['reply_url'] }}" wire:navigate class="hc-primary-button">View reply</a>
+                <a href="{{ $staffWorkspace ? route('customer-care.show', ['careRequest' => $requestItem->id, 'tab' => 'applicants']) : $caregiver['reply_url'] }}" wire:navigate class="hc-primary-button">View reply</a>
             @endif
         </div>
     </div>

@@ -123,10 +123,7 @@ class CustomerCareController extends Controller
 
     public function show(Request $http, CareRequest $careRequest, CareRequestRecruitmentService $recruitment): View|RedirectResponse
     {
-        $tab = in_array($http->query('tab'), ['overview', 'caregivers', 'visits', 'messages', 'activity'], true) ? $http->query('tab') : 'overview';
-        if ($careRequest->is_system_generated && $careRequest->carePlan?->sourceCareRequest?->staff_managed) {
-            return redirect()->route('customer-care.show', ['careRequest' => $careRequest->carePlan->source_care_request_id, 'tab' => $tab]);
-        }
+        $tab = in_array($http->query('panel', $http->query('tab')), ['visits', 'messages', 'activity'], true) ? $http->query('panel', $http->query('tab')) : 'overview';
         $careRequest->load(['family', 'recipient', 'tasks', 'applications.caregiver', 'carePlan']);
         $bookings = CareBooking::where(fn ($q) => $q->where('care_request_id', $careRequest->id)
             ->orWhereHas('carePlan', fn ($plan) => $plan->where('source_care_request_id', $careRequest->id)))

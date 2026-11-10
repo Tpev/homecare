@@ -29,9 +29,10 @@
         @error('hire') <x-alert color="red">{{ $message }}</x-alert> @enderror
     @endif
     @error('cancellationReason') <x-alert color="red">{{ $message }}</x-alert> @enderror
+    @if($staffWorkspace && $errors->any())<div role="alert" class="hc-recruit-notice">{{ $errors->first() }}</div>@endif
     @include('livewire.family.partials.replacement-visit-history')
     @if($requestItem->care_arrangement_id && ! $requestItem->is_system_generated)
-        <a href="{{ route('family.shared-care.show', $requestItem->care_arrangement_id) }}" wire:navigate class="hc-primary-button">Open shared care schedule · see caregivers and missing visits</a>
+        <a href="{{ $this->workspaceUrl('family.shared-care.show', $requestItem->care_arrangement_id) }}" wire:navigate class="hc-primary-button">Open shared care schedule · see caregivers and missing visits</a>
     @endif
 
     @if ($requestItem->is_private && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $requestItem->invitations->isEmpty())
@@ -96,7 +97,7 @@
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && ! $booking->family_confirmed_at
             && ! $hasActiveTimeCorrection;
-        $canLeaveFamilyReview = $booking
+        $canLeaveFamilyReview = ! $staffWorkspace && $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && $booking->family_confirmed_at
             && ! $familyReview;
@@ -555,7 +556,7 @@
                                 </a>
                             @endif
                             @if ($hiredConversation)
-                                <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
+                                <a href="{{ $this->workspaceUrl('messages.show', $hiredConversation->id) }}" wire:navigate>
                                     <x-button color="indigo" light class="hc-action-secondary">Open chat</x-button>
                                 </a>
                             @endif
@@ -828,7 +829,7 @@
                             Payment authorization is not ready yet.
                             <button type="button" wire:click="startPaymentAuthorization" class="font-semibold underline underline-offset-2">Confirm card authorization</button>
                             or update your card in
-                            <a href="{{ route('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
+                            <a href="{{ $this->workspaceUrl('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
                         </div>
                     @else
                         <div @if ($payment->last_error) data-ai-target="family.request.payment_attention" tabindex="-1" @endif class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#485E53] outline-none">
@@ -844,7 +845,7 @@
                             @endif
                             @if ($payment->last_error)
                                 <span class="mt-1 block text-amber-800">{{ $payment->last_error }}</span>
-                                <a href="{{ route('family.billing.show') }}" wire:navigate class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Use a different card</a>
+                                <a href="{{ $this->workspaceUrl('family.billing.show') }}" wire:navigate class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Use a different card</a>
                             @endif
                         </div>
                     @endif
@@ -854,7 +855,7 @@
                 <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
                     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         @if ($hiredConversation && ! $isLiveVisit)
-                            <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
+                            <a href="{{ $this->workspaceUrl('messages.show', $hiredConversation->id) }}" wire:navigate>
                                 <x-button color="indigo" class="hc-action-primary w-full sm:w-auto">Open chat</x-button>
                             </a>
                         @endif
@@ -1175,8 +1176,8 @@
                         <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
-                                    <h3 class="font-display text-lg font-semibold text-[#23483F]">Request cancellation or reschedule</h3>
-                                    <p class="mt-1 text-sm text-[#485E53]">Use this for schedule changes before the caregiver checks in.</p>
+                                    <h3 class="font-display text-lg font-semibold text-[#23483F]">{{ $staffWorkspace ? 'Cancel or reschedule this visit' : 'Request cancellation or reschedule' }}</h3>
+                                    <p class="mt-1 text-sm text-[#485E53]">{{ $staffWorkspace ? 'Changes apply immediately and notify the caregiver. The customer is not notified.' : 'Use this for schedule changes before the caregiver checks in.' }}</p>
                                 </div>
                                 <x-badge color="blue" text="Before check-in" />
                             </div>
@@ -1196,7 +1197,7 @@
                                         <x-input type="datetime-local" label="Proposed end" wire:model="proposedEndAt" />
                                     </div>
                                 @endif
-                                <x-button color="blue" wire:click="submitChangeRequest" class="hc-action-primary">Send request</x-button>
+                                <x-button color="blue" wire:click="submitChangeRequest" class="hc-action-primary">{{ $staffWorkspace ? 'Apply change' : 'Send request' }}</x-button>
                             </div>
                             @if ($canCancelScheduledShift)
                                 <details class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-950">
@@ -1235,7 +1236,7 @@
                                 Message the caregiver for ordinary updates. Use an incident report if there is a safety concern or something needs LoLo Care review.
                             </p>
                             @if ($hiredConversation)
-                                <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-semibold text-emerald-950 shadow-sm">
+                                <a href="{{ $this->workspaceUrl('messages.show', $hiredConversation->id) }}" wire:navigate class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-semibold text-emerald-950 shadow-sm">
                                     Open chat
                                 </a>
                             @endif
@@ -1304,7 +1305,7 @@
             @if ($mobilePrimaryAction['type'] === 'payment')
                 <button type="button" wire:click="startPaymentAuthorization" wire:loading.attr="disabled" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
             @elseif ($mobilePrimaryAction['type'] === 'new_date')
-                <a href="{{ route('family.requests.create', ['type' => \App\Models\CareRequest::TYPE_ONE_TIME]) }}" wire:navigate class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</a>
+                <a href="{{ $this->workspaceUrl('family.requests.create', ['type' => \App\Models\CareRequest::TYPE_ONE_TIME]) }}" wire:navigate class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</a>
             @elseif ($mobilePrimaryAction['type'] === 'approve_hours' || $mobilePrimaryAction['type'] === 'complete_visit')
                 <button type="button" wire:click="reviewCompletion" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
             @elseif ($mobilePrimaryAction['type'] === 'open_visit')

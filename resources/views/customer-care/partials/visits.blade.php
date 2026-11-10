@@ -1,4 +1,28 @@
 <fieldset @disabled($careRequest->staff_archived_at) class="min-w-0 space-y-6">
+    @if($careRequest->status === 'open' && ! $careRequest->booking)
+    <section class="hc-surface p-5 sm:p-6">
+        <h2 class="text-xl font-semibold">Placement agreed offline</h2><p class="hc-care-subtitle">Record an agreement already confirmed with a caregiver.</p>
+        <form method="GET" action="{{ route('customer-care.show', $careRequest) }}" class="mt-4 flex flex-wrap items-end gap-3"><input type="hidden" name="panel" value="visits"><label class="flex-1 text-sm font-semibold">Find caregiver<input name="caregiver_search" value="{{ $caregiverSearch }}" class="mt-2 block w-full rounded-xl border px-3 py-2" placeholder="Name, email, city or ZIP"></label><button class="hc-secondary-button">Search</button></form>
+<details class="mt-5">
+<summary class="cursor-pointer font-semibold">Record an agreed placement</summary>
+<form method="POST" action="{{ route('customer-care.action', $careRequest) }}" class="mt-4 space-y-3">
+@csrf
+<input type="hidden" name="action" value="hire">
+<label class="block text-sm font-semibold">Caregiver<select class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="caregiver_id" required>
+<option value="">Choose an eligible caregiver</option>
+@foreach($placements as $candidate)<option value="{{ $candidate->id }}">{{ $candidate->name }} — {{ $candidate->city }}</option>
+@endforeach
+</select>
+</label>
+<label class="block text-sm font-semibold">Placement agreement / internal note<textarea class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reason" required minlength="5" maxlength="2000">
+</textarea>
+</label>
+<button class="hc-primary-button">Hire and reserve prepaid hours</button>
+</form>
+</details>
+
+    </section>
+    @endif
     @if($careRequest->carePlan)
         <section class="hc-surface p-5 sm:p-6">
             <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-xl font-semibold">Recurring care</h2><span class="hc-care-status">{{ ucfirst($careRequest->carePlan->status) }}</span></div>
@@ -33,7 +57,7 @@
                 <article id="visit-{{ $booking->id }}" class="rounded-2xl border border-[#E3D6C5] p-4 sm:p-5" x-data="{ visitAction: @js($selectedAction) }">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div><p class="hc-care-eyebrow">Visit #{{ $booking->id }}</p><h3 class="mt-1 text-lg font-semibold">{{ $booking->scheduled_start_at?->format('D, M j · g:i A') }} – {{ $booking->scheduled_end_at?->format('g:i A') }}</h3><p class="hc-care-subtitle">{{ $booking->caregiver?->name }}</p></div>
-                        <span class="hc-care-status">{{ ucfirst(str_replace('_', ' ', $booking->status)) }}</span>
+                        <div class="flex flex-wrap items-center gap-3"><a class="hc-secondary-button" href="{{ route('customer-care.show', ['careRequest' => $booking->care_request_id, 'tab' => 'shift']) }}">Open visit</a><span class="hc-care-status">{{ ucfirst(str_replace('_', ' ', $booking->status)) }}</span></div>
                     </div>
                     <dl class="mt-5 grid gap-4 border-y border-[#E3D6C5] py-4 sm:grid-cols-3">
                         <div><dt class="hc-care-meta">Actual care</dt><dd class="mt-1 text-sm font-semibold">{{ $booking->worked_minutes !== null ? \App\Models\CareHourAccount::formatMinutes($booking->worked_minutes) : 'Not recorded yet' }}</dd></div>

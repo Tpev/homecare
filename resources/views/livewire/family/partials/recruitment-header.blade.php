@@ -35,8 +35,8 @@
 @endphp
 <header class="hc-recruit-header" x-data>
     <div class="hc-recruit-topline">
-        <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-recruit-back">← My care</a>
-        <div class="hc-recruit-utility"><span>Request #{{ $requestItem->id }}</span><button type="button" wire:click="setActiveTab('support')">Get help</button><a href="{{ route('family.care.journey', ['resourceType' => 'request', 'resourceId' => $requestItem->id]) }}" wire:navigate>Care timeline</a></div>
+        <a href="{{ $this->workspaceUrl('family.requests.index') }}" wire:navigate class="hc-recruit-back">← My care</a>
+        <div class="hc-recruit-utility"><span>Request #{{ $requestItem->id }}</span><button type="button" wire:click="setActiveTab('support')">Get help</button><a href="{{ $this->workspaceUrl('family.care.journey', ['resourceType' => 'request', 'resourceId' => $requestItem->id]) }}" wire:navigate>Care timeline</a></div>
     </div>
     <div class="hc-recruit-title-row">
         <div>
@@ -85,7 +85,7 @@
             <h2 id="recruit-next-title">{{ $requestDatePassed ? 'Choose a new date' : ($requestItem->status !== 'open' ? $recruitUnavailableTitle : ($openCaregiverResponses ? 'Meet your applicants' : 'Find the right caregiver')) }}</h2>
             <p>{{ $requestDatePassed ? 'This requested date has passed. Start a new request for the care you need.' : ($requestItem->status !== 'open' ? ($recruitPendingBody ?? 'Your request information and caregiver history remain available.') : ($openCaregiverResponses ? 'Compare their experience, read application notes and chat before choosing.' : ($requestItem->is_private ? 'Invite a caregiver to review your private request.' : 'Your request is posted. You can also invite someone who looks like a good fit.'))) }}</p>
         </div>
-        @if ($requestDatePassed)<a href="{{ route('family.requests.create', ['type' => 'one_time']) }}" wire:navigate class="hc-primary-button">Choose another date</a>
+        @if ($requestDatePassed)<a href="{{ $this->workspaceUrl('family.requests.create', ['type' => 'one_time']) }}" wire:navigate class="hc-primary-button">Choose another date</a>
         @elseif ($requestItem->status === 'open')<button type="button" wire:click="setActiveTab('{{ $openCaregiverResponses ? 'applicants' : 'invite' }}')" class="hc-primary-button">{{ $openCaregiverResponses ? 'Review applicants' : 'Find caregivers' }} <span aria-hidden="true">→</span></button>@endif
         <div class="hc-recruit-next-footer">
             <div class="hc-recruit-totals"><button type="button" wire:click="setActiveTab('applicants')"><strong>{{ $isExpiredRequest ? $requestItem->applications->count() : $openCaregiverResponses }}</strong><span>{{ $isExpiredRequest ? 'Previous replies' : 'Active applicants' }}</span></button><button type="button" wire:click="setCaregiverView('invited')"><strong>{{ $requestItem->invitations->count() }}</strong><span>Invitations sent</span></button></div>
@@ -130,7 +130,7 @@
             <p class="hc-recruit-caption">{{ $openCaregiverResponses ? 'No one is hired until you confirm your chosen caregiver.' : ($requestItem->is_private ? 'No applicants yet. Invite caregivers so they can respond to your private request.' : 'No applicants yet. Invite caregivers or come back when someone applies.') }}</p>
         </div>
     @else
-        <div class="hc-recruit-start-actions"><a href="{{ route('family.requests.create', ['type' => $requestItem->request_type]) }}" wire:navigate class="hc-primary-button">Create a new request</a><button type="button" wire:click="setActiveTab('applicants')" class="hc-recruit-link">View caregiver history</button></div>
+        <div class="hc-recruit-start-actions"><a href="{{ $this->workspaceUrl('family.requests.create', ['type' => $requestItem->request_type]) }}" wire:navigate class="hc-primary-button">Create a new request</a><button type="button" wire:click="setActiveTab('applicants')" class="hc-recruit-link">View caregiver history</button></div>
     @endif
 </section>
 @endif

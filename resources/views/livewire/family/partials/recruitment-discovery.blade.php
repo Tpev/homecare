@@ -26,7 +26,7 @@
                         @elseif ($inviteCard['can_reinvite'] && ! $requestDatePassed)<button type="button" data-invite-trigger wire:click="beginCaregiverInvitation({{ $inviteCard['user_id'] }}, true)" class="hc-primary-button">Invite again</button>@endif
                     @endif
                         @if (app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($requestItem, (int) $invitation->caregiver_user_id) === null || $requestItem->conversations()->where('caregiver_user_id', $invitation->caregiver_user_id)->exists())
-                            <x-care-request-chat-button :care-request-id="$requestItem->id" :caregiver-id="$invitation->caregiver_user_id" label="Message caregiver" />
+                            @if($staffWorkspace)<button type="button" wire:click="messageCaregiver({{ $invitation->caregiver_user_id }})" class="hc-secondary-button">Message caregiver</button>@else<x-care-request-chat-button :care-request-id="$requestItem->id" :caregiver-id="$invitation->caregiver_user_id" label="Message caregiver" />@endif
                         @endif
                     </div>
                     <details class="hc-invitation-message"><summary>Invitation details</summary>

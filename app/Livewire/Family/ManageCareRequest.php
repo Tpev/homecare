@@ -44,6 +44,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ManageCareRequest extends Component
 {
+    #[Locked]
     public CareRequest $requestItem;
 
     #[Url(as: 'tab', history: true)]
@@ -150,6 +151,31 @@ class ManageCareRequest extends Component
         ['label' => 'Withdrawn', 'value' => CareRequestApplication::STATUS_WITHDRAWN],
     ];
 
+    protected function authorizeWorkspace(): void
+    {
+        abort_unless(auth()->user()?->can('manageApplicants', $this->requestItem), 403);
+    }
+
+    protected function familyContextUser(): User
+    {
+        return auth()->user();
+    }
+
+    protected function isStaffWorkspace(): bool
+    {
+        return false;
+    }
+
+    protected function invitationActor(): ?User
+    {
+        return null;
+    }
+
+    public function workspaceUrl(string $name, mixed $parameters = []): string
+    {
+        return route($name, $parameters);
+    }
+
     public function mount(int $careRequest): void
     {
         $this->requestItem = CareRequest::query()
@@ -183,7 +209,7 @@ class ManageCareRequest extends Component
             ])
             ->findOrFail($careRequest);
 
-        abort_unless(auth()->user()->can('manageApplicants', $this->requestItem), 403);
+        $this->authorizeWorkspace();
 
         if ($this->reconcileFilledStateFromBooking()) {
             $this->refreshRequestItem(preferLifecyclePrimary: true);
@@ -291,7 +317,7 @@ class ManageCareRequest extends Component
             $quote = $pricing->quoteForCurrentBooking($booking, max(1, $minutes));
         } elseif ($pricing->currentPricingEnabled()) {
             $accountId = (int) ($this->requestItem->family_account_id
-                ?: app(FamilyAccountContext::class)->membershipFor(auth()->user(), false)?->family_account_id);
+                ?: app(FamilyAccountContext::class)->membershipFor($this->familyContextUser(), false)?->family_account_id);
             $quote = $pricing->quoteForPair($accountId, $caregiverId, max(1, $minutes));
         } else {
             $application = $this->requestItem->applications->firstWhere('caregiver_user_id', $caregiverId);
@@ -343,7 +369,7 @@ class ManageCareRequest extends Component
     }
 
     /** Presentation only: legacy tab keys and all existing actions remain available. */
-    private function workspaceLifecycle(): array
+    protected function workspaceLifecycle(): array
     {
         $stage = CareRequestProgress::familyLifecycleStage($this->requestItem);
         $booking = $this->requestItem->booking;
@@ -1286,7 +1312,7 @@ class ManageCareRequest extends Component
             app(BookingTrustService::class)->recordEvent(
                 $this->requestItem->booking,
                 auth()->id(),
-                'family',
+                auth()->user()->role,
                 'support_ticket_opened',
                 ['category' => $this->supportCategory]
             );
@@ -1503,7 +1529,7 @@ class ManageCareRequest extends Component
         app(BookingTrustService::class)->recordEvent(
             $booking,
             auth()->id(),
-            'family',
+            auth()->user()->role,
             'incident_reported_by_family',
             ['severity' => $this->incidentSeverity, 'title' => trim($this->incidentTitle)]
         );
@@ -1645,11 +1671,12 @@ class ManageCareRequest extends Component
         }
 
         $result = app(CareRequestInvitationService::class)->send(
-            family: auth()->user(),
+            family: $this->familyContextUser(),
             careRequest: $this->requestItem,
             caregiver: $caregiver,
             message: 'We think your profile could be a strong fit for this request.',
             source: 'request_suggestion',
+            staffActor: $this->invitationActor(),
         );
 
         $this->refreshRequestItem();
@@ -1785,7 +1812,7 @@ class ManageCareRequest extends Component
 
     public function beginCaregiverInvitation(int $caregiverUserId, bool $reinvite = false): void
     {
-        $family = auth()->user();
+        $family = $this->familyContextUser();
         abort_unless($family, 403);
 
         $card = app(CaregiverInvitationDiscoveryService::class)
@@ -1842,7 +1869,7 @@ class ManageCareRequest extends Component
             'confirmingCaregiverId.required' => 'Choose a caregiver before sending an invitation.',
         ]);
 
-        $family = auth()->user();
+        $family = $this->familyContextUser();
         abort_unless($family, 403);
 
         $card = app(CaregiverInvitationDiscoveryService::class)->caregiver(
@@ -1883,6 +1910,7 @@ class ManageCareRequest extends Component
             message: $this->caregiverInviteMessage,
             reinvite: $this->confirmingReinvite,
             source: 'request_search',
+            staffActor: $this->invitationActor(),
         );
 
         $this->caregiverInviteFeedback = [
@@ -1976,7 +2004,7 @@ class ManageCareRequest extends Component
         return Carbon::parse($time)->format('H:i:s');
     }
 
-    private function findOwnedApplication(int $applicationId): CareRequestApplication
+    protected function findOwnedApplication(int $applicationId): CareRequestApplication
     {
         return CareRequestApplication::query()
             ->where('care_request_id', $this->requestItem->id)
@@ -1984,7 +2012,7 @@ class ManageCareRequest extends Component
             ->firstOrFail();
     }
 
-    private function refreshRequestItem(bool $preferLifecyclePrimary = false): void
+    protected function refreshRequestItem(bool $preferLifecyclePrimary = false): void
     {
         $this->requestItem = $this->requestItem->fresh([
             'family:id,name,email,phone',
@@ -2055,7 +2083,7 @@ class ManageCareRequest extends Component
         }
     }
 
-    private function reconcileFilledStateFromBooking(): bool
+    protected function reconcileFilledStateFromBooking(): bool
     {
         $booking = $this->requestItem->relationLoaded('booking')
             ? $this->requestItem->booking
@@ -2129,7 +2157,7 @@ class ManageCareRequest extends Component
         );
     }
 
-    private function ownedTimeCorrection(int $correctionId): CareBookingTimeCorrection
+    protected function ownedTimeCorrection(int $correctionId): CareBookingTimeCorrection
     {
         return CareBookingTimeCorrection::query()
             ->where('care_booking_id', $this->requestItem->booking?->id)
@@ -2186,7 +2214,7 @@ class ManageCareRequest extends Component
         $caregiverDiscoveryCount = 0;
         $confirmingCaregiver = null;
         if ($this->showCaregiverInvitePanel || $this->activeTab === 'invite') {
-            $family = auth()->user();
+            $family = $this->familyContextUser();
             $discovery = app(CaregiverInvitationDiscoveryService::class);
             $search = trim($this->caregiverSearch);
 
@@ -2224,7 +2252,7 @@ class ManageCareRequest extends Component
         $savedDiscoveryLimitReached = false;
         $invitationCards = [];
         if ($this->activeTab === 'invite') {
-            $family = auth()->user();
+            $family = $this->familyContextUser();
             $discovery = app(CaregiverInvitationDiscoveryService::class);
             if ($this->caregiverView === 'saved') {
                 $favorites = \App\Models\FamilyCaregiverFavorite::query()
@@ -2264,6 +2292,7 @@ class ManageCareRequest extends Component
         }
 
         return view('livewire.family.manage-care-request', [
+            'staffWorkspace' => $this->isStaffWorkspace(),
             'careHourAccounts' => $this->careHourAccountsForRequest(),
             'prepaidBookingSummary' => $this->requestItem->booking
                 ? app(\App\Services\CareHours\PrepaidBookingFundingService::class)->summary($this->requestItem->booking) : null,
@@ -2287,11 +2316,11 @@ class ManageCareRequest extends Component
             'certificationCriteria' => $certificationCriteria,
             'applicationCertificationCriteria' => $applicationCertificationCriteria,
             'careProfileSnapshot' => app(CareRecipientProfilePresenter::class)
-                ->forCareRequest(auth()->user(), $this->requestItem),
+                ->forCareRequest($this->familyContextUser(), $this->requestItem),
         ]);
     }
 
-    private function paymentReadinessForHire(): array
+    protected function paymentReadinessForHire(): array
     {
         if ($this->careHourAccountId !== null) {
             return ['ready' => $this->selectedCareHourAccount() !== null, 'unavailable' => false];
@@ -2325,7 +2354,7 @@ class ManageCareRequest extends Component
         $this->hirePaymentReadiness = null;
     }
 
-    private function initializeCareHoursChoice(?CareRequestApplication $application = null): void
+    protected function initializeCareHoursChoice(?CareRequestApplication $application = null): void
     {
         if ($this->requestItem->status !== CareRequest::STATUS_OPEN || $this->requestItem->booking()->exists()) {
             $this->careHourAccountId = null;
@@ -2337,14 +2366,14 @@ class ManageCareRequest extends Component
         $this->hirePaymentReadiness = null;
     }
 
-    private function fundingApplication(): ?CareRequestApplication
+    protected function fundingApplication(): ?CareRequestApplication
     {
         return $this->reviewingApplicationId
             ? $this->requestItem->applications()->find($this->reviewingApplicationId)
             : null;
     }
 
-    private function selectedCareHourAccount(?CareRequestApplication $application = null): ?\App\Models\CareHourAccount
+    protected function selectedCareHourAccount(?CareRequestApplication $application = null): ?\App\Models\CareHourAccount
     {
         if ($this->careHourAccountId === null) {
             return null;
@@ -2358,7 +2387,7 @@ class ManageCareRequest extends Component
         return $account;
     }
 
-    private function careHourAccountsForRequest(): array
+    protected function careHourAccountsForRequest(): array
     {
         $account = app(\App\Services\CareHours\CareHourRequestFundingService::class)
             ->accountForRequest($this->requestItem, auth()->user(), $this->fundingApplication());
@@ -2370,7 +2399,7 @@ class ManageCareRequest extends Component
             'available_minutes' => $account->balance()['available_minutes']]];
     }
 
-    private function certificationCriteria(): CaregiverCertificationCriteria
+    protected function certificationCriteria(): CaregiverCertificationCriteria
     {
         return CaregiverCertificationCriteria::fromInput(
             $this->certificationTypes,
@@ -2406,7 +2435,7 @@ class ManageCareRequest extends Component
             return;
         }
 
-        $family = auth()->user();
+        $family = $this->familyContextUser();
         if (! $family) {
             return;
         }

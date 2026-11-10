@@ -3,7 +3,10 @@
     @php($carePaymentUnderReview = $prepaidBookingSummary['payment_under_review'] ?? false)
     <section class="rounded-xl border border-[#D8E1D7] bg-[#F2F8F4] p-4 text-sm" aria-label="Care-hour payment">
         <p class="font-semibold">{{ $carePaymentUnderReview ? 'Payment under review' : ($careSettlement ? 'Paid with care hours' : ($prepaidBookingSummary['status'] === 'released' ? 'Reserved hours returned' : 'Using care hours')) }}</p>
-        @if($carePaymentUnderReview)
+        @if($staffWorkspace ?? false)
+            <p class="mt-1">{{ \App\Models\CareHourAccount::formatMinutes($careSettlement['prepaid_minutes'] ?? $prepaidBookingSummary['reserved_minutes']) }} {{ $careSettlement ? 'used' : 'reserved' }} · {{ \App\Models\CareHourAccount::formatMinutes($prepaidBookingSummary['available_minutes']) }} available.</p>
+            @if(! $prepaidBookingSummary['ready'] && $prepaidBookingSummary['status'] !== 'released')<p class="mt-2">Review coverage and add prepaid hours before approving care.</p><a class="hc-care-text-link mt-3 inline-block" href="{{ route('customer-care.customer', $booking->family_user_id) }}">Manage prepaid hours</a>@endif
+        @elseif($carePaymentUnderReview)
             <p class="mt-1">LoLo needs to review this payment.</p>
             <a href="{{ route('support.index') }}" wire:navigate class="hc-care-text-link mt-3 inline-block">Contact support</a>
         @else
