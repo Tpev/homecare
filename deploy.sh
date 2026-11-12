@@ -391,6 +391,19 @@ resources/views/livewire/family/partials/recruitment-discovery.blade.php
 resources/views/livewire/family/partials/caregiver-invite-card.blade.php
 resources/views/livewire/family/partials/caregiver-invite-panel.blade.php
 resources/views/livewire/family/partials/caregiver-discovery-pagination.blade.php
+app/Console/Commands/DispatchManagedCareOps.php
+app/Jobs/SendManagedCareOpsNotification.php
+app/Models/ManagedCareOpsEvent.php
+app/Observers/ManagedCareOpsObserver.php
+app/Services/Ops/ManagedCareOpsCatalog.php
+app/Services/Ops/ManagedCareOpsContext.php
+app/Services/Ops/ManagedCareOpsDelivery.php
+app/Services/Ops/ManagedCareOpsRecorder.php
+app/Services/Ops/SlackDeliveryException.php
+app/Services/Ops/SlackOpsNotificationService.php
+app/Jobs/SendSlackOpsNotification.php
+app/Services/CareRequests/CareRequestExpirationService.php
+database/migrations/2026_11_12_000100_create_managed_care_ops_events.php
 EOF
 }
 

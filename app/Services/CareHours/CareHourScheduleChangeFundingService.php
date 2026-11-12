@@ -59,8 +59,8 @@ class CareHourScheduleChangeFundingService
             if ($change->fresh()->status !== CareBookingChangeRequest::STATUS_PENDING) {
                 throw new PaymentException('The schedule change has already been resolved.');
             }
-            $record->operations()->where('kind', 'shortfall')->where('metadata->schedule_change_id', $change->id)
-                ->where('status', 'authorized')->where('authorization_expires_at', '<=', now())->update(['status' => 'expired']);
+            app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery($record->operations()->where('kind', 'shortfall')->where('metadata->schedule_change_id', $change->id)
+                ->where('status', 'authorized')->where('authorization_expires_at', '<=', now()), ['status' => 'expired']);
             $attempt = $record->operations()->where('kind', 'shortfall')->where('metadata->schedule_change_id', $change->id)->whereIn('status', ['failed', 'expired', 'cancelled'])->count();
             $proposal = substr(hash('sha256', $change->proposed_start_at->toIso8601String().'|'.$change->proposed_end_at->toIso8601String()), 0, 16);
 

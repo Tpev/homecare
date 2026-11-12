@@ -2,7 +2,7 @@
     <div class="mb-6"><p class="hc-care-eyebrow">Caregiver conversations</p><h2 class="mt-2 text-2xl font-semibold">Keep everyone on the care team aligned</h2><p class="hc-care-subtitle">Send messages as yourself. The customer receives no notifications.</p></div>
     <div class="space-y-4">
         @forelse($conversations as $conversation)
-            <details class="rounded-2xl border border-[#E3D6C5] p-4 sm:p-5" @if(request()->integer('conversation') ? request()->integer('conversation') === $conversation->id : $loop->first) open @endif>
+            <details id="conversation-{{ $conversation->id }}" class="rounded-2xl border border-[#E3D6C5] p-4 sm:p-5" @if(request()->integer('conversation') ? request()->integer('conversation') === $conversation->id : $loop->first) open @endif>
                 <summary class="cursor-pointer font-semibold">{{ $conversation->caregiver?->name }} <span class="hc-care-meta ml-2">{{ $conversation->last_message_at?->diffForHumans() ?? 'Start a conversation' }}</span></summary>
                 <div class="my-5 max-h-96 space-y-4 overflow-y-auto pr-2" aria-label="Conversation with {{ $conversation->caregiver?->name }}">
                     @forelse($conversation->messages as $message)

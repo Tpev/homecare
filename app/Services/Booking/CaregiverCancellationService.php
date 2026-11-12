@@ -109,17 +109,18 @@ class CaregiverCancellationService
             $application->update(['status' => CareRequestApplication::STATUS_WITHDRAWN]);
             $restored = $request->applications()->where('status', CareRequestApplication::STATUS_NOT_SELECTED)
                 ->lockForUpdate()->pluck('id')->all();
-            $request->applications()->whereIn('id', $restored)->update(['status' => CareRequestApplication::STATUS_APPLIED]);
+            $request->applications()->whereIn('id', $restored)->get()->each(fn ($application) => $application->update(['status' => CareRequestApplication::STATUS_APPLIED]));
             // Reopening an existing request must not emit a new-request welcome campaign.
             $request->forceFill(['status' => CareRequest::STATUS_OPEN])->saveQuietly();
+            app(\App\Services\Ops\ManagedCareOpsRecorder::class)->record($request, false);
             if ($change) {
                 $change->update(['status' => CareBookingChangeRequest::STATUS_ACCEPTED,
                     'resolved_at' => now(), 'resolved_by_user_id' => $actor->id]);
             }
-            $booking->changeRequests()->where('status', CareBookingChangeRequest::STATUS_PENDING)->update([
+            $booking->changeRequests()->where('status', CareBookingChangeRequest::STATUS_PENDING)->get()->each(fn ($pendingChange) => $pendingChange->update([
                 'status' => CareBookingChangeRequest::STATUS_WITHDRAWN, 'resolved_at' => now(),
                 'resolved_by_user_id' => $actor->id, 'resolution_note' => 'The caregiver cancelled this visit; the care request reopened.',
-            ]);
+            ]));
             $this->trust->recordEvent($booking, $actor->id, $actor->role, 'caregiver_cancelled_request_reopened', [
                 'care_request_id' => $request->id, 'application_id' => $application->id,
                 'restored_application_ids' => $restored, 'reason' => $reason,

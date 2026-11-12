@@ -51,10 +51,11 @@ class CareRequestExpirationService
                     }
 
                     $request->forceFill(['status' => CareRequest::STATUS_EXPIRED])->saveQuietly();
-                    $request->invitations()->where('status', CareRequestInvitation::STATUS_PENDING)->update([
+                    app(\App\Services\Ops\ManagedCareOpsRecorder::class)->record($request, false);
+                    $request->invitations()->where('status', CareRequestInvitation::STATUS_PENDING)->get()->each(fn ($invitation) => $invitation->update([
                         'status' => CareRequestInvitation::STATUS_EXPIRED,
                         'expires_at' => $at,
-                    ]);
+                    ]));
 
                     // Preserve applications, conversations, and all financial records.
                     return true;

@@ -83,7 +83,7 @@ class PrepaidTransferPlanner
             }
             $netPaid = $this->netPaid($settlement);
             $target = (int) $settlement->payable_cents;
-            $settlement->operations()->where('kind', 'transfer')->where('status', 'pending')->where('metadata->revision', '!=', $settlement->revision)->update(['status' => 'cancelled']);
+            app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery($settlement->operations()->where('kind', 'transfer')->where('status', 'pending')->where('metadata->revision', '!=', $settlement->revision), ['status' => 'cancelled']);
             $uncertain = $settlement->operations()->whereIn('kind', ['transfer', 'reversal'])->whereIn('status', ['unknown', 'requested'])->exists();
             if ($uncertain && $target < $netPaid + (int) $settlement->operations()->where('kind', 'transfer')->whereIn('status', ['unknown', 'requested'])->sum('amount_cents')) {
                 throw new PaymentException('Reconcile the outstanding transfer before applying reduced earnings.');
@@ -250,7 +250,7 @@ class PrepaidTransferPlanner
             return;
         }
         $source = $settlement->operations()->where('kind', 'transfer')->where('source_charge_id', $payment->stripe_charge_id);
-        $source->clone()->where('status', 'pending')->update(['status' => 'cancelled']);
+        app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery($source->clone()->where('status', 'pending'), ['status' => 'cancelled']);
         foreach ($source->clone()->whereIn('status', ['requested', 'unknown'])->get() as $transfer) {
             // Look up an uncertain transfer, but never create new payout money after a loss.
             $result = $this->stripe->findPrepaidTransfer($transfer->stripe_transfer_id, $transfer->public_id,
@@ -575,7 +575,7 @@ class PrepaidTransferPlanner
                 'metadata' => array_merge($current->metadata ?? [], ['provider_reversed_cents' => $reversed,
                     'unmatched_reversal_cents' => $unmatched, 'provider_reversal_attention' => $unmatched > 0])]);
             if ($unmatched > 0 && $current->care_hour_settlement_id) {
-                CareHourSettlement::whereKey($current->care_hour_settlement_id)->update(['status' => 'payment_attention', 'paid_at' => null,
+                app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery(CareHourSettlement::whereKey($current->care_hour_settlement_id), ['status' => 'payment_attention', 'paid_at' => null,
                     'last_error' => 'A provider transfer reversal is not matched to an approved adjustment. Finance review is required before further payout.']);
             }
         }, 3);

@@ -416,7 +416,7 @@ class CarePlanService
                         CareRequestApplication::STATUS_APPLIED,
                         CareRequestApplication::STATUS_SHORTLISTED,
                     ])
-                    ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+                    ->get()->each(fn ($otherApplication) => $otherApplication->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]));
 
                 $lockedSource->forceFill([
                     'status' => CareRequest::STATUS_FILLED,

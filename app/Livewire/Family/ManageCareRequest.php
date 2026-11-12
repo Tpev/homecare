@@ -582,7 +582,7 @@ class ManageCareRequest extends Component
                         CareRequestApplication::STATUS_APPLIED,
                         CareRequestApplication::STATUS_SHORTLISTED,
                     ])
-                    ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+                    ->get()->each(fn ($otherApplication) => $otherApplication->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]));
 
                 $this->requestItem->update(['status' => CareRequest::STATUS_FILLED]);
                 if (! $this->requestItem->first_hire_at) {
@@ -2121,14 +2121,13 @@ class ManageCareRequest extends Component
                 $changed = true;
             }
 
-            $updatedOthers = CareRequestApplication::query()
+            $updatedOthers = app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery(CareRequestApplication::query()
                 ->where('care_request_id', $this->requestItem->id)
                 ->whereKeyNot($hiredApplicationId)
                 ->whereIn('status', [
                     CareRequestApplication::STATUS_APPLIED,
                     CareRequestApplication::STATUS_SHORTLISTED,
-                ])
-                ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+                ]), ['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
 
             $changed = $changed || $updatedOthers > 0;
         }

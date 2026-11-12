@@ -22,7 +22,7 @@ class SlackOpsNotificationService
 
     public function queueCareRequestCreated(CareRequest $careRequest): void
     {
-        if (! $this->enabled() || $careRequest->is_system_generated || $careRequest->status !== CareRequest::STATUS_OPEN) {
+        if (! $this->enabled() || $careRequest->staff_managed || $careRequest->is_system_generated || $careRequest->status !== CareRequest::STATUS_OPEN) {
             return;
         }
 
@@ -46,7 +46,7 @@ class SlackOpsNotificationService
         }
 
         $careRequest = $application->careRequest()->first();
-        if (! $careRequest || $careRequest->is_system_generated) {
+        if (! $careRequest || $careRequest->staff_managed || $careRequest->is_system_generated) {
             return;
         }
 
@@ -129,13 +129,35 @@ class SlackOpsNotificationService
         return (bool) config('services.slack.ops.enabled', false) && $this->webhookUrl() !== null;
     }
 
+    /** Use the same Ops webhook; ambiguous outcomes must not be blindly replayed. */
+    public function deliverManagedPayload(array $payload): void
+    {
+        if (! $this->enabled()) {
+            throw new SlackDeliveryException('Slack Ops delivery is disabled.', retryable: false);
+        }
+        try {
+            $response = Http::asJson()->acceptJson()->withOptions(['allow_redirects' => false])
+                ->connectTimeout(3)->timeout(min(12, max(3, (int) config('services.slack.ops.timeout_seconds', 8))))
+                ->post($this->webhookUrl(), $payload);
+        } catch (ConnectionException) {
+            throw new SlackDeliveryException('Slack delivery outcome unknown after a connection failure.', uncertain: true);
+        }
+        if (! $response->successful()) {
+            throw new SlackDeliveryException('Slack rejected the notification with HTTP '.$response->status().'.',
+                retryable: $response->status() === 429 || $response->serverError());
+        }
+        if (trim($response->body()) !== 'ok') {
+            throw new SlackDeliveryException('Slack acknowledgement could not be verified.', uncertain: true);
+        }
+    }
+
     private function careRequestCreatedPayload(int $careRequestId): ?array
     {
         $careRequest = CareRequest::query()
             ->with('family:id,name,email')
             ->find($careRequestId);
 
-        if (! $careRequest || $careRequest->is_system_generated) {
+        if (! $careRequest || $careRequest->is_system_generated || $careRequest->staff_managed) {
             return null;
         }
 
@@ -163,7 +185,7 @@ class SlackOpsNotificationService
             ->find($applicationId);
         $careRequest = $application?->careRequest;
 
-        if (! $application || ! $careRequest || (int) $careRequest->id !== $careRequestId || $careRequest->is_system_generated) {
+        if (! $application || ! $careRequest || (int) $careRequest->id !== $careRequestId || $careRequest->is_system_generated || $careRequest->staff_managed) {
             return null;
         }
 

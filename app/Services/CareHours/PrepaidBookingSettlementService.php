@@ -82,7 +82,7 @@ class PrepaidBookingSettlementService
         try {
             $this->reconcile(CareHourSettlement::findOrFail($id));
         } catch (\Throwable $error) {
-            CareHourSettlement::whereKey($id)->where('status', '!=', 'reconciliation_pending')->update(['status' => 'payment_attention', 'last_error' => $error->getMessage()]);
+            app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery(CareHourSettlement::whereKey($id)->where('status', '!=', 'reconciliation_pending'), ['status' => 'payment_attention', 'last_error' => $error->getMessage()]);
             report($error);
         }
     }
@@ -243,16 +243,18 @@ class PrepaidBookingSettlementService
         if ((int) $settlement->fresh()->revision !== (int) $settlement->revision) {
             throw new PaymentException('Visit funding changed during reconciliation. It will be checked again safely.');
         }
-        $updated = CareHourSettlement::whereKey($settlement->id)->where('revision', $settlement->revision)->update([
+        $reconciledAttributes = [
             'amount_due_cents' => max(0, $target - $cash), 'card_fee_cents' => $feesKnown ? $fees : null,
             'caregiver_net_cents' => $netEarnings === null || $netEarnings < 0 ? null : $netEarnings,
             'payable_cents' => $payable,
             'status' => $netEarnings !== null && $netEarnings < 0 ? 'payment_attention' : ($remaining > 0 ? 'partially_settled' : ($netEarnings === null ? 'fee_pending' : 'settled')),
             'last_error' => $netEarnings !== null && $netEarnings < 0 ? 'Processing fees exceed earnings; finance review is required.' : null,
-        ]);
+        ];
+        $updated = CareHourSettlement::whereKey($settlement->id)->where('revision', $settlement->revision)->update($reconciledAttributes);
         if (! $updated) {
             throw new PaymentException('Visit funding changed during reconciliation. It will be checked again safely.');
         }
+        app(\App\Services\Ops\ManagedCareOpsRecorder::class)->recordChanges($settlement, $reconciledAttributes);
         $settlement->refresh();
         // Pay collected coverage; preserve all approved uncollected earnings separately.
         if ($settlement->payable_cents !== null) {

@@ -90,7 +90,7 @@ class PrepaidShortfallDisputeService
                     if ($funding->fresh()->status !== 'released') {
                         $funding->update(['status' => 'payment_attention', 'last_error' => 'A visit card payment is disputed. Support review is required.']);
                     }
-                    CareHourSettlement::where('care_booking_id', $funding->care_booking_id)->update([
+                    app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery(CareHourSettlement::where('care_booking_id', $funding->care_booking_id), [
                         'status' => 'funding_on_hold', 'payable_cents' => null, 'paid_at' => null,
                         'last_error' => 'A visit card payment is disputed. Support review is required.',
                     ]);

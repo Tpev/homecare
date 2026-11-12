@@ -52,13 +52,13 @@ class CareRequestLifecycleService
 
             if ($activeApplications->isNotEmpty()) {
                 $request->applications()->whereKey($activeApplications->pluck('id')->all())
-                    ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+                    ->get()->each(fn ($application) => $application->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]));
             }
             if ($pendingInvitations->isNotEmpty()) {
-                $request->invitations()->whereKey($pendingInvitations->pluck('id')->all())->update([
+                $request->invitations()->whereKey($pendingInvitations->pluck('id')->all())->get()->each(fn ($invitation) => $invitation->update([
                     'status' => CareRequestInvitation::STATUS_CANCELLED,
                     'expires_at' => now(),
-                ]);
+                ]));
             }
 
             $request->forceFill(['status' => CareRequest::STATUS_CANCELLED])->save();

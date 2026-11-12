@@ -127,6 +127,7 @@ class CustomerCareController extends Controller
         $careRequest->load(['family', 'recipient', 'tasks', 'applications.caregiver', 'carePlan']);
         $bookings = CareBooking::where(fn ($q) => $q->where('care_request_id', $careRequest->id)
             ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($careRequest)))
+            ->when($http->integer('booking') > 0, fn ($q) => $q->whereKey($http->integer('booking')))
             ->with(['caregiver', 'careHourFunding', 'careHourSettlement', 'timeCorrections', 'changeRequests'])->orderBy('scheduled_start_at')->paginate(20)->withQueryString();
         $conversations = \App\Models\CareRequestConversation::whereHas('careRequest', fn ($q) => $q->whereKey($careRequest->id)
             ->orWhereHas('carePlan', fn ($plan) => $plan->forSourceRequest($careRequest)))

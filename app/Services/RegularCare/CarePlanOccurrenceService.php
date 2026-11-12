@@ -32,6 +32,12 @@ class CarePlanOccurrenceService
      */
     public function materialize(CarePlan $plan, bool $dryRun = false, ?Carbon $through = null): array
     {
+        return app(\App\Services\Ops\ManagedCareOpsRecorder::class)->batchOccurrences($plan,
+            fn () => $this->materializeOccurrences($plan, $dryRun, $through));
+    }
+
+    private function materializeOccurrences(CarePlan $plan, bool $dryRun, ?Carbon $through): array
+    {
         if (! $dryRun) {
             $plan = $this->synchronizeLifecycle($plan);
         }

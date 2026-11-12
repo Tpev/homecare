@@ -218,7 +218,7 @@ class SharedCareService
             $plan->forceFill(['ends_on' => $cutoff->copy()->subDay()->toDateString(),
                 'status' => $cutoff->lte(now()) ? CarePlan::STATUS_ENDED : $plan->status,
                 'ended_at' => $cutoff->lte(now()) ? now() : null])->save();
-            $plan->scheduleChanges()->where('status', 'pending')->where('effective_on', '>=', $cutoff->toDateString())->update(['status' => 'withdrawn', 'responded_at' => now(), 'responded_by_user_id' => $family->id]);
+            $plan->scheduleChanges()->where('status', 'pending')->where('effective_on', '>=', $cutoff->toDateString())->get()->each(fn ($offer) => $offer->update(['status' => 'withdrawn', 'responded_at' => now(), 'responded_by_user_id' => $family->id]));
             if (! $stillNeeded) {
                 $arrangement->update(['exceptions' => [...($arrangement->exceptions ?? []), ['days' => $plan->schedule_days, 'from' => $from, 'until' => null]]]);
                 $this->syncNeeds($arrangement->fresh(), $cutoff, $cutoff->copy()->addWeeks(6));
@@ -246,7 +246,7 @@ class SharedCareService
                 $this->cancelBooking($booking, $family, 'Shared care: '.($stillNeeded ? 'replacement needed.' : 'care not needed.'));
                 $this->notify($booking->carePlan, 'Visit cancelled', 'Your visit on '.$need->starts_at->format('F j, g:i A').' was cancelled. Your other regular visits continue.');
             }
-            $need->offers()->where('status', 'pending')->update(['status' => 'withdrawn', 'responded_at' => now(), 'responded_by_user_id' => $family->id]);
+            $need->offers()->where('status', 'pending')->get()->each(fn ($offer) => $offer->update(['status' => 'withdrawn', 'responded_at' => now(), 'responded_by_user_id' => $family->id]));
             $suppressed = $arrangement->plans()->get()->filter(fn ($plan) => app(CarePlanOccurrenceService::class)->overlapsScheduledRegularOccurrence($plan, $need->starts_at, $need->ends_at))->pluck('id')->all();
             $need->update(['status' => $stillNeeded ? 'needed' : 'waived', 'suppressed_plan_ids' => array_values(array_unique([...($need->suppressed_plan_ids ?? []), ...$suppressed]))]);
         }, 3);
@@ -297,7 +297,7 @@ class SharedCareService
         DB::transaction(function () use ($need, $family) {
             $arrangement = CareArrangement::lockForUpdate()->findOrFail($need->care_arrangement_id);
             $this->assertFamily($arrangement, $family);
-            $need->offers()->where('status', 'pending')->update(['status' => 'withdrawn', 'responded_at' => now(), 'responded_by_user_id' => $family->id]);
+            $need->offers()->where('status', 'pending')->get()->each(fn ($offer) => $offer->update(['status' => 'withdrawn', 'responded_at' => now(), 'responded_by_user_id' => $family->id]));
         });
     }
 

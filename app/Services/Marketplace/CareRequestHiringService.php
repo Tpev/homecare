@@ -82,7 +82,7 @@ class CareRequestHiringService
             CareRequestConversation::findOrCreateForApplication($lockedApplication->loadMissing('careRequest'), ($staffActor ?? $family)->id);
             $lockedRequest->applications()->where('id', '!=', $lockedApplication->id)
                 ->whereIn('status', [CareRequestApplication::STATUS_APPLIED, CareRequestApplication::STATUS_SHORTLISTED])
-                ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+                ->get()->each(fn ($otherApplication) => $otherApplication->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]));
             $lockedRequest->update(['status' => CareRequest::STATUS_FILLED]);
             if (! $lockedRequest->first_hire_at) {
                 $lockedRequest->update(['first_hire_at' => now()]);

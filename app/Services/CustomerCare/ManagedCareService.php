@@ -86,15 +86,19 @@ class ManagedCareService
                 'recurring_schedule' => $recurring ? array_map(fn ($day) => ['day' => (int) $day, 'start_time' => $data['recurring_start_time'], 'end_time' => $data['recurring_end_time']], $data['recurring_days']) : null,
                 'preferred_response_hours' => 24, 'time_expectations' => 'Coordinated by the LoLo Care team.',
             ];
+            $editing = $request !== null;
             if ($request) {
                 $request->update($attributes);
             } else {
                 $request = CareRequest::create($ownership + $attributes + ['created_by_user_id' => $actor->id, 'staff_request_key' => $data['request_key']]);
             }
-            $request->recipient()->updateOrCreate([], ['full_name' => trim($data['recipient_name']),
+            $recipient = $request->recipient()->updateOrCreate([], ['full_name' => trim($data['recipient_name']),
                 'recipient_is_requester' => false, 'relationship_to_family' => 'other', 'care_notes' => $data['care_notes'] ?? null]);
-            $request->tasks()->sync($data['tasks']);
-            $this->audit($actor, $request, $data['status'] === 'open' ? 'request_published' : 'draft_saved');
+            $taskChanges = $request->tasks()->sync($data['tasks']);
+            $auditId = $this->audit($actor, $request, $data['status'] === 'open' ? 'request_published' : 'draft_saved');
+            if ($editing && ($recipient->wasRecentlyCreated || $recipient->wasChanged(['full_name', 'care_notes']) || array_filter($taskChanges))) {
+                app(\App\Services\Ops\ManagedCareOpsRecorder::class)->detailsSaved($request, $actor, $auditId);
+            }
 
             return $request->fresh();
         }, 3);
@@ -426,11 +430,16 @@ class ManagedCareService
         app(CarePlanService::class)->requestExtraVisit($plan, $actor, Carbon::parse($data['start']), Carbon::parse($data['end']), $reason);
     }
 
-    public function audit(User $actor, CareRequest $request, string $action, ?string $note = null, array $metadata = []): void
+    public function audit(User $actor, CareRequest $request, string $action, ?string $note = null, array $metadata = []): int
     {
         CustomerCareAccess::authorize($actor);
-        DB::table('customer_care_actions')->insert(['care_request_id' => $request->id, 'actor_user_id' => $actor->id,
+        $auditId = DB::table('customer_care_actions')->insertGetId(['care_request_id' => $request->id, 'actor_user_id' => $actor->id,
             'action' => $action, 'note' => $note, 'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR), 'created_at' => now()]);
+        if ($action === 'follow_up_note') {
+            app(\App\Services\Ops\ManagedCareOpsRecorder::class)->note($request, $actor, $auditId);
+        }
+
+        return $auditId;
     }
 
     private function locked(User $actor, CareRequest $request): CareRequest

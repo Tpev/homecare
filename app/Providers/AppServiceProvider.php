@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(\App\Services\Ops\ManagedCareOpsRecorder::class);
     }
 
     /**
@@ -78,6 +78,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
         Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);
         CareRequest::observe(CareRequestObserver::class);
+        foreach (array_keys(\App\Services\Ops\ManagedCareOpsCatalog::definitions()) as $managedCareModel) {
+            $managedCareModel::observe(\App\Observers\ManagedCareOpsObserver::class);
+        }
         \App\Models\CaregiverProfile::observe(\App\Observers\CaregiverScreeningObserver::class);
         CareRequestApplication::observe(CareRequestApplicationObserver::class);
         Lead::observe(FamilyLeadObserver::class);

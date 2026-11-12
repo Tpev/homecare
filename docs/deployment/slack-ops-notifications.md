@@ -1,13 +1,84 @@
 # Slack operations notifications
 
-LoLo Care can post two operational events to a private Slack channel:
+For ordinary family requests, LoLo Care posts these operational events to the configured private Slack Ops channel:
 
 - a family publishes a new, open care request;
 - a family hires a caregiver for a request.
 
 Slack delivery is additive and disabled by default. It runs through the Laravel queue after the associated database transaction commits. A Slack timeout or rejection is retried and cannot roll back or interrupt the family request, hiring, booking, regular-care, or payment workflow.
 
-## Information included
+
+## Managed requests and bookings
+
+Managed care uses the **same configured Ops webhook**. There is no CS inbox and no second Slack channel configuration. Customer notifications stay suppressed by the existing managed-care policy; caregiver notifications keep their existing behavior.
+
+The following meaningful events generate Slack notices for managed requests and their related bookings, including recurring and selected-day descendants:
+
+| Area | Events |
+| --- | --- |
+| Request | Draft, publish, takeover, details/tasks/recipient edits, withdrawal, expiration, archive and restore |
+| Recruitment | New or updated application, shortlist, rejection, withdrawal, hire, other applicants closed; invitation sent, accepted, declined, cancelled or expired |
+| Conversation | Caregiver and staff messages; edited messages |
+| Visit | Booking created, rescheduled, check-in, pause/resume, checkout, hours submitted/approved, cancellation, replacement release, no-show and dispute changes |
+| Changes | Reschedule/cancellation proposals and decisions, time corrections and reported extra care, including review/payment/escalation outcomes |
+| Recurring care | Plan and payment state, schedule/counterproposal, pause/resume/end, schedule-change/extra-visit proposals and decisions |
+| Payment | Card authorization, capture, failure, refund and payout state; prepaid reservation/shortfall/release, settlement, holds and payment operation state |
+| Follow-up | Incident, linked support ticket/reply, internal support note, staff follow-up note |
+
+A recurring generation run groups up to 20 newly generated visits in each notice, with a date/time and authenticated link for every visit. The generated assignment records do not produce false “new applicant” notices. Actual payment changes remain separate notices.
+
+Page views, read markers, timestamps, unchanged saves and repeated provider updates do not create notices. Existing records are not backfilled on deployment. Ordinary family self-service requests keep their existing new-request and hired-caregiver notices.
+
+### Example
+
+> **Caregiver message received**
+>
+> **Family:** Charlie Test · #42
+>
+> **Request:** Afternoon companionship · #380
+>
+> **Caregiver:** Summer Test · #57
+>
+> **By:** Summer Test · Caregiver #57
+>
+> **Booking:** #918 · Mon, Nov 16, 2026 · 10:00 AM EST – 12:00 PM EST (America/New_York)
+>
+> **Event time:** Nov 12, 2026 · 10:00:00 AM EST
+>
+> **Next action:** Read the message and reply to the caregiver.
+>
+> **Open conversation** · **Open request**
+
+Names/IDs above are illustrative. Each notice identifies the family, original request title/ID, caregiver (or unassigned), actor or automatic system update, schedule with timezone, booking ID when applicable, event time and suggested next action. Status and schedule changes include before/after details. Payment notices may include amounts and prepaid minutes, but never card credentials or provider secrets.
+
+Buttons open the existing authenticated CS workspace, including the particular conversation, applicant, booking, recurring care or internal notes. They do not hire, charge, cancel or send messages directly from Slack. Full message text, internal notes, incident explanations, clinical/access notes and street addresses remain inside LoLo. A request's title is included, so use an operational title.
+
+This observes **messages recorded in LoLo**. It does not ingest independent emails sent directly to a staff member's mailbox.
+
+### Delivery and recovery
+
+The migration creates the internal managed_care_ops_events delivery ledger. Events are recorded with the business transaction and queued only after commit. Rolled-back changes produce no Slack notice. Each event keeps its original context even if the request changes before delivery.
+
+The existing queue worker handles delivery. The Laravel scheduler also runs ops:managed-care:dispatch every minute to recover pending delivery after a queue broker interruption. Both the worker and scheduler must be running. Recurring batches allow a brief collection window before sending.
+
+- A successful event is marked sent; duplicate jobs do not resend it.
+- Explicit retryable HTTP rejection (429/5xx) retries up to four attempts, with 10/60/300-second delays.
+- Permanent rejection is marked failed.
+- A timeout/unknown acknowledgement, or worker interruption during delivery, is marked uncertain. Incoming webhooks have no application idempotency key, so these are **not automatically replayed**: check Ops before any deliberate replay to avoid a duplicate.
+- Event recording failures and terminal/uncertain deliveries log a warning/error without private payloads, provider response bodies or webhook credentials.
+- Disabling Slack stops recording new events and pauses pending delivery. Re-enabling delivers the existing pending backlog.
+
+After deployment, inspect delivery counts **without sending anything**:
+
+    php artisan ops:managed-care:dispatch --status
+
+For failures, inspect the identified ledger row and application logs locally. Correct configuration or delivery issues first. For an uncertain result, verify the channel before an operator deliberately resets that specific event to pending; never bulk replay uncertain events. The ledger is operational storage, not a new staff inbox.
+
+Local verification (all Slack HTTP calls are faked):
+
+    php artisan test --compact tests/Feature/Notifications/ManagedCareOpsNotificationTest.php tests/Feature/Notifications/SlackOpsNotificationTest.php
+
+## Ordinary family notices: information included
 
 The messages contain only the operational summary needed to identify and follow up on the event:
 
@@ -76,7 +147,7 @@ Slack operations test notification delivered.
 
 The selected channel should receive a generic connection message containing no family, caregiver, or care information. Then verify the next genuine request and hire notifications against the corresponding authenticated Admin records. Do not create a fake production family request just to test Slack.
 
-Queue workers must be running for lifecycle notifications. If the connection test succeeds but genuine notifications do not arrive, inspect the standard queue worker and failed-job status without printing environment variables or the webhook URL:
+Queue workers must be running for lifecycle notifications. Managed-care recovery also requires the existing Laravel scheduler. If the connection test succeeds but genuine notifications do not arrive, inspect the standard queue worker and failed-job status without printing environment variables or the webhook URL:
 
 ```bash
 cd /var/www/homecare

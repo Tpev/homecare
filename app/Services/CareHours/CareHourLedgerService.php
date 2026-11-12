@@ -246,10 +246,10 @@ class CareHourLedgerService
             return;
         }
         // This durable marker is committed with the lot change. Recovery includes previously paid visits.
-        DB::table('care_hour_settlements')->whereIn('care_booking_id', $lot->allocations()
-            ->select('care_booking_id')->where('status', 'used'))->update([
-                'status' => 'reconciliation_pending', 'revision' => DB::raw('revision + 1'), 'updated_at' => now(),
-            ]);
+        app(\App\Services\Ops\ManagedCareOpsRecorder::class)->updateQuery(
+            \App\Models\CareHourSettlement::whereIn('care_booking_id', $lot->allocations()->select('care_booking_id')->where('status', 'used')),
+            ['status' => 'reconciliation_pending', 'revision' => DB::raw('revision + 1'), 'updated_at' => now()],
+        );
     }
 
     private function reserveLocked(CareHourAccount $account, CareBooking $booking, int $target): int

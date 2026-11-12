@@ -286,6 +286,8 @@ class CustomerCareFamilyWorkspaceTest extends TestCase
 
     public function test_recurring_card_hire_uses_family_schedule_and_keeps_future_visits_silent(): void
     {
+        // Keep the first 10am visit inside the existing 48-hour authorization window.
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-12 14:00:00', config('app.timezone')));
         $actor = User::factory()->create(['role' => 'customer_success']);
         $customer = User::factory()->create(['role' => 'family']);
         $date = now()->addDays(2);
@@ -361,6 +363,8 @@ class CustomerCareFamilyWorkspaceTest extends TestCase
 
     public function test_selected_day_card_hire_preserves_staff_context_and_access_to_generated_visits(): void
     {
+        // Keep the first 10am visit inside the existing 48-hour authorization window.
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-12 14:00:00', config('app.timezone')));
         [$actor, $customer, $request] = $this->requestFixture();
         $date = now()->addDays(2);
         $days = [$date->dayOfWeek, $date->copy()->addDay()->dayOfWeek];
