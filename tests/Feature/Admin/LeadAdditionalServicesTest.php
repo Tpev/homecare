@@ -67,6 +67,16 @@ class LeadAdditionalServicesTest extends TestCase
     {
         return [
             'raw payload' => [['raw_payload' => ['raw' => [self::QUESTION => self::SERVICES]]]],
+            'partner services raw payload' => [['raw_payload' => ['partner_services' => [
+                'pharmacy_pickup_or_delivery',
+                'home_safety_improvements_(ramps,_grab_bars,_stair_lifts)',
+                'meal_delivery',
+            ]]]],
+            'partner services normalized payload' => [['normalized_payload' => ['partner_services' => [
+                'pharmacy_pickup_or_delivery',
+                'home_safety_improvements_(ramps,_grab_bars,_stair_lifts)',
+                'meal_delivery',
+            ]]]],
             'normalized payload' => [['normalized_payload' => [
                 'which_additional_services_would_you_like_more_information_about_select_all_that_apply' => self::SERVICES,
             ]]],

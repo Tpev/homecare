@@ -142,6 +142,20 @@ class ZapierFacebookLeadWebhookTest extends TestCase
                 'additional_services' => [],
                 'raw' => [self::ADDITIONAL_SERVICES_QUESTION => self::ADDITIONAL_SERVICES],
             ], []],
+            'partner services single raw option' => [['partner_services' => 'meal_delivery'], ['Meal delivery']],
+            'partner services multiple raw options' => [['partner_services' => [
+                'pharmacy_pickup_or_delivery',
+                'home_safety_improvements_(ramps,_grab_bars,_stair_lifts)',
+                'meal_delivery',
+            ]], self::ADDITIONAL_SERVICES],
+            'empty partner services override raw answers' => [[
+                'partner_services' => [],
+                'raw' => [self::ADDITIONAL_SERVICES_QUESTION => self::ADDITIONAL_SERVICES],
+            ], []],
+            'canonical selections override partner services' => [[
+                'additional_services' => ['Meal delivery'],
+                'partner_services' => ['pharmacy_pickup_or_delivery'],
+            ], ['Meal delivery']],
             'single selection' => [[self::ADDITIONAL_SERVICES_QUESTION => self::ADDITIONAL_SERVICES[1]], [self::ADDITIONAL_SERVICES[1]]],
             'JSON array' => [['additional_services' => json_encode(self::ADDITIONAL_SERVICES)], self::ADDITIONAL_SERVICES],
             'semicolon separated' => [[self::ADDITIONAL_SERVICES_QUESTION => implode('; ', self::ADDITIONAL_SERVICES)], self::ADDITIONAL_SERVICES],

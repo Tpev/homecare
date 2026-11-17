@@ -12,8 +12,10 @@ final class AdditionalServiceAnswers
     public static function fromPayload(array $payload): ?array
     {
         // Zapier's explicitly mapped field takes precedence over its raw source copy.
-        if (array_key_exists('additional_services', $payload)) {
-            return self::values($payload['additional_services']);
+        foreach (['additional_services', 'partner_services'] as $field) {
+            if (array_key_exists($field, $payload)) {
+                return self::values($payload[$field]);
+            }
         }
 
         $found = false;
@@ -75,7 +77,7 @@ final class AdditionalServiceAnswers
     private static function isQuestion(string $key): bool
     {
         return preg_match(
-            '/^(?:raw_)?(?:\d+_)?(?:additional_services(?:_of_interest)?|other_services|which_additional_services_would_you_like_more_information_about(?:_select_all_that_apply)?)(?:_\d+)?$/',
+            '/^(?:raw_)?(?:\d+_)?(?:additional_services(?:_of_interest)?|partner_services|other_services|which_additional_services_would_you_like_more_information_about(?:_select_all_that_apply)?)(?:_\d+)?$/',
             self::normalizeKey($key),
         ) === 1;
     }
@@ -111,7 +113,12 @@ final class AdditionalServiceAnswers
 
         // Commas are part of option labels (e.g. ramps, grab bars, stair lifts).
         return array_values(array_unique(array_filter(
-            array_map('trim', preg_split('/[\r\n;]+/', $value)),
+            array_map(static function (string $answer): string {
+                $answer = trim($answer);
+
+                // Meta's raw option values may use underscores instead of spaces.
+                return str_contains($answer, '_') ? ucfirst(str_replace('_', ' ', $answer)) : $answer;
+            }, preg_split('/[\r\n;]+/', $value)),
             static fn (string $answer): bool => $answer !== '',
         )));
     }
