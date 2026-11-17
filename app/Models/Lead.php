@@ -136,6 +136,12 @@ class Lead extends Model
         'first_call_escalated_at' => 'datetime',
     ];
 
+    /** @return list<string> */
+    public function additionalServices(): array
+    {
+        return \App\Support\AdditionalServiceAnswers::fromLeadData(is_array($this->data) ? $this->data : []);
+    }
+
     public function assignedAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_admin_id');

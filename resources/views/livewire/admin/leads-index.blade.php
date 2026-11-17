@@ -517,6 +517,8 @@
                         </div>
                     </form>
 
+                    <x-lead-additional-services :lead="$selectedLead" />
+
                     <x-lead-follow-up-call :lead="$selectedLead" />
 
                     <livewire:admin.lead-sms-composer :lead-id="$selectedLead->id" :key="'crm-sms-'.$selectedLead->id" />

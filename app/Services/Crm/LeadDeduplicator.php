@@ -124,7 +124,16 @@ class LeadDeduplicator
             $survivor->unanswered_attempt_count = max((int) $survivor->unanswered_attempt_count, (int) $duplicate->unanswered_attempt_count);
         }
 
-        $survivor->data = array_replace_recursive($duplicate->data ?? [], $survivor->data ?? []);
+        $additionalServices = array_values(array_unique(array_merge(
+            $survivor->additionalServices(),
+            $duplicate->additionalServices(),
+        )));
+        $data = array_replace_recursive($duplicate->data ?? [], $survivor->data ?? []);
+        if ($additionalServices !== []) {
+            // Keep every selected service across submissions instead of merging list indexes.
+            data_set($data, 'care_preferences.additional_services', $additionalServices);
+        }
+        $survivor->data = $data;
         if (! $persisted) {
             // Call alerts and the next callback must use the latest request. Prior call
             // details and the complete incoming payload are retained in the audit note.

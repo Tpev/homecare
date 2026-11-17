@@ -156,6 +156,7 @@
                                     @endforelse
                                 </div>
                             </div>
+                            <x-lead-additional-services :lead="$activeLead" class="sm:col-span-2" />
                             <div class="rounded-2xl border border-[#E8C8BE] bg-[#FFF4EF] p-4 sm:col-span-2">
                                 <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-[#A55343]">In their own words</p>
                                 <p class="mt-2 text-sm leading-6 text-slate-800">“{{ data_get($form, 'additional_details', 'No additional details supplied.') }}”</p>

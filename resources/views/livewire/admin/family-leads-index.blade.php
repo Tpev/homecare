@@ -260,6 +260,8 @@
                             <p class="mt-3 text-sm leading-6 text-slate-700">{{ data_get($form, 'additional_details', 'No additional details.') }}</p>
                         </section>
 
+                        <x-lead-additional-services :lead="$selectedLead" />
+
                         <section class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div class="flex items-center justify-between"><p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Attribution</p><span class="text-xs font-bold text-slate-600">{{ $selectedLead->isFacebookLead() ? 'Facebook / Meta' : $selectedLead->sourceLabel() }}</span></div>
                             <p class="mt-2 text-sm font-bold text-slate-900">{{ data_get($meta, 'campaign_name', $selectedLead->source_detail) }}</p>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use App\Models\LeadActivity;
+use App\Support\AdditionalServiceAnswers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -74,10 +75,15 @@ class ZapierFacebookLeadWebhookController extends Controller
                 }
             }
 
-            $lead->data = array_replace_recursive(
+            $data = array_replace_recursive(
                 is_array($lead->data) ? $lead->data : [],
                 $mapped['data'],
             );
+            if (array_key_exists('additional_services', $mapped['data']['care_preferences'])) {
+                // Replace the selection as a list; recursive merging leaves stale items.
+                $data['care_preferences']['additional_services'] = $mapped['data']['care_preferences']['additional_services'];
+            }
+            $lead->data = $data;
             $lead->save();
             $created = $lead->wasRecentlyCreated;
 
@@ -207,10 +213,16 @@ class ZapierFacebookLeadWebhookController extends Controller
             '4_where_is_care_needed',
             'raw_4_where_is_care_needed_city_or_zip',
             'raw_4_where_is_care_needed',
+            'where_is_home_care_needed_city_or_zip',
+            '4_where_is_home_care_needed_city_or_zip',
+            '4_where_is_home_care_needed',
+            'raw_4_where_is_home_care_needed_city_or_zip',
+            'raw_4_where_is_home_care_needed',
         ]);
         $zip = $this->firstValue($normalized, ['zip', 'zipcode', 'zip_code', 'postal_code'])
             ?: $this->extractZip($careLocation);
-        $notes = $this->buildNotes($helpNeeded, $startTiming, $bestContactTime, $careLocation);
+        $additionalServices = AdditionalServiceAnswers::fromPayload($payload);
+        $notes = $this->buildNotes($helpNeeded, $startTiming, $bestContactTime, $careLocation, $additionalServices ?? []);
 
         $facebook = [
             'lead_id' => $leadId,
@@ -255,6 +267,7 @@ class ZapierFacebookLeadWebhookController extends Controller
                     'start_timing' => $startTiming,
                     'best_contact_time' => $bestContactTime,
                     'care_location' => $careLocation,
+                    ...($additionalServices !== null ? ['additional_services' => $additionalServices] : []),
                 ],
                 'notes' => $notes,
                 'zapier' => [
@@ -369,12 +382,14 @@ class ZapierFacebookLeadWebhookController extends Controller
         ?string $startTiming,
         ?string $bestContactTime,
         ?string $careLocation,
+        array $additionalServices,
     ): ?string {
         $details = [
             'Help needed' => $helpNeeded,
             'Preferred start' => $startTiming,
             'Best time to reach' => $bestContactTime,
             'Care location' => $careLocation,
+            'Additional services of interest' => implode('; ', $additionalServices),
         ];
         $lines = [];
 
