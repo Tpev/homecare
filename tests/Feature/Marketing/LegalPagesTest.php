@@ -33,7 +33,8 @@ class LegalPagesTest extends TestCase
                 ->assertSeeText('Effective Date: August 1, 2026');
             $response
                 ->assertSeeText(match ($slug) {
-                    'privacy-policy', 'platform-terms-of-service', 'caregiver-terms' => 'Last Updated: October 14, 2026',
+                    'privacy-policy', 'client-and-family-terms' => 'Last Updated: November 17, 2026',
+                    'platform-terms-of-service', 'caregiver-terms' => 'Last Updated: October 14, 2026',
                     'payment-terms-and-cancellation-policy' => 'Last Updated: August 26, 2026',
                     default => 'Last Updated: August 1, 2026',
                 })

@@ -1,6 +1,6 @@
 LoLo Care, Inc.
 Privacy Policy
-Effective Date: August 1, 2026 | Last Updated: October 14, 2026
+Effective Date: August 1, 2026 | Last Updated: November 17, 2026
 This Privacy Policy explains how LoLo Care, Inc. (“LOLO,” “we,” “us,” or “our”) collects, uses, discloses, stores, and protects personal information when you access or use our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
 This Privacy Policy should be read together with our Platform Terms of Service and any supplemental agreements, notices, or consents that may apply to specific products, workflows, users, or services.
 ## 1. Scope
@@ -17,6 +17,7 @@ This Privacy Policy does not apply to:
 - information processed solely on behalf of an enterprise, provider, partner, or customer where LOLO acts only as a service provider or processor under a separate agreement;
 - third-party websites, services, software, processors, or integrations not controlled by LOLO; or
 - offline services or activities not connected to the Platform, except where this Policy expressly says otherwise.
+- Requests made by you for connection to third parties for services not provided by LOLO or for referrals to third parties made at your request or in response to any inquiry wherein you have accepted a referral for third party services not provided by LOLO.
 ## 2. Categories of Information We Collect
 Depending on how you use the Platform, we may collect the following categories of information.
 ### 2.1 Information You Provide Directly

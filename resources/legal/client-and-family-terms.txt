@@ -1,6 +1,6 @@
 LoLo Care, Inc.
 Client and Family Terms
-Effective Date: August 1, 2026 | Last Updated: August 1, 2026
+Effective Date: August 1, 2026 | Last Updated: November 17, 2026
 These Client and Family Terms (“Client Terms”) govern the use of the LoLo Care, Inc. platform (the “Platform”) by individuals, families, households, or representatives requesting services (collectively, “Clients”).
 These Terms supplement the LOLO Platform Terms of Service. By requesting services, creating an account, or otherwise using the Platform as a client, you agree to comply with these Client Terms and the Platform Terms of Service.
 ## 1. Platform Role
@@ -10,6 +10,7 @@ By using the Platform, you acknowledge that:
 - LOLO is not a healthcare provider;
 - LOLO does not employ caregivers;
 - LOLO does not supervise services performed by caregivers or providers.
+- Where applicable, LOLO may offer Clients the opportunity to apply for the Care Assistance program for both Family & Caregiver users. LOLO has sole and complete discretion and authority for the approval or denial of applications to the Care Assistance program. Requirements for the program may change at LOLO’s sole discretion, and LOLO shall owe nothing to any applicant who is declined entry into the program, and all decisions on acceptance of a Client into the program shall be final and binding.
 Any services arranged through the Platform are provided by independent providers.
 ## 2. Client Responsibilities
 Clients are responsible for:
@@ -54,6 +55,7 @@ Violations may result in suspension or termination of Platform access.
 Clients are responsible for paying the agreed service fees for their selected provider(s).
 Payments may be processed through third-party payment processors. Payment timing, refunds, cancellations, and related rules are governed by the LOLO Payment Terms and Cancellation Policy.
 Clients must ensure valid payment information is provided when required.
+Where applicable, Clients who have purchased prepaid hours or gift cards that may be used directly or may be provided to 3rd parties, shall receive bonus hours that have been offered at the time of purchase. Offers made before or after the time of purchase are not applicable to those in effect at the time of purchase. Client is responsible for using all prepaid hours within the time period stated on their offer or on their prepaid hours certificate or gift card. LOLO shall not be liable to Client for any subsequent offer terms that may be available after the time of purchase. LOLO reserves the right to make any bonus hours available under such terms and conditions as it may impose or elect, in its sole and absolute discretion, but all bonus hours will be honored per the terms of the offer accepted by the Client and for which payment has been made.
 ## 8. Cancellations and Scheduling
 Clients may cancel or reschedule services subject to the Platform’s scheduling rules and cancellation policies.
 Late cancellations or missed appointments may result in fees.
