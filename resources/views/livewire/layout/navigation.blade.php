@@ -20,6 +20,7 @@ new class extends Component
         $user = auth()->user();
         $isCaregiver = $user?->role === 'caregiver';
         $isFamily = $user?->role === 'family';
+        $isPartner = $user?->role === 'partner';
         $isAdmin = $user?->isAdministrator() === true;
         $isContentTeam = $user?->isContentTeamMember() === true;
         $isSales = $user?->role === 'sales';
@@ -123,8 +124,8 @@ new class extends Component
             }
         }
 
-        $myProfileHref = $isCaregiver ? route('caregiver.profile.edit') : route('profile');
-        $myProfileLabel = $isCaregiver ? 'My Caregiver Profile' : ($isFamily ? 'My Family Profile' : 'My Profile');
+        $myProfileHref = $isPartner ? route('partner.profile.edit') : ($isCaregiver ? route('caregiver.profile.edit') : route('profile'));
+        $myProfileLabel = $isPartner ? 'Business profile' : ($isCaregiver ? 'My Caregiver Profile' : ($isFamily ? 'My Family Profile' : 'My Profile'));
         $securityHref = route('profile').'#password-security';
         $publicProfileHref = $isCaregiver && $caregiverProfile?->slug ? route('caregivers.show', $caregiverProfile->slug) : null;
 
@@ -271,8 +272,14 @@ new class extends Component
             'people' => [
                 'label' => 'People',
                 'active' => request()->routeIs('admin.users.*')
+                    || request()->routeIs('admin.partners.*')
                     || request()->routeIs('admin.caregivers.moderation_logs'),
                 'items' => [
+                    [
+                        'label' => 'Partner directory',
+                        'href' => route('admin.partners.index'),
+                        'active' => request()->routeIs('admin.partners.*'),
+                    ],
                     [
                         'label' => 'Admin Users',
                         'href' => route('admin.users.index'),
@@ -456,6 +463,11 @@ new class extends Component
             $primaryLinks = array_merge($sdrNavLinks, [$customerCareLink, $giftPurchasesLink]);
         } elseif ($isCustomerSuccess) {
             $primaryLinks = $customerCareNavLinks;
+        } elseif ($isPartner) {
+            $primaryLinks = [
+                ['label' => 'Dashboard', 'href' => route('partner.dashboard'), 'active' => request()->routeIs('partner.dashboard')],
+                ['label' => 'Business profile', 'href' => route('partner.profile.edit'), 'active' => request()->routeIs('partner.profile.*')],
+            ];
         } else {
             if ($user && ! $caregiverOnboardingMode && ! $isFamily) {
                 $primaryLinks[] = [
@@ -557,7 +569,7 @@ new class extends Component
                     </span>
                     <span class="block">
                         <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $usesAdminOrSalesNavigation ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : ($isCustomerSuccess ? 'Customer care' : 'Care that feels personal.'))))) }}</span>
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $isPartner ? 'Partner workspace' : ($usesAdminOrSalesNavigation ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : ($isCustomerSuccess ? 'Customer care' : 'Care that feels personal.')))))) }}</span>
                     </span>
                 </a>
             </div>

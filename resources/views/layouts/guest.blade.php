@@ -1,16 +1,20 @@
 @php
     $routeName = request()->route()?->getName();
-    $isLogin = $routeName === 'login';
+    $isLogin = in_array($routeName, ['login', 'partner.login'], true);
+    $isPartnerRegistration = $routeName === 'partner.register';
+    $isPartnerAuth = $isPartnerRegistration || $routeName === 'partner.login';
     $isFamilyRegistration = $routeName === 'register';
     $isCaregiverRegistration = $routeName === 'caregiver.register';
     $isPasswordFlow = in_array($routeName, ['password.request', 'password.reset', 'password.confirm'], true);
     $isGiftClaimAuth = ($isLogin || $isFamilyRegistration) && \App\Support\CareHourGiftClaimIntent::active();
-    $isWideForm = $isFamilyRegistration || $isCaregiverRegistration;
+    $isWideForm = $isFamilyRegistration || $isCaregiverRegistration || $isPartnerRegistration;
 
     $pageTitle = $isGiftClaimAuth ? 'Claim your care gift' : match ($routeName) {
         'login' => 'Sign in',
         'register' => 'Create a family account',
         'caregiver.register' => 'Create a caregiver account',
+        'partner.register' => 'Become a LoLo partner',
+        'partner.login' => 'Partner sign in',
         'password.request' => 'Reset your password',
         'password.reset' => 'Choose a new password',
         'password.confirm' => 'Confirm your password',
@@ -19,6 +23,16 @@
     };
 
     $story = match (true) {
+        $isPartnerAuth => [
+            'kicker' => 'For service partners',
+            'title' => 'Local services. Meaningful connections.',
+            'description' => 'Help us get to know your business and the communities you serve.',
+            'points' => [
+                'Introduce your business and your team.',
+                'Choose the services and areas that fit you.',
+                'Keep your partner profile up to date in one place.',
+            ],
+        ],
         $isFamilyRegistration => [
             'kicker' => 'For families',
             'title' => 'Care coordination that feels lighter.',
@@ -391,7 +405,11 @@
                 @endunless
 
                 <p class="m-0 text-right text-xs text-[#6B746F] sm:text-sm">
-                    @if ($isLogin)
+                    @if ($routeName === 'partner.login')
+                        New partner? <a href="{{ route('partner.register') }}" wire:navigate>Join LoLo</a>
+                    @elseif ($isPartnerRegistration)
+                        Already registered? <a href="{{ route('partner.login') }}" wire:navigate>Sign in</a>
+                    @elseif ($isLogin)
                         New to LoLo? <a href="{{ route('register') }}" wire:navigate>Create an account</a>
                     @elseif ($isFamilyRegistration || $isCaregiverRegistration)
                         Already registered? <a href="{{ route('login') }}" wire:navigate>Sign in</a>

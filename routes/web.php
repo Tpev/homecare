@@ -169,6 +169,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
     ->name('admin.')
     ->group(function () {
         Route::get('/ai-support', AiSupportOverview::class)->name('ai-support.index');
+        Route::get('/partners', \App\Livewire\Admin\PartnersIndex::class)->name('partners.index');
         Route::get('/ai-support/pilots', AiSupportPilotsIndex::class)->name('ai-support.pilots.index');
         Route::get('/ai-support/knowledge', AiSupportKnowledgeIndex::class)->name('ai-support.knowledge.index');
         Route::get('/ai-support/knowledge/create', AiSupportKnowledgeEditor::class)->name('ai-support.knowledge.create');
@@ -321,6 +322,12 @@ Route::get('dashboard', DashboardHome::class)
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
+
+Route::middleware(['auth', \App\Http\Middleware\EnsurePartnerRole::class])
+    ->prefix('partner')->name('partner.')->group(function () {
+        Route::get('/dashboard', \App\Livewire\Partner\Dashboard::class)->name('dashboard');
+        Route::get('/profile', \App\Livewire\Partner\ProfileEditor::class)->name('profile.edit');
+    });
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/caregiver/certifications/{certification}/document', CaregiverCertificationDocumentController::class)

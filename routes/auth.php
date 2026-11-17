@@ -9,6 +9,8 @@ use Livewire\Volt\Volt;
 Route::middleware('guest')->group(function () {
     Volt::route('register', 'pages.auth.register')->name('register');
     Route::get('caregiver/register', CaregiverRegister::class)->name('caregiver.register');
+    Route::get('partner/register', \App\Livewire\Partner\Register::class)->name('partner.register');
+    Volt::route('partner/login', 'pages.auth.login')->name('partner.login');
 
     Volt::route('login', 'pages.auth.login')->name('login');
     Volt::route('forgot-password', 'pages.auth.forgot-password')->name('password.request');

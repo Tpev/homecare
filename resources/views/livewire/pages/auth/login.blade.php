@@ -86,6 +86,7 @@ new #[Layout('layouts.guest')] class extends Component
         $default = match (true) {
             auth()->user()?->isAdministrator() => route('admin.crm.index', absolute: false),
             auth()->user()?->role === 'family' => route('family.requests.index', absolute: false),
+            auth()->user()?->role === 'partner' => route('partner.dashboard', absolute: false),
             default => route('dashboard', absolute: false),
         };
         $this->redirectIntended(default: $default, navigate: true);
@@ -95,7 +96,7 @@ new #[Layout('layouts.guest')] class extends Component
 <div class="space-y-7">
     @php($giftClaim = \App\Support\CareHourGiftClaimIntent::active())
     <div class="space-y-2">
-        <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Your LoLo account</p>
+        <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">{{ request()->routeIs('partner.login') ? 'Your partner account' : 'Your LoLo account' }}</p>
         <h1 class="font-semibold tracking-tight">{{ $giftClaim ? 'Sign in to claim your gift' : 'Welcome back' }}</h1>
         <p class="text-sm leading-6 text-[#68756F]">{{ $giftClaim ? 'Your gift is saved. No card needed.' : 'Sign in with the email and password you used to create your account.' }}</p>
     </div>

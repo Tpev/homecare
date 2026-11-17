@@ -153,6 +153,11 @@ class User extends Authenticatable
         return $this->hasOne(CaregiverProfile::class);
     }
 
+    public function partnerProfile(): HasOne
+    {
+        return $this->hasOne(PartnerProfile::class);
+    }
+
     public function careRequests(): HasMany
     {
         return $this->hasMany(CareRequest::class, 'family_user_id');
