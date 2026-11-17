@@ -21,3 +21,5 @@ Approval and pause are directory statuses. Partners can still access and update 
 ## Verification
 
 Run `php artisan test --filter=PartnerManagementTest` and `npm run build`. Browser review should cover the three-step signup, editing a partner profile, directory filters/status updates, and narrow mobile layouts.
+
+Before committing changes to the shared dashboard, routes or authentication views, run `bash deploy.sh --check-prepaid-release "$PWD"`. If a reviewed change affects the prepaid source manifest, follow [local manifest maintenance](../deployment/zero-downtime-deployments.md#local-manifest-maintenance) and commit the refreshed manifest with the source changes.
