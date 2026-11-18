@@ -147,6 +147,78 @@
                             <span wire:loading wire:target="savePartner">Saving...</span>
                         </button>
                     </form>
+                    <section aria-labelledby="partner-delivery-title" class="border-t border-[#E8DED1] pt-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 id="partner-delivery-title" class="text-xl font-semibold text-[#23483F]">Send a lead</h3>
+                            <span class="rounded-full bg-[#EAF0E9] px-3 py-1 text-xs font-semibold text-[#23483F]">{{ number_format($availableLeadCredits) }} {{ $availableLeadCredits === 1 ? 'credit' : 'credits' }} available</span>
+                        </div>
+                        <p class="mt-2 text-sm leading-6 text-[#66746D]">Each contact can be sent to one partner per service. Sending a lead uses one paid credit.</p>
+                        @if(session('partnerLeadSent'))<p role="status" class="mt-3 rounded-xl bg-[#E6F1E8] px-3 py-2 text-sm text-[#28553B]">{{ session('partnerLeadSent') }}</p>@endif
+                        @if($selectedPartner->status !== 'approved')
+                            <p class="mt-4 rounded-xl bg-[#F4F1EA] p-3 text-sm text-[#66746D]">Approve this partner and save their status before sending leads.</p>
+                        @elseif($availableLeadCredits < 1)
+                            <p class="mt-4 rounded-xl bg-[#F4F1EA] p-3 text-sm text-[#66746D]">This partner needs available paid credits before you can send a lead.</p>
+                        @else
+                            <form wire:submit="assignLead" class="mt-4 space-y-4">
+                                @if(!$selectedAssignmentLead)
+                                    <div>
+                                        <label for="partner-lead-search" class="mb-2 block text-sm font-semibold text-[#23483F]">Find a family lead</label>
+                                        <input id="partner-lead-search" type="search" wire:model.live.debounce.300ms="leadSearch" maxlength="150" placeholder="Name, email, phone, location or lead ID" class="min-h-11 w-full rounded-xl border-[#D9CEC0] bg-white text-sm focus:border-[#23483F] focus:ring-[#23483F]">
+                                        <p class="mt-1 text-xs text-[#66746D]">Search by ID or enter at least two characters. Up to eight matches are shown.</p>
+                                        @if(mb_strlen(trim($leadSearch)) >= 2 || ctype_digit(trim($leadSearch)))
+                                            <ul class="mt-3 space-y-2" aria-label="Matching leads">
+                                                @forelse($leadResults as $candidate)
+                                                    <li wire:key="assignment-candidate-{{ $candidate->id }}">
+                                                        <button type="button" wire:click="selectAssignmentLead({{ $candidate->id }})" class="w-full rounded-xl border border-[#E3D6C5] bg-white p-3 text-left text-sm hover:border-[#93A99D] focus:outline-none focus:ring-2 focus:ring-[#23483F]">
+                                                            <span class="block font-semibold text-[#23483F]">{{ $candidate->name ?: 'Contact' }} <span class="font-normal text-[#66746D]">#{{ $candidate->id }}</span></span>
+                                                            <span class="mt-1 block break-words text-xs text-[#66746D]">{{ implode(' · ', array_filter([$candidate->location, $candidate->zip, $candidate->email, $candidate->phone])) }}</span>
+                                                        </button>
+                                                    </li>
+                                                @empty
+                                                    <li class="rounded-xl bg-[#F4F1EA] p-3 text-sm text-[#66746D]">No family leads match this search.</li>
+                                                @endforelse
+                                            </ul>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="rounded-xl border border-[#D9CEC0] bg-white p-4">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <p class="break-words font-semibold text-[#23483F]">{{ $selectedAssignmentLead->name ?: 'Contact' }}</p>
+                                            <button type="button" wire:click="clearAssignmentLead" class="shrink-0 text-xs font-semibold text-[#23483F] underline underline-offset-4">Change lead</button>
+                                        </div>
+                                        <p class="mt-2 break-words text-sm text-[#66746D]">{{ implode(' · ', array_filter([$selectedAssignmentLead->location, $selectedAssignmentLead->zip])) ?: 'Location not recorded' }}</p>
+                                        <p class="mt-1 break-all text-xs text-[#66746D]">{{ implode(' · ', array_filter([$selectedAssignmentLead->email, $selectedAssignmentLead->phone])) }}</p>
+                                    </div>
+                                    @if(count($assignmentCategories))
+                                        <div>
+                                            <label for="partner-assignment-category" class="mb-2 block text-sm font-semibold text-[#23483F]">Requested service</label>
+                                            <select id="partner-assignment-category" wire:model.live="assignmentCategory" class="min-h-11 w-full rounded-xl border-[#D9CEC0] bg-white text-sm focus:border-[#23483F] focus:ring-[#23483F]">
+                                                @foreach($assignmentCategories as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+                                            </select>
+                                            <p class="mt-1 text-xs text-[#66746D]">Services requested by this lead that match the partner's profile.</p>
+                                        </div>
+                                        <label class="flex items-start gap-3 text-sm leading-6 text-[#56665D]">
+                                            <input type="checkbox" wire:model="sharingConfirmed" class="mt-1 rounded border-[#D9CEC0] text-[#23483F] focus:ring-[#23483F]">
+                                            <span>I confirmed this contact agreed to share their contact details and selected request with {{ $selectedPartner->business_name }}.</span>
+                                        </label>
+                                        <label class="flex items-start gap-3 text-sm leading-6 text-[#56665D]">
+                                            <input type="checkbox" wire:model="geographyConfirmed" class="mt-1 rounded border-[#D9CEC0] text-[#23483F] focus:ring-[#23483F]">
+                                            <span>I checked the contact's location and confirmed the partner covers it.</span>
+                                        </label>
+                                        <button type="submit" wire:loading.attr="disabled" wire:target="assignLead" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#23483F] px-5 py-3 text-sm font-semibold text-white hover:bg-[#19392F] focus:outline-none focus:ring-2 focus:ring-[#23483F] focus:ring-offset-2 disabled:opacity-60">
+                                            <span wire:loading.remove wire:target="assignLead">Send lead · Use 1 credit</span>
+                                            <span wire:loading wire:target="assignLead">Sending...</span>
+                                        </button>
+                                    @else
+                                        <p class="rounded-xl bg-[#FFF0DE] p-3 text-sm text-[#8A5425]">This lead has no recorded service request matching this partner. Choose another lead or verify the request in the CRM first.</p>
+                                    @endif
+                                @endif
+                                <x-input-error :messages="$errors->get('assignmentLeadId')" />
+                                <x-input-error :messages="$errors->get('assignmentCategory')" />
+                                <x-input-error :messages="$errors->get('assignment')" />
+                            </form>
+                        @endif
+                    </section>
                 </div>
             </aside>
         @endif

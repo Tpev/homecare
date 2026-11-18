@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Support\PartnerOptions;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PartnerProfile extends Model
 {
@@ -32,12 +35,39 @@ class PartnerProfile extends Model
             'coverage_states' => 'array',
             'submitted_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
+            'payment_method_summary' => 'array',
+            'payment_method_updated_at' => 'datetime',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(PartnerSubscription::class)->ofMany(
+            ['id' => 'max'],
+            fn (Builder $query) => $query->where('plan', 'monthly'),
+        );
+    }
+
+    public function leadCredits(): HasMany
+    {
+        return $this->hasMany(PartnerLeadCredit::class);
+    }
+
+    public function leads(): HasMany
+    {
+        return $this->hasMany(PartnerLead::class);
+    }
+
+    public function remainingLeadCredits(): int
+    {
+        return (int) $this->leadCredits()->whereNull('suspended_at')
+            ->selectRaw('COALESCE(SUM(quantity - used_quantity), 0) AS remaining')
+            ->value('remaining');
     }
 
     /** @return list<string> */

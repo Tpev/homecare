@@ -61,6 +61,14 @@ for path in app/Services/Notifications/CustomerCareNotificationPolicy.php app/Se
   reject "$path"
   cp -- "$PROJECT_DIR/$path" "$fixture/$path"
 done
+if [[ "$version" == 2 ]]; then
+  # The shared signed-event endpoint must retain its partner billing dependencies.
+  for path in app/Services/Partners/PartnerBillingService.php app/Services/Partners/PartnerStripeGateway.php database/migrations/2026_11_18_000100_create_partner_billing_tables.php; do
+    rm -- "$fixture/$path"
+    reject "$(basename "$path")"
+    cp -- "$PROJECT_DIR/$path" "$fixture/$path"
+  done
+fi
 printf 'extra manifest entry\n' >> "$fixture/$PREPAID_MANIFEST"
 reject 'manifest version or inventory is unknown'
 if [[ "$version" == 2 ]]; then

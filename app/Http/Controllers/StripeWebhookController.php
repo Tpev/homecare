@@ -87,6 +87,12 @@ class StripeWebhookController extends Controller
 
                 return response()->json(['ok' => true]);
             }
+            // Partner purchases and subscriptions use their own customer and credit ledger.
+            if (app(\App\Services\Partners\PartnerBillingService::class)->handle($type, $object, (bool) ($event->livemode ?? false), $event->account ?? null)) {
+                $inbox->forceFill(['status' => StripeWebhookEvent::STATUS_PROCESSED, 'processed_at' => now(), 'last_error' => null])->save();
+
+                return response()->json(['ok' => true]);
+            }
             if (in_array($type, [
                 'payment_intent.amount_capturable_updated',
                 'payment_intent.succeeded',

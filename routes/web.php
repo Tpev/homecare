@@ -326,6 +326,14 @@ Route::view('profile', 'profile')
 Route::middleware(['auth', \App\Http\Middleware\EnsurePartnerRole::class])
     ->prefix('partner')->name('partner.')->group(function () {
         Route::get('/dashboard', \App\Livewire\Partner\Dashboard::class)->name('dashboard');
+        Route::get('/leads', \App\Livewire\Partner\Leads::class)->name('leads.index');
+        Route::get('/billing', [\App\Http\Controllers\PartnerBillingController::class, 'show'])->name('billing.show');
+        Route::post('/billing/setup', [\App\Http\Controllers\PartnerBillingController::class, 'setupCheckout'])
+            ->middleware('throttle:12,1')->name('billing.setup');
+        Route::post('/billing/subscribe', [\App\Http\Controllers\PartnerBillingController::class, 'subscribe'])
+            ->middleware('throttle:12,1')->name('billing.subscribe');
+        Route::post('/billing/cancel', [\App\Http\Controllers\PartnerBillingController::class, 'cancel'])
+            ->middleware('throttle:12,1')->name('billing.cancel');
         Route::get('/profile', \App\Livewire\Partner\ProfileEditor::class)->name('profile.edit');
     });
 

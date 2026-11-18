@@ -404,6 +404,20 @@ app/Services/Ops/SlackOpsNotificationService.php
 app/Jobs/SendSlackOpsNotification.php
 app/Services/CareRequests/CareRequestExpirationService.php
 database/migrations/2026_11_12_000100_create_managed_care_ops_events.php
+app/Http/Controllers/PartnerBillingController.php
+app/Http/Middleware/EnsurePartnerRole.php
+app/Models/PartnerProfile.php
+app/Models/PartnerSubscription.php
+app/Models/PartnerLeadCredit.php
+app/Models/PartnerLead.php
+app/Services/Partners/PartnerBillingService.php
+app/Services/Partners/PartnerStripeGateway.php
+app/Services/Partners/PartnerLeadService.php
+app/Support/PartnerOptions.php
+config/partners.php
+database/migrations/2026_11_17_000100_create_partner_profiles_table.php
+database/migrations/2026_11_18_000100_create_partner_billing_tables.php
+database/migrations/2026_11_18_000200_create_partner_leads_table.php
 EOF
 }
 

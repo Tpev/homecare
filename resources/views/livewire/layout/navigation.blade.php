@@ -466,7 +466,8 @@ new class extends Component
         } elseif ($isPartner) {
             $primaryLinks = [
                 ['label' => 'Dashboard', 'href' => route('partner.dashboard'), 'active' => request()->routeIs('partner.dashboard')],
-                ['label' => 'Business profile', 'href' => route('partner.profile.edit'), 'active' => request()->routeIs('partner.profile.*')],
+                ['label' => 'My leads', 'href' => route('partner.leads.index'), 'active' => request()->routeIs('partner.leads.*')],
+                ['label' => 'Billing', 'href' => route('partner.billing.show'), 'active' => request()->routeIs('partner.billing.*')],
             ];
         } else {
             if ($user && ! $caregiverOnboardingMode && ! $isFamily) {

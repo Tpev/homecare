@@ -7,6 +7,7 @@
 @import "./shared-care.css";
 @import "./customer-onboarding.css";
 @import "./caregiver-crm.css";
+@import "./partner-workspace.css";
 
 @plugin "@tailwindcss/forms";
 
