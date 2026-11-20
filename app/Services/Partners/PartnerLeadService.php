@@ -3,6 +3,7 @@
 namespace App\Services\Partners;
 
 use App\Models\Lead;
+use App\Models\LeadActivity;
 use App\Models\PartnerLead;
 use App\Models\PartnerLeadCredit;
 use App\Models\PartnerProfile;
@@ -11,6 +12,7 @@ use App\Support\LeadPhone;
 use App\Support\PartnerOptions;
 use App\Support\StaffAccess;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -47,16 +49,12 @@ class PartnerLeadService
                     || ! in_array($category, $this->categoriesFor($lead), true)) {
                     throw ValidationException::withMessages(['assignment' => 'Choose a service requested by the lead and offered by this partner.']);
                 }
-                if ($lead->lead_type !== Lead::TYPE_FAMILY || $lead->do_not_contact_at
-                    || data_get($lead->data, 'provider_outreach.do_not_call')) {
-                    throw ValidationException::withMessages(['assignment' => 'This lead cannot be shared. Check its type and contact preferences.']);
+                if ($reason = $this->unavailabilityReason($lead)) {
+                    throw ValidationException::withMessages(['assignment' => $reason]);
                 }
 
                 $phone = LeadPhone::key($lead->phone);
                 $email = $this->email($lead->email);
-                if (! $phone && ! $email) {
-                    throw ValidationException::withMessages(['assignment' => 'Add a valid phone number or email before sending this lead.']);
-                }
                 $identities = $this->identities($lead);
                 $claimed = DB::table('partner_lead_claims')->where('category', $category)
                     ->where(function ($query) use ($identities) {
@@ -107,6 +105,98 @@ class PartnerLeadService
         }
     }
 
+    /** Lead-level blockers only; partner eligibility and credits are checked when sending. */
+    public function unavailabilityReason(Lead $lead): ?string
+    {
+        if ($lead->lead_type !== Lead::TYPE_FAMILY || $lead->do_not_contact_at
+            || data_get($lead->data, 'provider_outreach.do_not_call')) {
+            return 'This lead cannot be shared. Check its type and contact preferences.';
+        }
+        if (! LeadPhone::key($lead->phone) && ! $this->email($lead->email)) {
+            return 'Add a valid phone number or email before sending this lead.';
+        }
+
+        return null;
+    }
+
+    /**
+     * A sent category stays claimed even when its delivery snapshot has been removed.
+     *
+     * @return array<string, array{partner_profile_id: ?int, partner_name: ?string, assigned_at: ?Carbon, delivery_id: ?int}>
+     */
+    public function sentCategoriesFor(Lead $lead): array
+    {
+        return $this->sentCategoriesForLeads([$lead])[$lead->id] ?? [];
+    }
+
+    /**
+     * Read-only availability for an inventory page. Assignment rechecks under locks.
+     *
+     * @param  iterable<Lead>  $leads
+     * @return array<int, array<string, array{partner_profile_id: ?int, partner_name: ?string, assigned_at: ?Carbon, delivery_id: ?int}>>
+     */
+    public function sentCategoriesForLeads(iterable $leads): array
+    {
+        $leads = collect($leads)->filter(fn (Lead $lead): bool => $lead->id !== null)->keyBy('id');
+        $result = $leads->map(fn (): array => [])->all();
+        if ($leads->isEmpty()) {
+            return $result;
+        }
+
+        // Do not replace the caller's activities relation with partially selected notes.
+        $notes = collect();
+        foreach ($leads->keys()->chunk(500) as $leadIds) {
+            $notes = $notes->concat(LeadActivity::query()->whereIn('lead_id', $leadIds)
+                ->where('type', 'note')->get(['lead_id', 'metadata']));
+        }
+        $notesByLead = $notes->groupBy('lead_id');
+        $identityOwners = [];
+        $hashesByType = [];
+        foreach ($leads as $lead) {
+            foreach ($this->identities($lead, $notesByLead->get($lead->id, [])) as $identity) {
+                $type = $identity['identity_type'];
+                $hash = $identity['identity_hash'];
+                $identityOwners[$type.':'.$hash][$lead->id] = true;
+                $hashesByType[$type][$hash] = true;
+            }
+        }
+
+        $firstClaim = [];
+        foreach ($hashesByType as $type => $hashes) {
+            foreach (array_chunk(array_keys($hashes), 500) as $chunk) {
+                $claims = DB::table('partner_lead_claims as claims')
+                    ->leftJoin('partner_leads as delivery', 'delivery.id', '=', 'claims.partner_lead_id')
+                    ->leftJoin('partner_profiles as partner', 'partner.id', '=', 'delivery.partner_profile_id')
+                    ->where('claims.identity_type', $type)->whereIn('claims.identity_hash', $chunk)
+                    ->orderBy('claims.id')->get([
+                        'claims.id', 'claims.identity_type', 'claims.identity_hash', 'claims.category',
+                        'claims.created_at', 'delivery.id as delivery_id', 'delivery.partner_profile_id',
+                        'delivery.assigned_at', 'partner.business_name as partner_name',
+                    ]);
+                foreach ($claims as $claim) {
+                    foreach ($identityOwners[$claim->identity_type.':'.$claim->identity_hash] as $leadId => $_) {
+                        // Multiple identities can point to the same delivery; merged records
+                        // can have older claims too. Show the earliest claim consistently.
+                        if (isset($firstClaim[$leadId][$claim->category])
+                            && $firstClaim[$leadId][$claim->category] <= $claim->id) {
+                            continue;
+                        }
+                        $firstClaim[$leadId][$claim->category] = $claim->id;
+                        $assignedAt = $claim->assigned_at ?? $claim->created_at;
+                        $result[$leadId][$claim->category] = [
+                            'partner_profile_id' => $claim->partner_profile_id !== null ? (int) $claim->partner_profile_id : null,
+                            'partner_name' => $claim->partner_name,
+                            'assigned_at' => $assignedAt ? Carbon::parse($assignedAt) : null,
+                            'delivery_id' => $claim->delivery_id !== null ? (int) $claim->delivery_id : null,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
     /** Map known answers without treating commas inside option labels as choices. */
     public function categoriesFor(Lead $lead): array
     {
@@ -155,7 +245,7 @@ class PartnerLeadService
     }
 
     /** Preserve known identities from CRM merges as well as the current contact. */
-    private function identities(Lead $lead): array
+    private function identities(Lead $lead, ?iterable $notes = null): array
     {
         $identities = [];
         $add = function (string $type, mixed $value) use (&$identities): void {
@@ -169,7 +259,7 @@ class PartnerLeadService
             $add('email', $this->email($snapshot['email'] ?? null));
         };
         $fromSnapshot($lead->getAttributes());
-        foreach ($lead->activities()->where('type', 'note')->get(['metadata']) as $activity) {
+        foreach ($notes ?? $lead->activities()->where('type', 'note')->get(['metadata']) as $activity) {
             if (data_get($activity->metadata, 'source') !== 'phone_deduplication') {
                 continue;
             }

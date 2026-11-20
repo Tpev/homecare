@@ -273,12 +273,18 @@ new class extends Component
                 'label' => 'People',
                 'active' => request()->routeIs('admin.users.*')
                     || request()->routeIs('admin.partners.*')
+                    || request()->routeIs('admin.partner-leads.*')
                     || request()->routeIs('admin.caregivers.moderation_logs'),
                 'items' => [
                     [
                         'label' => 'Partner directory',
                         'href' => route('admin.partners.index'),
                         'active' => request()->routeIs('admin.partners.*'),
+                    ],
+                    [
+                        'label' => 'Partner leads',
+                        'href' => route('admin.partner-leads.index'),
+                        'active' => request()->routeIs('admin.partner-leads.*'),
                     ],
                     [
                         'label' => 'Admin Users',

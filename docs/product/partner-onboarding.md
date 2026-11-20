@@ -12,6 +12,14 @@ Partners can still access their workspace and update their profile while new or 
 
 The selected partner's directory panel also supports lead delivery. Search an existing family lead, select a requested service offered by the partner, and confirm permission to share the contact and coverage. Sending a lead consumes one available paid credit in the same transaction. A contact can be delivered only once per service category across all partners; other requested categories remain eligible. Delivery snapshots and durable phone/email/source identity claims preserve this rule through CRM deletion, reimport and documented duplicate merges. The partner sees contact details and the selected service request, never internal CRM notes.
 
+## Admin lead inventory
+
+Open **All tools → People → Partner leads** (`/admin/partner-leads`), or **View partner leads** in the partner directory. The inventory lists all family leads, their contact/location details and requested services, including leads with no recorded partner service. Search contacts or locations, filter by requested service, and switch between all leads, available leads, leads with deliveries and leads without a partner service request. Counts reflect the current search and service selection before the delivery-status filter; a partially delivered lead can be both available and sent.
+
+Choose **Review lead** or a service chip to open the delivery panel. Previously sent categories show the recipient and delivery date when retained. The panel offers approved, active partners who provide the selected service and have available paid credits, with their coverage and balance shown for review. Select a partner, confirm permission to share and geographic coverage, then send the lead to their dashboard. Sending uses one credit and the existing transactional exclusivity checks; it does not send an email. Changing the service or recipient clears the confirmations.
+
+Availability uses durable identity claims, including historical CRM merge identities. A deleted delivery snapshot never makes the category available again. Contact restrictions, invalid contact details and unsupported service requests remain visible but cannot be sent. Historical imported answer formats are parsed before pagination so service filters do not silently omit matching leads. This view adds no new database schema and does not change existing lead answers.
+
 ## Billing and packages
 
 `/partner/billing` uses the same Stripe-hosted card setup experience as family billing, with a separate partner Stripe customer. Saving a card verifies the Checkout session, successful SetupIntent and payment-method ownership before setting the default. Updating a card also updates the current monthly subscription's payment method. Card numbers and security codes never enter the app; only a display summary is cached for the dashboard.

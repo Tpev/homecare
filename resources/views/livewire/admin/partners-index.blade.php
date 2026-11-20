@@ -5,7 +5,8 @@
             <h1 class="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Partner directory</h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-[#66746D]">Know your partners, the services they offer, and the communities they cover.</p>
         </div>
-        <div x-data="{ copied: false, copyFailed: false }" class="shrink-0">
+        <div x-data="{ copied: false, copyFailed: false }" class="flex shrink-0 flex-wrap items-center gap-3">
+            <a href="{{ route('admin.partner-leads.index') }}" class="inline-flex min-h-11 items-center justify-center gap-3 rounded-xl border border-[#D9CEC0] bg-white/80 px-5 py-3 text-sm font-semibold text-[#23483F] transition hover:bg-[#EAF0E9] focus:outline-none focus:ring-2 focus:ring-[#23483F] focus:ring-offset-2">View partner leads <span aria-hidden="true">&rarr;</span></a>
             <button type="button" x-on:click="copyFailed = false; navigator.clipboard ? navigator.clipboard.writeText(@js(route('partner.register'))).then(() => { copied = true; setTimeout(() => copied = false, 3000); }).catch(() => copyFailed = true) : copyFailed = true" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#23483F] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#19392F] focus:outline-none focus:ring-2 focus:ring-[#23483F] focus:ring-offset-2">
                 <span x-text="copied ? 'Signup link copied' : 'Copy partner signup link'">Copy partner signup link</span>
             </button>

@@ -8,6 +8,7 @@
 @import "./customer-onboarding.css";
 @import "./caregiver-crm.css";
 @import "./partner-workspace.css";
+@import "./admin-partner-leads.css";
 
 @plugin "@tailwindcss/forms";
 

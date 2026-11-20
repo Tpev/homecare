@@ -170,6 +170,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
     ->group(function () {
         Route::get('/ai-support', AiSupportOverview::class)->name('ai-support.index');
         Route::get('/partners', \App\Livewire\Admin\PartnersIndex::class)->name('partners.index');
+        Route::get('/partner-leads', \App\Livewire\Admin\PartnerLeadsIndex::class)->name('partner-leads.index');
         Route::get('/ai-support/pilots', AiSupportPilotsIndex::class)->name('ai-support.pilots.index');
         Route::get('/ai-support/knowledge', AiSupportKnowledgeIndex::class)->name('ai-support.knowledge.index');
         Route::get('/ai-support/knowledge/create', AiSupportKnowledgeEditor::class)->name('ai-support.knowledge.create');
