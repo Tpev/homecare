@@ -4,6 +4,8 @@ The gift purchase admin page at `/admin/care-hours/gifts` includes date-filtered
 
 ## Deployment
 
+Before committing changes to prepaid handlers, services, views or scheduling, refresh the reviewed v2 source manifest using `bash deploy.sh --prepaid-manifest "$PWD" 2`, then run `bash deploy.sh --check-prepaid-release "$PWD"` and the deployment manifest smoke test. Commit the generated `docs/deployment/prepaid-care-hours-v1.sha256` with its matching sources. The v2 inventory includes all eight new gift event, report, delivery, migration and admin view dependencies. Keep the v1 inventory and all deployment guards intact; follow the local manifest-maintenance procedure in `docs/deployment/zero-downtime-deployments.md`.
+
 1. Deploy the application changes and build the frontend assets with the existing deployment process (`npm run build`).
 2. Run the new migration with the normal production migration process (`php artisan migrate --force`). It creates `care_hour_gift_events` and records the start of tracking; it does not backfill old visits or purchases.
 3. Keep the existing OPS configuration: `SLACK_OPS_ENABLED` and `SLACK_OPS_WEBHOOK_URL`. No new webhook or Slack credentials are required. Do not put webhook values in logs or documentation.

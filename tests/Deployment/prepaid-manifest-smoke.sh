@@ -68,6 +68,21 @@ if [[ "$version" == 2 ]]; then
     reject "$(basename "$path")"
     cp -- "$PROJECT_DIR/$path" "$fixture/$path"
   done
+  # Gift controllers, purchase reconciliation and the scheduler now require this
+  # additive analytics/notification package. Reject partial release deliveries.
+  for path in \
+    app/Console/Commands/DispatchGiftOps.php \
+    app/Jobs/SendGiftOpsNotification.php \
+    app/Models/CareHourGiftEvent.php \
+    app/Services/CareHours/GiftFunnelRecorder.php \
+    app/Services/CareHours/GiftFunnelReport.php \
+    app/Services/Ops/GiftOpsDelivery.php \
+    database/migrations/2026_11_23_000100_create_care_hour_gift_events.php \
+    resources/views/care-hours/admin/gift-funnel.blade.php; do
+    rm -- "$fixture/$path"
+    reject "$(basename "$path")"
+    cp -- "$PROJECT_DIR/$path" "$fixture/$path"
+  done
 fi
 printf 'extra manifest entry\n' >> "$fixture/$PREPAID_MANIFEST"
 reject 'manifest version or inventory is unknown'

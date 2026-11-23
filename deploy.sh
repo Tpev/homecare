@@ -418,6 +418,14 @@ config/partners.php
 database/migrations/2026_11_17_000100_create_partner_profiles_table.php
 database/migrations/2026_11_18_000100_create_partner_billing_tables.php
 database/migrations/2026_11_18_000200_create_partner_leads_table.php
+app/Console/Commands/DispatchGiftOps.php
+app/Jobs/SendGiftOpsNotification.php
+app/Models/CareHourGiftEvent.php
+app/Services/CareHours/GiftFunnelRecorder.php
+app/Services/CareHours/GiftFunnelReport.php
+app/Services/Ops/GiftOpsDelivery.php
+database/migrations/2026_11_23_000100_create_care_hour_gift_events.php
+resources/views/care-hours/admin/gift-funnel.blade.php
 EOF
 }
 
