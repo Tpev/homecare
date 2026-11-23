@@ -10,6 +10,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('homecare:dispatch-notifications --type=all')->everyTenMinutes();
 Schedule::command('ops:managed-care:dispatch')->everyMinute()->withoutOverlapping();
+Schedule::command('ops:gifts:dispatch')->everyMinute()->withoutOverlapping();
 if (config('screening.auto_refresh_enabled', false)) {
     Schedule::command('screening:refresh-datasets')->dailyAt('03:00')->withoutOverlapping();
 }

@@ -183,12 +183,6 @@
         .lolo-home .reassurance li { display: flex; align-items: flex-start; gap: 9px; }
         .lolo-home .reassurance span { text-wrap: balance; }
         .lolo-home .reassurance svg { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 1px; color: var(--green); }
-        .lolo-home .hero-press { max-width: 530px; margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line); }
-        .lolo-home .hero-press-label { margin: 0 0 16px; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
-        .lolo-home .hero-press-logos { display: grid; grid-template-columns: 1.2fr .45fr .95fr 1.65fr; align-items: center; gap: 24px; margin: 0; padding: 0; list-style: none; }
-        .lolo-home .hero-press-logos li { display: flex; align-items: center; justify-content: center; min-width: 0; height: 40px; }
-        .lolo-home .hero-press-logos img { width: 100%; height: auto; max-height: 40px; object-fit: contain; filter: grayscale(1); opacity: .64; mix-blend-mode: multiply; }
-        .lolo-home .hero-press-logos .press-ap { width: 32px; }
         .lolo-home .hero-visual { position: relative; display: flex; align-items: center; justify-content: center; height: 610px; }
         .lolo-home .hero-visual::before {
             position: absolute;
@@ -459,10 +453,6 @@
             .lolo-home .hero { padding: 48px 22px 100px; }
             .lolo-home .hero-actions { flex-direction: column; align-items: flex-start; gap: 18px; }
             .lolo-home .reassurance { gap: 16px 18px; font-size: .82rem; }
-            .lolo-home .hero-press-logos { grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 14px; }
-            .lolo-home .hero-press-logos img { max-width: 160px; }
-            .lolo-home .hero-press-logos .press-yahoo { max-width: 124px; }
-            .lolo-home .hero-press-logos .press-markets { max-width: 93px; }
             .lolo-home .hero-visual { height: 370px; }
             .lolo-home .hero-visual::before { width: 330px; height: 330px; }
             .lolo-home .hero-visual img { width: 320px; height: 320px; }
@@ -565,15 +555,7 @@
                         <span>Serving North Carolina Families</span>
                     </li>
                 </ul>
-                <aside class="hero-press" aria-labelledby="hero-press-label">
-                    <p class="hero-press-label" id="hero-press-label">As seen in</p>
-                    <ul class="hero-press-logos" role="list">
-                        <li><img class="press-yahoo" src="{{ asset('images/marketing/press/yahoo-news.svg') }}" alt="Yahoo News" width="124" height="20" decoding="async"></li>
-                        <li><img class="press-ap" src="{{ asset('images/marketing/press/associated-press.svg') }}" alt="Associated Press" width="158" height="195" decoding="async"></li>
-                        <li><img class="press-markets" src="{{ asset('images/marketing/press/markets-insider.svg') }}" alt="Markets Insider" width="93" height="30" decoding="async"></li>
-                        <li><img src="{{ asset('images/marketing/press/north-carolina-daily.png') }}" alt="North Carolina Daily" width="871" height="146" decoding="async"></li>
-                    </ul>
-                </aside>
+                <x-marketing.credibility-strip compact />
             </div>
 
             <div class="hero-visual">
@@ -633,6 +615,8 @@
                 <button class="button search" type="submit">See available caregivers</button>
             </form>
         </section>
+
+        <x-marketing.testimonials theme="home" />
 
         <section class="section caregivers" id="caregivers">
             <div class="section-head">

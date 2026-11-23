@@ -34,7 +34,9 @@ class AdminGiftController extends Controller
                 ->whereIn('care_hour_purchase_id', $gifts->pluck('id'))->groupBy('care_hour_purchase_id'))
             ->get()->keyBy('care_hour_purchase_id');
 
-        return view('care-hours.admin.gifts', compact('gifts', 'search', 'state', 'lastChecks'));
+        $funnel = app(\App\Services\CareHours\GiftFunnelReport::class)->forRequest($request);
+
+        return view('care-hours.admin.gifts', compact('gifts', 'search', 'state', 'lastChecks', 'funnel'));
     }
 
     public function show(CareHourPurchase $purchase): View

@@ -159,7 +159,9 @@
     @else
     <div class="flex flex-wrap items-center justify-between gap-3"><h1 class="font-display text-3xl font-semibold">Care-hour gifts</h1><a href="{{ route('admin.care-hours.index') }}" class="hc-secondary-button">Family balances</a></div>
     @include('care-hours.partials.messages')
+    @include('care-hours.admin.gift-funnel')
     <form method="GET" class="flex flex-wrap gap-3">
+        <input type="hidden" name="funnel_from" value="{{ $funnel['from'] }}"><input type="hidden" name="funnel_to" value="{{ $funnel['to'] }}">
         <label class="sr-only" for="gift-search">Purchase reference or buyer email</label><input id="gift-search" name="search" value="{{ $search }}" placeholder="Purchase reference or buyer email" class="min-h-12 min-w-0 flex-1 rounded-xl border-slate-300">
         <label class="sr-only" for="gift-state">Gift status</label><select id="gift-state" name="state" class="min-h-12 rounded-xl border-slate-300">@foreach(['all' => 'All gifts', 'unclaimed' => 'Awaiting claim', 'claimed' => 'Claimed', 'attention' => 'Needs attention'] as $value => $label)<option value="{{ $value }}" @selected($state === $value)>{{ $label }}</option>@endforeach</select>
         <button type="submit" class="hc-primary-button">Search</button>

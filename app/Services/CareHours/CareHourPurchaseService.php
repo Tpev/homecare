@@ -173,6 +173,7 @@ class CareHourPurchaseService
             $purchase->forceFill([
                 'stripe_checkout_session_id' => (string) $result['id'], 'checkout_url' => (string) $result['url'], 'last_error' => null,
             ])->save();
+            app(GiftFunnelRecorder::class)->purchase('checkout_started', $purchase);
         } catch (Throwable $exception) {
             $purchase->forceFill(['last_error' => 'Checkout could not be confirmed. Reconcile this attempt before replacing it.'])->save();
             report($exception);
@@ -188,6 +189,7 @@ class CareHourPurchaseService
         }
         $session = $this->gateway->retrieveCheckout($purchase->stripe_checkout_session_id);
         $this->assertSession($purchase, $session);
+        app(GiftFunnelRecorder::class)->recoveredCheckout($purchase);
         if (($session['status'] ?? '') === 'expired' && ($session['payment_status'] ?? '') !== 'paid') {
             $this->markFailed($purchase, 'expired');
 
@@ -228,11 +230,15 @@ class CareHourPurchaseService
             if ($current->correction_state !== null || $current->status === 'corrected') {
                 return;
             }
+            $firstPayment = $current->paid_at === null;
             $current->forceFill([
                 'stripe_payment_intent_id' => $financials['payment_intent_id'], 'stripe_charge_id' => $financials['charge_id'],
                 'livemode' => (bool) $financials['livemode'], 'paid_at' => $current->paid_at ?: now(),
                 'last_reconciled_at' => now(),
             ])->save();
+            if ($firstPayment) {
+                app(GiftFunnelRecorder::class)->purchase('payment_confirmed', $current);
+            }
             if ($unclaimedGift) {
                 if ($current->status !== 'held') {
                     $current->forceFill(['status' => 'paid', 'last_error' => null])->save();
@@ -300,6 +306,7 @@ class CareHourPurchaseService
                 return;
             }
             $current->forceFill(['status' => $status === 'expired' ? 'expired' : 'failed', 'last_reconciled_at' => now()])->save();
+            app(GiftFunnelRecorder::class)->purchase($status === 'expired' ? 'checkout_expired' : 'payment_failed', $current);
             DB::table('care_hour_welcome_claims')->where('care_hour_account_id', $current->care_hour_account_id)
                 ->where('care_hour_purchase_id', $current->id)->where('status', 'reserved')
                 ->update(['care_hour_purchase_id' => null, 'status' => 'available', 'updated_at' => now()]);
@@ -533,6 +540,7 @@ class CareHourPurchaseService
         if ($purchase->issued_at || $purchase->paid_at) {
             return;
         }
+        app(GiftFunnelRecorder::class)->purchase('payment_failed', $purchase);
         $this->queueNotice($purchase, 'attention', $purchase->buyer_email);
     }
 

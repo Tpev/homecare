@@ -112,7 +112,7 @@ class CareHourGiftService
         return ['email' => $verification->email, 'name' => $verification->name];
     }
 
-    public function start(#[\SensitiveParameter] string $verifiedToken, int $hours, string $quoteKey, string $requestKey, string $successUrl, string $cancelUrl): CareHourPurchase
+    public function start(#[\SensitiveParameter] string $verifiedToken, int $hours, string $quoteKey, string $requestKey, string $successUrl, string $cancelUrl, ?string $visitorId = null): CareHourPurchase
     {
         $verification = $this->verification($verifiedToken);
         if ($verification->care_hour_purchase_id !== null) {
@@ -152,6 +152,8 @@ class CareHourGiftService
 
             return $purchase;
         }, 3);
+
+        app(GiftFunnelRecorder::class)->purchase('checkout_submitted', $purchase, $visitorId);
 
         return app(CareHourPurchaseService::class)->startCheckout($purchase);
     }
@@ -333,6 +335,7 @@ class CareHourGiftService
                 'metadata' => ['purchase_id' => $purchase->id, 'care_hour_account_id' => $account->id, 'paid_minutes' => $purchase->paid_minutes, 'bonus_minutes' => $purchase->bonus_minutes],
             ]);
             app(CareHourPurchaseService::class)->queueFamilyNotices($purchase);
+            app(GiftFunnelRecorder::class)->purchase('gift_claimed', $purchase);
 
             return $purchase;
         }, 3);

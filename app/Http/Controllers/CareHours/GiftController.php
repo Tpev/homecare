@@ -23,6 +23,8 @@ class GiftController extends Controller
     {
         abort_unless(app(\App\Services\CareHours\CareHourAccess::class)->canBuyGift($request->user()), 404);
 
+        app(\App\Services\CareHours\GiftFunnelRecorder::class)->page($request, 'shop_view');
+
         return view('care-hours.gifts.buy', [
             'buyer' => $this->buyer($request), 'packages' => $this->gifts->catalog(),
             'verificationPending' => $request->session()->has('care_hours.gift_verification'),
@@ -38,6 +40,7 @@ class GiftController extends Controller
             'hours' => ['nullable', 'integer', 'in:5,10,20,40'],
         ]);
         $verification = $this->gifts->requestVerification($input['email'], $input['name']);
+        app(\App\Services\CareHours\GiftFunnelRecorder::class)->verification($request, 'verification_requested', $verification->id);
         $request->session()->forget('care_hours.gift_buyer');
         $request->session()->put('care_hours.gift_verification', $verification->id);
         if (isset($input['hours'])) {
@@ -56,6 +59,7 @@ class GiftController extends Controller
         $id = (string) $request->session()->get('care_hours.gift_verification', '');
         abort_unless($id !== '', 422);
         $token = $this->gifts->verify($id, $input['code']);
+        app(\App\Services\CareHours\GiftFunnelRecorder::class)->verification($request, 'verification_completed', $id);
         $request->session()->put('care_hours.gift_buyer', $token);
         $request->session()->forget('care_hours.gift_verification');
         if (isset($input['hours'])) {
@@ -74,7 +78,8 @@ class GiftController extends Controller
         $purchase = $this->gifts->start((string) $request->session()->get('care_hours.gift_buyer', ''),
             (int) $input['hours'], (string) ($input['quotes'][$input['hours']] ?? ''), $input['request_key'],
             url('/care-hours/gifts/receipts/{PURCHASE_ID}').'?checkout=success',
-            url('/care-hours/gifts/receipts/{PURCHASE_ID}').'?checkout=cancel');
+            url('/care-hours/gifts/receipts/{PURCHASE_ID}').'?checkout=cancel',
+            app(\App\Services\CareHours\GiftFunnelRecorder::class)->visitor($request));
 
         return $purchase->checkout_url && $purchase->status === 'pending'
             ? redirect()->away($purchase->checkout_url)

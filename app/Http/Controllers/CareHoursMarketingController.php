@@ -17,6 +17,8 @@ class CareHoursMarketingController extends Controller
 
     public function gifts(Request $request, CareHourAccess $access): View
     {
+        app(\App\Services\CareHours\GiftFunnelRecorder::class)->page($request, 'landing_view');
+
         return $this->page($request, $access, true);
     }
 

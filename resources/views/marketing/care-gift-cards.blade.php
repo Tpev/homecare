@@ -33,7 +33,6 @@
         .gift-note p { margin: 0; font: italic 22px/1.25 ChmSerif, Georgia, serif; color: #23483f; }
         .gift-note small { display: block; margin-top: 10px; font-size: 11px; color: #68746b; }
         .gift-stage-caption { position: absolute; right: 8px; bottom: -20px; font-size: 10px; color: #64746b; letter-spacing: .03em; }
-        .gift-benefit-symbol { display: block; font: 500 28px/1 ChmSerif, Georgia, serif; color: #b7634d; margin-bottom: 11px; }
         .gift-story-wrap { background: #f1ecdf; }
         .gift-story-photo { position: relative; max-width: 500px; }
         .chm .gift-story-photo img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; object-position: center; border-radius: 100px 100px 12px 12px; }
@@ -42,9 +41,6 @@
         .gift-occasions span { border: 1px solid #d7cfbd; border-radius: 100px; padding: 7px 13px; font-size: 12px; color: #4b5e53; }
         .gift-story .chm-lead { font-size: 17px; }
         .gift-story-link { display: inline-flex; gap: 10px; margin-top: 10px; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
-        .gift-steps-intro { max-width: 650px; }
-        .chm .chm-step .gift-step-number { display: grid; width: 45px; height: 45px; place-items: center; border: 1px solid #d9cdbb; border-radius: 50%; font: 500 23px/1 ChmSerif, Georgia, serif; color: #a95543; margin-bottom: 22px; }
-        .chm .gift-steps-note { text-align: center; margin-top: 34px; color: #66756b; font-size: 14px; }
         .gift-pricing { background: #f2ede3; border-top: 1px solid #e2d9c9; border-bottom: 1px solid #e2d9c9; }
         .gift-package-label { font-size: 12px; letter-spacing: .01em; color: #647168; min-height: 20px; }
         .gift-pricing .chm-package h3.gift-package-hours { margin: 14px 0 0; font: 500 36px/1.1 ChmSerif, Georgia, serif; color: #23483f; }
@@ -62,13 +58,33 @@
         .gift-faq-layout .chm-section-heading h2 { max-width: 350px; }
         .gift-closing .chm-actions { justify-content: center; flex-direction: column; }
         .gift-closing .gift-redeem-link { display: inline-block; color: #e9e1d2; font-size: 12px; text-decoration: underline; text-underline-offset: 5px; }
+        .chm .gift-review-jump { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; min-height: 32px; font-size: 12px; font-weight: 500; text-underline-offset: 4px; }
+        .gift-support { background: #e8ecdf; border-block: 1px solid #d7dfce; padding-block: 58px; }
+        .gift-support-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+        .gift-support-copy h2 { font-size: clamp(32px, 3.2vw, 46px); max-width: 540px; }
+        .chm .gift-support-copy>p { margin-top: 20px; color: var(--muted); max-width: 500px; font-size: 15px; line-height: 1.8; }
+        .gift-support-copy .gift-story-link { margin-top: 22px; }
+        .gift-support-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 24px; }
+        .gift-support-steps li { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 16px; }
+        .gift-step-number { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #b8c6ae; border-radius: 50%; font: 500 21px/1 ChmSerif, Georgia, serif; color: var(--green); }
+        .chm .gift-support-steps h3 { font-size: 25px; margin: 2px 0 9px; }
+        .chm .gift-support-steps p { color: var(--muted); font-size: 14px; line-height: 1.75; }
+        .gift-credibility-wrap { padding-block: 30px; }
         @media(max-width: 960px) {
+            .gift-support-layout { gap: 36px; }
+
             .gift-hero { padding-top: 42px; }
             .gift-stage { min-height: 420px; max-width: 550px; width: 100%; margin-inline: auto; }
             .gift-faq-layout { grid-template-columns: 1fr; gap: 30px; }
             .gift-faq-layout .chm-section-heading h2 { max-width: none; }
         }
         @media(max-width: 600px) {
+            .gift-support { padding-block: 38px; }
+            .gift-support-layout { grid-template-columns: 1fr; gap: 30px; }
+            .gift-support-steps { gap: 22px; }
+            .chm .gift-support-steps h3 { font-size: 24px; }
+            .gift-credibility-wrap { padding-block: 22px; }
+
             .gift-hero { padding-bottom: 42px; }
             .gift-stage { min-height: 355px; margin-top: 5px; }
             .gift-stage::before { width: 300px; height: 300px; }
@@ -85,7 +101,6 @@
             .gift-note p { font-size: 18px; }
             .gift-note small { margin-top: 7px; font-size: 9px; }
             .gift-stage-caption { bottom: -27px; right: 0; font-size: 9px; }
-            .chm .chm-step .gift-step-number { width: 28px; height: 28px; font-size: 17px; }
             .chm .gift-story-photo img { border-radius: 70px 70px 12px 12px; }
             .chm .gift-story-caption { left: 12px; right: 12px; bottom: 12px; padding: 12px 16px; font-size: 16px; }
             .chm .gift-pricing-note { text-align: left; }
@@ -99,12 +114,13 @@
         <div class="chm-hero-copy">
             <p class="chm-eyebrow">LoLo care gift cards</p>
             <h1 class="chm-hero-title" id="gift-title">A thoughtful gift.<br>A little more <em>care.</em></h1>
-            <p class="chm-lead">For someone who has always been there for you. Give hours of help at home, with the freedom to choose when they need it.</p>
+            <p class="chm-lead">Give hours of help at home, with a real team to arrange it. We help your loved one get started, then stay a call or text away.</p>
             <div class="chm-actions">
                 <a class="chm-button" href="#packages">Explore gift cards <span aria-hidden="true">→</span></a>
                 <a class="chm-button chm-button-secondary" href="{{ route('care-hours.claim') }}">Redeem a gift code</a>
             </div>
             <p class="chm-microcopy">From $155 · No expiry · They can create an account later</p>
+            <a class="gift-review-jump" href="#lolo-reviews">Read reviews on Trustpilot <span aria-hidden="true">↘</span></a>
         </div>
         <div class="chm-hero-visual gift-stage" role="img" aria-label="A LoLo gift for Mum from Jane, with ten hours of care and a note saying a little help, whenever you need it.">
             <div class="gift-envelope"></div>
@@ -120,11 +136,25 @@
         </div>
     </section>
 
-    <section class="chm-wrap chm-benefit-strip" aria-label="A gift that fits their life">
-        <div class="chm-benefit-item"><span class="gift-benefit-symbol" aria-hidden="true">01</span><div><strong>Useful in real life</strong><p>Companionship, everyday help and a little breathing room.</p></div></div>
-        <div class="chm-benefit-item"><span class="gift-benefit-symbol" aria-hidden="true">02</span><div><strong>Their timing. Their choice.</strong><p>They arrange care when they’re ready. The hours never expire.</p></div></div>
-        <div class="chm-benefit-item"><span class="gift-benefit-symbol" aria-hidden="true">03</span><div><strong>A simple code to share</strong><p>No recipient account needed now. They can create one to claim.</p></div></div>
+    <section class="gift-support" id="how-it-works" aria-labelledby="gift-support-title">
+        <div class="chm-wrap gift-support-layout">
+            <div class="gift-support-copy">
+                <h2 id="gift-support-title">A little help at home.<br>A real person to arrange it.</h2>
+                <p>LoLo connects families with local caregivers for non-medical help at home—companionship, meals, errands and everyday tasks.</p>
+                <p>Your loved one has one LoLo number to call or text. From arranging another visit to changing plans or asking a question, our team helps with the details.</p>
+                <a class="gift-story-link" href="{{ route('landing') }}">See how LoLo works <span aria-hidden="true">→</span></a>
+            </div>
+            <ol class="gift-support-steps">
+                <li><span class="gift-step-number" aria-hidden="true">1</span><div><h3>You give the hours.</h3><p>Choose a gift and share their private code. They can create an account when they’re ready to claim it.</p></div></li>
+                <li><span class="gift-step-number" aria-hidden="true">2</span><div><h3>We help them get started.</h3><p>After they claim their gift, our team reaches out, talks through what they need and helps arrange their first visit.</p></div></li>
+                <li><span class="gift-step-number" aria-hidden="true">3</span><div><h3>Support stays a call or text away.</h3><p>They have one number to come back to whenever they need help arranging care. We help find a caregiver and coordinate the details.</p></div></li>
+            </ol>
+        </div>
     </section>
+
+    <div class="chm-wrap gift-credibility-wrap"><x-marketing.credibility-strip /></div>
+
+    @include('marketing.partials.gift-reviews')
 
     <section class="chm-section gift-story-wrap">
         <div class="chm-wrap chm-split gift-story">
@@ -144,19 +174,6 @@
                 <a class="gift-story-link" href="#how-it-works">See how gifting works <span aria-hidden="true">↗</span></a>
             </div>
         </div>
-    </section>
-
-    <section class="chm-section chm-wrap" id="how-it-works" aria-labelledby="gift-steps-title">
-        <div class="chm-section-heading gift-steps-intro">
-            <p class="chm-eyebrow">From you, with care</p>
-            <h2 id="gift-steps-title">A gift now. Help when it’s needed.</h2>
-        </div>
-        <div class="chm-steps">
-            <article class="chm-step"><span class="gift-step-number" aria-hidden="true">1</span><h3>Choose their hours</h3><p>Pick a gift of 5, 10, 20 or 40 hours. Pay once, with the platform fee included.</p></article>
-            <article class="chm-step"><span class="gift-step-number" aria-hidden="true">2</span><h3>Share the private code</h3><p>Add it to a card or send it in a personal message. Keep the code private: it can be claimed once.</p></article>
-            <article class="chm-step"><span class="gift-step-number" aria-hidden="true">3</span><h3>They claim. They choose.</h3><p>They enter the code, sign in or create a free family account, and add the hours to their balance.</p></article>
-        </div>
-        <p class="gift-steps-note">New to LoLo? They can create their account when they’re ready to claim.</p>
     </section>
 
     <section class="chm-section gift-pricing" id="packages" aria-labelledby="gift-packages-title">

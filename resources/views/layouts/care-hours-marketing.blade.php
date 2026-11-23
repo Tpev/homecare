@@ -19,6 +19,7 @@
         <header class="chm-header chm-wrap">
             <a class="chm-logo" href="{{ route('landing') }}" aria-label="LoLo Care home"><img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" width="102" height="35" alt="LoLo"><span>CARE, WITH YOU.</span></a>
             <nav class="chm-nav" aria-label="Main navigation">
+                <a href="{{ route('landing') }}">Home</a>
                 <a href="{{ route('prepaid-care-hours') }}" @if(request()->routeIs('prepaid-care-hours')) aria-current="page" @endif>Prepaid care hours</a>
                 <a href="{{ route('care-gift-cards') }}" @if(request()->routeIs('care-gift-cards')) aria-current="page" @endif>Gift cards</a>
                 <a href="#how-it-works">How it works</a>
@@ -27,6 +28,7 @@
             <details class="chm-menu">
                 <summary aria-label="Open navigation">Menu <span aria-hidden="true">+</span></summary>
                 <nav aria-label="Mobile navigation">
+                    <a href="{{ route('landing') }}">Home</a>
                     <a href="{{ route('prepaid-care-hours') }}">Prepaid care hours</a>
                     <a href="{{ route('care-gift-cards') }}">Gift cards</a>
                     <a href="#how-it-works">How it works</a>
