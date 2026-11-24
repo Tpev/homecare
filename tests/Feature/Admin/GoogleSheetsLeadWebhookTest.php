@@ -118,6 +118,57 @@ class GoogleSheetsLeadWebhookTest extends TestCase
         ]);
     }
 
+    public function test_new_meta_row_resets_attempts_but_replaying_a_known_row_keeps_progress(): void
+    {
+        config()->set('services.google_sheets_leads.webhook_secret', 'sheet-secret');
+        $payload = [
+            'import_key' => 'first-row',
+            'row' => [
+                'Name' => 'Returning contact', 'Phone' => '9195551234',
+                'Source' => 'Meta', 'Facebook Lead ID' => 'first-meta-lead',
+            ],
+        ];
+        $this->postJson(route('webhooks.google-sheets.leads'), $payload, $this->signatureHeaders($payload))->assertOk();
+        $lead = Lead::query()->sole();
+        $lead->update(['status' => 'unreachable', 'call_attempt_count' => 7, 'unanswered_attempt_count' => 7]);
+        $firstPayload = $payload;
+        $payload['import_key'] = 'second-row';
+        $payload['row']['Facebook Lead ID'] = 'second-meta-lead';
+
+        $this->postJson(route('webhooks.google-sheets.leads'), $payload, $this->signatureHeaders($payload))
+            ->assertOk()->assertJson(['created' => false, 'lead_id' => $lead->id, 'status' => 'new']);
+        $lead->refresh();
+        $this->assertDatabaseCount('leads', 1);
+        $this->assertSame(0, $lead->call_attempt_count);
+        $this->assertSame(0, $lead->unanswered_attempt_count);
+
+        $lead->update(['status' => 'attempting_contact', 'call_attempt_count' => 1, 'unanswered_attempt_count' => 1]);
+        foreach ([$payload, $firstPayload] as $replay) {
+            $this->postJson(route('webhooks.google-sheets.leads'), $replay, $this->signatureHeaders($replay))
+                ->assertOk()->assertJson(['created' => false, 'status' => 'attempting_contact']);
+        }
+        $lead->refresh();
+        $this->assertSame(1, $lead->call_attempt_count);
+        $this->assertSame(1, $lead->unanswered_attempt_count);
+        $this->assertSame(1, $lead->activities()->where('metadata->source', 'meta_resubmission')->count());
+    }
+
+    public function test_new_non_meta_row_keeps_the_existing_status_and_attempts(): void
+    {
+        config()->set('services.google_sheets_leads.webhook_secret', 'sheet-secret');
+        $lead = Lead::create([
+            'lead_type' => Lead::TYPE_FAMILY, 'name' => 'Existing contact', 'phone' => '9195551234',
+            'status' => 'contacted', 'call_attempt_count' => 3, 'unanswered_attempt_count' => 2,
+        ]);
+        $payload = ['import_key' => 'new-row', 'row' => ['Name' => 'Contact', 'Phone' => '+19195551234']];
+
+        $this->postJson(route('webhooks.google-sheets.leads'), $payload, $this->signatureHeaders($payload))
+            ->assertOk()->assertJson(['created' => false, 'lead_id' => $lead->id, 'status' => 'contacted']);
+        $lead->refresh();
+        $this->assertSame(3, $lead->call_attempt_count);
+        $this->assertSame(2, $lead->unanswered_attempt_count);
+    }
+
     public function test_google_sheets_lead_webhook_maps_facebook_export_columns(): void
     {
         config()->set('services.google_sheets_leads.webhook_secret', 'sheet-secret');

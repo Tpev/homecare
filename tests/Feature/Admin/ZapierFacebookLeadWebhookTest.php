@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Lead;
 use App\Models\LeadActivity;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -104,6 +105,56 @@ class ZapierFacebookLeadWebhookTest extends TestCase
             'lead_id' => $lead->id,
             'summary' => 'Facebook Lead Ads lead updated via Zapier',
         ]);
+    }
+
+    #[DataProvider('returningLeadStages')]
+    public function test_new_meta_submission_reopens_existing_lead_and_resets_attempts(string $status): void
+    {
+        config()->set('services.zapier_facebook_leads.webhook_secret', 'zapier-secret');
+        $owner = User::factory()->create(['role' => 'admin']);
+        $lead = Lead::create([
+            'lead_type' => Lead::TYPE_FAMILY,
+            'name' => 'Existing contact',
+            'phone' => '(919) 555-1212',
+            'source' => 'manual_crm',
+            'status' => $status,
+            'assigned_admin_id' => $owner->id,
+            'call_attempt_count' => 7,
+            'unanswered_attempt_count' => 7,
+        ]);
+        $call = $lead->activities()->create([
+            'type' => LeadActivity::TYPE_CALL,
+            'summary' => 'Previous contact attempt',
+            'occurred_at' => now()->subDay(),
+        ]);
+        $headers = ['X-LoLo-Zapier-Token' => 'zapier-secret'];
+        $payload = $this->facebookPayload();
+
+        $this->postJson(route('api.webhooks.zapier.facebook-leads'), $payload, $headers)
+            ->assertOk()->assertJson(['created' => false, 'lead_id' => $lead->id, 'status' => 'new']);
+
+        $lead->refresh();
+        $this->assertDatabaseCount('leads', 1);
+        $this->assertSame(0, $lead->call_attempt_count);
+        $this->assertSame(0, $lead->unanswered_attempt_count);
+        $this->assertSame($owner->id, $lead->assigned_admin_id);
+        $this->assertSame($lead->id, $call->fresh()->lead_id);
+        $reset = $lead->activities()->where('metadata->source', 'meta_resubmission')->sole();
+        $this->assertSame([
+            'status' => $status, 'call_attempt_count' => 7, 'unanswered_attempt_count' => 7,
+        ], $reset->metadata['previous']);
+
+        $lead->update(['status' => 'attempting_contact', 'call_attempt_count' => 1, 'unanswered_attempt_count' => 1]);
+        $payload['Lead Id'] = 'another-new-submission';
+        $this->postJson(route('api.webhooks.zapier.facebook-leads'), $payload, $headers)
+            ->assertOk()->assertJson(['created' => false, 'lead_id' => $lead->id, 'status' => 'new']);
+        $this->assertSame(0, $lead->fresh()->call_attempt_count);
+        $this->assertSame(0, $lead->fresh()->unanswered_attempt_count);
+    }
+
+    public static function returningLeadStages(): array
+    {
+        return array_map(fn (string $status): array => [$status], array_keys(Lead::FAMILY_STAGES));
     }
 
     #[DataProvider('additionalServicePayloads')]
@@ -217,7 +268,7 @@ class ZapierFacebookLeadWebhookTest extends TestCase
 
         $this->assertDatabaseCount('leads', 1);
         $lead->refresh();
-        $this->assertSame('qualified', $lead->status);
+        $this->assertSame('new', $lead->status);
         $this->assertEqualsCanonicalizing(self::ADDITIONAL_SERVICES, $lead->additionalServices());
         $this->assertEqualsCanonicalizing(self::ADDITIONAL_SERVICES, data_get($lead->data, 'care_preferences.additional_services'));
     }

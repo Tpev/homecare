@@ -100,11 +100,18 @@ class LeadPhoneDeduplicationTest extends TestCase
     public function test_facebook_imports_keep_all_external_identities_even_when_a_replay_has_no_phone(): void
     {
         config(['services.zapier_facebook_leads.webhook_secret' => 'secret']);
-        $lead = $this->lead(['external_source' => 'facebook_lead_ads', 'external_id' => 'first', 'status' => 'qualified']);
+        $lead = $this->lead(['external_source' => 'facebook_lead_ads', 'external_id' => 'first',
+            'status' => 'unreachable', 'call_attempt_count' => 7, 'unanswered_attempt_count' => 7]);
         $headers = ['X-LoLo-Zapier-Token' => 'secret'];
         $this->postJson(route('api.webhooks.zapier.facebook-leads'), [
             'lead_id' => 'second', 'name' => 'Repeated ad submission', 'phone' => '+19195551234',
         ], $headers)->assertOk()->assertJsonPath('created', false)->assertJsonPath('lead_id', $lead->id);
+        $lead->refresh();
+        $this->assertSame('new', $lead->status);
+        $this->assertSame(0, $lead->call_attempt_count);
+        $this->assertSame(0, $lead->unanswered_attempt_count);
+
+        $lead->update(['status' => 'attempting_contact', 'call_attempt_count' => 1, 'unanswered_attempt_count' => 1]);
         $this->postJson(route('api.webhooks.zapier.facebook-leads'), [
             'lead_id' => 'second', 'name' => 'Replayed submission',
         ], $headers)->assertOk()->assertJsonPath('created', false)->assertJsonPath('lead_id', $lead->id);
@@ -112,7 +119,11 @@ class LeadPhoneDeduplicationTest extends TestCase
             'lead_id' => 'first', 'name' => 'Original submission replay',
         ], $headers)->assertOk()->assertJsonPath('created', false)->assertJsonPath('lead_id', $lead->id);
         $this->assertDatabaseCount('leads', 1);
-        $this->assertSame('qualified', $lead->fresh()->status);
+        $lead->refresh();
+        $this->assertSame('attempting_contact', $lead->status);
+        $this->assertSame(1, $lead->call_attempt_count);
+        $this->assertSame(1, $lead->unanswered_attempt_count);
+        $this->assertSame(1, $lead->activities()->where('metadata->source', 'meta_resubmission')->count());
     }
 
     public function test_editing_a_phone_combines_records_and_keeps_the_open_record_id(): void

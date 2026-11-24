@@ -53,6 +53,10 @@ class LeadDeduplicator
                         }
                     }
 
+                    if ($current) {
+                        $this->restartForNewMetaSubmission($lead, $lead);
+                    }
+
                     $this->rememberIdentity($lead, $lead->getOriginal('external_source'), $lead->getOriginal('external_id'));
                     $saved = $lead->saveWithoutDeduplication($options);
                     if ($saved) {
@@ -181,6 +185,10 @@ class LeadDeduplicator
             });
         }
 
+        if (! $persisted) {
+            $this->restartForNewMetaSubmission($survivor, $duplicate);
+        }
+
         if (! $survivor->saveWithoutDeduplication()) {
             throw new \RuntimeException('The surviving lead could not be saved. No records were merged.');
         }
@@ -204,6 +212,43 @@ class LeadDeduplicator
         if ($persisted) {
             DB::table('leads')->where('id', $duplicate->id)->delete();
         }
+    }
+
+    private function restartForNewMetaSubmission(Lead $lead, Lead $submission): void
+    {
+        // A new external identity represents another submission; webhook retries and
+        // ordinary CRM edits must keep any contact progress made since that submission.
+        if (! $submission->isFacebookLead()
+            || ! in_array($submission->external_source, ['facebook_lead_ads', 'google_sheets'], true)
+            || blank($submission->external_id)
+            || Lead::query()->externalIdentity($submission->external_source, $submission->external_id)->exists()) {
+            return;
+        }
+
+        $previous = [
+            'status' => $lead->status,
+            'call_attempt_count' => (int) $lead->call_attempt_count,
+            'unanswered_attempt_count' => (int) $lead->unanswered_attempt_count,
+        ];
+
+        $lead->forceFill([
+            'status' => 'new',
+            'call_attempt_count' => 0,
+            'unanswered_attempt_count' => 0,
+        ]);
+
+        $lead->activities()->create([
+            'type' => LeadActivity::TYPE_STAGE_CHANGE,
+            'summary' => 'New Meta submission restarted contact attempts',
+            'occurred_at' => now(),
+            'metadata' => [
+                'source' => 'meta_resubmission',
+                'external_source' => $submission->external_source,
+                'external_id' => $submission->external_id,
+                'previous' => $previous,
+                'status' => 'new',
+            ],
+        ]);
     }
 
     private function rememberIdentity(Lead $lead, ?string $source, ?string $id): void
