@@ -50,6 +50,7 @@ class SdrCrmAccessTest extends TestCase
             foreach ([
                 'admin.crm.index' => 'CRM',
                 'admin.customer-onboarding.index' => 'Customer onboarding',
+                'admin.care-assistance.index' => 'Care assistance',
                 'admin.family-acquisition.leads' => 'Family leads CRM',
                 'sdr.family-calling' => 'Family calling console',
                 'sdr.calling' => 'Referral outreach',

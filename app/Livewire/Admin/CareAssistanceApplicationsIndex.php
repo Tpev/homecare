@@ -22,7 +22,7 @@ class CareAssistanceApplicationsIndex extends Component
 
     public function mount(): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
 
         if (! in_array($this->status, ['all', ...array_keys(CareAssistanceApplication::STATUS_LABELS)], true)) {
             $this->status = 'all';
@@ -31,27 +31,27 @@ class CareAssistanceApplicationsIndex extends Component
 
     public function updatedStatus(): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         $this->validate(['status' => ['required', Rule::in(['all', ...array_keys(CareAssistanceApplication::STATUS_LABELS)])]]);
         $this->resetPage();
     }
 
     public function updatedSearch(): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         $this->resetPage();
     }
 
     public function clearFilters(): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         $this->reset('status', 'search');
         $this->resetPage();
     }
 
     public function render(): View
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
 
         $query = CareAssistanceApplication::query()->with('reviewer:id,name');
         $search = trim(mb_substr($this->search, 0, 255));
@@ -88,8 +88,9 @@ class CareAssistanceApplicationsIndex extends Component
         ])->title('Care assistance applications | LoLo Care');
     }
 
-    private function authorizeAdministrator(): void
+    private function authorizeAccess(): void
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $user = auth()->user();
+        abort_unless($user?->canAccessCareAssistance() && $user->fresh()?->canAccessCareAssistance(), 403);
     }
 }

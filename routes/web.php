@@ -150,6 +150,15 @@ Route::middleware(['web', 'auth', 'sdr.access'])
         Route::get('/family-calling', FamilyCallingConsole::class)->name('family-calling');
     });
 
+Route::middleware(['web', 'auth', 'care-assistance.access', \App\Http\Middleware\CareAssistancePrivacyHeaders::class])
+    ->prefix('admin/care-assistance')
+    ->name('admin.care-assistance.')
+    ->group(function () {
+        Route::get('/', CareAssistanceApplicationsIndex::class)->name('index');
+        Route::get('/{application}', CareAssistanceApplicationShow::class)
+            ->whereNumber('application')->name('show');
+    });
+
 Route::middleware(['web', 'auth', 'content.access'])
     ->prefix('admin/content')
     ->name('admin.content.')
@@ -184,11 +193,6 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
-        Route::get('/care-assistance', CareAssistanceApplicationsIndex::class)
-            ->middleware(\App\Http\Middleware\CareAssistancePrivacyHeaders::class)->name('care-assistance.index');
-        Route::get('/care-assistance/{application}', CareAssistanceApplicationShow::class)
-            ->middleware(\App\Http\Middleware\CareAssistancePrivacyHeaders::class)
-            ->whereNumber('application')->name('care-assistance.show');
         Route::get('/support/tickets/{ticket}', SupportTicketShow::class)
             ->whereNumber('ticket')
             ->name('support.tickets.show');

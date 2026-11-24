@@ -25,21 +25,21 @@ class CareAssistanceApplicationShow extends Component
 
     public function mount(CareAssistanceApplication $application): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         $this->applicationId = $application->id;
         $this->syncApplication($application->fresh());
     }
 
     public function saveNotes(): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         $this->persistReview();
         session()->flash('status', 'Private notes saved.');
     }
 
     public function updateStatus(string $status): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         Validator::make(['status' => $status], [
             'status' => ['required', 'string', Rule::in(array_keys(CareAssistanceApplication::STATUS_LABELS))],
         ])->validate();
@@ -50,7 +50,7 @@ class CareAssistanceApplicationShow extends Component
 
     public function reloadApplication(): void
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
         $this->syncApplication(CareAssistanceApplication::query()->findOrFail($this->applicationId));
         $this->resetValidation();
         session()->flash('status', 'The latest application and saved notes have been loaded.');
@@ -58,7 +58,7 @@ class CareAssistanceApplicationShow extends Component
 
     public function render(): View
     {
-        $this->authorizeAdministrator();
+        $this->authorizeAccess();
 
         return view('livewire.admin.care-assistance-application-show', [
             'application' => CareAssistanceApplication::query()
@@ -119,8 +119,9 @@ class CareAssistanceApplicationShow extends Component
         ], JSON_THROW_ON_ERROR));
     }
 
-    private function authorizeAdministrator(): void
+    private function authorizeAccess(): void
     {
-        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $user = auth()->user();
+        abort_unless($user?->canAccessCareAssistance() && $user->fresh()?->canAccessCareAssistance(), 403);
     }
 }

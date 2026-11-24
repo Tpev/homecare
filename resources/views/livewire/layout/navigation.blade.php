@@ -154,11 +154,17 @@ new class extends Component
             'href' => route('customer-care.gifts'),
             'active' => request()->routeIs('customer-care.gifts'),
         ];
+        $careAssistanceLink = [
+            'label' => 'Care assistance',
+            'href' => route('admin.care-assistance.index'),
+            'active' => request()->routeIs('admin.care-assistance.*'),
+        ];
         $customerCareNavLinks = [
             $customerCareLink,
             ['label' => 'Customer onboarding', 'href' => route('admin.customer-onboarding.index'),
                 'active' => request()->routeIs('admin.customer-onboarding.*', 'admin.family-onboarding.*')],
             $giftPurchasesLink,
+            ...($user?->canAccessCareAssistance() ? [$careAssistanceLink] : []),
         ];
 
         $sdrNavLinks = [
@@ -466,7 +472,7 @@ new class extends Component
         if ($usesAdminOrSalesNavigation) {
             $primaryLinks = [$adminCrmLink];
         } elseif ($isSdr) {
-            $primaryLinks = array_merge($sdrNavLinks, [$customerCareLink, $giftPurchasesLink]);
+            $primaryLinks = array_merge($sdrNavLinks, [$customerCareLink, $giftPurchasesLink, $careAssistanceLink]);
         } elseif ($isCustomerSuccess) {
             $primaryLinks = $customerCareNavLinks;
         } elseif ($isPartner) {
@@ -1006,6 +1012,7 @@ new class extends Component
                         </div>
                         <a href="{{ route('admin.crm.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">CRM</a>
                         <a href="{{ route('admin.customer-onboarding.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Customer onboarding</a>
+                        <a href="{{ $careAssistanceLink['href'] }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Care assistance</a>
                         <a href="{{ route('sdr.family-calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Family calling console</a>
                         <a href="{{ route('admin.family-acquisition.leads') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Family leads CRM</a>
                         <a href="{{ route('sdr.calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Referral outreach</a>
@@ -1142,6 +1149,7 @@ new class extends Component
                     @if ($isSdr)
                         <x-responsive-nav-link :href="route('admin.crm.index')" wire:navigate>{{ __('CRM') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.customer-onboarding.index')" wire:navigate>{{ __('Customer onboarding') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="$careAssistanceLink['href']" wire:navigate>{{ __('Care assistance') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.family-calling')" wire:navigate>{{ __('Family calling console') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.family-acquisition.leads')" wire:navigate>{{ __('Family leads CRM') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.calling')" wire:navigate>{{ __('Referral outreach') }}</x-responsive-nav-link>

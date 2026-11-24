@@ -2,26 +2,27 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Livewire\Admin\CareAssistanceApplicationsIndex;
 use App\Livewire\Admin\CareAssistanceApplicationShow;
+use App\Livewire\Admin\CareAssistanceApplicationsIndex;
 use App\Models\CareAssistanceApplication;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CareAssistanceReviewTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_and_non_admins_cannot_read_applications_or_review_components(): void
+    public function test_guests_and_unauthorized_roles_cannot_read_applications_or_review_components(): void
     {
         $application = $this->application();
         $this->get(route('admin.care-assistance.index'))->assertRedirect(route('login'));
         $this->get(route('admin.care-assistance.show', $application))->assertRedirect(route('login'));
-        foreach (['family', 'caregiver'] as $role) {
+        foreach (['family', 'caregiver', 'sales', 'customer_success', 'partner'] as $role) {
             $user = User::factory()->create(['role' => $role]);
             $this->actingAs($user)->get(route('admin.care-assistance.index'))->assertForbidden();
             $this->get(route('admin.care-assistance.show', $application))->assertForbidden();
@@ -30,9 +31,10 @@ class CareAssistanceReviewTest extends TestCase
         }
     }
 
-    public function test_admin_can_filter_queue_and_open_an_application(): void
+    #[DataProvider('reviewerRoles')]
+    public function test_authorized_staff_can_filter_queue_and_open_an_application(string $role): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => $role]);
         $application = $this->application();
         $this->application(['name' => 'Morgan Reviewed', 'status' => 'declined']);
         $this->actingAs($admin)->get(route('admin.care-assistance.index'))->assertOk();
@@ -44,11 +46,12 @@ class CareAssistanceReviewTest extends TestCase
             ->set('status', 'all')->set('search', 'Morgan')->assertSee('Morgan Reviewed')->assertDontSee('Avery Applicant');
     }
 
-    public function test_admin_can_save_private_notes_approve_and_decline_with_reviewer_identity(): void
+    #[DataProvider('reviewerRoles')]
+    public function test_authorized_staff_can_save_private_notes_approve_and_decline_with_reviewer_identity(string $role): void
     {
         Mail::fake();
         Notification::fake();
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => $role]);
         $application = $this->application();
         $component = Livewire::actingAs($admin)->test(CareAssistanceApplicationShow::class, ['application' => $application]);
         $component->set('internalNotes', 'Discuss availability with the applicant.')->call('saveNotes')->assertHasNoErrors();
@@ -92,14 +95,47 @@ class CareAssistanceReviewTest extends TestCase
         $this->assertNull($application->fresh()->internal_notes);
     }
 
-    public function test_review_actions_recheck_admin_access_after_mount(): void
+    #[DataProvider('changedReviewerAccess')]
+    public function test_review_actions_recheck_persisted_access_after_mount(string $role, bool $revoked, string $action): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => $role]);
         $application = $this->application();
-        $component = Livewire::actingAs($admin)->test(CareAssistanceApplicationShow::class, ['application' => $application]);
-        $admin->update(['role' => 'family']);
-        $component->call('updateStatus', 'approved')->assertForbidden();
+        $component = Livewire::actingAs($admin)->test(CareAssistanceApplicationShow::class, ['application' => $application])
+            ->set('internalNotes', 'This note must not be saved.');
+        User::whereKey($admin->id)->update($revoked ? ['access_revoked_at' => now()] : ['role' => 'family']);
+        $component->call($action, ...($action === 'updateStatus' ? ['approved'] : []))->assertForbidden();
         $this->assertSame('new', $application->fresh()->status);
+        $this->assertNull($application->fresh()->internal_notes);
+        $this->assertNull($application->fresh()->reviewed_by);
+    }
+
+    public static function reviewerRoles(): array
+    {
+        return [['admin'], ['sdr']];
+    }
+
+    public static function changedReviewerAccess(): array
+    {
+        $cases = [];
+        foreach (['admin', 'sdr'] as $role) {
+            foreach ([false, true] as $revoked) {
+                foreach (['saveNotes', 'updateStatus', 'reloadApplication'] as $action) {
+                    $cases[$role.' '.$action.($revoked ? ' revoked' : ' role changed')] = [$role, $revoked, $action];
+                }
+            }
+        }
+
+        return $cases;
+    }
+
+    public function test_sdr_care_assistance_access_does_not_grant_other_admin_permissions(): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr']);
+        $this->actingAs($sdr)->get(route('admin.care-assistance.index'))->assertOk();
+        foreach (['admin.users.index', 'admin.payments.ops', 'admin.sms.index'] as $route) {
+            $this->get(route($route))->assertForbidden();
+        }
+        $this->assertFalse($sdr->isAdministrator());
     }
 
     public function test_applicant_html_is_rendered_as_text(): void

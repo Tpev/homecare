@@ -106,6 +106,11 @@ class User extends Authenticatable
         return $this->canManageCustomerCare();
     }
 
+    public function canAccessCareAssistance(): bool
+    {
+        return $this->access_revoked_at === null && in_array($this->role, ['admin', 'sdr'], true);
+    }
+
     public function canManageCustomerCare(): bool
     {
         return $this->access_revoked_at === null && in_array($this->role, ['admin', 'sdr', 'customer_success'], true);
