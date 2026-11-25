@@ -123,6 +123,7 @@ class ManagedCareService
         DB::transaction(function () use ($actor, $request, $caregiverId, $reason, $fundingSource): void {
             $request = $this->locked($actor, $request);
             $this->require($request->status === 'open' && $request->isAcceptingApplications(), 'This request is not open for hiring.');
+            $this->require(! $request->isCareAssistance() || $fundingSource === 'card', 'Care Assistance uses the family’s saved card. Prepaid care hours cannot fund this request.');
             $caregiver = User::where('role', 'caregiver')->whereNull('access_revoked_at')->findOrFail($caregiverId);
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork($caregiverId);
             $this->require($caregiver->caregiverProfile?->isMarketplaceReady() === true, 'This caregiver is not ready for marketplace work.');
@@ -133,7 +134,7 @@ class ManagedCareService
             }
             $application = $request->applications()->firstOrCreate(['caregiver_user_id' => $caregiverId], [
                 'status' => CareRequestApplication::STATUS_APPLIED,
-                'proposed_rate' => app(\App\Support\MarketplacePricing::class)->caregiverGrossHourlyCents() / 100,
+                'proposed_rate' => app(\App\Support\MarketplacePricing::class)->caregiverQuoteForRequest($request, $caregiverId)['caregiver_gross_rate_cents'] / 100,
                 'cover_note' => 'Placement coordinated by the LoLo Care team.',
             ]);
             // Existing withdrawn/rejected offers must not be silently revived.

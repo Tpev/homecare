@@ -35,6 +35,7 @@
                         <div class="space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="font-display font-semibold text-[#17313F]">{{ $invitation->careRequest?->title }}</p>
+                                <x-care-assistance-badge :active="$invitation->careRequest?->isCareAssistance()" />
                                 @if ($invitation->careRequest?->is_private)
                                     <x-badge text="PRIVATE" color="indigo" />
                                 @endif
@@ -55,6 +56,9 @@
                         <x-badge :text="strtoupper($invitation->status)" color="blue" />
                     </div>
 
+                    @if ($invitation->careRequest?->isCareAssistance())
+                        <p class="mt-3 text-sm font-semibold">Caregiver pay: $20.00/hour before Stripe processing fees.</p>
+                    @endif
                     @if ($invitation->message)
                         <div class="mt-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">
                             {{ $invitation->message }}

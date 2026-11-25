@@ -12,6 +12,7 @@ Route::middleware(['auth', EnsureCustomerCareAccess::class, CareHoursPrivacyHead
         Route::get('/gifts', [CustomerCareController::class, 'gifts'])->name('gifts');
         Route::post('/customers', [CustomerCareController::class, 'createCustomer'])->middleware('throttle:20,1')->name('customers.store');
         Route::get('/customers/{customer}', [CustomerCareController::class, 'customer'])->whereNumber('customer')->name('customer');
+        Route::post('/customers/{customer}/care-assistance', [CustomerCareController::class, 'careAssistance'])->whereNumber('customer')->middleware('throttle:20,1')->name('care-assistance');
         Route::post('/customers/{customer}/credits', [CustomerCareController::class, 'credit'])->whereNumber('customer')->middleware('throttle:20,1')->name('credit');
         Route::get('/customers/{customer}/requests/create', [CustomerCareController::class, 'create'])->whereNumber('customer')->name('create');
         Route::post('/customers/{customer}/requests', [CustomerCareController::class, 'store'])->whereNumber('customer')->name('store');

@@ -22,7 +22,7 @@ class CareAssistanceReviewTest extends TestCase
         $application = $this->application();
         $this->get(route('admin.care-assistance.index'))->assertRedirect(route('login'));
         $this->get(route('admin.care-assistance.show', $application))->assertRedirect(route('login'));
-        foreach (['family', 'caregiver', 'sales', 'customer_success', 'partner'] as $role) {
+        foreach (['family', 'caregiver', 'sales', 'partner'] as $role) {
             $user = User::factory()->create(['role' => $role]);
             $this->actingAs($user)->get(route('admin.care-assistance.index'))->assertForbidden();
             $this->get(route('admin.care-assistance.show', $application))->assertForbidden();
@@ -111,7 +111,7 @@ class CareAssistanceReviewTest extends TestCase
 
     public static function reviewerRoles(): array
     {
-        return [['admin'], ['sdr']];
+        return [['admin'], ['sdr'], ['customer_success']];
     }
 
     public static function changedReviewerAccess(): array

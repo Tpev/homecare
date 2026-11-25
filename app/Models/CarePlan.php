@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
+use App\Models\Concerns\HasCareAssistancePricing;
 use App\Support\WeeklySchedule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CarePlan extends Model
 {
-    use BelongsToFamilyAccount, HasFactory;
+    use BelongsToFamilyAccount, HasCareAssistancePricing, HasFactory;
 
     /** Include the separate caregiver agreements created for selected-day offers. */
     public function scopeForSourceRequest(Builder $query, CareRequest $request): Builder

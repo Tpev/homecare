@@ -52,6 +52,11 @@ class CareAssistanceApplication extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function familyAccount(): BelongsTo
+    {
+        return $this->belongsTo(FamilyAccount::class);
+    }
+
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');

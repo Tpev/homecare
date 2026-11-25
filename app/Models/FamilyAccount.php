@@ -38,6 +38,11 @@ class FamilyAccount extends Model
         return $this->belongsTo(User::class, 'owner_user_id');
     }
 
+    public function careAssistance(): HasOne
+    {
+        return $this->hasOne(CarePricingAgreement::class)->where('program', CarePricingAgreement::CARE_ASSISTANCE)->where('active', true);
+    }
+
     public function onboarding(): HasOne
     {
         return $this->hasOne(FamilyOnboarding::class);

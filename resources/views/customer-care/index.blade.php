@@ -29,7 +29,7 @@
                 <div class="space-y-3">
                     @forelse($requests as $item)
                         <a class="hc-care-visit-row group" href="{{ route('customer-care.show', $item) }}">
-                            <div class="min-w-0"><p class="hc-care-eyebrow">{{ $item->family?->name }}</p><h3 class="mt-1 text-lg font-semibold group-hover:underline">{{ $item->title }}</h3><p class="hc-care-meta mt-2">{{ $item->isRecurring() ? 'Recurring care' : $item->requested_start_at?->format('M j, Y · g:i A') }} · {{ $item->applications_count }} applicants</p></div>
+                            <div class="min-w-0"><p class="hc-care-eyebrow">{{ $item->family?->name }}</p><h3 class="mt-1 text-lg font-semibold group-hover:underline">{{ $item->title }}</h3><x-care-assistance-badge :active="$item->isCareAssistance()" /><p class="hc-care-meta mt-2">{{ $item->isRecurring() ? 'Recurring care' : $item->requested_start_at?->format('M j, Y · g:i A') }} · {{ $item->applications_count }} applicants</p></div>
                             <span class="hc-care-status">{{ $archived ? 'Archived' : ucfirst(str_replace('_', ' ', $item->booking?->status ?? $item->status)) }}</span>
                         </a>
                     @empty<div class="hc-care-soft p-8 text-center"><h3 class="text-lg font-semibold">{{ $archived ? 'No archived requests' : 'No requests found' }}</h3><p class="hc-care-subtitle">{{ $archived ? 'Removed requests stay here with their history.' : 'Choose a family to create their first request, or try a different search.' }}</p></div>@endforelse
@@ -37,9 +37,9 @@
                 <div class="mt-5">{{ $requests->links() }}</div>
             </section>
             <section id="customers" class="hc-surface p-5 sm:p-6">
-                <h2 class="text-2xl font-semibold">Families</h2><p class="hc-care-subtitle">Open an account to arrange care or add prepaid hours.</p>
+                <a class="hc-care-text-link" href="{{ route('admin.care-assistance.index') }}">Care Assistance applications →</a><h2 class="text-2xl font-semibold mt-4">Families</h2><p class="hc-care-subtitle">Open an account to arrange care or add prepaid hours.</p>
                 <div class="mt-5 space-y-3">
-                    @forelse($customers as $customer)<a class="block rounded-2xl border border-[#E3D6C5] p-4 transition hover:bg-[#F8F0E2]" href="{{ route('customer-care.customer', $customer) }}"><p class="text-sm font-semibold">{{ $customer->name }}</p><p class="hc-care-meta mt-1 break-all">{{ $customer->email }}</p></a>@empty<p class="hc-care-subtitle">No matching families.</p>@endforelse
+                    @forelse($customers as $customer)<a class="block rounded-2xl border border-[#E3D6C5] p-4 transition hover:bg-[#F8F0E2]" href="{{ route('customer-care.customer', $customer) }}"><p class="text-sm font-semibold">{{ $customer->name }}</p><x-care-assistance-badge :active="$customer->ownedFamilyAccount?->careAssistance !== null" /><p class="hc-care-meta mt-1 break-all">{{ $customer->email }}</p></a>@empty<p class="hc-care-subtitle">No matching families.</p>@endforelse
                 </div>
                 <div class="mt-5">{{ $customers->links() }}</div>
                 <details class="mt-5 border-t border-[#E3D6C5] pt-3"><summary class="cursor-pointer text-sm font-semibold">Create a family account</summary>

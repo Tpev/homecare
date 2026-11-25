@@ -434,10 +434,10 @@ class CarePlanOccurrenceService
 
                 $address = $plan->address_snapshot ?? [];
                 $recipient = $plan->recipient_snapshot ?? [];
-                $agreement = $this->pricing->agreementForPair($plan->family_account_id, $plan->caregiver_user_id);
+                $agreement = $this->pricing->agreementForWork($plan, $plan->caregiver_user_id);
                 $hourlyRate = $agreement
                     ? $agreement->family_care_rate_cents / 100
-                    : $this->pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
+                    : $this->pricing->hourlyRateForFamilyEmail($plan->family?->email, (float) $plan->hourly_rate);
 
                 $request = CareRequest::query()->create([
                     'family_account_id' => $plan->family_account_id,

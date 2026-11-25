@@ -41,7 +41,7 @@ class CaregiverWorkInboxBuilder
         $pendingInvitations = CareRequestInvitation::query()
             ->with([
                 'family:id,name',
-                'careRequest:id,family_account_id,family_user_id,title,request_type,preferred_response_hours,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on,city,state,status',
+                'careRequest:id,care_assistance_pricing_agreement_id,family_account_id,family_user_id,title,request_type,preferred_response_hours,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on,city,state,status',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
@@ -143,7 +143,7 @@ class CaregiverWorkInboxBuilder
 
         $applications = CareRequestApplication::query()
             ->with([
-                'careRequest:id,family_account_id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on,city,state,status,created_at',
+                'careRequest:id,care_assistance_pricing_agreement_id,family_account_id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on,city,state,status,created_at',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'conversation:id,care_request_application_id',
@@ -733,7 +733,7 @@ class CaregiverWorkInboxBuilder
 
     private function planCompensation(CarePlan $plan, ?int $minutes): ?array
     {
-        $quote = app(MarketplacePricing::class)->quoteForPair((int) $plan->family_account_id, (int) $plan->caregiver_user_id, 60);
+        $quote = app(MarketplacePricing::class)->quoteForPlan($plan, (int) $plan->caregiver_user_id, 60);
 
         return $this->compensationPayload($minutes, $quote['caregiver_gross_rate_cents'] / 100,
             $quote['caregiver_fee_policy'] === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING);

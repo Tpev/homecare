@@ -42,6 +42,7 @@ class ContinuousCoveragePricingService
             'caregiver_user_id' => $caregiver->id,
             'expected_minutes' => max(1, $workedMinutes),
         ]);
+        $booking->setRelation('carePlan', $plan);
         $booking->forceFill($this->pricing->currentSnapshotAttributes($booking));
         $booking->setRelation('application', $application);
         $booking->setRelation('family', $plan->family);

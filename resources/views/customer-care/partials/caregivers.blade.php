@@ -2,7 +2,7 @@
 <div class="mb-5">
 <p class="hc-care-eyebrow">Find the right fit</p>
 <h2 class="mb-4 text-xl font-semibold">Applicants</h2>
-<p class="hc-care-subtitle">Review responses, shortlist caregivers, and confirm the placement using prepaid hours.</p>
+<p class="hc-care-subtitle">Review responses, shortlist caregivers, and confirm the placement using the family's saved card or eligible prepaid hours.</p>
 </div>
 <div class="space-y-4">
 @forelse($careRequest->applications as $application)<div class="rounded-xl border border-[#e3d6c5] p-4">
@@ -66,7 +66,8 @@
 <label class="block text-sm font-semibold">Placement agreement / internal note<textarea class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reason" required minlength="5" maxlength="2000">
 </textarea>
 </label>
-<button class="hc-primary-button">Hire and reserve prepaid hours</button>
+<label class="block text-sm font-semibold">Payment<select name="funding_source" class="mt-2 block w-full rounded-xl border px-3 py-2"><option value="card">Family’s saved card</option>@unless($careRequest->isCareAssistance())<option value="prepaid">Use care hours</option>@endunless</select></label>
+<button class="hc-primary-button">Confirm hire</button>
 </form>
 </details>
 </section>

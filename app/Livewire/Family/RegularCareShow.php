@@ -294,8 +294,8 @@ class RegularCareShow extends Component
         $agreement = in_array($this->plan->status, [
             CarePlan::STATUS_DRAFT, CarePlan::STATUS_PENDING_CAREGIVER, CarePlan::STATUS_COUNTERED,
             CarePlan::STATUS_ACTIVE, CarePlan::STATUS_PAYMENT_ATTENTION, CarePlan::STATUS_PAUSED,
-        ], true) ? app(MarketplacePricing::class)->agreementForPair(
-            (int) $this->plan->family_account_id, (int) $this->plan->caregiver_user_id,
+        ], true) ? app(MarketplacePricing::class)->agreementForWork(
+            $this->plan, (int) $this->plan->caregiver_user_id,
         ) : null;
         $upcomingVisits = $this->upcomingQuery($this->visitQuery())->orderBy('scheduled_start_at')->get();
         $nextVisit = $upcomingVisits->first(fn (CareBooking $booking): bool => in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true))
@@ -355,7 +355,7 @@ class RegularCareShow extends Component
         return CareBooking::query()->where('care_plan_id', $this->plan->id)
             ->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
             ->with([
-                'careRequest:id,title,address_line1,address_line2,city,state,zip',
+                'careRequest:id,care_assistance_pricing_agreement_id,title,address_line1,address_line2,city,state,zip',
                 'caregiver:id,name', 'payment', 'latestTimeCorrection',
                 'changeRequests' => fn ($query) => $query->where('status', CareBookingChangeRequest::STATUS_PENDING),
                 'reviews' => fn ($query) => $query->where('reviewer_user_id', auth()->id()),

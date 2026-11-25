@@ -65,6 +65,9 @@ class CareRequestRecruitmentEmail
         }
 
         // Match the gross caregiver rate shown on the application page, never the family budget.
+        if ($request->isCareAssistance()) {
+            $details[] = ['label' => 'Program', 'value' => 'Care Assistance'];
+        }
         $quote = $this->pricing->caregiverQuoteForRequest($request, (int) $caregiver->id);
         $details[] = [
             'label' => 'Gross caregiver rate',

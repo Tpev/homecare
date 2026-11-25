@@ -132,8 +132,8 @@ class RegularCareComposer extends Component
 
     public function render(CarePlanService $plans)
     {
-        $quote = app(\App\Support\MarketplacePricing::class)->quoteForPair(
-            $this->requestItem->family_account_id,
+        $quote = app(\App\Support\MarketplacePricing::class)->quoteForRequest(
+            $this->requestItem,
             (int) $this->hiredApplication?->caregiver_user_id,
             60,
         );
@@ -143,7 +143,7 @@ class RegularCareComposer extends Component
             'hiredApplication' => $this->hiredApplication,
             'platformRate' => $quote['pricing_agreement_id']
                 ? $quote['hourly_rate']
-                : $plans->hourlyRateForFamily(auth()->user()),
+                : app(\App\Support\MarketplacePricing::class)->hourlyRateForRequest($this->requestItem, $plans->platformHourlyRate()),
             'processingFeeRate' => $quote['family_processing_fee_rate_cents'] / 100,
             'careHoursAccount' => $quote['pricing_agreement_id'] ? null : $this->careHoursAccount(),
         ]);

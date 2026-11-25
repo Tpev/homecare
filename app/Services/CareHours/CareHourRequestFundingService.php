@@ -28,13 +28,13 @@ class CareHourRequestFundingService
     public function accountForRequest(CareRequest $request, User $actor, ?CareRequestApplication $application = null): ?CareHourAccount
     {
         if (! $this->available() || ! app(FamilyAccountContext::class)->canAccessRecord($actor, $request)
-            || $request->care_arrangement_id || $request->pricing_agreement_id
+            || $request->care_arrangement_id || $request->pricing_agreement_id || $request->isCareAssistance()
             || ($application && ((int) $application->care_request_id !== (int) $request->id
                 || ($request->request_type === CareRequest::TYPE_RECURRING && $application->selected_days !== null)))) {
             return null;
         }
         $familyId = (int) ($request->family_account_id ?: app(FamilyAccountContext::class)->account($actor)->id);
-        if ($application && app(MarketplacePricing::class)->quoteForPair($familyId, (int) $application->caregiver_user_id, 60)['pricing_agreement_id']) {
+        if ($application && app(MarketplacePricing::class)->quoteForRequest($request, (int) $application->caregiver_user_id, 60)['pricing_agreement_id']) {
             return null;
         }
         $booking = new CareBooking(['family_account_id' => $familyId]);

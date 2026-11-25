@@ -51,7 +51,7 @@ class InvitationsIndex extends Component
         return CareRequestInvitation::query()
             ->where('caregiver_user_id', auth()->id())
             ->with([
-                'careRequest:id,title,status,request_type,preferred_response_hours,is_private,city,state,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on',
+                'careRequest:id,care_assistance_pricing_agreement_id,family_account_id,title,status,request_type,preferred_response_hours,is_private,city,state,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'family:id,name',
                 'application:id',
@@ -65,7 +65,7 @@ class InvitationsIndex extends Component
         CareRequestInvitation::query()
             ->where('caregiver_user_id', auth()->id())
             ->where('status', CareRequestInvitation::STATUS_PENDING)
-            ->with('careRequest:id,request_type,preferred_response_hours,requested_start_at,requested_end_at')
+            ->with('careRequest:id,care_assistance_pricing_agreement_id,request_type,preferred_response_hours,requested_start_at,requested_end_at')
             ->get()
             ->filter(fn (CareRequestInvitation $invitation): bool => $invitation->isExpired())
             ->each(fn (CareRequestInvitation $invitation) => $invitation->update([
@@ -74,7 +74,7 @@ class InvitationsIndex extends Component
 
         $invitations = CareRequestInvitation::query()
             ->with([
-                'careRequest:id,title,status,request_type,preferred_response_hours,is_private,city,state,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on',
+                'careRequest:id,care_assistance_pricing_agreement_id,family_account_id,title,status,request_type,preferred_response_hours,is_private,city,state,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'family:id,name',
                 'application:id',

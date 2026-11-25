@@ -257,7 +257,9 @@ class CareRequestInvitationService
                 recipients: $invitation->caregiver,
                 eventKey: MarketplaceEvent::INVITATION_RECEIVED,
                 title: ($staffActor ? 'The LoLo Care team' : $family->name).' invited you to a care request',
-                body: 'Review the schedule, approximate location, requested care, and rate before you respond.',
+                body: $careRequest->isCareAssistance()
+                    ? 'Care Assistance: $20.00/hour before Stripe processing fees. Review the schedule and requested care before you respond.'
+                    : 'Review the schedule, approximate location, requested care, and rate before you respond.',
                 url: route('caregiver.invitations.index'),
                 payload: ['care_request_id' => $careRequest->id],
                 subject: $invitation,

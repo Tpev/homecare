@@ -9,6 +9,7 @@
 </div>
 <a class="hc-primary-button" href="{{ route('customer-care.create', $customer) }}">Create a request</a>
 </header>
+@include('customer-care.partials.care-assistance')
 <div class="grid items-start gap-6 lg:grid-cols-3">
 <section id="prepaid-hours" class="hc-surface p-5 sm:p-6">
 <p class="hc-care-eyebrow">Family balance</p>
@@ -16,6 +17,9 @@
 @php($balance = $wallet?->balance())<p class="text-3xl font-semibold">{{ \App\Models\CareHourAccount::formatMinutes($balance['available_minutes'] ?? 0) }} <span class="text-base font-normal">available</span>
 </p>
 <p class="mt-2 hc-care-subtitle">{{ \App\Models\CareHourAccount::formatMinutes($balance['reserved_minutes'] ?? 0) }} reserved · {{ \App\Models\CareHourAccount::formatMinutes($balance['used_minutes'] ?? 0) }} used</p>
+@if($prepaidRestriction)
+<p class="mt-4 text-sm">{{ $prepaidRestriction }} Existing balances are retained.</p>
+@else
 <details class="mt-6" @if($errors->any()) open @endif>
 <summary class="hc-care-text-link cursor-pointer">Add hours from an offline payment</summary>
 <form method="POST" action="{{ route('customer-care.credit', $customer) }}" class="mt-6 space-y-4">
@@ -36,6 +40,7 @@
 <button class="hc-primary-button">Record prepaid hours</button>
 </form>
 </details>
+@endif
 </section>
 <section class="hc-surface p-5 sm:p-6 lg:col-span-2">
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -45,6 +50,7 @@
 <div class="space-y-3">
 @forelse($requests as $item)<a class="block rounded-xl border border-[#e3d6c5] p-4" href="{{ route('customer-care.show', $item) }}">
 <strong>{{ $item->title }}</strong>
+<x-care-assistance-badge :active="$item->isCareAssistance()" />
 <p class="hc-care-subtitle">#{{ $item->id }} · {{ $archived ? 'Archived' : ucfirst($item->status) }} · {{ $item->staff_managed ? 'Managed by Customer Success' : 'Customer-managed' }}</p>
 </a>
 @empty

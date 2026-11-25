@@ -34,6 +34,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p class="text-lg font-semibold text-slate-900">{{ $careRequest->title ?: 'Untitled request' }}</p>
+                    <x-care-assistance-badge :active="$careRequest->isCareAssistance()" />
                     <p class="text-sm text-slate-500">
                         {{ collect([$careRequest->city, $careRequest->state, $careRequest->zip])->filter()->join(', ') ?: 'Location not provided' }}
                         · {{ $careRequest->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}

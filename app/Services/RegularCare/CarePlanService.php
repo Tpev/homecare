@@ -59,6 +59,14 @@ class CarePlanService
         return $this->pricing->hourlyRateForFamily($family, $this->platformHourlyRate());
     }
 
+    private function hourlyRateForRequest(CareRequest $source, int $caregiverUserId): float
+    {
+        $agreement = $this->pricing->agreementForWork($source, $caregiverUserId);
+
+        return $agreement ? $agreement->family_care_rate_cents / 100
+            : $this->pricing->hourlyRateForRequest($source, $this->platformHourlyRate());
+    }
+
     /**
      * @return array{ready:bool,customer_id:string|null,card:array<string,mixed>|null}
      */
@@ -154,9 +162,9 @@ class CarePlanService
             'schedule_end_time' => substr($endTime, 0, 5),
             'schedule_slots' => $slots,
             'starts_on' => (string) $startsOn,
-            'hourly_rate' => $this->hourlyRateForFamily(
-                $source->family,
-                $caregiver?->id
+            'hourly_rate' => $this->hourlyRateForRequest(
+                $source,
+                (int) $caregiver?->id
             ),
             'care_notes' => $source->recipient?->care_notes ?: $source->scope_of_work,
             'family_message' => 'We would love to make this a regular visit.',
@@ -208,7 +216,7 @@ class CarePlanService
         }
 
         $schedule = $this->normalizeSchedulePayload($payload);
-        $hourlyRate = $this->hourlyRateForFamily($family, $caregiver->id);
+        $hourlyRate = $this->hourlyRateForRequest($source, $caregiver->id);
 
         try {
             [$plan, $created] = DB::transaction(function () use ($source, $family, $caregiver, $payload, $schedule, $hourlyRate): array {
@@ -378,7 +386,7 @@ class CarePlanService
             ]);
         }
         $schedule['starts_on'] = $firstVisit['local_date'];
-        $hourlyRate = $this->hourlyRateForFamily($family, $caregiver->id);
+        $hourlyRate = $this->hourlyRateForRequest($source, $caregiver->id);
 
         try {
             $plan = DB::transaction(function () use (

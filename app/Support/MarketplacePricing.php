@@ -3,8 +3,10 @@
 namespace App\Support;
 
 use App\Models\CareBooking;
+use App\Models\CarePlan;
 use App\Models\CarePricingAgreement;
 use App\Models\CareRequest;
+use App\Models\ContinuousCoveragePlan;
 use App\Models\User;
 
 class MarketplacePricing
@@ -27,7 +29,7 @@ class MarketplacePricing
         ];
 
         if ($booking?->family_account_id && $booking->caregiver_user_id) {
-            $agreement = $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id);
+            $agreement = $this->agreementForBooking($booking);
             if ($agreement?->appliesToBooking($booking)) {
                 $attributes = array_merge($attributes, $agreement->snapshotAttributes());
             }
@@ -36,14 +38,79 @@ class MarketplacePricing
         return $attributes;
     }
 
-    public function agreementForPair(int $familyAccountId, int $caregiverUserId): ?CarePricingAgreement
+    public function agreementForPair(int $familyAccountId, int $caregiverUserId, bool $includeCareAssistance = true): ?CarePricingAgreement
     {
         return CarePricingAgreement::query()
             ->where('family_account_id', $familyAccountId)
             ->where(fn ($query) => $query->where('all_caregivers', true)->orWhere('caregiver_user_id', $caregiverUserId))
             ->where('active', true)
+            ->when(! $includeCareAssistance, fn ($query) => $query->whereNull('program'))
             ->orderByRaw('CASE WHEN all_caregivers = 1 THEN 0 ELSE 1 END')
             ->first();
+    }
+
+    public function activeCareAssistance(int $familyAccountId): ?CarePricingAgreement
+    {
+        return CarePricingAgreement::query()->where('family_account_id', $familyAccountId)
+            ->where('program', CarePricingAgreement::CARE_ASSISTANCE)->where('active', true)->first();
+    }
+
+    public function agreementForWork(CareRequest|CarePlan|ContinuousCoveragePlan $work, int $caregiverUserId): ?CarePricingAgreement
+    {
+        if (! $work->exists && ! array_key_exists('care_assistance_pricing_agreement_id', $work->getAttributes())) {
+            return $this->agreementForPair((int) $work->family_account_id, $caregiverUserId);
+        }
+        if ($work->exists && (! array_key_exists('care_assistance_pricing_agreement_id', $work->getAttributes()) || ! $work->family_account_id)) {
+            $work = $work->newQuery()->findOrFail($work->id);
+        }
+        if ($work->care_assistance_pricing_agreement_id) {
+            // Ended enrollment still honors the terms of already posted/accepted work.
+            return CarePricingAgreement::query()->whereKey($work->care_assistance_pricing_agreement_id)
+                ->where('family_account_id', $work->family_account_id)
+                ->where('program', CarePricingAgreement::CARE_ASSISTANCE)->firstOrFail();
+        }
+
+        return $this->agreementForPair((int) $work->family_account_id, $caregiverUserId, includeCareAssistance: false);
+    }
+
+    public function agreementForBooking(CareBooking $booking): ?CarePricingAgreement
+    {
+        if (($booking->care_request_id || $booking->relationLoaded('careRequest')) && $booking->careRequest) {
+            return $this->agreementForWork($booking->careRequest, (int) $booking->caregiver_user_id);
+        }
+        if (($booking->care_plan_id || $booking->relationLoaded('carePlan')) && $booking->carePlan) {
+            return $this->agreementForWork($booking->carePlan, (int) $booking->caregiver_user_id);
+        }
+        if ($booking->exists && $booking->pricing_agreement_id) {
+            $saved = CarePricingAgreement::query()->whereKey($booking->pricing_agreement_id)
+                ->where('family_account_id', $booking->family_account_id)->where('program', CarePricingAgreement::CARE_ASSISTANCE)->first();
+            if ($saved) {
+                return $saved;
+            }
+        }
+
+        return $this->agreementForPair((int) $booking->family_account_id, (int) $booking->caregiver_user_id, includeCareAssistance: ! $booking->exists);
+    }
+
+    public function quoteForRequest(CareRequest $request, int $caregiverUserId, int $workedMinutes): array
+    {
+        if ($request->exists && ! $request->family_account_id) {
+            $request = $request->newQuery()->findOrFail($request->id);
+        }
+        $booking = new CareBooking(['family_account_id' => $request->family_account_id, 'caregiver_user_id' => $caregiverUserId]);
+        $booking->setRelation('careRequest', $request);
+        $booking->forceFill($this->currentSnapshotAttributes($booking));
+
+        return $this->quoteForCurrentBooking($booking, $workedMinutes);
+    }
+
+    public function quoteForPlan(CarePlan|ContinuousCoveragePlan $plan, int $caregiverUserId, int $workedMinutes): array
+    {
+        $booking = new CareBooking(['family_account_id' => $plan->family_account_id, 'caregiver_user_id' => $caregiverUserId]);
+        $booking->setRelation('carePlan', $plan);
+        $booking->forceFill($this->currentSnapshotAttributes($booking));
+
+        return $this->quoteForCurrentBooking($booking, $workedMinutes);
     }
 
     public function estimateAgreementForFamily(int $familyAccountId): ?CarePricingAgreement
@@ -58,13 +125,13 @@ class MarketplacePricing
     /** The caregiver's earnings are independent of the family's rate or request budget. */
     public function caregiverQuoteForRequest(CareRequest $request, int $caregiverUserId): array
     {
-        return $this->quoteForPair((int) $request->family_account_id, $caregiverUserId, 60);
+        return $this->quoteForRequest($request, $caregiverUserId, 60);
     }
 
     public function caregiverRateForBooking(CareBooking $booking): float
     {
         return ($booking->caregiver_gross_rate_cents
-            ?? $this->quoteForPair((int) $booking->family_account_id, (int) $booking->caregiver_user_id, 60)['caregiver_gross_rate_cents']) / 100;
+            ?? $this->currentSnapshotAttributes($booking)['caregiver_gross_rate_cents']) / 100;
     }
 
     public function caregiverProcessingFeeCents(CareBooking $booking, int $stripeProcessingFeeCents): int
@@ -80,11 +147,11 @@ class MarketplacePricing
             return false;
         }
 
-        $agreement = $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id);
+        $agreement = $this->agreementForBooking($booking);
         if (! $agreement?->appliesToBooking($booking)) {
             return false;
         }
-        if ($agreement->all_caregivers) {
+        if ($agreement->all_caregivers || $agreement->program === CarePricingAgreement::CARE_ASSISTANCE) {
             return $booking->only(array_keys($agreement->snapshotAttributes())) != $agreement->snapshotAttributes();
         }
 
@@ -318,17 +385,27 @@ class MarketplacePricing
 
     public function hourlyRateForFamily(?User $family, float $fallback): float
     {
+        if ($family?->role === 'family') {
+            $familyId = app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->membershipFor($family, false)?->family_account_id;
+            if ($familyId && ($agreement = $this->activeCareAssistance((int) $familyId))) {
+                return $agreement->family_care_rate_cents / 100;
+            }
+        }
+
         return $this->hourlyRateForFamilyEmail($family?->email, $fallback);
     }
 
     public function hourlyRateForRequest(CareRequest $request, float $fallback): float
     {
-        return $this->hourlyRateForFamily($request->family, $fallback);
+        $agreement = $this->agreementForWork($request, 0);
+
+        return $agreement ? $agreement->family_care_rate_cents / 100 : $this->hourlyRateForFamilyEmail($request->family?->email, $fallback);
     }
 
     public function hourlyRateForBooking(CareBooking $booking, float $fallback): float
     {
-        return $this->hourlyRateForFamily($booking->family, $fallback);
+        return $booking->family_care_rate_cents !== null ? $booking->family_care_rate_cents / 100
+            : ($booking->careRequest ? $this->hourlyRateForRequest($booking->careRequest, $fallback) : $this->hourlyRateForFamilyEmail($booking->family?->email, $fallback));
     }
 
     public function platformFeePercentForFamilyEmail(?string $email, float $fallback): float

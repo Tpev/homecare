@@ -62,7 +62,7 @@ class CareAssistanceApplicationShow extends Component
 
         return view('livewire.admin.care-assistance-application-show', [
             'application' => CareAssistanceApplication::query()
-                ->with('reviewer:id,name')->findOrFail($this->applicationId),
+                ->with('reviewer:id,name', 'familyAccount.careAssistance')->findOrFail($this->applicationId),
             'statusLabels' => CareAssistanceApplication::STATUS_LABELS,
         ])->title('Review care assistance | LoLo Care');
     }
@@ -84,6 +84,10 @@ class CareAssistanceApplicationShow extends Component
             $attributes = ['internal_notes' => $notes === '' ? null : $notes];
 
             if ($status !== null && $status !== $application->status) {
+                if ($status !== 'approved' && \App\Models\CarePricingAgreement::query()
+                    ->where('care_assistance_application_id', $application->id)->where('active', true)->exists()) {
+                    throw ValidationException::withMessages(['status' => 'End Care Assistance on the linked customer account before changing this approval. Existing work will keep its terms.']);
+                }
                 $isDecision = in_array($status, ['approved', 'declined'], true);
                 $attributes += [
                     'status' => $status,

@@ -246,7 +246,7 @@ class SharedCareShow extends Component
             $minutes = \App\Support\WeeklySchedule::timeToMinutes($this->visitEnd) - \App\Support\WeeklySchedule::timeToMinutes($this->visitStart);
             if ($minutes > 0) {
                 $pricing = app(\App\Support\MarketplacePricing::class);
-                $extraPrice = $pricing->currentPricingEnabled() ? $pricing->quoteForPair($care->family_account_id, $endPlan->caregiver_user_id, $minutes)['total_charge_cents'] / 100 : $minutes / 60 * (float) $endPlan->hourly_rate;
+                $extraPrice = ($pricing->currentPricingEnabled() || $endPlan->isCareAssistance()) ? $pricing->quoteForPlan($endPlan, $endPlan->caregiver_user_id, $minutes)['total_charge_cents'] / 100 : $minutes / 60 * (float) $endPlan->hourly_rate;
             }
         }
 

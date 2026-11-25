@@ -6,6 +6,9 @@
 <h1 class="hc-care-title">{{ $careRequest ? 'Edit request' : 'Create a request' }}</h1>
 <p class="mt-2 hc-care-subtitle">For {{ $customer->name }} · Managed by your team · Customer notifications off</p>
 </header>
+@if($assistance)
+<section class="hc-surface p-5 space-y-2"><x-care-assistance-badge :active="true" /><p class="text-sm font-semibold">Customer $23.00/hour total · Caregiver $20.00/hour before Stripe fees</p><p class="hc-care-subtitle">These program terms will follow this request and its visits. Use the family's saved card when hiring.</p></section>
+@endif
 <form method="POST" action="{{ $careRequest ? route('customer-care.update', $careRequest) : route('customer-care.store', $customer) }}" class="space-y-6" x-data="{ frequency: @js(old('request_type', $careRequest?->request_type ?? 'one_time')) }">
 @csrf
 <input type="hidden" name="request_key" value="{{ old('request_key', $careRequest?->staff_request_key ?? (string) \Illuminate\Support\Str::uuid()) }}">
@@ -78,7 +81,7 @@
 </section>
 </div>
 <div class="hc-surface p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
-<p class="hc-care-subtitle">After posting, review applicants and hire using this family's saved card or prepaid hours.</p>
+<p class="hc-care-subtitle">After posting, review applicants and hire using {{ $assistance ? "this family's saved card." : "this family's saved card or prepaid hours." }}</p>
 <div class="flex flex-wrap gap-3">
 <a class="hc-care-text-link" href="{{ $careRequest ? route('customer-care.show', $careRequest) : route('customer-care.customer', $customer) }}">Cancel</a>
 <button class="hc-secondary-button" name="status" value="draft">Save draft</button>

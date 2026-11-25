@@ -59,7 +59,7 @@ class ContinuousCoverageBookingAdapter
                 return $existing;
             }
 
-            $request = CareRequest::query()->create([
+            $request = new CareRequest([
                 'family_account_id' => $plan->family_account_id,
                 'family_user_id' => $plan->family_user_id,
                 'is_system_generated' => true,
@@ -86,6 +86,7 @@ class ContinuousCoverageBookingAdapter
                 'first_shortlist_at' => now(),
                 'first_hire_at' => now(),
             ]);
+            $request->forceFill(['care_assistance_pricing_agreement_id' => $plan->care_assistance_pricing_agreement_id])->save();
 
             $request->recipient()->create([
                 'recipient_is_requester' => (bool) data_get($recipient, 'recipient_is_requester', false),
@@ -103,7 +104,7 @@ class ContinuousCoverageBookingAdapter
                 ->all();
             $request->tasks()->sync($taskPayload);
 
-            $agreement = app(\App\Support\MarketplacePricing::class)->agreementForPair((int) $plan->family_account_id, (int) $caregiver->id);
+            $agreement = app(\App\Support\MarketplacePricing::class)->agreementForWork($plan, (int) $caregiver->id);
             $application = CareRequestApplication::query()->create([
                 'care_request_id' => $request->id,
                 'caregiver_user_id' => $caregiver->id,

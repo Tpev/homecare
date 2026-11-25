@@ -108,7 +108,7 @@ class AdminUserDeletionService
             'care_bookings' => $participants + $requests,
             'care_booking_payments' => $participants,
             'care_booking_payment_attempts' => ['family_account_id' => $accountIds],
-            'care_pricing_agreements' => ['family_account_id' => $accountIds, 'caregiver_user_id' => [$userId], 'created_by_user_id' => [$userId]],
+            'care_pricing_agreements' => ['family_account_id' => $accountIds, 'caregiver_user_id' => [$userId], 'created_by_user_id' => [$userId], 'ended_by_user_id' => [$userId]],
             'care_relationships' => $participants + $profiles,
             'care_plans' => $participants + $profiles + $versions,
             'continuous_coverage_plans' => $family + $profiles + $versions,

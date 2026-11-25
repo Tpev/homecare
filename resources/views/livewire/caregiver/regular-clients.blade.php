@@ -118,7 +118,7 @@
                                 : strtoupper(str_replace('_', ' ', $offer->status));
                             $tasks = collect($offer->task_snapshot ?? []);
                             $visits = $scheduleService->upcomingVisits($offer, 3, $offer->status === \App\Models\CarePlan::STATUS_COUNTERED);
-                            $offerPricing = $pricing->quoteForPair($offer->family_account_id, $offer->caregiver_user_id, 60);
+                            $offerPricing = $pricing->quoteForPlan($offer, $offer->caregiver_user_id, 60);
                             $offerRate = $offerPricing['caregiver_gross_rate_cents'] / 100;
                         @endphp
                         <div class="rounded-2xl border border-[#DED6CA] bg-white p-4">
@@ -126,6 +126,7 @@
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h3 class="font-display text-lg font-semibold text-[#17313F]">{{ $offer->title }}</h3>
+                                        <x-care-assistance-badge :active="$offer->isCareAssistance()" />
                                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $style }}">{{ $offerStatusLabel }}</span>
                                     </div>
                                     <p class="mt-1 text-sm text-[#607080]">

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
+use App\Models\Concerns\HasCareAssistancePricing;
 use App\Support\WeeklySchedule;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CareRequest extends Model
 {
-    use BelongsToFamilyAccount, HasFactory;
+    use BelongsToFamilyAccount, HasCareAssistancePricing, HasFactory;
 
     public const TYPE_ONE_TIME = 'one_time';
 

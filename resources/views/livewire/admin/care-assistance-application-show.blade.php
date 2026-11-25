@@ -21,6 +21,20 @@
             <span class="inline-flex w-fit items-center rounded-full px-4 py-2 text-sm font-semibold {{ $badgeClasses }}">{{ $statusLabels[$application->status] ?? $application->status }}</span>
         </header>
 
+        @if($application->status === 'approved' || $application->family_account_id)
+            <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-2">
+                <h2 class="font-semibold">Account activation</h2>
+                @if($application->familyAccount)
+                    <p class="text-sm">Linked family account: {{ $application->familyAccount->owner?->name }}.
+                        {{ $application->familyAccount->careAssistance ? 'Care Assistance is active for new requests.' : 'Care Assistance is not active for new requests.' }}</p>
+                    <a class="inline-block font-semibold underline" href="{{ route('customer-care.customer', $application->familyAccount->owner_user_id) }}#care-assistance">Manage Care Assistance on the customer account</a>
+                @else
+                    <p class="text-sm">Approved, but account pricing is not active yet. Find or prepare the customer's account, open Care Assistance, and select application #{{ $application->id }}.</p>
+                    <a class="inline-block font-semibold underline" href="{{ route('customer-care.index', ['search' => $application->email]) }}">Find the customer account</a>
+                @endif
+            </section>
+        @endif
+
         @if (session('status'))
             <div role="status" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm leading-6 text-emerald-900">{{ session('status') }}</div>
         @endif

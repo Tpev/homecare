@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
+use App\Models\Concerns\HasCareAssistancePricing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContinuousCoveragePlan extends Model
 {
-    use BelongsToFamilyAccount, HasFactory;
+    use BelongsToFamilyAccount, HasCareAssistancePricing, HasFactory;
 
     public const STATUS_ACTIVE = 'active';
 

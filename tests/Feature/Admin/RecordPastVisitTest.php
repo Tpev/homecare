@@ -50,6 +50,7 @@ class RecordPastVisitTest extends TestCase
         Http::preventStrayRequests();
         Notification::fake();
         $this->mock(SlackOpsNotificationService::class, function ($mock): void {
+            $mock->shouldReceive('enabled')->andReturn(false);
             $mock->shouldNotReceive('queueCaregiverHired');
             $mock->shouldNotReceive('queueCareRequestCreated');
         });
@@ -97,6 +98,21 @@ class RecordPastVisitTest extends TestCase
         $this->assertDatabaseCount('care_booking_payments', 0);
         $this->assertDatabaseCount('admin_recorded_visits', 0);
         Http::assertNothingSent();
+    }
+
+    public function test_recorded_program_visit_uses_the_same_pricing_as_its_preview(): void
+    {
+        app(\App\Services\CustomerCare\CareAssistanceEnrollmentService::class)->update($this->admin, $this->family->owner, [
+            'action' => 'activate', 'expected_agreement_id' => 0, 'approval_confirmed' => 1, 'reason' => 'Verified program approval for this family.',
+        ]);
+        $preview = $this->service()->preview($this->admin, $this->input);
+        $this->assertSame(2300, $preview['quote']['family_care_rate_cents']);
+        $record = $this->createVisit();
+        $booking = CareBooking::findOrFail($record->care_booking_id);
+        $this->assertTrue($booking->careRequest->isCareAssistance());
+        $this->assertSame(2300, $booking->family_care_rate_cents);
+        $this->assertSame(2000, $booking->caregiver_gross_rate_cents);
+        $this->assertEquals(20, $booking->application->proposed_rate);
     }
 
     public function test_complete_visit_and_repeated_submission_charge_once_with_admin_audit(): void

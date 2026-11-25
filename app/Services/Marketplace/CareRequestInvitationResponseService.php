@@ -65,8 +65,8 @@ class CareRequestInvitationResponseService
             $applicationRate = $platformRate > 0 && $invitation->careRequest
                 ? $this->pricing->hourlyRateForRequest($invitation->careRequest, $platformRate)
                 : null;
-            $agreement = $invitation->careRequest ? $this->pricing->agreementForPair(
-                (int) $invitation->careRequest->family_account_id, (int) $caregiver->id,
+            $agreement = $invitation->careRequest ? $this->pricing->agreementForWork(
+                $invitation->careRequest, (int) $caregiver->id,
             ) : null;
             if ($agreement) {
                 $applicationRate = $agreement->caregiver_gross_rate_cents / 100;

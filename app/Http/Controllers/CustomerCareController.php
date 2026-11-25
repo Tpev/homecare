@@ -24,7 +24,7 @@ class CustomerCareController extends Controller
         $archived = $http->query('view') === 'archived';
         $search = trim((string) $http->query('search', ''));
         $term = '%'.addcslashes(mb_substr($search, 0, 120), '%_\\').'%';
-        $customers = User::where('role', 'family')->whereNull('access_revoked_at')
+        $customers = User::with('ownedFamilyAccount.careAssistance')->where('role', 'family')->whereNull('access_revoked_at')
             ->when($search !== '', fn ($q) => $q->where(fn ($match) => $match->where('name', 'like', $term)->orWhere('email', 'like', $term)))
             ->orderBy('name')->paginate(15, ['*'], 'customers')->withQueryString();
         $requests = CareRequest::with(['family', 'booking'])->where('staff_managed', true)->where('is_system_generated', false)
@@ -82,7 +82,24 @@ class CustomerCareController extends Controller
         $credits = DB::table('care_hour_manual_credits')->join('users', 'users.id', '=', 'care_hour_manual_credits.actor_user_id')
             ->where('family_account_id', $family->id)->select('care_hour_manual_credits.*', 'users.name as actor_name')->latest('care_hour_manual_credits.id')->limit(30)->get();
 
-        return view('customer-care.customer', compact('customer', 'wallet', 'requests', 'credits', 'archived'));
+        $assistance = $family->careAssistance()->with('creator', 'application')->first();
+        $assistanceHistory = $family->activityLogs()->whereIn('action', ['care_assistance_activated', 'care_assistance_ended'])
+            ->with('actor')->latest('id')->limit(30)->get();
+        $approvedApplications = \App\Models\CareAssistanceApplication::query()->where('status', 'approved')
+            ->where(fn ($query) => $query->whereNull('family_account_id')->orWhere('family_account_id', $family->id))
+            ->orderByDesc('reviewed_at')->get(['id', 'name', 'email', 'family_account_id']);
+        $prepaidRestriction = app(\App\Services\CareHours\CareHourEligibilityService::class)->reasonForFamily($family->id);
+
+        return view('customer-care.customer', compact('customer', 'family', 'wallet', 'requests', 'credits', 'archived', 'assistance', 'assistanceHistory', 'approvedApplications', 'prepaidRestriction'));
+    }
+
+    public function careAssistance(Request $http, User $customer, \App\Services\CustomerCare\CareAssistanceEnrollmentService $enrollment): RedirectResponse
+    {
+        $enrollment->update($http->user(), $customer, $http->only('action', 'expected_agreement_id', 'application_id', 'approval_confirmed', 'reason'));
+
+        return redirect()->route('customer-care.customer', $customer)->with('status', $http->input('action') === 'activate'
+            ? 'Care Assistance activated for new requests: customer $23/hour total, caregiver $20/hour before Stripe fees. Existing work keeps its terms.'
+            : 'Care Assistance ended for new requests. Existing requests, visits and recurring plans keep their agreed terms.');
     }
 
     public function credit(Request $http, User $customer, ManualCareHourCreditService $credits): RedirectResponse
@@ -96,7 +113,10 @@ class CustomerCareController extends Controller
     {
         abort_unless($customer->role === 'family' && $customer->access_revoked_at === null, 404);
 
-        return view('customer-care.edit', ['customer' => $customer, 'careRequest' => null, 'tasks' => CareTask::orderBy('name')->get()]);
+        $family = app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->account($customer);
+
+        return view('customer-care.edit', ['customer' => $customer, 'careRequest' => null, 'tasks' => CareTask::orderBy('name')->get(),
+            'assistance' => $family->careAssistance()->first()]);
     }
 
     public function edit(CareRequest $careRequest): View
@@ -104,7 +124,8 @@ class CustomerCareController extends Controller
         abort_unless($careRequest->staff_managed, 403);
         abort_unless(! $careRequest->staff_archived_at && in_array($careRequest->status, ['draft', 'open'], true) && ! $careRequest->booking()->exists(), 409);
 
-        return view('customer-care.edit', ['customer' => $careRequest->family, 'careRequest' => $careRequest->load('tasks', 'recipient'), 'tasks' => CareTask::orderBy('name')->get()]);
+        return view('customer-care.edit', ['customer' => $careRequest->family, 'careRequest' => $careRequest->load('tasks', 'recipient'), 'tasks' => CareTask::orderBy('name')->get(),
+            'assistance' => $careRequest->careAssistancePricingAgreement]);
     }
 
     public function store(Request $http, User $customer, ManagedCareService $care): RedirectResponse

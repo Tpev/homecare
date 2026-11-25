@@ -10,6 +10,9 @@
     class="hc-page hc-care-workspace hc-recruitment space-y-5 pb-28 pt-5 sm:space-y-6 sm:pb-8 sm:pt-8"
     data-inline-support
 >
+    @if($requestItem->isCareAssistance())
+        <div class="flex flex-wrap items-center gap-3"><x-care-assistance-badge :active="true" /><p class="text-sm font-semibold">$23.00/hour total · Saved-card payment</p></div>
+    @endif
     @if($aiPrepared)
         <x-alert color="blue">LoLo prepared the correction details. Review and edit them before you send, submit, or approve anything. Nothing was changed automatically.</x-alert>
     @endif
@@ -110,7 +113,7 @@
             : ($profileRate > 0 ? $profileRate : (float) config('marketplace.family_estimate_hourly_rate', 30.00));
         $shiftRate = $booking
             ? $pricing->hourlyRateForBooking($booking, $baseShiftRate)
-            : $pricing->hourlyRateForFamily($requestItem->family, $baseShiftRate);
+            : $pricing->hourlyRateForRequest($requestItem, $baseShiftRate);
         $shiftEarnings = $workedMinutes > 0 && $shiftRate > 0
             ? round(($workedMinutes / 60) * $shiftRate, 2)
             : 0;
@@ -515,14 +518,14 @@
                     $selectedCaregiverProfileHref = $selectedCaregiverProfile?->slug
                         ? route('caregivers.show', ['slug' => $selectedCaregiverProfile->slug, 'careRequest' => $requestItem->id])
                         : null;
-                    $selectedCaregiverRate = $pricing->hourlyRateForFamily(
-                        $requestItem->family,
+                    $selectedCaregiverRate = $pricing->hourlyRateForRequest(
+                        $requestItem,
                         (float) ($hiredApplication->proposed_rate ?: $selectedCaregiverProfile?->resolvePlatformHourlyRate() ?: config('marketplace.family_estimate_hourly_rate', 30.00))
                     );
                     $selectedCaregiverQuote = $usesPricingV2
                         ? $pricing->quoteForCurrentBooking($booking, 60)
-                        : (! $booking && $pricing->currentPricingEnabled()
-                            ? $pricing->quoteForPair((int) $requestItem->family_account_id, (int) $hiredApplication->caregiver_user_id, 60)
+                        : (! $booking && ($pricing->currentPricingEnabled() || $requestItem->isCareAssistance())
+                            ? $pricing->quoteForRequest($requestItem, (int) $hiredApplication->caregiver_user_id, 60)
                             : null);
                     $selectedCaregiverRate = $selectedCaregiverQuote['hourly_rate'] ?? $selectedCaregiverRate;
                     $selectedProcessingFeeRate = ($selectedCaregiverQuote['family_processing_fee_rate_cents']

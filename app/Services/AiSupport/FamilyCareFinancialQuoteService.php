@@ -59,11 +59,10 @@ class FamilyCareFinancialQuoteService
         $application = clone $application;
         $request = $application->careRequest;
         $request->loadMissing('family');
-        $accountId = $this->accountId($request);
-        $agreement = $this->pricing->agreementForPair($accountId, (int) $application->caregiver_user_id);
+        $agreement = $this->pricing->agreementForWork($request, (int) $application->caregiver_user_id);
         $application->proposed_rate = $agreement
             ? $agreement->family_care_rate_cents / 100
-            : $this->pricing->hourlyRateForFamily($actor ?? $request->family,
+            : $this->pricing->hourlyRateForRequest($request,
                 $this->pricing->rateForTier((string) config('marketplace.default_pricing_tier', 'standard')));
 
         return $this->newVisit($application, $start, $end, 'offer');
@@ -116,10 +115,11 @@ class FamilyCareFinancialQuoteService
             'scheduled_end_at' => $end,
         ]);
         $booking->setRelation('application', $application);
+        $booking->setRelation('careRequest', $request);
         $booking->setRelation('family', $request->family);
         $booking->setRelation('caregiver', $application->caregiver);
         $booking->setRelation('payment', null);
-        if ($this->pricing->currentPricingEnabled()) {
+        if ($this->pricing->currentPricingEnabled() || $request->isCareAssistance()) {
             $booking->forceFill($this->pricing->currentSnapshotAttributes($booking));
         }
 

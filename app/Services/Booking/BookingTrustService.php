@@ -23,6 +23,7 @@ class BookingTrustService
             'care_request_id' => $request->id,
             'application_id' => $application->id,
             'request_type' => $request->request_type,
+            'care_assistance_pricing_agreement_id' => $request->care_assistance_pricing_agreement_id,
             'title' => $request->title,
             'scope_of_work' => $request->scope_of_work,
             'time_expectations' => $request->time_expectations,

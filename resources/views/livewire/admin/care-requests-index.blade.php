@@ -84,6 +84,7 @@
                 <article wire:key="request-card-{{ $request->id }}" class="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div>
                         <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="break-words text-base font-semibold text-slate-900 hover:text-cyan-800">{{ $request->title ?: 'Untitled request' }}</a>
+                                <x-care-assistance-badge :active="$request->isCareAssistance()" />
                         <p class="mt-1 text-xs text-slate-500">#{{ $request->id }} · {{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
                         <p class="mt-1 text-sm text-slate-600">{{ collect([$request->city, $request->state, $request->zip])->filter()->implode(', ') ?: 'Location not set' }}</p>
                     </div>
@@ -127,6 +128,7 @@
                         <tr wire:key="request-row-{{ $request->id }}">
                             <td class="px-4 py-4 align-top">
                                 <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="break-words font-semibold text-slate-900 hover:text-cyan-800">{{ $request->title ?: 'Untitled request' }}</a>
+                                <x-care-assistance-badge :active="$request->isCareAssistance()" />
                                 <p class="mt-1 text-xs text-slate-500">#{{ $request->id }} · {{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
                                 <p class="text-xs text-slate-600">{{ collect([$request->city, $request->state, $request->zip])->filter()->implode(', ') ?: 'Location not set' }}</p>
                                 <p class="mt-3 text-xs font-medium text-slate-900">{{ $request->family?->name ?: 'Unknown family' }}</p>

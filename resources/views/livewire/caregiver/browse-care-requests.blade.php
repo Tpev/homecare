@@ -112,6 +112,7 @@
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <h2 class="font-display text-xl font-semibold leading-snug text-[#17313F]">{{ $request->title }}</h2>
+                                <x-care-assistance-badge :active="$request->isCareAssistance()" />
                                 @if ($isFresh)
                                     <x-badge text="NEW" color="blue" />
                                 @endif

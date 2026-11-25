@@ -122,6 +122,8 @@
             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                     <h1 class="text-2xl font-display font-semibold text-[#17313F]">{{ $requestItem->title }}</h1>
+                    <x-care-assistance-badge :active="$requestItem->isCareAssistance()" />
+                    @if($requestItem->isCareAssistance())<p class="mt-2 text-sm font-semibold">Caregiver pay: ${{ number_format($ratePerHour, 2) }}/hour before Stripe processing fees.</p>@endif
                     <p class="mt-1 text-sm text-[#607080]">
                         {{ $requestItem->city }}, {{ $requestItem->state }}
                         - {{ $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}

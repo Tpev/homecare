@@ -652,6 +652,7 @@ class CompletedExtraVisitService
     private function financialPreview(CarePlan $plan, int $workedMinutes): array
     {
         $booking = new CareBooking([
+            'care_plan_id' => $plan->id,
             'family_account_id' => $plan->family_account_id,
             'family_user_id' => $plan->family_user_id,
             'caregiver_user_id' => $plan->caregiver_user_id,

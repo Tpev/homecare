@@ -81,6 +81,7 @@ class AdminRecordedVisitService
 
             $request = new CareRequest;
             $request->forceFill([
+                'care_assistance_pricing_agreement_id' => $this->pricing->activeCareAssistance((int) $family->id)?->id,
                 'family_user_id' => $family->owner_user_id, 'family_account_id' => $family->id, 'created_by_user_id' => $admin->id,
                 'request_type' => CareRequest::TYPE_ONE_TIME, 'status' => CareRequest::STATUS_FILLED, 'is_private' => true,
                 'is_system_generated' => false, 'title' => $data['title'], 'scope_of_work' => $data['scope_of_work'],
@@ -94,7 +95,8 @@ class AdminRecordedVisitService
             $request->tasks()->sync($data['task_ids']);
             $request->load(['recipient', 'tasks']);
             $application = new CareRequestApplication(['care_request_id' => $request->id, 'caregiver_user_id' => $data['caregiver_user_id'],
-                'status' => CareRequestApplication::STATUS_HIRED, 'proposed_rate' => $preview['quote']['hourly_rate'],
+                'status' => CareRequestApplication::STATUS_HIRED, 'proposed_rate' => $request->isCareAssistance()
+                    ? $preview['quote']['caregiver_gross_rate_cents'] / 100 : $preview['quote']['hourly_rate'],
                 'cover_note' => 'Assigned by an administrator for a reported completed visit.']);
             $application->saveQuietly();
             CareRequestConversation::findOrCreateForApplication($application->setRelation('careRequest', $request), $admin->id);

@@ -44,6 +44,7 @@ class ManualCareHourCreditService
 
                 return $account;
             }
+            app(CareHourEligibilityService::class)->assertFamilyEligible((int) $account->family_account_id, 'hours');
             $lot = CareHourLot::create([
                 'care_hour_account_id' => $account->id, 'care_hour_purchase_id' => null,
                 'paid_minutes' => $minutes, 'bonus_minutes' => 0, 'total_minutes' => $minutes,

@@ -315,10 +315,8 @@ class ManageCareRequest extends Component
         $booking = $this->requestItem->booking;
         if ($booking && (int) $booking->caregiver_user_id === $caregiverId && $pricing->usesCurrentPricing($booking)) {
             $quote = $pricing->quoteForCurrentBooking($booking, max(1, $minutes));
-        } elseif ($pricing->currentPricingEnabled()) {
-            $accountId = (int) ($this->requestItem->family_account_id
-                ?: app(FamilyAccountContext::class)->membershipFor($this->familyContextUser(), false)?->family_account_id);
-            $quote = $pricing->quoteForPair($accountId, $caregiverId, max(1, $minutes));
+        } elseif ($pricing->currentPricingEnabled() || $this->requestItem->isCareAssistance()) {
+            $quote = $pricing->quoteForRequest($this->requestItem, $caregiverId, max(1, $minutes));
         } else {
             $application = $this->requestItem->applications->firstWhere('caregiver_user_id', $caregiverId);
             $fallbackRate = $fallbackRate > 0 ? $fallbackRate

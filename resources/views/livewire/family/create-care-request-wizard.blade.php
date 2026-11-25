@@ -56,6 +56,9 @@
             <div>
                 <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-create-back"><span aria-hidden="true">←</span> My requests</a>
                 <h1>Request care</h1>
+                @if($this->estimateAgreement?->program === \App\Models\CarePricingAgreement::CARE_ASSISTANCE)
+                    <x-care-assistance-badge :active="true" /><p class="mt-2 text-sm font-semibold">Your Care Assistance rate is $23.00/hour total. Payment uses your saved card.</p>
+                @endif
                 <p>Share the help you need. Find a caregiver who feels right.</p>
             </div>
             <button type="button" data-support-chat-opener="create-care" x-data x-on:click="$dispatch('open-care-support-chat')" class="hc-care-text-link">Chat with support</button>
