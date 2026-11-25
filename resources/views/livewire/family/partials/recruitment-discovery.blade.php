@@ -49,11 +49,16 @@
             @endif
             <details class="hc-recruit-filter"><summary>Filters @if ($certificationCriteria->hasSelections())<span class="hc-recruit-filter-dot" aria-label="Active filters"></span>@endif</summary><div class="hc-recruit-filter-panel"><p id="discovery-search-hint" class="hc-recruit-caption">Search from 2 characters.</p><x-caregiver-certification-filter :options="$certificationOptions" :selected="$certificationTypes" :verification="$certificationVerification" id-prefix="recruitment-discovery-certifications" /></div></details>
         </div>
-        <p class="sr-only" role="status" aria-live="polite"><span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification">Searching caregivers</span><span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification">{{ $caregiverView === 'saved' ? $savedDiscoveryCaregivers->count() : $caregiverDiscoveryCount }} caregivers shown</span></p>
-        <div class="hc-candidate-list" wire:loading.class="opacity-60" wire:target="caregiverSearch,certificationTypes,certificationVerification">
+        @if ($staffWorkspace && $caregiverView === 'search')
+            @include('livewire.customer-care.partials.caregiver-distance-filter', ['idPrefix' => 'discovery'])
+        @endif
+        <p class="sr-only" role="status" aria-live="polite"><span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles">Searching caregivers</span><span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles">{{ $caregiverView === 'saved' ? $savedDiscoveryCaregivers->count() : $caregiverDiscoveryCount }} caregivers shown</span></p>
+        <div class="hc-candidate-list" wire:loading.class="opacity-60" wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles">
             @if ($caregiverView === 'saved')
                 @forelse ($savedDiscoveryCaregivers as $caregiver)@include('livewire.family.partials.caregiver-invite-card')@empty<div class="hc-recruit-empty"><h3>No saved profiles match</h3><p>Saved profiles that match these filters will appear here. Find caregivers to explore your options.</p><button type="button" wire:click="setCaregiverView('search')" class="hc-secondary-button">Search caregivers</button></div>@endforelse
                 @if ($savedDiscoveryLimitReached)<p class="hc-recruit-caption">Showing up to 12 saved profiles. Search by name to find another caregiver.</p>@endif
+            @elseif ($staffWorkspace && $caregiverDistanceMiles !== '' && $caregiverDiscoveryCount === 0 && mb_strlen(trim($caregiverSearch)) !== 1)
+                @include('livewire.customer-care.partials.caregiver-distance-empty')
             @elseif (trim($caregiverSearch) === '')
                 @forelse ($caregiverInitialSections as $section)
                     @if ($section['caregivers']->isNotEmpty())

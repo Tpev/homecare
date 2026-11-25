@@ -9,6 +9,9 @@
     <div class="hc-candidate-identity">
         <h3 class="hc-candidate-name"><a href="{{ $caregiver['profile_url'] }}" wire:navigate>{{ $caregiver['name'] }}</a></h3>
         <p class="hc-candidate-meta">{{ collect([$caregiver['city'], $caregiver['state']])->filter()->implode(', ') ?: 'Location not listed' }}</p>
+        @if ($staffWorkspace && isset($caregiver['distance_miles']))
+            <p class="hc-candidate-meta">{{ $caregiver['distance_miles'] < 1 ? 'Less than 1 mile' : 'About '.number_format($caregiver['distance_miles'], 0).' miles' }} from care location</p>
+        @endif
         <div class="hc-candidate-metrics">
             @if($caregiver['reviews_count'] > 0)
                 <span>★ {{ number_format($caregiver['average_rating'], 1) }} · {{ $caregiver['reviews_count'] }} {{ \Illuminate\Support\Str::plural('review', $caregiver['reviews_count']) }}</span>

@@ -134,8 +134,8 @@
                         @endif
                     </div>
                     <p id="caregiver-search-status" class="sr-only" role="status" aria-live="polite">
-                        <span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification">Searching caregivers</span>
-                        <span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification">
+                        <span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles">Searching caregivers</span>
+                        <span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles">
                             @if (trim($caregiverSearch) === '')
                                 {{ collect($caregiverInitialSections)->sum(fn ($section) => $section['caregivers']->count()) }} caregivers found
                             @elseif (mb_strlen(trim($caregiverSearch)) >= 2)
@@ -145,6 +145,10 @@
                     </p>
                 </div>
 
+                @if ($staffWorkspace && $caregiverView === 'search')
+                    @include('livewire.customer-care.partials.caregiver-distance-filter', ['idPrefix' => 'invite-panel'])
+                @endif
+
                 <x-caregiver-certification-filter
                     :options="$certificationOptions"
                     :selected="$certificationTypes"
@@ -153,13 +157,15 @@
                     class="mt-4"
                 />
 
-                <div wire:loading.flex wire:target="caregiverSearch,certificationTypes,certificationVerification" class="mt-6 items-center gap-3 rounded-xl border border-[#BDD4F7] bg-blue-50 px-4 py-4 text-sm font-medium text-blue-900">
+                <div wire:loading.flex wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles" class="mt-6 items-center gap-3 rounded-xl border border-[#BDD4F7] bg-blue-50 px-4 py-4 text-sm font-medium text-blue-900">
                     <span class="h-5 w-5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" aria-hidden="true"></span>
                     Searching caregivers…
                 </div>
 
-                <div wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification" class="mt-6 space-y-6">
-                    @if (trim($caregiverSearch) === '')
+                <div wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification,caregiverDistanceMiles" class="mt-6 space-y-6">
+                    @if ($staffWorkspace && $caregiverView === 'search' && $caregiverDistanceMiles !== '' && $caregiverDiscoveryCount === 0 && mb_strlen(trim($caregiverSearch)) !== 1)
+                        @include('livewire.customer-care.partials.caregiver-distance-empty')
+                    @elseif (trim($caregiverSearch) === '')
                         @php $visibleInitialSectionCount = collect($caregiverInitialSections)->filter(fn ($section) => $section['caregivers']->isNotEmpty())->count(); @endphp
                         @forelse ($caregiverInitialSections as $section)
                             @if ($section['caregivers']->isNotEmpty())

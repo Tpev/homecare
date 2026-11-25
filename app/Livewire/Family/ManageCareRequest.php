@@ -1736,11 +1736,22 @@ class ManageCareRequest extends Component
         $criteria = $this->certificationCriteria();
         $context = hash('sha256', json_encode([
             $this->caregiverView, trim($this->caregiverSearch), $criteria->typeSlugs(), $criteria->verification(),
+            $this->caregiverDiscoveryFilterContext(),
         ], JSON_THROW_ON_ERROR));
         if ($context !== $this->caregiverDiscoveryContext) {
             $this->caregiverDiscoveryContext = $context;
             $this->caregiverDiscoveryLimit = CaregiverInvitationDiscoveryService::SEARCH_LIMIT;
         }
+    }
+
+    protected function caregiverDiscoveryFilterContext(): array
+    {
+        return [];
+    }
+
+    protected function caregiverDiscoveryDistances(): ?array
+    {
+        return null;
     }
 
     public function updatedCertificationTypes(): void
@@ -2217,8 +2228,9 @@ class ManageCareRequest extends Component
 
             $limit = $this->caregiverDiscoveryLimit;
             if ($this->caregiverView === 'search') {
+                $distances = $this->caregiverDiscoveryDistances();
                 if ($search === '') {
-                    $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family, $certificationCriteria, $limit + 1);
+                    $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family, $certificationCriteria, $limit + 1, $distances);
                     $found = collect($caregiverInitialSections)->sum(fn (array $section) => $section['caregivers']->count());
                     $remaining = $limit;
                     foreach ($caregiverInitialSections as &$section) {
@@ -2227,7 +2239,7 @@ class ManageCareRequest extends Component
                     }
                     unset($section);
                 } else {
-                    $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search, $certificationCriteria, $limit + 1);
+                    $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search, $certificationCriteria, $limit + 1, $distances);
                     $found = $caregiverSearchResults->count();
                     $caregiverSearchResults = $caregiverSearchResults->take($limit);
                 }

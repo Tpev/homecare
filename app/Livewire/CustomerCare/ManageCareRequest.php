@@ -9,11 +9,15 @@ use App\Models\CareRequestConversation;
 use App\Models\User;
 use App\Services\CustomerCare\CustomerCareAccess;
 use App\Services\CustomerCare\ManagedCareService;
+use App\Services\Marketplace\CaregiverDistanceFilter;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /** The family screen, with separately authorized and audited staff actions. */
 class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
 {
+    public string $caregiverDistanceMiles = '';
+
     public string $actualStartAt = '';
 
     public string $actualEndAt = '';
@@ -258,7 +262,33 @@ class ManageCareRequest extends \App\Livewire\Family\ManageCareRequest
     {
         $this->authorizeWorkspace();
 
-        return parent::render();
+        return parent::render()->with('caregiverDistanceAvailable', app(CaregiverDistanceFilter::class)->hasOrigin($this->requestItem));
+    }
+
+    public function updatedCaregiverDistanceMiles(): void
+    {
+        $this->validateOnly('caregiverDistanceMiles', [
+            'caregiverDistanceMiles' => ['nullable', Rule::in(CaregiverDistanceFilter::MILES)],
+        ]);
+    }
+
+    protected function caregiverDiscoveryFilterContext(): array
+    {
+        return [$this->caregiverDistanceMiles, $this->requestItem->zip];
+    }
+
+    protected function caregiverDiscoveryDistances(): ?array
+    {
+        if ($this->caregiverDistanceMiles === '') {
+            return null;
+        }
+
+        // Invalid client input must never silently broaden a distance search.
+        if (! in_array($this->caregiverDistanceMiles, array_map('strval', CaregiverDistanceFilter::MILES), true)) {
+            return [];
+        }
+
+        return app(CaregiverDistanceFilter::class)->within($this->requestItem, (int) $this->caregiverDistanceMiles);
     }
 
     private function booking(): CareBooking

@@ -29,6 +29,7 @@ class CaregiverInvitationDiscoveryService
         string $search,
         ?CaregiverCertificationCriteria $criteria = null,
         int $limit = self::SEARCH_LIMIT,
+        ?array $serviceAreaDistances = null,
     ): Collection {
         $this->authorize($request, $family);
         $criteria ??= CaregiverCertificationCriteria::empty();
@@ -43,7 +44,7 @@ class CaregiverInvitationDiscoveryService
             return collect();
         }
 
-        $profiles = $this->eligibleProfilesQuery($criteria)
+        $profiles = $this->eligibleProfilesQuery($criteria, $serviceAreaDistances)
             ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'))
             ->where(function (Builder $profileQuery) use ($safeTerm): void {
                 $profileQuery->whereHas('user', function (Builder $userQuery) use ($safeTerm): void {
@@ -60,7 +61,7 @@ class CaregiverInvitationDiscoveryService
             ->limit(max(1, $limit))
             ->get();
 
-        return $this->cards($request, $profiles, $criteria);
+        return $this->cards($request, $profiles, $criteria, $serviceAreaDistances);
     }
 
     /**
@@ -71,6 +72,7 @@ class CaregiverInvitationDiscoveryService
         User $family,
         ?CaregiverCertificationCriteria $criteria = null,
         int $limit = self::SEARCH_LIMIT,
+        ?array $serviceAreaDistances = null,
     ): array {
         $this->authorize($request, $family);
         $criteria ??= CaregiverCertificationCriteria::empty();
@@ -91,7 +93,7 @@ class CaregiverInvitationDiscoveryService
 
         // Rank the whole eligible pool before limiting it. Saved availability
         // does not determine who families can discover or invite.
-        $query = $this->eligibleProfilesQuery($criteria);
+        $query = $this->eligibleProfilesQuery($criteria, $serviceAreaDistances);
         $this->prioritizeIds($query, $previousIds);
         $this->prioritizeIds($query, $favoriteIds);
         $query->orderByDesc('has_platform_visits');
@@ -106,7 +108,7 @@ class CaregiverInvitationDiscoveryService
             ->orderBy('user_id')
             ->limit(max(1, $limit))
             ->get();
-        $cards = $this->cards($request, $profiles, $criteria);
+        $cards = $this->cards($request, $profiles, $criteria, $serviceAreaDistances);
 
         return [
             [
@@ -169,7 +171,7 @@ class CaregiverInvitationDiscoveryService
         }
     }
 
-    private function eligibleProfilesQuery(?CaregiverCertificationCriteria $criteria = null): Builder
+    private function eligibleProfilesQuery(?CaregiverCertificationCriteria $criteria = null, ?array $serviceAreaDistances = null): Builder
     {
         $criteria ??= CaregiverCertificationCriteria::empty();
         $query = CaregiverProfile::query()
@@ -225,6 +227,10 @@ class CaregiverInvitationDiscoveryService
             ->whereHas('skills')
             ->whereHas('languages');
 
+        if ($serviceAreaDistances !== null) {
+            $query->whereIn('service_area_zip', array_map('strval', array_keys($serviceAreaDistances)));
+        }
+
         return app(CaregiverCertificationFilter::class)->apply($query, $criteria);
     }
 
@@ -236,6 +242,7 @@ class CaregiverInvitationDiscoveryService
         CareRequest $request,
         Collection $profiles,
         CaregiverCertificationCriteria $criteria,
+        ?array $serviceAreaDistances = null,
     ): Collection {
         $caregiverIds = $profiles->pluck('user_id')->map(fn ($id) => (int) $id)->all();
         if ($caregiverIds === []) {
@@ -252,7 +259,7 @@ class CaregiverInvitationDiscoveryService
             ->get()
             ->keyBy('caregiver_user_id');
 
-        return $profiles->map(function (CaregiverProfile $profile) use ($request, $applications, $invitations, $criteria): array {
+        return $profiles->map(function (CaregiverProfile $profile) use ($request, $applications, $invitations, $criteria, $serviceAreaDistances): array {
             $user = $profile->user;
             $application = $applications->get($profile->user_id);
             $invitation = $invitations->get($profile->user_id);
@@ -268,6 +275,7 @@ class CaregiverInvitationDiscoveryService
                     ->map(fn ($part) => Str::upper(Str::substr((string) $part, 0, 1)))->implode(''),
                 'city' => (string) $user?->city,
                 'state' => (string) $user?->state,
+                ...($serviceAreaDistances !== null ? ['distance_miles' => $serviceAreaDistances[$profile->service_area_zip] ?? null] : []),
                 'profile_photo_path' => $profile->profile_photo_path,
                 'profile_url' => route('caregivers.show', [
                     'slug' => $profile->slug,
