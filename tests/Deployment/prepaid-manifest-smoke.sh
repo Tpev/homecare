@@ -62,6 +62,17 @@ for path in app/Services/Notifications/CustomerCareNotificationPolicy.php app/Se
   cp -- "$PROJECT_DIR/$path" "$fixture/$path"
 done
 if [[ "$version" == 2 ]]; then
+  # Staff invitation discovery depends on the distance service, bundled ZIP
+  # data and views. Partial delivery must fail before the workspace is used.
+  for path in \
+    app/Services/Marketplace/CaregiverDistanceFilter.php \
+    resources/geo/us-zcta.csv \
+    resources/views/livewire/customer-care/partials/caregiver-distance-filter.blade.php \
+    resources/views/livewire/customer-care/partials/caregiver-distance-empty.blade.php; do
+    rm -- "$fixture/$path"
+    reject "$(basename "$path")"
+    cp -- "$PROJECT_DIR/$path" "$fixture/$path"
+  done
   # The shared signed-event endpoint must retain its partner billing dependencies.
   for path in app/Services/Partners/PartnerBillingService.php app/Services/Partners/PartnerStripeGateway.php database/migrations/2026_11_18_000100_create_partner_billing_tables.php; do
     rm -- "$fixture/$path"

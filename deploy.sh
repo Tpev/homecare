@@ -384,6 +384,10 @@ app/Services/RegularCare/SharedCareService.php
 app/Models/CarePlan.php
 app/Services/Marketplace/CareRequestInvitationService.php
 app/Services/Marketplace/CaregiverInvitationDiscoveryService.php
+app/Services/Marketplace/CaregiverDistanceFilter.php
+resources/geo/us-zcta.csv
+resources/views/livewire/customer-care/partials/caregiver-distance-filter.blade.php
+resources/views/livewire/customer-care/partials/caregiver-distance-empty.blade.php
 resources/views/customer-care/partials/remove-request.blade.php
 resources/views/components/care-workspace-payment-prompt.blade.php
 resources/views/livewire/family/partials/recruitment-header.blade.php
