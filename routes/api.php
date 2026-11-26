@@ -6,6 +6,14 @@ use App\Http\Controllers\ZapierFacebookLeadWebhookController;
 use App\Models\ContentApiToken;
 use Illuminate\Support\Facades\Route;
 
+// Isolated from browser sessions, content mutations, audit writes and model observers.
+Route::prefix('reporting/v1')->name('api.reporting.v1.')
+    ->middleware(\App\Http\Middleware\AuthenticateReportingApi::class)
+    ->group(function (): void {
+        Route::get('/schema', [\App\Http\Controllers\Api\Reporting\ReportingController::class, 'schema'])->name('schema');
+        Route::get('/export', [\App\Http\Controllers\Api\Reporting\ReportingController::class, 'export'])->name('export');
+    });
+
 Route::post('/webhooks/zapier/facebook-leads', ZapierFacebookLeadWebhookController::class)
     ->middleware('throttle:60,1')
     ->name('api.webhooks.zapier.facebook-leads');

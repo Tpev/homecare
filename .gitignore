@@ -30,6 +30,9 @@
 /output/
 /outputs/
 /bridge/
+/integrations/lolo-reporting/**/__pycache__/
+/integrations/lolo-reporting/.venv/
+/reporting-data/
 /storage/framework/onboarding-preview-views/
 /storage/framework/testing-onboarding-views/
 /docs/legal/package-review-2026-07-23/.audit/

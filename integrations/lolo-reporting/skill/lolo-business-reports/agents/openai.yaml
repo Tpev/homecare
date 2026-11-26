@@ -1,0 +1,4 @@
+interface:
+  display_name: "LoLo Business Reports"
+  short_description: "Review lead traction, care searches and CS follow-ups"
+  default_prompt: "Use $lolo-business-reports to refresh the data and summarize hot opportunities, caregiver searches, and questions for customer success."
