@@ -122,7 +122,11 @@
         </div>
     </div>
 
-    <section class="space-y-3 pt-1">
+    @if (in_array($scope, ['all', 'new_requests'], true))
+        @include('livewire.caregiver.partials.request-distance-filter')
+    @endif
+
+    <section class="space-y-3 pt-1" wire:loading.class="opacity-60" wire:target="radiusMiles">
         @forelse ($items as $item)
             <article class="group overflow-hidden rounded-[1.8rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:p-5">
                 <div @class(['grid grid-cols-1 gap-4', 'lg:grid-cols-[minmax(0,1fr)_17rem]' => $scope !== 'history'])>
@@ -131,6 +135,9 @@
                             <div class="min-w-0">
                                 <p class="font-display text-lg font-semibold leading-snug text-[#17313F]">{{ $item['title'] }}</p>
                                 <p class="mt-1 text-sm text-[#607080]">{{ $item['location'] }} - {{ $item['schedule'] }}</p>
+                                @if ($item['scope'] === 'new_requests')
+                                    <x-care-distance :miles="$item['distance_miles'] ?? null" class="mt-2" />
+                                @endif
                             </div>
                             <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_tone'] ?? 'neutral'] ?? $statusStyles['neutral'] }}">
                                 {{ strtoupper((string) $item['status_label']) }}
@@ -283,7 +290,11 @@
             </article>
         @empty
             <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-8 text-center text-sm text-[#607080]">
+                @if (empty($prelaunchMode) && in_array($scope, ['all', 'new_requests'], true) && $radiusMiles !== 'all')
+                    @include('livewire.caregiver.partials.request-distance-empty')
+                @else
                 No items for this filter yet.
+                @endif
             </div>
         @endforelse
         @if ($scope === 'history' && $items->count() < ($counts['history'] ?? 0))

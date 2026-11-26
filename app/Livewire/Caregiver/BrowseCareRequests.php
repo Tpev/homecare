@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Caregiver;
 
+use App\Livewire\Caregiver\Concerns\FiltersCareRequestsByDistance;
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Services\Marketplace\CaregiverDistanceFilter;
 use App\Support\CaregiverPrelaunch;
 use App\Support\MarketplacePricing;
 use App\Support\WeeklySchedule;
@@ -17,6 +19,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class BrowseCareRequests extends Component
 {
+    use FiltersCareRequestsByDistance;
     use WithPagination;
 
     public string $city = '';
@@ -94,6 +97,7 @@ class BrowseCareRequests extends Component
             'when',
             'sort',
             'scope',
+            'radiusMiles',
         ]);
 
         $this->requestType = 'all';
@@ -108,8 +112,12 @@ class BrowseCareRequests extends Component
         $prelaunchMode = CaregiverPrelaunch::enabled();
         $caregiverId = (int) auth()->id();
 
-        $query = $this->filteredOpenRequestsQuery($prelaunchMode, $caregiverId);
-        $scopeCounts = $this->scopeCounts($query, $caregiverId);
+        $baseQuery = $this->filteredOpenRequestsQuery($prelaunchMode, $caregiverId);
+        $nearbyQuery = clone $baseQuery;
+        $distanceData = $this->distanceFilterData();
+        $requestDistances = app(CaregiverDistanceFilter::class)->filterRequests($nearbyQuery, $distanceData['serviceZip'], $this->selectedRadiusMiles());
+        $scopeCounts = $this->scopeCounts($baseQuery, $caregiverId, $nearbyQuery);
+        $query = in_array($this->scope, ['invited', 'applied'], true) ? $baseQuery : $nearbyQuery;
 
         $this->applyScope($query, $caregiverId);
 
@@ -136,6 +144,8 @@ class BrowseCareRequests extends Component
             'prelaunchMode' => $prelaunchMode,
             'requests' => $query->paginate(10),
             'scopeCounts' => $scopeCounts,
+            'requestDistances' => $requestDistances,
+            ...$distanceData,
         ]);
     }
 
@@ -231,10 +241,10 @@ class BrowseCareRequests extends Component
     /**
      * @return array<string, int>
      */
-    private function scopeCounts(Builder $query, int $caregiverId): array
+    private function scopeCounts(Builder $query, int $caregiverId, Builder $nearbyQuery): array
     {
         return [
-            'new_to_you' => (clone $query)
+            'new_to_you' => (clone $nearbyQuery)
                 ->whereDoesntHave('applications', fn ($q) => $q->where('caregiver_user_id', $caregiverId))
                 ->whereDoesntHave('invitations', fn ($q) => $this->pendingInvitationFilter($q, $caregiverId))
                 ->count(),
@@ -244,7 +254,7 @@ class BrowseCareRequests extends Component
             'applied' => (clone $query)
                 ->whereHas('applications', fn ($q) => $q->where('caregiver_user_id', $caregiverId))
                 ->count(),
-            'all' => (clone $query)->count(),
+            'all' => (clone $nearbyQuery)->count(),
         ];
     }
 

@@ -38,6 +38,12 @@
         </div>
     </section>
 
+    @if (in_array($scope, ['new_to_you', 'all'], true))
+        @include('livewire.caregiver.partials.request-distance-filter')
+    @else
+        <p class="text-sm text-[#607080]">{{ $scope === 'invited' ? 'Your invitations' : 'Your applications' }} are shown at every distance.</p>
+    @endif
+
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-[19rem_minmax(0,1fr)]">
         <x-card>
             <div class="space-y-4">
@@ -96,7 +102,7 @@
             </div>
         </x-card>
 
-        <section class="space-y-4">
+        <section class="space-y-4" wire:loading.class="opacity-60" wire:target="radiusMiles">
             @forelse ($requests as $request)
                 @php
                     $existingApplication = $request->applications->first();
@@ -127,6 +133,7 @@
                                 @endif
                             </div>
                             <p class="mt-1 text-sm text-[#607080]">{{ $request->city }}, {{ $request->state }} - posted {{ $this->postedLabel($request) }}</p>
+                            <x-care-distance :miles="$requestDistances[$request->zip] ?? null" class="mt-2" />
                         </div>
 
                         <div class="shrink-0 text-left sm:text-right">
@@ -214,9 +221,13 @@
                 </article>
             @empty
                 <x-card>
+                    @if (empty($prelaunchMode) && in_array($scope, ['new_to_you', 'all'], true) && $radiusMiles !== 'all')
+                        @include('livewire.caregiver.partials.request-distance-empty')
+                    @else
                     <p class="text-sm text-[#607080]">
                         {{ !empty($prelaunchMode) ? 'Applications are paused during pre-launch. You will be notified when Raleigh goes live.' : 'No open requests match this view yet.' }}
                     </p>
+                    @endif
                 </x-card>
             @endforelse
 

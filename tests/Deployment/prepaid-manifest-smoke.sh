@@ -62,13 +62,15 @@ for path in app/Services/Notifications/CustomerCareNotificationPolicy.php app/Se
   cp -- "$PROJECT_DIR/$path" "$fixture/$path"
 done
 if [[ "$version" == 2 ]]; then
-  # Staff invitation discovery depends on the distance service, bundled ZIP
-  # data and views. Partial delivery must fail before the workspace is used.
+  # Staff invitation discovery and caregiver browsing depend on the distance
+  # service, bundled ZIP data and views. Partial delivery must fail closed.
   for path in \
     app/Services/Marketplace/CaregiverDistanceFilter.php \
     resources/geo/us-zcta.csv \
     resources/views/livewire/customer-care/partials/caregiver-distance-filter.blade.php \
-    resources/views/livewire/customer-care/partials/caregiver-distance-empty.blade.php; do
+    resources/views/livewire/customer-care/partials/caregiver-distance-empty.blade.php \
+    app/Livewire/Caregiver/Concerns/FiltersCareRequestsByDistance.php \
+    resources/views/livewire/caregiver/partials/request-distance-filter.blade.php; do
     rm -- "$fixture/$path"
     reject "$(basename "$path")"
     cp -- "$PROJECT_DIR/$path" "$fixture/$path"

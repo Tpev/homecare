@@ -4,8 +4,9 @@ namespace App\Services\Marketplace;
 
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
+use Illuminate\Database\Eloquent\Builder;
 
-/** ZIP-area estimates for staff invitation discovery, independent of travel preferences. */
+/** ZIP-area estimates for browsing, independent of saved travel preferences. */
 class CaregiverDistanceFilter
 {
     public const MILES = [5, 10, 25, 50, 100];
@@ -14,30 +15,58 @@ class CaregiverDistanceFilter
 
     public function hasOrigin(CareRequest $request): bool
     {
-        return $this->coordinates($request->zip) !== null;
+        return $this->hasZip($request->zip);
+    }
+
+    public function hasZip(?string $zip): bool
+    {
+        return $this->coordinates($zip) !== null;
     }
 
     /** @return array<string|int, float> Distances keyed by the stored service ZIP. */
     public function within(CareRequest $request, int $miles): array
     {
-        $origin = $this->coordinates($request->zip);
-        if ($origin === null || ! in_array($miles, self::MILES, true)) {
+        if (! in_array($miles, self::MILES, true)) {
+            return [];
+        }
+
+        // Resolve the whole pool before discovery applies its result limit. Only
+        // ZIPs are read here; eligibility stays in the existing discovery query.
+        return array_filter($this->distancesFrom($request->zip,
+            CaregiverProfile::query()->whereNotNull('service_area_zip')->distinct()->pluck('service_area_zip')
+        ), fn (float $distance) => $distance <= $miles);
+    }
+
+    /** Filter the existing visibility query before pagination; return distances for card labels. */
+    public function filterRequests(Builder $query, ?string $originZip, ?int $miles): array
+    {
+        $zips = (clone $query)->reorder()->select('care_requests.zip')->distinct()->pluck('care_requests.zip');
+        $distances = $this->distancesFrom($originZip, $zips);
+        if ($miles !== null) {
+            $matching = in_array($miles, self::MILES, true)
+                ? array_filter($distances, fn (float $distance) => $distance <= $miles)
+                : [];
+            $query->whereIn('care_requests.zip', array_map('strval', array_keys($matching)));
+        }
+
+        return $distances;
+    }
+
+    private function distancesFrom(?string $originZip, iterable $zips): array
+    {
+        $origin = $this->coordinates($originZip);
+        if ($origin === null) {
             return [];
         }
 
         $distances = [];
-        // Resolve the whole pool before discovery applies its result limit. Only
-        // ZIPs are read here; eligibility stays in the existing discovery query.
-        foreach (CaregiverProfile::query()->whereNotNull('service_area_zip')->distinct()->pluck('service_area_zip') as $zip) {
+        foreach ($zips as $zip) {
             $destination = $this->coordinates($zip);
             if ($destination === null) {
                 continue;
             }
 
-            $distance = $this->milesBetween($origin, $destination);
-            if ($distance <= $miles) {
-                $distances[$zip] = $distance;
-            }
+            $distances[$zip] = $this->milesBetween($origin, $destination);
         }
 
         return $distances;

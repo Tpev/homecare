@@ -9,6 +9,7 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
 use App\Models\User;
+use App\Services\Marketplace\CaregiverDistanceFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -21,7 +22,7 @@ class CaregiverWorkInboxBuilder
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function buildForUser(User $user, string $scope = 'all', string $sort = 'priority', int $limit = 30): Collection
+    public function buildForUser(User $user, string $scope = 'all', string $sort = 'priority', int $limit = 30, ?int $radiusMiles = 25): Collection
     {
         if ($user->role !== 'caregiver') {
             return collect();
@@ -235,8 +236,9 @@ class CaregiverWorkInboxBuilder
             ->values();
 
         $recommendedRequests = collect();
+        $requestDistances = [];
         if (! CaregiverPrelaunch::enabled()) {
-            $recommendedRequests = CareRequest::query()
+            $recommendedQuery = CareRequest::query()
                 ->with([
                     'tasks:id,name',
                     'family:id,email',
@@ -246,8 +248,9 @@ class CaregiverWorkInboxBuilder
                 ->where('status', CareRequest::STATUS_OPEN)
                 ->acceptingApplications($now)
                 ->where('is_private', false)
-                ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds))
-                ->latest()
+                ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds));
+            $requestDistances = app(CaregiverDistanceFilter::class)->filterRequests($recommendedQuery, $profile?->service_area_zip, $radiusMiles);
+            $recommendedRequests = $recommendedQuery->latest()
                 ->limit(30)
                 ->get();
         }
@@ -266,6 +269,7 @@ class CaregiverWorkInboxBuilder
                 'id' => 'new-request-'.$request->id,
                 'scope' => 'new_requests',
                 'state' => 'open_match',
+                'distance_miles' => $requestDistances[$request->zip] ?? null,
                 'priority' => ($isFresh ? 350 : 300) + $score,
                 'created_at' => $request->created_at,
                 'start_at' => $request->requested_start_at,
@@ -331,9 +335,9 @@ class CaregiverWorkInboxBuilder
     /**
      * @return array<string, int>
      */
-    public function countsForUser(User $user): array
+    public function countsForUser(User $user, ?int $radiusMiles = 25): array
     {
-        $items = $this->buildForUser($user, 'all', 'priority', 300);
+        $items = $this->buildForUser($user, 'all', 'priority', 300, $radiusMiles);
         $newRequests = $items->where('scope', 'new_requests')->count();
 
         return [

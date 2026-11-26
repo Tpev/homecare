@@ -385,6 +385,13 @@ app/Models/CarePlan.php
 app/Services/Marketplace/CareRequestInvitationService.php
 app/Services/Marketplace/CaregiverInvitationDiscoveryService.php
 app/Services/Marketplace/CaregiverDistanceFilter.php
+app/Livewire/Caregiver/BrowseCareRequests.php
+app/Livewire/Caregiver/WorkInbox.php
+app/Livewire/Caregiver/Concerns/FiltersCareRequestsByDistance.php
+resources/views/livewire/caregiver/work-inbox.blade.php
+resources/views/livewire/caregiver/partials/request-distance-filter.blade.php
+resources/views/livewire/caregiver/partials/request-distance-empty.blade.php
+resources/views/components/care-distance.blade.php
 resources/geo/us-zcta.csv
 resources/views/livewire/customer-care/partials/caregiver-distance-filter.blade.php
 resources/views/livewire/customer-care/partials/caregiver-distance-empty.blade.php

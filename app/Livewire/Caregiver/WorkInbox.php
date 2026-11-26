@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Caregiver;
 
+use App\Livewire\Caregiver\Concerns\FiltersCareRequestsByDistance;
 use App\Models\CareRequestInvitation;
 use App\Services\Marketplace\CareRequestInvitationResponseService;
 use App\Support\CaregiverPrelaunch;
@@ -13,6 +14,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class WorkInbox extends Component
 {
+    use FiltersCareRequestsByDistance;
+
     public string $scope = 'all';
 
     public string $sort = 'priority';
@@ -44,7 +47,7 @@ class WorkInbox extends Component
         if ($this->scopeIsValid($requestedScope)) {
             $this->scope = $requestedScope;
         } else {
-            $counts = app(CaregiverWorkInboxBuilder::class)->countsForUser(auth()->user());
+            $counts = app(CaregiverWorkInboxBuilder::class)->countsForUser(auth()->user(), $this->selectedRadiusMiles());
             $this->scope = $this->defaultScopeForCounts($counts);
         }
 
@@ -132,8 +135,9 @@ class WorkInbox extends Component
 
         return view('livewire.caregiver.work-inbox', [
             'prelaunchMode' => CaregiverPrelaunch::enabled(),
-            'counts' => $builder->countsForUser($user),
-            'items' => $builder->buildForUser($user, $this->scope, $this->sort, $this->scope === 'history' ? $this->historyLimit : 50),
+            'counts' => $builder->countsForUser($user, $this->selectedRadiusMiles()),
+            'items' => $builder->buildForUser($user, $this->scope, $this->sort, $this->scope === 'history' ? $this->historyLimit : 50, $this->selectedRadiusMiles()),
+            ...$this->distanceFilterData(),
         ]);
     }
 

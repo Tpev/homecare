@@ -1,4 +1,4 @@
-# ZIP coordinates for staff invitation filtering
+# ZIP coordinates for distance filtering
 
 `us-zcta.csv` contains the `GEOID`, `INTPTLAT`, and `INTPTLONG` columns
 from the U.S. Census Bureau's 2026 national ZIP Code Tabulation Area Gazetteer,
@@ -18,6 +18,12 @@ coordinates or driving distances. Some USPS ZIPs have no matching ZCTA. Missing
 or malformed locations are excluded only while a distance filter is active;
 Any distance retains the existing discovery behavior. ZIP+4 inputs use the
 first five digits. Same-ZIP estimates can be zero despite different addresses.
+
+Caregiver request browsing starts within 25 miles of the profile's service ZIP.
+Caregivers can change the browsing radius or select All distances without
+changing their saved service radius. Invitations, applications and existing
+work remain accessible at every distance. Staff invitation filtering remains
+optional and starts at Any distance.
 
 The file ships with the application. No API key, database migration, external
 geocoding request, or transmission of customer addresses is needed at runtime.
