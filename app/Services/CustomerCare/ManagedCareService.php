@@ -123,7 +123,6 @@ class ManagedCareService
         DB::transaction(function () use ($actor, $request, $caregiverId, $reason, $fundingSource): void {
             $request = $this->locked($actor, $request);
             $this->require($request->status === 'open' && $request->isAcceptingApplications(), 'This request is not open for hiring.');
-            $this->require(! $request->isCareAssistance() || $fundingSource === 'card', 'Care Assistance uses the family’s saved card. Prepaid care hours cannot fund this request.');
             $caregiver = User::where('role', 'caregiver')->whereNull('access_revoked_at')->findOrFail($caregiverId);
             app(\App\Services\Screening\CaregiverWorkEligibility::class)->assertUserCanStartNewWork($caregiverId);
             $this->require($caregiver->caregiverProfile?->isMarketplaceReady() === true, 'This caregiver is not ready for marketplace work.');

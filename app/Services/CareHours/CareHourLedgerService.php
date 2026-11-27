@@ -19,9 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class CareHourLedgerService
 {
-    public function balance(CareHourAccount $account): array
+    public function balance(CareHourAccount $account, ?int $agreementId = null, bool $filterPricing = false): array
     {
         $lots = CareHourLot::query()->whereIn('care_hour_account_id', $account->familySourceIds())
+            ->when($filterPricing, fn ($q) => $q->where('care_assistance_pricing_agreement_id', $agreementId))
             ->where('status', '!=', 'reversed')->with('account')
             ->withSum(['allocations as reserved' => fn ($q) => $q->where('status', 'reserved')], 'minutes')
             ->withSum(['allocations as used' => fn ($q) => $q->where('status', 'used')], 'minutes')->get();
@@ -39,6 +40,18 @@ class CareHourLedgerService
         }
 
         return $balance;
+    }
+
+    public function balanceForBooking(CareHourAccount $account, CareBooking $booking): array
+    {
+        return $this->balance($account, $this->assistanceAgreementId($booking), filterPricing: true);
+    }
+
+    private function assistanceAgreementId(CareBooking $booking): ?int
+    {
+        $agreement = app(\App\Support\MarketplacePricing::class)->agreementForBooking($booking);
+
+        return $agreement?->program === \App\Models\CarePricingAgreement::CARE_ASSISTANCE ? $agreement->id : null;
     }
 
     public function history(CareHourAccount $account): Builder
@@ -270,6 +283,7 @@ class CareHourLedgerService
             return $current;
         }
         $lots = CareHourLot::query()->whereIn('care_hour_account_id', $account->familySourceIds(true))
+            ->where('care_assistance_pricing_agreement_id', $this->assistanceAgreementId($booking))
             ->where('status', 'available')->with('account')->orderBy('issued_at')->orderBy('id')->lockForUpdate()->get();
         foreach ($lots as $lot) {
             foreach ($this->freeRanges($lot) as [$start, $length]) {
@@ -384,6 +398,13 @@ class CareHourLedgerService
 
     private function assertBookingAccount(CareHourAccount $account, CareBooking $booking): void
     {
+        $agreementId = $this->assistanceAgreementId($booking);
+        if ($agreementId && $booking->pricing_snapshotted_at
+            && app(\App\Support\MarketplacePricing::class)->hasUnappliedAgreement($booking)) {
+            throw ValidationException::withMessages(['care_hours' => 'Review this visit’s saved Care Assistance rates before using prepaid hours.']);
+        }
+        $wrongPricing = $this->allocationsFor($booking)->contains(
+            fn ($allocation) => $allocation->lot->care_assistance_pricing_agreement_id != $agreementId);
         $sameFamily = $booking->family_account_id
             ? (int) $booking->family_account_id === (int) $account->family_account_id
             : (int) $booking->family_user_id === (int) $account->familyAccount->owner_user_id;
@@ -392,7 +413,7 @@ class CareHourLedgerService
             ->where(fn ($query) => $query->whereNotIn('care_hour_account_id', $sourceIds)
                 ->orWhereHas('lot', fn ($lots) => $lots->whereNotIn('care_hour_account_id', $sourceIds)
                     ->orWhereColumn('care_hour_lots.care_hour_account_id', '!=', 'care_hour_allocations.care_hour_account_id')))->exists();
-        if (! $sameFamily || $account->currency !== config('care_hours.currency', 'usd') || $other) {
+        if (! $sameFamily || $account->currency !== config('care_hours.currency', 'usd') || $other || $wrongPricing) {
             throw ValidationException::withMessages(['care_hours' => 'These care hours cannot fund this visit.']);
         }
     }

@@ -66,7 +66,7 @@
 <label class="block text-sm font-semibold">Placement agreement / internal note<textarea class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reason" required minlength="5" maxlength="2000">
 </textarea>
 </label>
-<label class="block text-sm font-semibold">Payment<select name="funding_source" class="mt-2 block w-full rounded-xl border px-3 py-2"><option value="card">Family’s saved card</option>@unless($careRequest->isCareAssistance())<option value="prepaid">Use care hours</option>@endunless</select></label>
+<label class="block text-sm font-semibold">Payment<select name="funding_source" class="mt-2 block w-full rounded-xl border px-3 py-2"><option value="card">Family’s saved card</option><option value="prepaid">Use eligible care hours</option></select></label>
 <button class="hc-primary-button">Confirm hire</button>
 </form>
 </details>

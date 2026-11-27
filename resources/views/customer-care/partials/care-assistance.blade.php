@@ -4,7 +4,7 @@
         <span class="hc-care-status">{{ $assistance ? 'Active for new requests' : 'Not active for new requests' }}</span>
     </div>
     <p class="text-sm"><strong>Customer: $23.00/hour total.</strong> Caregiver: $20.00/hour before Stripe processing fees. LoLo: $3.00/hour.</p>
-    <p class="hc-care-subtitle">Applies to every caregiver on new requests for this family account. Existing requests, drafts, visits and recurring plans keep their agreed terms when participation starts or ends. Use the family's saved card; prepaid care hours cannot fund Care Assistance work.</p>
+    <p class="hc-care-subtitle">Applies to every caregiver on new requests for this family account. Existing requests, drafts, visits and recurring plans keep their agreed terms when participation starts or ends. Use the family's saved card or prepaid Care Assistance hours recorded from a received payment. Standard-price packages and gift hours remain separate.</p>
     @if($assistance)
         <p class="text-sm">Activated {{ $assistance->created_at->format('M j, Y g:i A T') }} by {{ $assistance->creator?->name ?? 'Former staff member' }}.
             @if($assistance->care_assistance_application_id)<a class="hc-care-text-link" href="{{ route('admin.care-assistance.show', $assistance->care_assistance_application_id) }}">Application #{{ $assistance->care_assistance_application_id }}</a>@else Approval recorded outside the application form.@endif

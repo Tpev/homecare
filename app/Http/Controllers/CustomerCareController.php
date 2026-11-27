@@ -80,7 +80,9 @@ class CustomerCareController extends Controller
             ->when($archived, fn ($q) => $q->whereNotNull('staff_archived_at'), fn ($q) => $q->whereNull('staff_archived_at'))
             ->latest()->paginate(20)->withQueryString();
         $credits = DB::table('care_hour_manual_credits')->join('users', 'users.id', '=', 'care_hour_manual_credits.actor_user_id')
-            ->where('family_account_id', $family->id)->select('care_hour_manual_credits.*', 'users.name as actor_name')->latest('care_hour_manual_credits.id')->limit(30)->get();
+            ->join('care_hour_lots', 'care_hour_lots.id', '=', 'care_hour_manual_credits.care_hour_lot_id')
+            ->where('family_account_id', $family->id)->select('care_hour_manual_credits.*', 'users.name as actor_name',
+                'care_hour_lots.processing_fee_cents', 'care_hour_lots.care_assistance_pricing_agreement_id')->latest('care_hour_manual_credits.id')->limit(30)->get();
 
         $assistance = $family->careAssistance()->with('creator', 'application')->first();
         $assistanceHistory = $family->activityLogs()->whereIn('action', ['care_assistance_activated', 'care_assistance_ended'])
@@ -88,7 +90,7 @@ class CustomerCareController extends Controller
         $approvedApplications = \App\Models\CareAssistanceApplication::query()->where('status', 'approved')
             ->where(fn ($query) => $query->whereNull('family_account_id')->orWhere('family_account_id', $family->id))
             ->orderByDesc('reviewed_at')->get(['id', 'name', 'email', 'family_account_id']);
-        $prepaidRestriction = app(\App\Services\CareHours\CareHourEligibilityService::class)->reasonForFamily($family->id);
+        $prepaidRestriction = app(\App\Services\CareHours\CareHourEligibilityService::class)->reasonForManualCredit($family->id);
 
         return view('customer-care.customer', compact('customer', 'family', 'wallet', 'requests', 'credits', 'archived', 'assistance', 'assistanceHistory', 'approvedApplications', 'prepaidRestriction'));
     }
@@ -104,7 +106,7 @@ class CustomerCareController extends Controller
 
     public function credit(Request $http, User $customer, ManualCareHourCreditService $credits): RedirectResponse
     {
-        $credits->credit($http->user(), $customer, $http->only('request_key', 'hours', 'amount', 'reference', 'reason'));
+        $credits->credit($http->user(), $customer, $http->only('request_key', 'hours', 'amount', 'reference', 'reason', 'processing_fee', 'expected_agreement_id'));
 
         return redirect()->route('customer-care.customer', $customer)->with('status', 'Prepaid hours recorded. The same payment reference cannot be credited twice.');
     }

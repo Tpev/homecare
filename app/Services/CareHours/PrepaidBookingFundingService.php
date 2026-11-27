@@ -498,7 +498,7 @@ class PrepaidBookingFundingService
             'ready' => $this->readiness($booking)['ready'], 'last_error' => $funding->last_error,
             'payment_under_review' => $this->hasDisputedShortfall($funding),
             'approval_preview' => $this->approvalPreview($booking, (int) ($booking->worked_minutes ?? $this->plannedMinutes($booking))),
-            'available_minutes' => $funding->account->balance()['available_minutes'],
+            'available_minutes' => $this->ledger->balanceForBooking($funding->account, $booking)['available_minutes'],
             'settlement' => $settlement ? ['status' => $settlement->status, 'prepaid_minutes' => (int) $settlement->prepaid_minutes,
                 'card_minutes' => (int) $settlement->card_minutes, 'amount_due_cents' => (int) $settlement->amount_due_cents,
                 'card_paid_cents' => (int) $funding->operations()->where('kind', 'shortfall')->where('status', 'captured')->get()
@@ -513,7 +513,7 @@ class PrepaidBookingFundingService
         $original = (int) ($current?->prepaid_minutes ?? $record->reserved_minutes);
         $extra = $this->usesStaffPrepaidOnly($booking) ? max(0, $minutes - $original)
             : max(0, $minutes - max((int) $record->planned_minutes, (int) ($current?->worked_minutes ?? 0)));
-        $prepaid = min(max(0, $minutes), $original + min($extra, $this->ledger->balance($record->account)['available_minutes']));
+        $prepaid = min(max(0, $minutes), $original + min($extra, $this->ledger->balanceForBooking($record->account, $booking)['available_minutes']));
 
         return ['billable_minutes' => max(0, $minutes), 'prepaid_minutes' => $prepaid,
             'card_cents' => $this->amountForMinutes($booking, max(0, $minutes - $prepaid)), 'restore_minutes' => max(0, $original - $prepaid)];
@@ -598,7 +598,10 @@ class PrepaidBookingFundingService
             || ! in_array((int) $this->identities->forBooking($booking)?->id, $account->familySourceIds(), true)) {
             throw ValidationException::withMessages(['careHourAccountId' => 'Choose your family care balance.']);
         }
-        if ($booking->pricing_agreement_id || $this->pricing->hasUnappliedAgreement($booking)
+        $agreement = $this->pricing->agreementForBooking($booking);
+        $assistance = $agreement?->program === \App\Models\CarePricingAgreement::CARE_ASSISTANCE;
+        if (($booking->pricing_snapshotted_at && $this->pricing->hasUnappliedAgreement($booking))
+            || (! $assistance && ($booking->pricing_agreement_id || $this->pricing->hasUnappliedAgreement($booking)))
             || $booking->carePlan?->care_arrangement_id || \App\Models\ContinuousCoverageShift::where('care_booking_id', $booking->id)->exists()
             || $booking->completedExtraVisitRequest()->exists()) {
             throw ValidationException::withMessages(['careHourAccountId' => 'This care arrangement uses its existing payment method.']);

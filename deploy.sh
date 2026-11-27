@@ -351,6 +351,7 @@ prepaid_wallet_compatibility_files() {
   cat <<'EOF'
 database/migrations/2026_10_30_000100_create_care_hour_family_wallets.php
 database/migrations/2026_11_10_000100_add_customer_care_management.php
+database/migrations/2026_11_27_000100_add_care_assistance_prepaid_credits.php
 app/Console/Commands/CreateCustomerSuccessUser.php
 app/Models/CareRequestConversation.php
 app/Http/Controllers/CustomerCareController.php

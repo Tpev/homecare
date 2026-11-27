@@ -24,12 +24,22 @@ Approving an application and activating account pricing are separate steps. The 
 3. Enter the care recipient, needs, tasks, location and one-time or recurring schedule. Save a draft or click **Post request**.
 4. Invite caregivers or review applicants through the normal request workspace. Caregiver job details, invitations and recruitment emails identify Care Assistance and the $20/hour gross rate. Financial hardship details and application notes are never copied into the job.
 5. Confirm that the caregiver accepts the program rate. Hire through the usual hire review, or use **Visit tools → Record an agreed placement** when the placement was agreed outside the app.
-6. Choose the **family's saved card**. If the customer has no saved card, use the existing customer-onboarding payment setup workflow before completing hiring. Prepaid care hours and gift-hour balances cannot fund Care Assistance jobs.
+6. Choose the **family's saved card**, or **Use eligible care hours** when staff have recorded a paid Care Assistance credit for this enrollment. The first visit must be fully covered for staff-managed prepaid hiring. Standard-price packages and gift-hour balances cannot fund Care Assistance jobs.
 7. Verify the booking shows the program rate. Staff-managed requests retain the existing customer-notification suppression; caregiver invitations continue through the usual flow.
 
 Customers who post their own new requests also receive program pricing automatically. The program belongs to the whole family account and applies with every caregiver; staff do not select a discount separately for each request.
 
 ## During and after care
+
+### Record hours already paid outside the app checkout
+
+From the customer's account, open **Prepaid hours → Add hours from a received payment**. Verify the invoice is paid, belongs to this family, and has not already been credited. Enter the exact hours, full amount paid before fees, confirmed processing fee, Stripe invoice ID (`in_...`) or bank reference, and an internal reason. This records funding; it does not charge the customer or pay the caregiver immediately.
+
+For 48 Care Assistance hours, enter **48** and **$1,104.00**. Use the actual payment processing fee, not an estimate or the net amount received. The form requires explicit fee entry for Care Assistance (0 is valid only for a confirmed fee-free payment). No promotional bonus is issued. The credit is restricted to work under the enrollment active when it was recorded, including that work after enrollment ends; it cannot pay for standard-rate work or a later enrollment. Standard-price credits remain separate.
+
+At approval, two hours use 120 minutes of the credit and earn the caregiver $40 gross, minus that portion of the recorded processing fee. Across all 48 hours, caregiver gross is $960 and LoLo's share is $144 before other costs. Staff-managed overrun approval requires enough eligible prepaid hours; add a verified top-up before approving uncovered time.
+
+The invoice reference, actor, amount, fee and enrollment are audited. Retrying the same credit is idempotent; a Stripe invoice ID cannot credit two families. Manual credits use LoLo's available Stripe balance for transfers. These external invoices are manually reconciled: do not assume the prepaid checkout webhook automatically monitors their refunds or disputes. Finance must review any later invoice refund/dispute before further use.
 
 Use the normal visit tools for schedule changes, check-in/out, actual-time recording, approving hours, cancellations, disputes and time corrections. Program bookings use the same charge, transfer and earnings services as other bookings, with their saved program rates. Recurring generated visits, extra visits under that plan, and shared-care caregiver schedules retain the source request's program terms.
 
@@ -51,13 +61,13 @@ Ending enrollment does not cancel care, change hours, capture a payment, refund 
 | Account already has custom pricing | Ask an administrator to review the existing arrangement. Care Assistance deliberately does not overwrite it. |
 | Application already linked to another family | Check that you opened the right account and selected the right application. Do not create a duplicate enrollment to bypass this check. |
 | Care Assistance changed in another session | Reload the account, check the latest status/history, and submit only the action still needed. |
-| Prepaid hours cannot fund this request | Use the family's saved card. Existing prepaid balances are retained. |
+| Prepaid hours cannot fund this request | Check that hours were credited under this request's Care Assistance enrollment and cover the visit. Standard-price hours are ineligible. Use the family's saved card if appropriate. |
 | Cannot change an active application's approval | End participation on the linked customer account first; existing work will keep its terms. |
 | A visit needs its agreed pricing restored | Ask an administrator to investigate the saved booking/payment terms. Do not substitute a standard-rate charge. |
 
 ## Release notes for the operator
 
-Deploy the complete reviewed change through the normal release process, including migration `2026_11_25_000100_add_care_assistance_enrollment`, the new model concern, enrollment service and views. Run the normal migrations and asset build. The prepaid compatibility source inventory/manifest must match this release. Do not copy only the controller or templates.
+Deploy the complete reviewed change through the normal release process, including migrations `2026_11_25_000100_add_care_assistance_enrollment` and `2026_11_27_000100_add_care_assistance_prepaid_credits`, the services and views. Run the normal migrations and asset build. The prepaid compatibility source inventory/manifest must match this release. Do not copy only the controller or templates.
 
 The migration adds enrollment provenance and request/plan references; it does **not** enroll any live customer or change existing bookings. After deployment, Customer Success activates the approved customer using the steps above. Do not roll back this migration after program records have been used; preserve the pricing references and release a forward correction instead.
 

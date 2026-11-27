@@ -17,22 +17,30 @@
 @php($balance = $wallet?->balance())<p class="text-3xl font-semibold">{{ \App\Models\CareHourAccount::formatMinutes($balance['available_minutes'] ?? 0) }} <span class="text-base font-normal">available</span>
 </p>
 <p class="mt-2 hc-care-subtitle">{{ \App\Models\CareHourAccount::formatMinutes($balance['reserved_minutes'] ?? 0) }} reserved · {{ \App\Models\CareHourAccount::formatMinutes($balance['used_minutes'] ?? 0) }} used</p>
+@if($assistance)
+@php($programBalance = $wallet ? app(\App\Services\CareHours\CareHourLedgerService::class)->balance($wallet, $assistance->id, filterPricing: true) : [])
+<p class="mt-2 hc-care-subtitle">{{ \App\Models\CareHourAccount::formatMinutes($programBalance['available_minutes'] ?? 0) }} available for this Care Assistance enrollment. Program hours and standard-price hours are kept separate.</p>
+@endif
 @if($prepaidRestriction)
 <p class="mt-4 text-sm">{{ $prepaidRestriction }} Existing balances are retained.</p>
 @else
 <details class="mt-6" @if($errors->any()) open @endif>
-<summary class="hc-care-text-link cursor-pointer">Add hours from an offline payment</summary>
+<summary class="hc-care-text-link cursor-pointer">Add hours from a received payment</summary>
 <form method="POST" action="{{ route('customer-care.credit', $customer) }}" class="mt-6 space-y-4">
 @csrf
 <input type="hidden" name="request_key" value="{{ old('request_key', (string) \Illuminate\Support\Str::uuid()) }}">
-<h2 class="mb-4 text-xl font-semibold">Add hours from an offline payment</h2>
+<input type="hidden" name="expected_agreement_id" value="{{ old('expected_agreement_id', $assistance?->id ?? 0) }}">
+<h2 class="mb-4 text-xl font-semibold">Add hours from a received payment</h2>
+@if($assistance)<p class="hc-care-subtitle">Care Assistance credit: $23/hour paid by the customer, $20/hour caregiver earnings before fees. These hours can only fund work under this enrollment. Verify the payment is paid and has not already been credited.</p>@endif
 <div class="grid grid-cols-2 gap-4">
 <label class="block text-sm font-semibold">Hours<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="hours" type="number" min="0.25" max="10000" step="0.25" value="{{ old('hours') }}" required>
 </label>
-<label class="block text-sm font-semibold">Amount received (USD)<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="amount" type="number" min="0" step="0.01" max="1000000" value="{{ old('amount') }}" required>
+<label class="block text-sm font-semibold">Amount paid before fees (USD)<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="amount" type="number" min="0" step="0.01" max="1000000" value="{{ old('amount') }}" required>
 </label>
 </div>
-<label class="block text-sm font-semibold">Payment reference<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reference" maxlength="120" value="{{ old('reference') }}" placeholder="Bank transfer or receipt reference" required>
+<label class="block text-sm font-semibold">Actual processing fee (USD)<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="processing_fee" type="number" min="0" step="0.01" max="1000000" value="{{ old('processing_fee', $assistance ? '' : '0') }}" required></label>
+<p class="hc-care-subtitle">Use the confirmed payment processing fee, or 0 for a fee-free payment. It is allocated across these hours and deducted from caregiver gross earnings as care is approved.</p>
+<label class="block text-sm font-semibold">Payment reference<input class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reference" maxlength="120" value="{{ old('reference') }}" placeholder="Stripe invoice ID (in_...) or bank reference" required>
 </label>
 <label class="block text-sm font-semibold">Reason / internal note<textarea class="mt-2 block w-full rounded-xl border px-3 py-2 text-sm font-normal focus:border-[#23483F] focus:ring-[#23483F]" name="reason" minlength="5" maxlength="1000" required>{{ old('reason') }}</textarea>
 </label>
@@ -76,6 +84,7 @@
 <td class="border-b border-[#E3D6C5] px-3 py-4 align-top">{{ $credit->created_at }}<p class="hc-care-subtitle">{{ $credit->actor_name }}</p>
 </td>
 <td class="border-b border-[#E3D6C5] px-3 py-4 align-top">{{ \App\Models\CareHourAccount::formatMinutes($credit->minutes) }}<p class="hc-care-subtitle">USD {{ number_format($credit->amount_cents / 100, 2) }}</p>
+<p class="hc-care-subtitle">Processing fee: USD {{ number_format($credit->processing_fee_cents / 100, 2) }}{{ $credit->care_assistance_pricing_agreement_id ? ' · Care Assistance' : '' }}</p>
 </td>
 <td class="border-b border-[#E3D6C5] px-3 py-4 align-top">{{ $credit->reference }}<p class="hc-care-subtitle">{{ $credit->reason }}</p>
 </td>

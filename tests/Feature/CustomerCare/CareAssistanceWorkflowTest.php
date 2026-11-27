@@ -67,7 +67,7 @@ class CareAssistanceWorkflowTest extends TestCase
         $this->assertDatabaseHas('family_account_activity_logs', ['action' => 'care_assistance_activated', 'actor_user_id' => $staff->id]);
         $this->assertDatabaseCount('care_booking_payments', 0);
         $this->get(route('customer-care.customer', $customer))->assertOk()->assertSee('Active for new requests')->assertSee('$23.00/hour total')
-            ->assertSee('Care Assistance')->assertSee('Application #'.$application->id)->assertDontSee('Record prepaid hours');
+            ->assertSee('Care Assistance')->assertSee('Application #'.$application->id)->assertSee('Record prepaid hours');
         $this->get(route('admin.care-assistance.show', $application))->assertOk()->assertSee('Care Assistance is active for new requests.');
         Notification::assertNothingSent();
     }
@@ -234,7 +234,7 @@ class CareAssistanceWorkflowTest extends TestCase
         $this->assertStringNotContainsString('PRIVATE HARDSHIP', $details);
     }
 
-    public function test_family_and_staff_creation_show_program_and_prepaid_cannot_be_selected(): void
+    public function test_family_and_staff_creation_show_program_and_require_eligible_prepaid_hours(): void
     {
         [$staff, $customer] = $this->people();
         $agreement = $this->enroll($staff, $customer);
@@ -250,7 +250,7 @@ class CareAssistanceWorkflowTest extends TestCase
         $this->end($staff, $customer, $agreement);
         try {
             app(ManagedCareService::class)->hire($staff, $request, $this->caregiver()->id, 'Program placement agreed.', 'prepaid');
-            $this->fail('Program requests cannot use prepaid funding, even after enrollment ends.');
+            $this->fail('Program requests require eligible prepaid hours, even after enrollment ends.');
         } catch (ValidationException $exception) {
             $this->assertStringContainsString('saved card', $exception->getMessage());
             $this->assertDatabaseCount('care_bookings', 0);
@@ -299,6 +299,160 @@ class CareAssistanceWorkflowTest extends TestCase
     private function people(): array
     {
         return [User::factory()->create(['role' => 'customer_success']), User::factory()->create(['role' => 'family'])];
+    }
+
+    public function test_received_program_payment_funds_care_at_23_20_without_another_customer_charge(): void
+    {
+        [$staff, $customer] = $this->people();
+        $agreement = $this->enroll($staff, $customer);
+        $input = $this->programCredit($agreement);
+        $credits = app(\App\Services\CareHours\ManualCareHourCreditService::class);
+        $wallet = $credits->credit($staff, $customer, $input);
+        $credits->credit($staff, $customer, $input);
+        $credits->credit($staff, $customer, array_replace($input, ['request_key' => (string) Str::uuid()]));
+        $this->assertSame(2880, $wallet->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_hour_manual_credits', 1);
+        $this->assertDatabaseCount('care_hour_purchases', 0);
+        $request = $this->request($staff, $customer);
+        $this->assertSame($wallet->id, app(CareHourRequestFundingService::class)->defaultAccountId($request, $customer));
+        $partial = CareRequest::select('id', 'family_account_id', 'family_user_id')->findOrFail($request->id);
+        $this->assertSame($wallet->id, app(CareHourRequestFundingService::class)->accountForRequest($partial, $customer)?->id);
+        app(ManagedCareService::class)->hire($staff, $request, $this->caregiver()->id, 'Program placement agreed.', 'prepaid');
+        $booking = $request->fresh()->booking;
+        $this->assertSame(2300, $booking->family_care_rate_cents);
+        $this->assertSame(0, $booking->family_processing_fee_rate_cents);
+        $this->assertSame(2000, $booking->caregiver_gross_rate_cents);
+        $this->assertSame(120, $wallet->balance()['reserved_minutes']);
+        $booking->update(['status' => 'completed', 'worked_minutes' => 120, 'completed_at' => now(), 'family_confirmed_at' => now()]);
+        $settlements = app(\App\Services\CareHours\PrepaidBookingSettlementService::class);
+        $settlement = $settlements->settle($booking->fresh());
+        $settlement = $settlements->reconcile($settlement);
+        $this->assertSame(4000, $settlement->caregiver_gross_cents);
+        $this->assertSame(134, $settlement->package_fee_cents);
+        $this->assertSame(3866, $settlement->caregiver_net_cents);
+        $this->assertSame(0, $settlement->amount_due_cents);
+        $this->assertSame(120, $wallet->balance()['used_minutes']);
+        $this->assertSame(2760, $wallet->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+        $this->assertSame(0, \App\Models\CareHourPaymentOperation::where('kind', 'shortfall')->count());
+        $booking->update(['worked_minutes' => 2880]);
+        $settlement = $settlements->reconcile($settlements->settle($booking->fresh()));
+        $this->assertSame(96000, $settlement->caregiver_gross_cents);
+        $this->assertSame(3232, $settlement->package_fee_cents);
+        $this->assertSame(92768, $settlement->caregiver_net_cents);
+        $this->assertSame(0, $settlement->amount_due_cents);
+        $this->assertSame(0, $wallet->balance()['available_minutes']);
+    }
+
+    public function test_program_credit_cannot_fund_standard_care_and_standard_credit_cannot_fund_program_care(): void
+    {
+        [$staff, $customer] = $this->people();
+        $standardRequest = $this->request($staff, $customer);
+        $credits = app(\App\Services\CareHours\ManualCareHourCreditService::class);
+        $wallet = $credits->credit($staff, $customer, ['request_key' => (string) Str::uuid(), 'hours' => 1,
+            'amount' => 31, 'reference' => 'bank-standard', 'reason' => 'Verified bank payment.']);
+        $agreement = $this->enroll($staff, $customer);
+        $credits->credit($staff, $customer, $this->programCredit($agreement));
+        $programRequest = $this->request($staff, $customer);
+        $ledger = app(\App\Services\CareHours\CareHourLedgerService::class);
+        $standardBooking = $this->booking($standardRequest, $this->caregiver());
+        $programBooking = $this->booking($programRequest, $this->caregiver());
+        $this->assertSame(60, $ledger->reserve($wallet, $standardBooking, 120));
+        $this->assertSame(2880, $ledger->reserve($wallet, $programBooking, 2940));
+        $this->assertNull($ledger->allocationsFor($standardBooking)->sole()->lot->care_assistance_pricing_agreement_id);
+        $this->assertEquals($agreement->id, $ledger->allocationsFor($programBooking)->sole()->lot->care_assistance_pricing_agreement_id);
+        $ledger->release($programBooking);
+        $this->assertSame(2880, $wallet->balance()['available_minutes']);
+    }
+
+    public function test_program_credit_requires_correct_paid_amount_fee_and_current_enrollment(): void
+    {
+        [$staff, $customer] = $this->people();
+        $agreement = $this->enroll($staff, $customer);
+        foreach ([['amount' => 1488], ['processing_fee' => null], ['expected_agreement_id' => 0], ['processing_fee' => 1105]] as $invalid) {
+            $this->actingAs($staff)->post(route('customer-care.credit', $customer), array_replace($this->programCredit($agreement), $invalid))
+                ->assertSessionHasErrors();
+            $this->assertDatabaseCount('care_hour_manual_credits', 0);
+        }
+        $input = $this->programCredit($agreement);
+        $this->end($staff, $customer, $agreement);
+        $this->post(route('customer-care.credit', $customer), $input)->assertSessionHasErrors('hours');
+        $this->assertDatabaseCount('care_hour_lots', 0);
+    }
+
+    public function test_invoice_reference_and_fee_cannot_be_reused_for_another_credit(): void
+    {
+        [$staff, $customer] = $this->people();
+        $agreement = $this->enroll($staff, $customer);
+        $input = $this->programCredit($agreement);
+        $this->actingAs($staff)->post(route('customer-care.credit', $customer), $input)->assertSessionHasNoErrors();
+        $this->post(route('customer-care.credit', $customer), array_replace($input, ['processing_fee' => 1]))->assertSessionHasErrors('reference');
+        $other = User::factory()->create(['role' => 'family']);
+        $otherAgreement = $this->enroll($staff, $other);
+        $this->post(route('customer-care.credit', $other), $this->programCredit($otherAgreement))->assertSessionHasErrors('reference');
+        $this->assertDatabaseCount('care_hour_manual_credits', 1);
+    }
+
+    public function test_ended_enrollment_keeps_prepaid_program_work_and_overrun_uses_program_rate(): void
+    {
+        [$staff, $customer] = $this->people();
+        $agreement = $this->enroll($staff, $customer);
+        $wallet = app(\App\Services\CareHours\ManualCareHourCreditService::class)->credit($staff, $customer, $this->programCredit($agreement));
+        $request = $this->request($staff, $customer);
+        $this->end($staff, $customer, $agreement);
+        $this->assertSame($wallet->id, app(CareHourRequestFundingService::class)->accountForRequest($request, $customer)?->id);
+        app(ManagedCareService::class)->hire($staff, $request, $this->caregiver()->id, 'Existing program placement agreed.', 'prepaid');
+        $booking = $request->fresh()->booking;
+        $preview = app(\App\Services\CareHours\PrepaidBookingFundingService::class)->approvalPreview($booking, 2940);
+        $this->assertSame(2880, $preview['prepaid_minutes']);
+        $this->assertSame(2300, $preview['card_cents']);
+    }
+
+    private function programCredit(CarePricingAgreement $agreement): array
+    {
+        return ['request_key' => (string) Str::uuid(), 'hours' => 48, 'amount' => 1104, 'processing_fee' => 32.32,
+            'expected_agreement_id' => $agreement->id, 'reference' => 'in_test_program_48', 'reason' => 'Verified paid Stripe invoice for 48 program hours.'];
+    }
+
+    public function test_program_recurring_visits_inherit_credit_and_restore_cancelled_hours(): void
+    {
+        [$staff, $customer] = $this->people();
+        $agreement = $this->enroll($staff, $customer);
+        $wallet = app(\App\Services\CareHours\ManualCareHourCreditService::class)->credit($staff, $customer, $this->programCredit($agreement));
+        $start = now()->addDays(2);
+        $request = $this->request($staff, $customer, ['request_type' => 'recurring', 'recurring_days' => [$start->dayOfWeek],
+            'recurring_start_time' => '10:00', 'recurring_end_time' => '12:00', 'recurring_starts_on' => $start->toDateString()]);
+        app(ManagedCareService::class)->hire($staff, $request, $this->caregiver()->id, 'Recurring program care agreed.', 'prepaid');
+        $plan = CarePlan::where('source_care_request_id', $request->id)->sole();
+        $this->end($staff, $customer, $agreement);
+        $this->travel(8)->days();
+        app(CarePlanOccurrenceService::class)->materialize($plan->fresh());
+        $funding = app(\App\Services\CareHours\PrepaidBookingFundingService::class);
+        foreach ($plan->generatedBookings()->get() as $booking) {
+            $this->assertTrue($funding->isPrepaid($booking));
+            $this->assertSame(2300, $booking->family_care_rate_cents);
+            $this->assertSame(2000, $booking->caregiver_gross_rate_cents);
+        }
+        $booking = $request->fresh()->booking;
+        $before = $wallet->balance();
+        $reserved = $funding->forBooking($booking)->reserved_minutes;
+        $booking->update(['status' => 'cancelled']);
+        $funding->release($booking->fresh());
+        $this->assertSame($before['available_minutes'] + $reserved, $wallet->balance()['available_minutes']);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+    }
+
+    public function test_prepaid_program_settlement_rejects_a_changed_caregiver_rate(): void
+    {
+        [$staff, $customer] = $this->people();
+        $agreement = $this->enroll($staff, $customer);
+        app(\App\Services\CareHours\ManualCareHourCreditService::class)->credit($staff, $customer, $this->programCredit($agreement));
+        $request = $this->request($staff, $customer);
+        app(ManagedCareService::class)->hire($staff, $request, $this->caregiver()->id, 'Program placement agreed.', 'prepaid');
+        $booking = $request->fresh()->booking;
+        $booking->update(['status' => 'completed', 'worked_minutes' => 120, 'caregiver_gross_rate_cents' => 2700]);
+        $this->expectException(ValidationException::class);
+        app(\App\Services\CareHours\PrepaidBookingSettlementService::class)->settle($booking->fresh());
     }
 
     private function enrollmentInput(?CareAssistanceApplication $application = null): array

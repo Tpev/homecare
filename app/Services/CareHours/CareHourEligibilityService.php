@@ -9,6 +9,14 @@ use Illuminate\Validation\ValidationException;
 /** Check recipient-wide restrictions before accepting new prepaid money or a gift. */
 class CareHourEligibilityService
 {
+    public function reasonForManualCredit(int $familyAccountId): ?string
+    {
+        return CarePricingAgreement::query()->where('family_account_id', $familyAccountId)
+            ->where('active', true)->where('all_caregivers', true)
+            ->where(fn ($q) => $q->whereNull('program')->orWhere('program', '!=', CarePricingAgreement::CARE_ASSISTANCE))->exists()
+                ? $this->reasonForFamily($familyAccountId) : null;
+    }
+
     public function reasonForFamily(int $familyAccountId): ?string
     {
         // A caregiver-specific agreement still leaves other standard-priced care eligible.

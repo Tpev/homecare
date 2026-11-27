@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('Customer Success activates assistance, posts care and ends enrollment without repricing the request', async ({ page }, testInfo) => {
+    test.setTimeout(180_000); // Includes recording the external payment and verifying its balance.
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.context().route('**/*', route => {
@@ -25,6 +26,15 @@ test('Customer Success activates assistance, posts care and ends enrollment with
     await program.getByRole('button', { name: 'Activate Care Assistance', exact: true }).click();
     await expect(program.getByText('Active for new requests', { exact: true })).toBeVisible();
     await expect(program).toContainText('Customer: $23.00/hour total.');
+    const prepaid = page.locator('#prepaid-hours');
+    await prepaid.getByText('Add hours from a received payment', { exact: true }).first().click();
+    await prepaid.getByLabel('Hours', { exact: true }).fill('48');
+    await prepaid.getByLabel('Amount paid before fees (USD)').fill('1104');
+    await prepaid.getByLabel('Actual processing fee (USD)').fill('32.32');
+    await prepaid.getByLabel('Payment reference').fill(`in_synthetic_assistance_${testInfo.project.name}`);
+    await prepaid.getByLabel('Reason / internal note').fill('Verified synthetic paid invoice for browser QA.');
+    await prepaid.getByRole('button', { name: 'Record prepaid hours' }).click();
+    await expect(prepaid).toContainText('48 h available for this Care Assistance enrollment');
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
     await page.screenshot({ path: testInfo.outputPath('account-active.png'), fullPage: true });
 
@@ -43,7 +53,7 @@ test('Customer Success activates assistance, posts care and ends enrollment with
     await page.getByRole('button', { name: 'Post request', exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/customer-care\/requests\/\d+/);
     const requestURL = page.url();
-    await expect(page.getByText('$23.00/hour total · Saved-card payment')).toBeVisible();
+    await expect(page.getByText('$23.00/hour total · Caregiver $20.00/hour before fees')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
     await page.screenshot({ path: testInfo.outputPath('request-posted.png'), fullPage: true });
 
@@ -53,6 +63,6 @@ test('Customer Success activates assistance, posts care and ends enrollment with
     await program.getByRole('button', { name: 'End Care Assistance for new requests', exact: true }).click();
     await expect(program.getByText('Not active for new requests', { exact: true })).toBeVisible();
     await page.goto(requestURL);
-    await expect(page.getByText('$23.00/hour total · Saved-card payment')).toBeVisible();
+    await expect(page.getByText('$23.00/hour total · Caregiver $20.00/hour before fees')).toBeVisible();
     expect(errors).toEqual([]);
 });

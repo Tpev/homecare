@@ -11,7 +11,7 @@
     data-inline-support
 >
     @if($requestItem->isCareAssistance())
-        <div class="flex flex-wrap items-center gap-3"><x-care-assistance-badge :active="true" /><p class="text-sm font-semibold">$23.00/hour total · Saved-card payment</p></div>
+        <div class="flex flex-wrap items-center gap-3"><x-care-assistance-badge :active="true" /><p class="text-sm font-semibold">$23.00/hour total · Caregiver $20.00/hour before fees</p></div>
     @endif
     @if($aiPrepared)
         <x-alert color="blue">LoLo prepared the correction details. Review and edit them before you send, submit, or approve anything. Nothing was changed automatically.</x-alert>

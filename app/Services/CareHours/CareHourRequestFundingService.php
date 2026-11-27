@@ -28,19 +28,21 @@ class CareHourRequestFundingService
     public function accountForRequest(CareRequest $request, User $actor, ?CareRequestApplication $application = null): ?CareHourAccount
     {
         if (! $this->available() || ! app(FamilyAccountContext::class)->canAccessRecord($actor, $request)
-            || $request->care_arrangement_id || $request->pricing_agreement_id || $request->isCareAssistance()
+            || $request->care_arrangement_id || $request->pricing_agreement_id
             || ($application && ((int) $application->care_request_id !== (int) $request->id
                 || ($request->request_type === CareRequest::TYPE_RECURRING && $application->selected_days !== null)))) {
             return null;
         }
         $familyId = (int) ($request->family_account_id ?: app(FamilyAccountContext::class)->account($actor)->id);
-        if ($application && app(MarketplacePricing::class)->quoteForRequest($request, (int) $application->caregiver_user_id, 60)['pricing_agreement_id']) {
+        // This also reloads the pinned agreement when a caller selected only request summary columns.
+        $agreementId = $request->isCareAssistance() ? (int) $request->care_assistance_pricing_agreement_id : null;
+        if ($application && ! $agreementId && app(MarketplacePricing::class)->quoteForRequest($request, (int) $application->caregiver_user_id, 60)['pricing_agreement_id']) {
             return null;
         }
         $booking = new CareBooking(['family_account_id' => $familyId]);
         $booking->setRelation('careRequest', $request);
 
-        return $this->usable(app(CareHourIdentityService::class)->forBooking($booking), $familyId, $actor);
+        return $this->usable(app(CareHourIdentityService::class)->forBooking($booking), $familyId, $actor, $agreementId);
     }
 
     public function accountForFamily(User $actor): ?CareHourAccount
@@ -50,7 +52,8 @@ class CareHourRequestFundingService
         }
         $familyId = (int) app(FamilyAccountContext::class)->account($actor)->id;
 
-        return $this->usable(app(CareHourIdentityService::class)->walletFor($actor), $familyId, $actor);
+        return $this->usable(app(CareHourIdentityService::class)->walletFor($actor), $familyId, $actor,
+            app(MarketplacePricing::class)->activeCareAssistance($familyId)?->id);
     }
 
     public function accountForProfile(?int $profileId, User $actor): ?CareHourAccount
@@ -85,7 +88,7 @@ class CareHourRequestFundingService
             return null;
         }
 
-        return $account->balance()['available_minutes'] > 0 ? $account->id : null;
+        return app(CareHourLedgerService::class)->balance($account, $request->care_assistance_pricing_agreement_id, filterPricing: true)['available_minutes'] > 0 ? $account->id : null;
     }
 
     public function remember(CareRequest $request, User $actor, ?int $accountId, ?User $staffActor = null): void
@@ -114,11 +117,15 @@ class CareHourRequestFundingService
         }, 3);
     }
 
-    private function usable(?CareHourAccount $account, int $familyId, User $actor): ?CareHourAccount
+    private function usable(?CareHourAccount $account, int $familyId, User $actor, ?int $agreementId = null): ?CareHourAccount
     {
+        $programBalance = $account && $agreementId && \App\Models\CareHourLot::query()
+            ->whereIn('care_hour_account_id', $account->familySourceIds())
+            ->where('care_assistance_pricing_agreement_id', $agreementId)->where('status', 'available')->exists();
+
         return $account && (int) $account->family_account_id === $familyId && $account->active && $account->currency === 'usd'
             && app(CareHourAccess::class)->canUseAccount($account, $actor)
             && $account->familyAccount?->status === FamilyAccount::STATUS_ACTIVE
-            && app(CareHourEligibilityService::class)->reasonFor($account) === null ? $account : null;
+            && ($agreementId ? $programBalance : app(CareHourEligibilityService::class)->reasonFor($account) === null) ? $account : null;
     }
 }
