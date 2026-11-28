@@ -341,10 +341,71 @@ class CaregiverRosterTest extends TestCase
     {
         [$actor, $request] = $this->fixture();
         Http::swap(new \Illuminate\Http\Client\Factory);
-        $this->fakeAi('sms_messages:99999999');
+        $this->fakeAi(99999999);
         $roster = $this->generate($actor, $request);
         $this->assertSame('failed', $roster->status);
         $this->assertSame(0, $roster->entries()->count());
+    }
+
+    public function test_selected_request_is_a_valid_source_without_linked_lead_notes(): void
+    {
+        [$actor, $request] = $this->fixture();
+        Http::swap(new \Illuminate\Http\Client\Factory);
+        $this->fakeAi('request');
+        $roster = $this->generate($actor, $request);
+        $this->assertSame('ready', $roster->status, $roster->error ?? 'Generation failed');
+        $entry = $roster->entries->first();
+        $this->assertSame(['care_requests:'.$request->id], $entry->assessment['evidence_refs']);
+        $this->assertArrayNotHasKey('evidence_ids', $entry->assessment);
+        $this->assertSame('care_requests:'.$request->id, $entry->evidence['customer']['request']['ref']);
+        Queue::assertNotPushed(SendCaregiverRosterEntry::class);
+        Notification::assertNothingSent();
+    }
+
+    public function test_citation_from_another_caregiver_in_the_same_batch_is_rejected(): void
+    {
+        [$actor, $request] = $this->fixture();
+        $this->fixture();
+        Http::swap(new \Illuminate\Http\Client\Factory);
+        $this->fakeAi('other_candidate');
+        $roster = $this->generate($actor, $request);
+        $this->assertSame('failed', $roster->status);
+        $this->assertStringContainsString('unknown evidence reference', $roster->error);
+        $this->assertSame(0, $roster->entries()->count());
+        $this->assertDatabaseCount('care_request_invitations', 0);
+        Queue::assertNotPushed(SendCaregiverRosterEntry::class);
+    }
+
+    public function test_large_source_catalog_uses_bounded_citations_instead_of_large_schema_enums(): void
+    {
+        [$actor, $request] = $this->fixture();
+        $customer = app(CareRosterEvidence::class)->customer($request);
+        $candidates = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $candidates[] = ['caregiver_user_id' => $i, 'records' => array_map(fn ($j) => [
+                'ref' => 'sms_messages:'.($i * 1000 + $j), 'body' => 'Please confirm the requested hours.',
+            ], range(1, 100))];
+        }
+        $result = app(\App\Services\CustomerCare\CareRosterAi::class)->assess($actor, $customer, $candidates, 'Confirm the hours.', 'normal');
+        $this->assertCount(12, $result['assessments']);
+        $this->assertSame(['sms_messages:1001'], $result['assessments'][0]['evidence_refs']);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+            $schema = $request['text']['format']['schema'];
+            $variants = $schema['properties']['assessments']['items']['anyOf'];
+            $this->assertCount(12, $variants);
+            $this->assertStringNotContainsString('sms_messages:', json_encode($schema));
+            foreach ($variants as $i => $variant) {
+                $this->assertSame([$input['candidates'][$i]['caregiver_user_id']], $variant['properties']['caregiver_user_id']['enum']);
+                $allowed = $variant['properties']['evidence_ids']['items']['anyOf'];
+                $ownIds = array_column($input['candidates'][$i]['records'], 'evidence_id');
+                $this->assertSame(min($ownIds), $allowed[1]['minimum']);
+                $this->assertSame(max($ownIds), $allowed[1]['maximum']);
+                $this->assertSame($input['customer']['request']['evidence_id'], $allowed[0]['minimum']);
+            }
+
+            return true;
+        });
     }
 
     public function test_new_customer_note_invalidates_an_existing_roster(): void
@@ -446,7 +507,7 @@ class CaregiverRosterTest extends TestCase
         $service->approve($actor, $roster, $token);
     }
 
-    private function fakeAi(?string $evidenceOverride = null): void
+    private function fakeAi(int|string|null $evidenceOverride = null): void
     {
         Http::fake(['api.openai.test/*' => function ($request) use ($evidenceOverride) {
             $input = json_decode($request['input'], true);
@@ -454,7 +515,11 @@ class CaregiverRosterTest extends TestCase
                 $data = ['assessments' => array_map(fn ($candidate) => [
                     'caregiver_user_id' => $candidate['caregiver_user_id'], 'fit' => 'strong', 'why' => 'Relevant bathing experience and saved afternoon hours.',
                     'concerns' => ['Saved hours still need confirmation.'], 'confirm' => ['Can you commit to both visits?'],
-                    'evidence_refs' => [$evidenceOverride ?? $candidate['records'][0]['ref']], 'avoid_contact' => false,
+                    'evidence_ids' => [match ($evidenceOverride) {
+                        'request' => $input['customer']['request']['evidence_id'],
+                        'other_candidate' => $input['candidates'][0]['records'][0]['evidence_id'],
+                        default => $evidenceOverride ?? $candidate['records'][0]['evidence_id'],
+                    }], 'avoid_contact' => false,
                     'invitation_body' => 'Are you interested in bathing assistance in Durham on Monday afternoon?',
                     'sms_body' => 'LoLo Care: please review your invitation for Monday afternoon in Durham.',
                 ], $input['candidates'])];

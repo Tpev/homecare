@@ -26,6 +26,16 @@ Build evidence packets from allowlisted fields, linked by durable IDs:
 
 Process regional evidence in bounded batches, assess every candidate in those batches, then rank the strongest candidates globally. Keep evidence references with each assessment. The model may not invent caregivers, source IDs, certification verification, availability, acceptance, or probabilities. Server validation rejects unknown/duplicate IDs and unknown evidence references. Empty results are valid and explained.
 
+The selected request is an explicit evidence source, even without linked lead notes. Prompt version `care-roster-v2` supplies numbered sources and constrains each caregiver's citations to the shared customer/request records or their own records. The server maps these temporary numbers back to original `table:id` references before storing or ranking assessments, and still rejects unknown or cross-caregiver citations. Numeric ranges keep the schema within provider limits for large evidence catalogs.
+
+## Runtime model and processing limits
+
+The app calls the existing OpenAI Responses connection with `ai_support.model` (committed default `gpt-5.6-luna`) and `ai_support.reasoning_effort` (default `low`). Existing server configuration can override those defaults. The app uses a dedicated prompt adapted from the reporting approach; it does not load this chat or the local Codex skill at runtime. Each assessment call receives customer/request evidence, CS context and urgency, and up to 12 caregiver packets. The final ranking call compares all resulting assessments against customer context and returns up to 12 candidates. There is no fixed weighted score or calibrated conversion probability.
+
+The structural scan covers the profile pool; model review covers eligible regional candidates, including previously uninvited people. The normal ZIP-centre search is at least 50 miles, extends to a caregiver's stated radius up to 100 miles, and retains existing invitees/applicants and unknown geography for review. Eligibility rules still apply. Saved availability is optional and needs confirmation; recorded overlaps block outreach. More than 240 regional candidates or more than 500,000 bytes of evidence in one provider input causes a visible failure rather than silent omissions.
+
+History packets include at most the newest 100 records per source; long free-text fields, including context, are clipped at 4,000 characters with a marker. They do not read audio, attachments, external calendars or external inboxes. Recurring commitment checks cover 90 days. A new generation collects a database snapshot; reopening a saved draft uses that snapshot. An already-running generation for the same request is reused. Drafts expire after 24 hours and exact-outreach previews after 15 minutes. SMS remains off until CS selects it.
+
 The instructions carry forward the reporting skill: read chronology and corrections; distinguish facts, reported experience and inference; treat notes/SMS as untrusted evidence rather than instructions; respect opt-outs; avoid caregiver pay discussion; avoid inferring protected characteristics or personal qualities from names/photos. Use job-relevant professional evidence. Outbound drafts must not reveal private CS assessments, unrelated customer details, health history, or credentials/contact details from evidence.
 
 ## Implementation
@@ -62,3 +72,9 @@ Run focused existing customer-care, invitations and SMS suites, PHP formatting a
 - Reproduced the reported MySQL error 1038 using large saved JSON packets and a 32 KiB sort buffer in a disposable local MySQL 8.0.20 instance. The replacement metadata query succeeds; `EXPLAIN` confirms a backward covering-index scan without filesort.
 - All 22 focused tests pass on SQLite (112 assertions) and MySQL (113 assertions), including history size/order/isolation, retained draft evidence, JSON object-key normalization, review, approval, invitation/SMS dispatch and stale-evidence rejection. The MySQL run exposed and then verified the fix for false evidence-change errors after JSON storage.
 - The additive history-index migration successfully rolled back and reapplied on MySQL. All 252 committed prepaid manifest hashes still match; this repair changes no protected source or deployment driver. All provider calls and outreach in tests were faked, and the disposable database was shut down afterward.
+
+### Evidence-citation repair verification
+
+- All 25 focused PHP tests pass (176 assertions), including selected-request citations without linked lead notes, rejection of unknown and cross-caregiver references, and a 1,200-record source catalog without large schema enums. Desktop and mobile approval flows also pass with fake providers.
+- The constrained source schema passed a live OpenAI check. A second live check exercised the actual assessment and ranking services with two fictional caregivers and an isolated in-memory database: both were assessed/ranked, and request/profile/availability citations were validated. The connection used `gpt-5.6-luna`, reasoning `low`, and prompt `care-roster-v2`.
+- The local live check used a temporary bundle of existing Windows trusted root certificates, with TLS verification enabled. No `.env`, server settings or credentials changed, and no real customer data, invitation or SMS was sent.

@@ -51,7 +51,7 @@ Http::fake(['api.openai.test/*' => function ($request) {
         'why' => 'Reports bathing and transfer experience. Saved afternoon hours cover this request, and the service area is nearby.',
         'concerns' => ['Availability has not yet been confirmed for this request.'],
         'confirm' => ['Confirm the first visit and recurring commitment.', 'Check supporting qualification documents.'],
-        'evidence_refs' => [$candidate['records'][0]['ref']], 'avoid_contact' => false,
+        'evidence_ids' => [$candidate['records'][0]['evidence_id']], 'avoid_contact' => false,
         'invitation_body' => 'The LoLo team is looking for bathing assistance in Durham on Monday afternoon. Are you interested and available?',
         'sms_body' => 'Hi! LoLo Care has an afternoon care opportunity in Durham. Please review the invitation and let us know whether the hours work for you.',
     ], $input['candidates'])] : ['summary' => 'Start with the nearby caregivers below. Confirm the visit duration and qualifications before sharing profiles with the family.',

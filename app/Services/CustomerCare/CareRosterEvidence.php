@@ -52,7 +52,7 @@ class CareRosterEvidence
                 ['id', 'lead_id', 'direction', 'body', 'status', 'created_at'], $coverage),
             $this->messages(DB::table('care_request_conversations')->where('care_request_id', $request->id)->pluck('id')->all(), $coverage));
 
-        return ['request' => $this->requestData($request), 'customer_name' => $request->family?->name,
+        return ['request' => ['ref' => 'care_requests:'.$request->id] + $this->requestData($request), 'customer_name' => $request->family?->name,
             'lead_ids' => $leadIds, 'lead_link_note' => $leadIds ? null : 'No linked lead history; customer context may be incomplete.',
             'records' => $records, 'coverage' => $coverage, 'timezone' => config('app.timezone')];
     }

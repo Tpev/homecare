@@ -9,22 +9,49 @@ use RuntimeException;
 
 class CareRosterAi
 {
-    public const VERSION = 'care-roster-v1';
+    public const VERSION = 'care-roster-v2';
 
     public function __construct(private OpenAiStructuredResponses $client) {}
 
     public function assess(User $actor, array $customer, array $candidates, string $context, string $urgency): array
     {
+        // Numeric source IDs keep the strict schema bounded even with thousands
+        // of records. Each caregiver can cite only customer or their own evidence.
+        $references = [];
+        $number = function (array $record) use (&$references): array {
+            $id = count($references) + 1;
+            $references[$id] = $record['ref'];
+            $record['evidence_id'] = $id;
+
+            return $record;
+        };
+        $customer['request'] = $number(['ref' => 'care_requests:'.$customer['request']['id']] + $customer['request']);
+        $customer['records'] = array_map($number, $customer['records']);
+        $customerEnd = count($references);
         $text = ['type' => 'string'];
         $list = ['type' => 'array', 'items' => $text];
-        $schema = $this->object(['assessments' => ['type' => 'array', 'items' => $this->object([
-            'caregiver_user_id' => ['type' => 'integer', 'enum' => array_column($candidates, 'caregiver_user_id')],
-            'fit' => ['type' => 'string', 'enum' => ['strong', 'possible', 'unsuitable']],
-            'why' => $text, 'concerns' => $list, 'confirm' => $list, 'evidence_refs' => $list,
-            'avoid_contact' => ['type' => 'boolean'], 'invitation_body' => $text, 'sms_body' => $text,
-        ])]]);
+        $variants = $bounds = [];
+        foreach ($candidates as &$candidate) {
+            $first = count($references) + 1;
+            $candidate['records'] = array_map($number, $candidate['records']);
+            $last = count($references);
+            $bounds[$candidate['caregiver_user_id']] = [$first, $last];
+            $sources = [['type' => 'integer', 'minimum' => 1, 'maximum' => $customerEnd]];
+            if ($last >= $first) {
+                $sources[] = ['type' => 'integer', 'minimum' => $first, 'maximum' => $last];
+            }
+            $variants[] = $this->object([
+                'caregiver_user_id' => ['type' => 'integer', 'enum' => [$candidate['caregiver_user_id']]],
+                'fit' => ['type' => 'string', 'enum' => ['strong', 'possible', 'unsuitable']],
+                'why' => $text, 'concerns' => $list, 'confirm' => $list,
+                'evidence_ids' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 20, 'items' => ['anyOf' => $sources]],
+                'avoid_contact' => ['type' => 'boolean'], 'invitation_body' => $text, 'sms_body' => $text,
+            ]);
+        }
+        unset($candidate);
+        $schema = $this->object(['assessments' => ['type' => 'array', 'items' => ['anyOf' => $variants]]]);
         $result = $this->call($actor, $schema, compact('customer', 'candidates', 'context', 'urgency'),
-            'Assess every supplied caregiver exactly once. Do not omit candidates or silently substitute a top-N list.');
+            'Assess every supplied caregiver exactly once. Do not omit candidates or silently substitute a top-N list. For evidence_ids copy the numeric evidence_id from customer.request, customer.records, or this caregiver\'s records. Never return database IDs, ref strings, field names, or another caregiver\'s evidence_id as citations.');
         $rows = $result['result']['assessments'] ?? null;
         Validator::make(['rows' => $rows], [
             'rows' => ['required', 'array', 'size:'.count($candidates)],
@@ -33,22 +60,27 @@ class CareRosterAi
             'rows.*.why' => ['required', 'string', 'max:3000'],
             'rows.*.concerns' => ['present', 'array', 'max:12'], 'rows.*.concerns.*' => ['string', 'max:1200'],
             'rows.*.confirm' => ['present', 'array', 'max:12'], 'rows.*.confirm.*' => ['string', 'max:1200'],
-            'rows.*.evidence_refs' => ['required', 'array', 'min:1', 'max:20'], 'rows.*.evidence_refs.*' => ['string'],
+            'rows.*.evidence_ids' => ['required', 'array', 'min:1', 'max:20'], 'rows.*.evidence_ids.*' => ['integer'],
             'rows.*.avoid_contact' => ['required', 'boolean'],
             'rows.*.invitation_body' => ['present', 'string', 'max:1000'],
             'rows.*.sms_body' => ['present', 'string', 'max:1600'],
         ])->validate();
-        $byId = collect($candidates)->keyBy('caregiver_user_id');
-        foreach ($rows as $row) {
-            $packet = $byId->get($row['caregiver_user_id']);
-            if (! $packet) {
+        foreach ($rows as &$row) {
+            if (! isset($bounds[$row['caregiver_user_id']])) {
                 throw new RuntimeException('The AI returned an unknown caregiver. No roster was created.');
             }
-            $allowed = array_merge(array_column($packet['records'], 'ref'), array_column($customer['records'], 'ref'));
-            if (array_diff($row['evidence_refs'], $allowed)) {
-                throw new RuntimeException('The AI returned an unknown evidence reference. No roster was created.');
+            [$first, $last] = $bounds[$row['caregiver_user_id']];
+            $row['evidence_refs'] = [];
+            foreach ($row['evidence_ids'] as $id) {
+                if (! is_int($id) || ! isset($references[$id]) || ! (($id >= 1 && $id <= $customerEnd) || ($id >= $first && $id <= $last))) {
+                    throw new RuntimeException('The AI returned an unknown evidence reference. No roster was created.');
+                }
+                $row['evidence_refs'][] = $references[$id];
             }
+            $row['evidence_refs'] = array_values(array_unique($row['evidence_refs']));
+            unset($row['evidence_ids']);
         }
+        unset($row);
 
         return ['assessments' => $rows, 'usage' => $result['usage']];
     }
