@@ -39,6 +39,8 @@ The instructions carry forward the reporting skill: read chronology and correcti
 - Per-entry queue jobs use stable SMS request UUIDs and existing invitation deduplication. A submitted or indeterminate SMS is never automatically resent. Recheck the original approver's current permission before sending.
 - Model/provider failures leave a failed draft, never an executable partial roster. Store safe error descriptions, not provider payloads or credentials.
 - Generation checkpoints collection, each 12-caregiver assessment batch, and final ranking separately. Each worker step makes at most one provider request with a 40-second timeout, under the 55-second job limit. Retries resume the saved cursor; completed/failed drafts discard the temporary full-pool working packet. The review screen shows batch progress. Existing queue configuration is sufficient.
+- Recent-history navigation fetches only ID, status and creation time, ordered by creation time and ID. A covering request/history index avoids sorting full AI working packets; selecting an individual draft still loads its evidence. The additive index migration also repairs already-deployed roster tables. This follows [MySQL's indexed ORDER BY guidance](https://dev.mysql.com/doc/refman/8.0/en/order-by-optimization.html).
+- Evidence fingerprints recursively normalize object-key order before hashing, preserving list order and values. [MySQL normalizes JSON objects on storage](https://dev.mysql.com/doc/refman/8.0/en/json.html); this must not make unchanged evidence fail the review/approval checks. Actual replies, consent, commitments and eligibility changes still invalidate approval.
 
 ## Verification and rollout
 
@@ -54,3 +56,9 @@ Run focused existing customer-care, invitations and SMS suites, PHP formatting a
 - The existing pricing KB test `test_published_pricing_kb_uses_exact_family_and_caregiver_math_without_provider_calls` fails governed validation for `KB-B4-PRICE-001`. The same failure was reproduced with the original OpenAI client from HEAD; it was excluded from the 101-test passing run.
 - A fictional-data smoke request using the existing OpenAI configuration could not connect from this machine (cURL transport error 7). Live provider behavior remains unverified; mocked provider tests passed. No credentials were changed or exposed.
 - Implementation is local and has not been deployed. No production invitation or SMS was sent.
+
+### MySQL runtime repair verification
+
+- Reproduced the reported MySQL error 1038 using large saved JSON packets and a 32 KiB sort buffer in a disposable local MySQL 8.0.20 instance. The replacement metadata query succeeds; `EXPLAIN` confirms a backward covering-index scan without filesort.
+- All 22 focused tests pass on SQLite (112 assertions) and MySQL (113 assertions), including history size/order/isolation, retained draft evidence, JSON object-key normalization, review, approval, invitation/SMS dispatch and stale-evidence rejection. The MySQL run exposed and then verified the fix for false evidence-change errors after JSON storage.
+- The additive history-index migration successfully rolled back and reapplied on MySQL. All 252 committed prepaid manifest hashes still match; this repair changes no protected source or deployment driver. All provider calls and outreach in tests were faked, and the disposable database was shut down afterward.

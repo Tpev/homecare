@@ -191,7 +191,23 @@ class CareRosterEvidence
 
     public function stateFingerprint(array $state): string
     {
-        return hash('sha256', json_encode($state, JSON_THROW_ON_ERROR));
+        return hash('sha256', json_encode($this->canonicalState($state), JSON_THROW_ON_ERROR));
+    }
+
+    private function canonicalState(array $state): array
+    {
+        foreach ($state as $key => $value) {
+            if (is_array($value)) {
+                $state[$key] = $this->canonicalState($value);
+            }
+        }
+        // MySQL normalizes JSON object keys when storing evidence. Key order is
+        // not an evidence change; list order and all values remain significant.
+        if (! array_is_list($state)) {
+            ksort($state, SORT_STRING);
+        }
+
+        return $state;
     }
 
     public function optedOut(User $user): bool

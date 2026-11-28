@@ -77,6 +77,59 @@ class CaregiverRosterTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_history_stays_small_and_uses_an_index_with_large_saved_drafts(): void
+    {
+        [$actor, $request] = $this->fixture();
+        [, $otherRequest] = $this->fixture();
+        $evidence = ['pool' => ['notes' => str_repeat('Private caregiver evidence. ', 12000)], 'assessments' => []];
+        $ids = [];
+        for ($i = 0; $i < 12; $i++) {
+            $ids[] = CaregiverRoster::create([
+                'care_request_id' => $request->id, 'created_by_user_id' => $actor->id,
+                'status' => 'generating', 'request_fingerprint' => str_repeat('a', 64),
+                'context' => 'Saved private search context.', 'generation_data' => $evidence,
+                'created_at' => now()->subMinutes(12 - intdiv($i, 2)),
+            ])->id;
+        }
+        CaregiverRoster::create(['care_request_id' => $otherRequest->id, 'created_by_user_id' => $actor->id,
+            'status' => 'queued', 'request_fingerprint' => str_repeat('b', 64)]);
+
+        DB::enableQueryLog();
+        $component = Livewire::actingAs($actor)->test(CaregiverRosterWorkspace::class)
+            ->set('requestId', (string) $request->id)
+            ->assertViewHas('history', function ($history) use ($ids) {
+                $this->assertCount(10, $history);
+                foreach ($history as $past) {
+                    $this->assertEmpty(array_intersect(['generation_data', 'context', 'summary', 'questions', 'coverage'], array_keys($past->getAttributes())),
+                        'History navigation must not fetch large evidence or draft content.');
+                }
+                $this->assertSame(array_reverse(array_slice($ids, -10)), $history->modelKeys());
+
+                return true;
+            });
+        $historyQueries = collect(DB::getQueryLog())->filter(fn ($query) => str_contains($query['query'], 'caregiver_rosters') && str_contains($query['query'], 'order by'));
+        DB::disableQueryLog();
+        $this->assertCount(1, $historyQueries);
+        $query = $historyQueries->first();
+        if (DB::getDriverName() === 'sqlite') {
+            $plan = collect(DB::select('EXPLAIN QUERY PLAN '.$query['query'], $query['bindings']))->pluck('detail')->implode(' ');
+            $this->assertStringContainsString('USING COVERING INDEX caregiver_rosters_request_history_index', $plan);
+            $this->assertStringNotContainsString('USE TEMP B-TREE', $plan);
+        } elseif (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            $plan = DB::select('EXPLAIN '.$query['query'], $query['bindings'])[0];
+            $this->assertSame('caregiver_rosters_request_history_index', $plan->key);
+            $this->assertStringContainsString('Using index', $plan->Extra);
+            $this->assertStringNotContainsString('filesort', $plan->Extra);
+        }
+
+        $component->call('loadRoster', end($ids))->assertHasNoErrors()
+            ->assertSet('context', 'Saved private search context.');
+        $this->assertSame($evidence, CaregiverRoster::findOrFail(end($ids))->generation_data);
+        Queue::assertNotPushed(SendCaregiverRosterEntry::class);
+        Http::assertNothingSent();
+        Notification::assertNothingSent();
+    }
+
     public function test_cs_reviews_exact_edited_messages_and_approval_is_idempotent(): void
     {
         [$actor, $request, $caregiver] = $this->fixture();

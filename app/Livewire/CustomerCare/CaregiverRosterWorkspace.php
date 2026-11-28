@@ -150,7 +150,10 @@ class CaregiverRosterWorkspace extends Component
 
         return view('livewire.customer-care.caregiver-roster-workspace', [
             'roster' => $roster, 'requests' => $requests,
-            'history' => $selectedRequest ? CaregiverRoster::where('care_request_id', $selectedRequest->id)->latest()->limit(10)->get() : collect(),
+            // History is navigation only: never sort or hydrate the large AI evidence packet.
+            'history' => $selectedRequest ? CaregiverRoster::select(['id', 'status', 'created_at'])
+                ->where('care_request_id', $selectedRequest->id)
+                ->orderByDesc('created_at')->orderByDesc('id')->limit(10)->get() : collect(),
             'applications' => $selectedRequest ? $selectedRequest->applications()->get()->keyBy('caregiver_user_id') : collect(),
             'invitations' => $selectedRequest ? $selectedRequest->invitations()->get()->keyBy('caregiver_user_id') : collect(),
         ])->layout('layouts.app');
