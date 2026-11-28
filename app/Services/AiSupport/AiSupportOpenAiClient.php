@@ -2,11 +2,7 @@
 
 namespace App\Services\AiSupport;
 
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use RuntimeException;
-use Throwable;
 
 class AiSupportOpenAiClient
 {
@@ -33,60 +29,11 @@ class AiSupportOpenAiClient
             ],
         ];
 
-        $started = hrtime(true);
-        $response = null;
-        $exception = null;
-        $attempts = 0;
-        $maximum = max(1, min(2, (int) config('ai_support.provider_retry_attempts', 2)));
-        for ($attempt = 1; $attempt <= $maximum; $attempt++) {
-            $attempts = $attempt;
-            try {
-                $request = Http::baseUrl(rtrim((string) config('services.openai.base_url'), '/'))
-                    ->withToken((string) config('services.openai.api_key'))
-                    ->acceptJson()->asJson()->connectTimeout(5)
-                    ->timeout(max(10, (int) config('services.openai.timeout_seconds', 60)));
-                $caBundle = trim((string) config('services.openai.ca_bundle'));
-                if ($caBundle !== '') {
-                    $request = $request->withOptions(['verify' => $caBundle]);
-                }
-                $response = $request->post('responses', $payload);
-                if ($response->successful() || ! $this->mayRetry($response) || $attempt === $maximum) {
-                    break;
-                }
-            } catch (ConnectionException $caught) {
-                $exception = $caught;
-                if ($attempt === $maximum) {
-                    break;
-                }
-            }
-        }
-        $latency = (int) round((hrtime(true) - $started) / 1_000_000);
-
-        if (! $response instanceof Response) {
-            throw new RuntimeException('AI Support provider connection failed.', 0, $exception);
-        }
-        if (! $response->successful()) {
-            throw new RuntimeException('AI Support provider failed with HTTP '.$response->status().'.');
-        }
-        $body = $response->json();
-        if (! is_array($body)) {
-            throw new RuntimeException('AI Support provider returned an invalid response.');
-        }
-
-        try {
-            $result = json_decode($this->outputText($body), true, 512, JSON_THROW_ON_ERROR);
-        } catch (Throwable $caught) {
-            throw new RuntimeException('AI Support provider returned invalid structured output.', 0, $caught);
-        }
-        if (! is_array($result)) {
-            throw new RuntimeException('AI Support provider returned no structured result.');
-        }
-
-        $usage = [
-            'input_tokens' => (int) data_get($body, 'usage.input_tokens', 0),
-            'cached_input_tokens' => (int) data_get($body, 'usage.input_tokens_details.cached_tokens', 0),
-            'output_tokens' => (int) data_get($body, 'usage.output_tokens', 0),
-        ];
+        $provider = app(OpenAiStructuredResponses::class)->send($payload);
+        $result = $provider['result'];
+        $usage = $provider['usage'];
+        $latency = $provider['latency_ms'];
+        $attempts = $provider['retries'] + 1;
         $uncached = max(0, $usage['input_tokens'] - $usage['cached_input_tokens']);
         $inputCost = ($uncached * (float) config('ai_support.provider_input_usd_per_million', 0.20))
             + ($usage['cached_input_tokens'] * (float) config('ai_support.provider_cached_input_usd_per_million', 0.02));
@@ -272,33 +219,5 @@ class AiSupportOpenAiClient
                 ],
             ],
         ];
-    }
-
-    private function mayRetry(Response $response): bool
-    {
-        return $response->status() === 429 || $response->serverError();
-    }
-
-    /** @param array<string,mixed> $body */
-    private function outputText(array $body): string
-    {
-        $texts = [];
-        foreach ((array) ($body['output'] ?? []) as $item) {
-            foreach ((array) ($item['content'] ?? []) as $content) {
-                if (($content['type'] ?? null) === 'refusal') {
-                    throw new RuntimeException('AI Support provider refused the structured request.');
-                }
-                if (($content['type'] ?? null) === 'output_text' && is_string($content['text'] ?? null)) {
-                    $texts[] = $content['text'];
-                }
-            }
-        }
-
-        $text = trim(implode("\n", $texts));
-        if ($text === '') {
-            throw new RuntimeException('AI Support provider returned no output text.');
-        }
-
-        return $text;
     }
 }

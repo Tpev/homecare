@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', EnsureCustomerCareAccess::class, CareHoursPrivacyHeaders::class])
     ->prefix('admin/customer-care')->name('customer-care.')->group(function (): void {
         Route::get('/', [CustomerCareController::class, 'index'])->name('index');
+        Route::get('/roster', \App\Livewire\CustomerCare\CaregiverRosterWorkspace::class)
+            ->middleware(\App\Http\Middleware\EnsureCareRosterAccess::class)->name('roster');
         Route::get('/gifts', [CustomerCareController::class, 'gifts'])->name('gifts');
         Route::post('/customers', [CustomerCareController::class, 'createCustomer'])->middleware('throttle:20,1')->name('customers.store');
         Route::get('/customers/{customer}', [CustomerCareController::class, 'customer'])->whereNumber('customer')->name('customer');

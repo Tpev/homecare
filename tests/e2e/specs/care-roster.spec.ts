@@ -1,0 +1,42 @@
+import { expect, test } from '@playwright/test';
+
+test('CS generates, edits, reviews and approves only selected roster outreach', async ({ page }, testInfo) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.context().route('**/*', route => {
+        const url = new URL(route.request().url());
+        return url.hostname === '127.0.0.1' || ['data:', 'blob:'].includes(url.protocol) ? route.continue() : route.abort();
+    });
+    await page.goto('/login');
+    await page.getByLabel('Email', { exact: true }).fill('roster.cs@example.test');
+    await page.getByLabel('Password', { exact: true }).fill('RosterBrowserQA!2026');
+    await page.getByRole('button', { name: 'Log in', exact: true }).click();
+    await expect(page).not.toHaveURL(/\/login$/);
+    await page.goto('/admin/customer-care');
+    await page.getByRole('link', { name: 'Build caregiver roster', exact: true }).click();
+    await page.waitForFunction(() => (window as any).Livewire?.all().some((component: any) => component.name === 'customer-care.caregiver-roster-workspace'));
+    await page.getByLabel('Customer and request').selectOption({ label: `Roster Family ${testInfo.project.name} · #${testInfo.project.name === 'desktop' ? '1' : '2'} · Bathing assistance ${testInfo.project.name}` });
+    await page.getByLabel('Context for this search').fill('Need options quickly. Confirm two-hour visits and supporting qualification documents.');
+    await page.getByRole('button', { name: 'Generate fresh roster' }).click();
+    await expect(page.getByRole('heading', { name: '1. Taylor Morgan' })).toBeVisible();
+    const first = page.locator('article').filter({ has: page.getByRole('heading', { name: '1. Taylor Morgan' }) });
+    await expect(first.getByLabel('Select for outreach')).not.toBeChecked();
+    await expect(first.getByLabel('Also send SMS', { exact: true })).not.toBeChecked();
+    await first.getByLabel('Select for outreach').check();
+    await first.getByLabel('Invitation message').fill('Reviewed invitation: can you help with the Durham afternoon visit?');
+    await first.getByLabel('Also send SMS', { exact: true }).check();
+    await first.getByLabel('SMS message', { exact: true }).fill('Reviewed SMS: please confirm your availability for the Durham visit.');
+    await page.screenshot({ path: testInfo.outputPath('roster.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Review selected outreach' }).click();
+    await expect(page.getByRole('heading', { name: 'Review exact outreach' })).toBeVisible();
+    await expect(page.getByText('Reviewed invitation: can you help with the Durham afternoon visit?', { exact: true })).toBeVisible();
+    await expect(page.getByText('Reviewed SMS: please confirm your availability for the Durham visit.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Approve and send to 1 caregiver' })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath('approval.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Approve and send to 1 caregiver' }).click();
+    await expect(page.getByText('Completed · SMS: queued')).toBeVisible();
+    await expect(page.getByText('Not selected — nothing sent')).toHaveCount(2);
+    const dimensions = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth }));
+    expect(dimensions.page).toBeLessThanOrEqual(dimensions.viewport + 1);
+    expect(errors).toEqual([]);
+});

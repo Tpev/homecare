@@ -3,7 +3,9 @@
         @include('customer-care.partials.status')
         <header class="hc-care-heading flex flex-wrap items-start justify-between gap-4">
             <div><p class="hc-care-eyebrow">Your care team workspace</p><h1 class="hc-care-title">Customer Success</h1><p class="hc-care-subtitle">Find a family, arrange care, and keep every visit on track.</p></div>
-            <a class="hc-secondary-button" href="#customers">Find a family</a>
+            <div class="flex flex-wrap gap-3"><a class="hc-secondary-button" href="#customers">Find a family</a>
+                @if(auth()->user()->canUseCareRoster())<a class="hc-primary-button" href="{{ route('customer-care.roster') }}">Build caregiver roster</a>@endif
+            </div>
         </header>
         <form method="GET" class="flex gap-3">
             @if($archived)<input type="hidden" name="view" value="archived">@endif

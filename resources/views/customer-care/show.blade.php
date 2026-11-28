@@ -1,5 +1,8 @@
 <x-app-layout>
     <div class="hc-page pt-5">
+        @if(auth()->user()->canUseCareRoster() && $careRequest->staff_managed && ! $careRequest->staff_archived_at)
+            <a class="hc-secondary-button mb-4" href="{{ route('customer-care.roster', ['request' => $careRequest->id]) }}">Build caregiver roster</a>
+        @endif
         @if(! $careRequest->staff_managed || $careRequest->staff_archived_at || $errors->any())
             @include('customer-care.partials.status')
         @endif

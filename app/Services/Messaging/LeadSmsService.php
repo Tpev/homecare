@@ -20,9 +20,26 @@ class LeadSmsService
 
     public function send(Lead|User $recipient, User $actor, string $body, string $requestKey): SmsMessage
     {
+        return $this->sendToRecipient($recipient, $actor, $body, $requestKey);
+    }
+
+    /** Narrow staff-only entry point; general caregiver CRM permission is unchanged. */
+    public function sendForCareRoster(User $recipient, User $actor, \App\Models\CareRequest $request, string $body, string $requestKey): SmsMessage
+    {
+        \App\Services\CustomerCare\CareRosterAccess::authorize($actor, $request);
+        $state = app(\App\Services\CustomerCare\CareRosterEvidence::class)->state($request->fresh(), $recipient->fresh());
+        if (! $state['sms_allowed'] || $state['blocked_reason'] || $state['action'] !== 'follow_up') {
+            throw ValidationException::withMessages(['roster' => 'SMS stopped: review consent, current availability and the invitation response.']);
+        }
+
+        return $this->sendToRecipient($recipient, $actor, $body, $requestKey, true);
+    }
+
+    private function sendToRecipient(Lead|User $recipient, User $actor, string $body, string $requestKey, bool $rosterAuthorized = false): SmsMessage
+    {
         $actor = $actor->fresh();
         if ($recipient instanceof User) {
-            abort_unless($actor?->canAccessCaregiverCrm(), 403);
+            abort_unless($actor?->canAccessCaregiverCrm() || ($rosterAuthorized && \App\Services\CustomerCare\CareRosterAccess::allows($actor)), 403);
             $recipient = app(CaregiverWorkEligibility::class)->caregivers()->findOrFail($recipient->id);
             $ownerKey = 'caregiver_user_id';
         } else {
