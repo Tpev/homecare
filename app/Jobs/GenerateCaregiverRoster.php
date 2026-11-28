@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\CaregiverRoster;
+use App\Services\CustomerCare\CareRosterAi;
 use App\Services\CustomerCare\CareRosterService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -13,11 +14,14 @@ class GenerateCaregiverRoster implements ShouldQueue
 
     public int $tries = 3;
 
-    public int $timeout = 55;
+    public int $timeout;
 
     public int $backoff = 30;
 
-    public function __construct(public int $rosterId) {}
+    public function __construct(public int $rosterId)
+    {
+        $this->timeout = CareRosterAi::requestTimeout() + 20;
+    }
 
     public function handle(CareRosterService $service): void
     {

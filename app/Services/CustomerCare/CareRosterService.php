@@ -28,7 +28,7 @@ class CareRosterService
 
         return Cache::lock('care-roster:create:'.$request->id, 10)->block(3, function () use ($actor, $request, $context, $urgency) {
             $pending = CaregiverRoster::where('care_request_id', $request->id)->whereIn('status', ['queued', 'generating'])
-                ->where('created_at', '>', now()->subMinutes(35))->first();
+                ->where('prompt_version', CareRosterAi::VERSION)->where('updated_at', '>', now()->subMinutes(35))->first();
             if ($pending) {
                 return $pending;
             }
@@ -36,7 +36,8 @@ class CareRosterService
                 'care_request_id' => $request->id, 'created_by_user_id' => $actor->id,
                 'context' => trim($context), 'urgency' => $urgency, 'status' => 'queued',
                 'request_fingerprint' => $this->evidence->requestFingerprint($request),
-                'model' => config('ai_support.model'), 'prompt_version' => CareRosterAi::VERSION,
+                'model' => config('care_roster.model'), 'prompt_version' => CareRosterAi::VERSION,
+                'coverage' => ['ai' => CareRosterAi::settings()],
             ]);
             GenerateCaregiverRoster::dispatch($roster->id)->afterCommit();
 
@@ -47,7 +48,7 @@ class CareRosterService
     /** One bounded queue step: collect, assess one batch, or rank and finish. */
     public function generate(int $id): bool
     {
-        return Cache::lock('care-roster:generate:'.$id, 70)->block(3, function () use ($id): bool {
+        return Cache::lock('care-roster:generate:'.$id, CareRosterAi::requestTimeout() + 30)->block(3, function () use ($id): bool {
             $roster = CaregiverRoster::findOrFail($id);
             if (! in_array($roster->status, ['queued', 'generating'])) {
                 return false;
@@ -56,11 +57,15 @@ class CareRosterService
                 $actor = User::findOrFail($roster->created_by_user_id);
                 $request = $roster->careRequest;
                 CareRosterAccess::authorize($actor, $request);
+                $this->ensure($roster->prompt_version === CareRosterAi::VERSION, 'The roster assistant was upgraded. Generate a fresh roster.');
                 $this->ensure($roster->request_fingerprint === $this->evidence->requestFingerprint($request), 'Customer context changed. Generate a fresh roster.');
+                $settings = data_get($roster->coverage, 'ai', CareRosterAi::settings());
+                $settings['model'] = $roster->model;
                 $data = $roster->generation_data;
                 if (! $data) {
                     $data = ['customer' => $this->evidence->customer($request), 'pool' => $this->evidence->pool($request),
                         'assessments' => [], 'usage' => ['input_tokens' => 0, 'cached_input_tokens' => 0, 'output_tokens' => 0]];
+                    $data['pool']['coverage']['ai'] = $settings;
                     $roster->update(['status' => 'generating', 'generation_data' => $data, 'coverage' => $data['pool']['coverage']]);
 
                     return true;
@@ -71,7 +76,7 @@ class CareRosterService
                 $usage = $data['usage'];
                 $batch = array_slice($pool['candidates'], count($assessments), (int) config('care_roster.batch_size'));
                 if ($batch) {
-                    $result = $this->ai->assess($actor, $customer, $batch, $roster->context ?? '', $roster->urgency);
+                    $result = $this->ai->assess($actor, $customer, $batch, $roster->context ?? '', $roster->urgency, $settings);
                     $data['assessments'] = array_merge($assessments, $result['assessments']);
                     foreach ($usage as $key => $value) {
                         $data['usage'][$key] += $result['usage'][$key] ?? 0;
@@ -82,7 +87,7 @@ class CareRosterService
                 }
                 $ranking = ['summary' => 'No eligible regional caregivers were found. Review the request and caregiver coverage.', 'customer_questions' => [], 'caregiver_user_ids' => []];
                 if ($assessments) {
-                    $ranked = $this->ai->rank($actor, $customer, $assessments, $roster->context ?? '', $roster->urgency);
+                    $ranked = $this->ai->rank($actor, $customer, $assessments, $roster->context ?? '', $roster->urgency, $pool['candidates'], $settings);
                     $ranking = $ranked['result'];
                     foreach ($usage as $key => $value) {
                         $usage[$key] += $ranked['usage'][$key] ?? 0;

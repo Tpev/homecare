@@ -71,10 +71,104 @@ class CaregiverRosterTest extends TestCase
         $refs = collect($roster->entries->first()->evidence['caregiver']['records'])->pluck('ref');
         $this->assertContains('sms_messages:'.$message->id, $refs);
         Http::assertSent(fn ($req) => str_contains($req['input'], 'Confirm two-hour visits') && str_contains($req['input'], 'Monday afternoon works'));
+        Http::assertSent(function ($req) use ($message, $caregiver) {
+            $input = json_decode($req['input'], true);
+            if (! isset($input['rankingEvidence'])) {
+                return false;
+            }
+            $this->assertContains('sms_messages:'.$message->id, array_column($input['rankingEvidence'][0]['records'], 'ref'));
+            $this->assertStringContainsString('Confirm two-hour visits', $req['input']);
+            $this->assertSame([$caregiver->id], $req['text']['format']['schema']['properties']['caregiver_user_ids']['items']['enum']);
+
+            return true;
+        });
         $this->assertDatabaseCount('care_request_invitations', 0);
         $this->assertDatabaseCount('sms_messages', 1);
         Queue::assertNotPushed(SendCaregiverRosterEntry::class);
         Notification::assertNothingSent();
+    }
+
+    public function test_only_active_verified_caregivers_reach_ai_review(): void
+    {
+        [$actor, $request, $eligible] = $this->fixture();
+        foreach ([
+            ['status' => 'draft'], ['status' => 'pending_review'], ['status' => 'rejected'],
+            ['identity_verified_at' => null, 'identity_verification_status' => 'in_review'],
+            ['screening_suspended_at' => now()], ['screening_initial_approved_at' => null, 'screening_legacy_access' => false],
+            ['is_accepting_new_clients' => false], ['bio' => null],
+        ] as $changes) {
+            [, , $caregiver] = $this->fixture();
+            $caregiver->caregiverProfile->update($changes);
+            SmsMessage::create(['caregiver_user_id' => $caregiver->id, 'direction' => 'incoming', 'status' => 'received',
+                'body' => 'EXCLUDED PRIVATE HISTORY '.$caregiver->id, 'from_phone' => $caregiver->phone, 'to_phone' => '+19845550100']);
+        }
+        $roster = $this->generate($actor, $request);
+        $this->assertSame('ready', $roster->status, $roster->error ?? 'Generation failed');
+        $this->assertSame([$eligible->id], $roster->entries->pluck('caregiver_user_id')->all());
+        $this->assertSame(9, $roster->coverage['profiles_screened']);
+        $this->assertSame(6, $roster->coverage['active_profiles']);
+        $this->assertSame(8, $roster->coverage['excluded']['not_eligible']);
+        $this->assertSame(1, $roster->coverage['candidates_reviewed']);
+        Http::assertSentCount(2);
+        Http::assertNotSent(fn ($req) => str_contains($req['input'], 'EXCLUDED PRIVATE HISTORY'));
+        Queue::assertNotPushed(SendCaregiverRosterEntry::class);
+    }
+
+    public function test_roster_model_and_reasoning_are_independent_and_frozen_for_the_run(): void
+    {
+        [$actor, $request] = $this->fixture();
+        config(['ai_support.model' => 'support-only-model', 'ai_support.reasoning_effort' => 'low']);
+        $service = app(CareRosterService::class);
+        $roster = $service->start($actor, $request, 'Confirm the visit.', 'normal');
+        $this->assertSame('gpt-6.2-astra', $roster->model);
+        $this->assertSame('high', $roster->coverage['ai']['reasoning_effort']);
+        config(['care_roster.model' => 'changed-after-start', 'care_roster.reasoning_effort' => 'low']);
+        while ($service->generate($roster->id)) {
+        }
+        $this->assertSame('ready', $roster->fresh()->status);
+        $this->assertSame(['model' => 'gpt-6.2-astra', 'reasoning_effort' => 'high'], $roster->fresh()->coverage['ai']);
+        Http::assertSentCount(2);
+        Http::assertNotSent(fn ($req) => $req['model'] !== 'gpt-6.2-astra' || $req['reasoning']['effort'] !== 'high' || $req['store'] !== false);
+    }
+
+    public function test_longer_reasoning_timeout_stays_inside_the_queue_reservation(): void
+    {
+        foreach ([90 => 50, 180 => 120] as $reservation => $expectedTimeout) {
+            config(['queue.default' => 'database', 'queue.connections.database.retry_after' => $reservation]);
+            $providerTimeout = \App\Services\CustomerCare\CareRosterAi::requestTimeout();
+            $job = new \App\Jobs\GenerateCaregiverRoster(1);
+            $this->assertSame($expectedTimeout, $providerTimeout);
+            $this->assertGreaterThan($providerTimeout, $job->timeout);
+            $this->assertLessThan($reservation, $job->timeout + 10);
+        }
+    }
+
+    public function test_an_old_prompt_run_is_not_reused_and_recent_progress_keeps_a_long_run_active(): void
+    {
+        [$actor, $request] = $this->fixture();
+        $service = app(CareRosterService::class);
+        $old = $service->start($actor, $request, 'Old context.', 'normal');
+        $old->update(['prompt_version' => 'care-roster-v2']);
+        $current = $service->start($actor, $request, 'Current context.', 'normal');
+        $this->assertNotSame($old->id, $current->id);
+        $this->assertFalse($service->generate($old->id));
+        $this->assertSame('failed', $old->fresh()->status);
+        Http::assertNothingSent();
+        $current->update(['created_at' => now()->subMinutes(40)]);
+        $this->assertSame($current->id, $service->start($actor, $request, 'Current context.', 'normal')->id);
+    }
+
+    public function test_ranked_operational_block_is_rejected_even_if_ai_claims_strong_fit(): void
+    {
+        [$actor, $request, $caregiver] = $this->fixture();
+        $evidence = app(CareRosterEvidence::class);
+        $candidate = $evidence->caregiver($request, $caregiver);
+        $candidate['operational']['blocked_reason'] = 'A recorded commitment overlaps this visit.';
+        $ai = app(\App\Services\CustomerCare\CareRosterAi::class);
+        $result = $ai->assess($actor, $evidence->customer($request), [$candidate], '', 'normal');
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('blocked from this request');
+        $ai->rank($actor, $evidence->customer($request), $result['assessments'], '', 'normal', [$candidate]);
     }
 
     public function test_history_stays_small_and_uses_an_index_with_large_saved_drafts(): void
@@ -218,16 +312,20 @@ class CaregiverRosterTest extends TestCase
         $service->approve($actor, $roster, $new);
     }
 
-    public function test_revoked_approver_or_suspended_caregiver_stops_dispatch(): void
+    public function test_revoked_approver_or_ineligible_caregiver_stops_dispatch(): void
     {
-        foreach (['revoked', 'suspended'] as $case) {
+        foreach (['revoked', 'suspended', 'inactive', 'unverified'] as $case) {
             [$actor, $request, $caregiver] = $this->fixture();
             $roster = $this->generate($actor, $request);
             $this->approve($actor, $roster);
             if ($case === 'revoked') {
                 $actor->forceFill(['access_revoked_at' => now()])->save();
             } else {
-                $roster->entries->first()->caregiver->caregiverProfile->update(['screening_suspended_at' => now()]);
+                $roster->entries->first()->caregiver->caregiverProfile->update(match ($case) {
+                    'inactive' => ['status' => 'draft'],
+                    'unverified' => ['identity_verified_at' => null, 'identity_verification_status' => 'in_review'],
+                    default => ['screening_suspended_at' => now()],
+                });
             }
             app(CareRosterService::class)->dispatch($roster->entries->first()->id);
             $this->assertSame('blocked', $roster->entries->first()->fresh()->dispatch_status);

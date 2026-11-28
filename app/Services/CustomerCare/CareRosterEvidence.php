@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Marketplace\CaregiverDistanceFilter;
 use App\Services\Messaging\TwilioSmsClient;
 use App\Services\RegularCare\CarePlanOccurrenceService;
+use App\Services\Screening\CaregiverWorkEligibility;
 use App\Support\WeeklySchedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -59,11 +60,19 @@ class CareRosterEvidence
 
     public function pool(CareRequest $request): array
     {
-        $profiles = CaregiverProfile::with(['user', 'skills', 'languages', 'availabilities'])->orderBy('user_id')->get();
+        $totalProfiles = CaregiverProfile::count();
+        $activeProfiles = CaregiverProfile::where('status', 'active')->count();
+        // Only active, identity-verified caregivers with new-work access reach
+        // profile/history loading. Keep isReadyForInvitation as the final gate.
+        $profiles = app(CaregiverWorkEligibility::class)->constrain(CaregiverProfile::query())
+            ->where('is_accepting_new_clients', true)
+            ->where(fn ($query) => $query->whereNotNull('identity_verified_at')->orWhere('identity_verification_status', 'approved'))
+            ->whereHas('user', fn ($query) => $query->where('role', 'caregiver')->whereNull('access_revoked_at'))
+            ->with(['user', 'skills', 'languages', 'availabilities'])->orderBy('user_id')->get();
         $distances = app(CaregiverDistanceFilter::class)->within($request, 100);
         $invited = $request->invitations()->pluck('caregiver_user_id')->merge($request->applications()->pluck('caregiver_user_id'))->all();
         $candidates = [];
-        $excluded = ['not_eligible' => 0, 'outside_search_area' => 0, 'opted_out' => 0];
+        $excluded = ['not_eligible' => $totalProfiles - $profiles->count(), 'outside_search_area' => 0, 'opted_out' => 0];
         foreach ($profiles as $profile) {
             $user = $profile->user;
             if (! $user || $user->role !== 'caregiver' || $user->access_revoked_at || ! $profile->isReadyForInvitation() || ! $profile->is_accepting_new_clients) {
@@ -92,7 +101,9 @@ class CareRosterEvidence
         }
 
         return ['candidates' => $candidates, 'coverage' => [
-            'profiles_screened' => $profiles->count(), 'candidates_reviewed' => count($candidates), 'excluded' => $excluded,
+            'profiles_screened' => $totalProfiles, 'active_profiles' => $activeProfiles,
+            'active_verified_profiles' => $profiles->count(), 'candidates_reviewed' => count($candidates), 'excluded' => $excluded,
+            'eligibility' => 'Active caregivers only: verified identity, current new-work access, complete invitation profile and accepting new clients. Inactive or unverified caregivers are never sent to the AI.',
             'geography' => 'ZIP-centre estimates; search includes at least 50 miles, stated radii up to 100 miles, unknown locations and existing invitees.',
             'conflicts' => 'Checks the first '.config('care_roster.conflict_days').' days from the next requested visit; outside commitments require confirmation.',
         ]];
@@ -104,7 +115,8 @@ class CareRosterEvidence
         $coverage = [];
         $records = [['ref' => 'caregiver_profiles:'.$profile->id] + $profile->only([
             'id', 'user_id', 'bio', 'care_experience_notes', 'years_experience', 'service_area_zip', 'service_radius_miles',
-            'status', 'screening_initial_approved_at', 'screening_suspended_at', 'updated_at'])];
+            'status', 'identity_verified_at', 'identity_verification_status', 'screening_legacy_access',
+            'screening_initial_approved_at', 'screening_suspended_at', 'updated_at'])];
         foreach ($profile->availabilities as $availability) {
             $records[] = ['ref' => 'caregiver_availabilities:'.$availability->id] + $availability->only(['id', 'day_of_week', 'start_time', 'end_time', 'updated_at']);
         }
